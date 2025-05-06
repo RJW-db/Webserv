@@ -1,0 +1,21 @@
+Abbreviation	Full Form
+-----------	---------
+RFC				Request for Comments
+CGI				Common Gateway Interface
+HTTP			Hypertext Transfer Protocol
+URI				Uniform Resource Identifier
+URL				Uniform Resource Locator
+GET				HTTP GET Method
+POST			HTTP POST Method
+DELETE			HTTP DELETE Method
+HEAD			HTTP HEAD Method
+PUT				HTTP PUT Method
+OPTIONS			HTTP OPTIONS Method
+TRACE			HTTP TRACE Method
+CONNECT			HTTP CONNECT Method
+HTTP/1.1		HTTP Version 1.1
+CRLF			Carriage Return Line Feed
+EOF				End of File
+FD				File Descriptor
+O_NONBLOCK		Non-blocking I/O Flag
+FD_CLOEXEC		Close-on-exec Flag

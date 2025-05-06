@@ -1,0 +1,91 @@
+https://datatracker.ietf.org/doc/html/rfc2616#section-5
+Essential RFC 2616 Sections for HTTP Server Implementation
+Section 5: Request
+	Details the structure of HTTP request messages, including the request line, headers, and optional body.
+
+Section 6: Response
+	Explains the structure of HTTP response messages, including the status line, headers, and body.
+
+Section 7: Entity
+	Covers entity headers and body, which are crucial for handling content negotiation and representation.
+
+Section 8: Connections
+	Discusses persistent connections and how to manage them, which is vital for performance.
+
+Section 9: Method Definitions
+	Defines HTTP methods like GET, POST, and DELETE, which your server must support.
+
+Section 10: Status Code Definitions
+	Lists HTTP status codes and their meanings, essential for sending appropriate responses.
+
+Section 14: Header Field Definitions
+	Provides detailed information on standard HTTP headers, necessary for both requests and responses.
+
+
+https://datatracker.ietf.org/doc/html/rfc7230
+RFC 7230: HTTP/1.1 Message Syntax and Routing
+Section 3: Message Format
+    Details the general structure of HTTP messages, including start lines, headers, and body.
+
+Section 5.3: Request Target
+    Explains how the request target is determined, which is crucial for routing requests to the appropriate handler.
+
+Section 6.1: Connection Management
+    Covers how connections are managed, including persistent connections and the Connection header field.
+
+
+https://datatracker.ietf.org/doc/html/rfc7231
+RFC 7231: HTTP/1.1 Semantics and Content
+Section 4: Request Methods
+    Defines the semantics of HTTP methods like GET, POST, and DELETE, which your server must support.
+
+Section 6: Response Status Codes
+    Provides a comprehensive list of HTTP status codes and their meanings, essential for sending appropriate responses.
+
+Section 7: Representation
+    Discusses how resources are represented in HTTP, including media types and content negotiation.
+
+
+https://datatracker.ietf.org/doc/html/rfc3875
+RFC 3875: The Common Gateway Interface (CGI) Version 1.1
+Section 4: Environment Variables
+	Lists the environment variables that must be set when invoking a CGI script, such as REQUEST_METHOD, QUERY_STRING, and CONTENT_TYPE.
+
+Section 6: Input and Output
+	Describes how data is passed to and from CGI scripts, including how to handle standard input and output streams.
+
+
+https://datatracker.ietf.org/doc/html/rfc7232
+RFC 7232: Conditional Requests
+    Describes mechanisms for conditional requests, such as caching and validation.
+
+
+https://datatracker.ietf.org/doc/html/rfc7233
+RFC 7233: Range Requests
+    Details how to handle partial content and byte-range requests.
+
+
+https://datatracker.ietf.org/doc/html/rfc7234
+RFC 7234: Caching
+    Explains HTTP caching mechanisms and cache control directives.
+
+
+https://datatracker.ietf.org/doc/html/rfc7235
+RFC 7235: Authentication
+    Covers HTTP authentication frameworks and challenges.
+
+
+HTTP Semantics and Routing
+For a deeper understanding of HTTP semantics and routing, consider the updated specifications:
+https://www.rfc-editor.org/rfc/rfc9110.html
+    RFC 9110: HTTP Semantics
+        Provides a comprehensive overview of HTTP semantics, including methods, status codes, and header fields.
+
+https://www.rfc-editor.org/rfc/rfc9112.html
+    RFC 9112: HTTP/1.1
+        Specifies the HTTP/1.1 message syntax, parsing, and connection management.
+
+
+
+
+
