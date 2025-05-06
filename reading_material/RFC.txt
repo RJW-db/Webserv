@@ -1,3 +1,4 @@
+2616 is obseleted by 9110 & 9112
 https://datatracker.ietf.org/doc/html/rfc2616#section-5
 Essential RFC 2616 Sections for HTTP Server Implementation
 Section 5: Request
@@ -78,12 +79,38 @@ RFC 7235: Authentication
 HTTP Semantics and Routing
 For a deeper understanding of HTTP semantics and routing, consider the updated specifications:
 https://www.rfc-editor.org/rfc/rfc9110.html
-    RFC 9110: HTTP Semantics
-        Provides a comprehensive overview of HTTP semantics, including methods, status codes, and header fields.
+RFC 9110: HTTP Semantics
+This document defines the semantics of HTTP, including methods, status codes, header fields, and more.
+
+    Section 3: HTTP Message Semantics
+
+        Covers the structure of HTTP messages, including request and response lines, headers, and bodies.
+
+    Section 9: Request Methods
+
+        Defines HTTP methods such as GET, POST, DELETE, etc.
+
+    Section 15: Status Code Definitions
+
+        Provides definitions and usage of HTTP status codes.
+
+    Section 16: Field Definitions
+
+        Details standard HTTP header fields used in requests and responses.
+        W3C+5RFC Editor+5
 
 https://www.rfc-editor.org/rfc/rfc9112.html
-    RFC 9112: HTTP/1.1
-        Specifies the HTTP/1.1 message syntax, parsing, and connection management.
+RFC 9112: HTTP/1.1
+
+This document specifies the HTTP/1.1 message syntax and parsing requirements.
+
+    Section 2: Message Format
+
+        Describes the syntax of HTTP/1.1 messages, including the start-line, headers, and body.
+
+    Section 3: Connection Management
+
+        Discusses how connections are managed in HTTP/1.1, including persistent connections and pipelining.
 
 
 

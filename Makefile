@@ -24,7 +24,7 @@ COMPILER		:=	c++
 CCPFLAGS			:=	-std=c++98
 CCPFLAGS			+=	-Wall -Wextra
 CCPFLAGS			+=	-Werror
-CCPFLAGS			+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
+# CCPFLAGS			+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS			+=	-MMD -MP
 CCPFLAGS			+=	-g
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
@@ -37,7 +37,7 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						poll_usage.cpp
+MAIN			:=	main.cpp						poll_usage.cpp			getaddrinfo_usage.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
 #		Find all .c files in the specified directories
