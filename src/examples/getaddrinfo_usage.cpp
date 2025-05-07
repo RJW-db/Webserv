@@ -10,8 +10,8 @@
 
 int	getaddrinfo_usage(void)
 {
-	// const char* website = "www.example.net";
-	const char* website = "www.google.com";
+	const char* website = "www.example.net";
+	// const char* website = "www.google.com";
 	struct addrinfo hints, *res, *p;
 	int status;
 	char ipstr[INET6_ADDRSTRLEN];
