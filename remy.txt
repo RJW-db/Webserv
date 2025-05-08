@@ -1,3 +1,30 @@
-remy
+scan-build-14 make
+Run 'scan-view /tmp/scan-build-2025-05-08-175353-70197-1' to examine bug reports.
+remy:
+	scan-view-14 /tmp/scan-build-2025-05-08-175353-70197-1
 
-yuuuur
+infer		good with FD
+https://fbinfer.com/
+https://github.com/facebook/infer/releases/tag/v1.2.0
+unzip, find infer location as below,
+/home/rde-brui/Downloads/infer-linux-x86_64-v1.2.0/bin/infer
+
+go to project and run:
+/home/rde-brui/Downloads/infer-linux-x86_64-v1.2.0/bin/infer run -- make
+
+
+
+cpp Check
+https://github.com/danmar/cppcheck
+in zip
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+cmake --build . --config RelWithDebInfo 
+cd bin
+pwd
+/home/rde-brui/sgoinfre/cppcheck-main/build/bin
+
+inside the project
+/home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --check-level=exhaustive --enable=all src -I include
+/home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --suppress=missingIncludeSystem --check-level=exhaustive --enable=all src -I include > /dev/null
