@@ -1,0 +1,16 @@
+go into this folder in terminal and run
+
+STARTING UP
+docker-compose build			# Just builds (does not run)
+docker-compose up -d			# Then runs in background because of -d
+	docker-compose up --build	# Build and run
+TURNING OFF
+docker-compose down				# Only possible when running with -d
+ctrl + c						# if running in the foreground
+
+now the server is running.
+
+
+
+cd client
+c++ main.cpp && ./a.out
