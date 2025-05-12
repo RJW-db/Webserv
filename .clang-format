@@ -1,0 +1,23 @@
+# Usage: clang-format -i src/main.cpp
+
+IndentWidth: 4
+UseTab: Never
+AlignTrailingComments: true
+ColumnLimit: 80
+BreakBeforeBraces: Allman
+PointerAlignment: Right
+AlignConsecutiveDeclarations: true
+SpaceBeforeParens: ControlStatements
+SortIncludes: true
+IncludeBlocks: Preserve
+SpacesInAngles: false
+IndentCaseLabels: true
+
+# IndentWidth: 4
+# UseTab: Never
+# AlignTrailingComments: true
+# ColumnLimit: 80
+# BreakBeforeBraces: Attach
+# PointerAlignment: Right
+# AllowShortBlocksOnASingleLine: false
+# AlwaysBreakAfterReturnType: None
