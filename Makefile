@@ -21,14 +21,14 @@ PRINT_NO_DIR	:=	--no-print-directory
 
 #		CCPFLAGS for testing
 COMPILER		:=	c++
-CCPFLAGS			:=	-std=c++98
-CCPFLAGS			+=	-Wall -Wextra
-CCPFLAGS			+=	-Werror
-# CCPFLAGS			+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
-CCPFLAGS			+=	-MMD -MP
-CCPFLAGS			+=	-g
+CCPFLAGS		:=	-std=c++98
+CCPFLAGS		+=	-Wall -Wextra
+CCPFLAGS		+=	-Werror
+# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
+CCPFLAGS		+=	-MMD -MP
+CCPFLAGS		+=	-g
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS			+=	-fsanitize=address
+# CCPFLAGS		+=	-fsanitize=address
 
 #		Directories
 BUILD_DIR		:=	.build/
@@ -37,7 +37,7 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						\
+MAIN			:=	main.cpp						server.cpp			serverListenFD.cpp		\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 

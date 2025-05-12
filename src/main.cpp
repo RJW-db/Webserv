@@ -4,6 +4,7 @@
 #include <cstring>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -12,23 +13,18 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // close
+#include <stdlib.h>	// callod
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif
 
 #include <iostream>
 
-#define RESERVED_FDS 3         // stdin, stdout, stderr
-#define INCOMING_FD_LIMIT 1024 // Makefile, shell(ulimit -n)
-// TODO if FD minimum = 5, immediate turning off webserv with error.
-// 4th is listener FD, 5th FD is client.
-#define FD_LIMIT 1024 - 3
 
-int              remy_serv(void);
-int              create_listener_socket(void);
-struct addrinfo *get_server_addrinfo(void);
-int              bind_to_socket(struct addrinfo *server);
-static int       make_socket_non_blocking(int sfd);
+
+// int              create_listener_socket(void);
+// struct addrinfo *get_server_addrinfo(void);
+// int              bind_to_socket(struct addrinfo *server);
 
 int main()
 {
@@ -36,162 +32,186 @@ int main()
     // epoll_usage();
     // getaddrinfo_usage();
     // server();
-    remy_serv();
+    Server surf;
+
+    surf.run();
     return 0;
 }
 
-#define PORT "8080"
-// getaddrinfo();
-// socket();
-// bind();
-// listen();
-// /* accept() goes here */
 
-int remy_serv(void)
+
+// typedef union epoll_data {
+// 	void        *ptr;
+// 	int          fd;
+// 	uint32_t     u32;
+// 	uint64_t     u64;
+// } epoll_data_t;
+
+// struct epoll_event {
+// 	uint32_t     events;      /* Epoll events */
+// 	epoll_data_t data;        /* User data variable */
+// };
+
+int Server::run(void)
 {
-    struct pollfd *pfds;
-    int            listener = create_listener_socket();
-    if (listener == -1)
-        return -1;
-
-    // struct pollfd *pfds = (pollfd *)malloc(sizeof(pollfd) * FD_LIMIT);
-    // if (pfds == NULL)
-    // {
-    //     close(listener);
+    // int listener = create_listener_socket();
+    // printf("listener %d\n", listener);
+    // if (listener == -1)
     //     return -1;
-    // }
-    // int nfds = 0;
-(void)pfds;
-    puts("yur");
-    if (epoll_create(FD_LIMIT) == -1) // parameter must be bigger than 0, rtfm
-    {
-        std::cerr << "Server listen: " << strerror(errno);
-    	return -1;
-    }
-	return (0);
-}
 
-int create_listener_socket(void)
-{
-    struct addrinfo *server = get_server_addrinfo();
-    if (server == NULL)
+    int                 epfd;
+    struct epoll_event  current_event;
+    struct epoll_event *events;
+
+    epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
+    if (epfd == -1)
     {
+        std::cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
-
-    int listener = bind_to_socket(server);
-    freeaddrinfo(server);
-    if (listener == -1)
+    current_event.data.fd = _listener;
+    current_event.events = EPOLLIN | EPOLLET;
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, _listener, &current_event) == -1)
     {
+        std::cerr << "Server epoll_ctl: " << strerror(errno);
         return -1;
     }
-    if (make_socket_non_blocking(listener) == -1)
+    // events = (epoll_event *)calloc(64, sizeof(event));
+    // events = (epoll_event *)calloc(64, sizeof(event));
+    events = new epoll_event[64];
+    if (events == NULL)
     {
+        std::cerr << "Server calloc: " << strerror(errno);
         return -1;
     }
-    // TODO test with 1~5 maximum pending queue of people connecting
-    if (listen(listener, SOMAXCONN) == -1)
+    int errHndl = 0;
+    bool    client_said_quit_server = true;
+    while (client_said_quit_server == true)
     {
-        std::cerr << "Server listen: " << strerror(errno);
-        return -1;
-    }
-    return listener;
-}
+        int n, i;
 
-struct addrinfo *get_server_addrinfo(void)
-{
-    struct addrinfo  serverSetup;
-    struct addrinfo *server;
-    int              errHndl;
-
-    std::memset(&serverSetup, 0, sizeof(serverSetup));
-    serverSetup.ai_family = AF_UNSPEC;     // Use IPv4 or IPv6
-    serverSetup.ai_socktype = SOCK_STREAM; // TCP stream sockets
-    serverSetup.ai_flags = AI_PASSIVE;     // Use my IP
-
-    errHndl = getaddrinfo(NULL, PORT, &serverSetup, &server);
-    if (errHndl != 0)
-    {
-        std::cerr << "Server getaddrinfo: " << gai_strerror(errHndl)
-                  << std::endl;
-        return NULL;
-    }
-    return server;
-}
-
-int bind_to_socket(struct addrinfo *server)
-{
-    struct addrinfo *p;
-    int              listener;
-    for (p = server; server != NULL; p = p->ai_next)
-    {
-        listener =
-            socket(server->ai_family, server->ai_socktype, server->ai_protocol);
-        if (listener < 0)
+        fprintf(stdout, "Blocking and waiting for epoll event...\n");
+        n = epoll_wait(epfd, events, 64, -1);
+        // n = epoll_wait(epfd, events, 64, 5000);
+        fprintf(stdout, "Received epoll event\n");
+        if (n == -1) // for use only goes wrong with EINTR(signals)
         {
-            continue;
+            std::cerr << "Server epoll_wait: " << strerror(errno);
+            return -1;
         }
-        int reUse = 1;
-        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &reUse, sizeof(int));
-        if (bind(listener, p->ai_addr, p->ai_addrlen) == -1)
+        for (i = 0; i < n; ++i)
         {
-            close(listener);
-            continue;
+            fprintf(stdout, "event %d open on fd:%d\n", i, events[i].data.fd);
+            if ((events[i].events & EPOLLERR) ||
+                (events[i].events & EPOLLHUP) ||
+                (events[i].events & EPOLLIN) == 0)
+            {
+                fprintf(stderr, "epoll error\n");
+                close(events[i].data.fd);
+                continue;
+            }
+            else if (_listener == events[i].data.fd)
+            {
+                while(1)
+                {
+                    struct sockaddr in_addr;
+                    socklen_t in_len;
+                    int infd;
+                    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+
+                    in_len = sizeof(in_addr);
+                    // class filedescriptors(_listener);
+                    infd = accept(_listener, &in_addr, &in_len);
+                    if(infd == -1)
+                    {
+                        if((errno == EAGAIN) ||
+                           (errno == EWOULDBLOCK))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            perror("accept");
+                            break;
+                        }
+                    }
+                    errHndl = getnameinfo(&in_addr, in_len,
+                                    hbuf, sizeof(hbuf),
+                                    sbuf, sizeof(sbuf),
+                                    NI_NUMERICHOST | NI_NUMERICSERV);
+                    if(errHndl == 0)
+                    {
+                        printf("Accepted connection on descriptor %d"
+                              "(host=%s, port=%s)\n", infd, hbuf, sbuf);
+                    }
+
+                    errHndl = make_socket_non_blocking(infd);
+                    if(errHndl == -1)
+                        abort();
+
+                    current_event.data.fd = infd;
+                    current_event.events = EPOLLIN | EPOLLET;
+                    errHndl = epoll_ctl(epfd, EPOLL_CTL_ADD, infd, &current_event);
+                    if(errHndl == -1)
+                    {
+                        perror("epoll_ctl");
+                        abort();
+                    }
+                }
+            }
+            else
+            {
+                bool done = false;
+                std::cout << events[i].events << std::endl;
+                while(1)
+                {
+                    ssize_t count;
+                    char buf[512];
+
+                    count = read(events[i].data.fd, buf, sizeof(buf));
+                    if(count == -1)
+                    {
+                        if(errno != EAGAIN)
+                        {
+                            perror("read");
+                            done = true;
+                        }
+                        break;
+                    }
+                    else if(count == 0)
+                    {
+                        done = true;
+                        break;
+                    }
+                    if (strncmp(buf, "exit", 4) == 0){
+                        client_said_quit_server = false;
+                        done = true;
+                    }
+                    buf[count] = '\n';
+                    errHndl = write(1, buf, count+1);
+                    if(errHndl == -1)
+                    {
+                        perror("write");
+                        abort();
+                    }
+
+                    errHndl = write(events[i].data.fd, buf, count+1);
+                    if(errHndl == -1)
+                    {
+                        perror("socket write");
+                        abort();
+                    }
+                }
+                if(done == true)
+                {
+                    printf("Closed connection on descriptor %d\n",
+                           events[i].data.fd);
+                    close(events[i].data.fd);
+                }
+            }
         }
-        return listener;
     }
-    std::cerr << "Server bind_to_socket: " << strerror(errno);
-    return -1;
-}
-
-static int make_socket_non_blocking(int sfd)
-{
-    int currentFlags = fcntl(sfd, F_GETFL, 0);
-    if (currentFlags == -1)
-    {
-        std::cerr << "fcntl: " << strerror(errno);
-        return -1;
-    }
-
-    currentFlags |= O_NONBLOCK;
-    int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
-    if (fcntlResult == -1)
-    {
-        std::cerr << "fcntl: " << strerror(errno);
-        return -1;
-    }
+    close(epfd);
+    delete[] events;
     return 0;
 }
-
-// int nbytes = recv(pfds[i].fd, buf, sizeof buf - 1, 0);
-// if (nbytes > 0) {
-// 	buf[nbytes] = '\0'; // Null-terminate the buffer
-// 	printf("Received request:\n%s\n", buf);
-
-// 	// Parse the HTTP request (very basic parsing)
-// 	if (strncmp(buf, "GET ", 4) == 0) {
-// 		// Extract the requested path
-// 		char *path = buf + 4;
-// 		char *end_path = strchr(path, ' ');
-// 		if (end_path) {
-// 			*end_path = '\0'; // Null-terminate the path
-// 			printf("Requested path: %s\n", path);
-// 		}
-
-// 		// Respond to the client
-// 		const char *response =
-// 			"HTTP/1.1 200 OK\r\n"
-// 			"Content-Type: text/html\r\n"
-// 			"Content-Length: 13\r\n"
-// 			"\r\n"
-// 			"Hello, world!";
-// 		send(pfds[i].fd, response, strlen(response), 0);
-// 	} else {
-// 		// Handle unsupported methods
-// 		const char *response =
-// 			"HTTP/1.1 405 Method Not Allowed\r\n"
-// 			"Content-Length: 0\r\n"
-// 			"\r\n";
-// 		send(pfds[i].fd, response, strlen(response), 0);
-// 	}
-// }
