@@ -1,4 +1,5 @@
 #include <Webserv.hpp>
+#include <Parsing.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -32,6 +33,11 @@ int main()
     // epoll_usage();
     // getaddrinfo_usage();
     // server();
+
+
+	Parsing sam("./config/default.conf");
+
+	exit(0);
     Server surf;
 
     surf.run();

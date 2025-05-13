@@ -2,4 +2,6 @@
 FROM nginx:alpine
 
 # Copy our custom HTML page to Nginx's default serving directory
-COPY index.html /usr/share/nginx/html/index.html
+COPY data/. /usr/share/nginx/html
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf

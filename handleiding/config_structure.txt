@@ -1,0 +1,16 @@
+Our bare minimum setup
+
+server {
+    listen 8080;
+}
+
+our defaults when not given.
+    Listen on 127.0.0.1:8080.
+    Use default values for:
+        server_name (default hostname 127.0.0.1)
+        Root directory (./www/)
+        Error pages (default internal ones)
+        Max body size (e.g. 1MB or similar)
+        Methods allowed (probably GET only by default)
+        No CGI
+        No upload

@@ -37,7 +37,7 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						server.cpp			serverListenFD.cpp		\
+MAIN			:=	main.cpp						server.cpp			serverListenFD.cpp		parsing.cpp		\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -51,7 +51,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	Webserv.hpp
+INCS			:=	Webserv.hpp			Parsing.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

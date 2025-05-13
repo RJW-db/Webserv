@@ -49,7 +49,6 @@ int ServerListenFD::create_listener_socket()
 	{
 		return -1;
 	}
-	
 	if (Server::make_socket_non_blocking(_listener) == -1)
 	{
 		return -1;
