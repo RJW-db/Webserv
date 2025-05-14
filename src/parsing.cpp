@@ -17,7 +17,6 @@ bool	skipLine(std::string& line, std::size_t& skipSpace)
 
 
 
-
 // std::string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::foundServer(std::fstream& fs, std::string line)
 {
