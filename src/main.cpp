@@ -1,5 +1,6 @@
 #include <Webserv.hpp>
 #include <Parsing.hpp>
+#include <FileDescriptor.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -20,7 +21,8 @@
 #endif
 
 #include <iostream>
-
+#include <memory>
+#include <vector>
 
 
 // int              create_listener_socket(void);
@@ -35,12 +37,16 @@ int main()
     // server();
 
 
-	Parsing sam("./config/default.conf");
+	// Parsing sam("./config/default.conf");
 
-	exit(0);
+	// exit(0);
+	FileDescriptor fds;
     Server surf;
 
-    surf.run();
+    surf.run(fds);
+
+	// std::vector<std::unique_ptr<Server>> servers;
+	// Server* check = new Server[3];
     return 0;
 }
 
@@ -58,7 +64,7 @@ int main()
 // 	epoll_data_t data;        /* User data variable */
 // };
 
-int Server::run(void)
+int Server::run(FileDescriptor &fds)
 {
     // int listener = create_listener_socket();
     // printf("listener %d\n", listener);
@@ -107,7 +113,6 @@ int Server::run(void)
         }
         for (i = 0; i < n; ++i)
         {
-            fprintf(stdout, "event %d open on fd:%d\n", i, events[i].data.fd);
             if ((events[i].events & EPOLLERR) ||
                 (events[i].events & EPOLLHUP) ||
                 (events[i].events & EPOLLIN) == 0)
@@ -126,7 +131,6 @@ int Server::run(void)
                     char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 
                     in_len = sizeof(in_addr);
-                    // class filedescriptors(_listener);
                     infd = accept(_listener, &in_addr, &in_len);
                     if(infd == -1)
                     {
@@ -163,6 +167,7 @@ int Server::run(void)
                         perror("epoll_ctl");
                         abort();
                     }
+					fds.setFD(infd);
                 }
             }
             else
@@ -210,9 +215,12 @@ int Server::run(void)
                 }
                 if(done == true)
                 {
-                    printf("Closed connection on descriptor %d\n",
-                           events[i].data.fd);
-                    close(events[i].data.fd);
+					if (epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL) == -1)
+					{
+						perror("epoll_ctl: EPOLL_CTL_DEL");
+					}
+					printf("Closed connection on descriptor %d\n", events[i].data.fd);
+					fds.closeFD(events[i].data.fd);
                 }
             }
         }

@@ -9,13 +9,15 @@
 
 #define PORT "8080"
 
+class FileDescriptor;
+
 class Server
 {
 	public:
 		Server();
 		~Server();
 
-		int run();
+		int run(FileDescriptor& fds);
 		static int make_socket_non_blocking(int sfd);
 
 	private:

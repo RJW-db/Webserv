@@ -21,7 +21,7 @@ PRINT_NO_DIR	:=	--no-print-directory
 
 #		CCPFLAGS for testing
 COMPILER		:=	c++
-CCPFLAGS		:=	-std=c++98
+CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
@@ -38,7 +38,7 @@ INCD			:=	include/
 SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp						server.cpp							serverListenFD.cpp		\
-					parsing.cpp						ConfigServer.cpp									\
+					parsing.cpp						ConfigServer.cpp					FileDescriptor.cpp				\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -88,7 +88,7 @@ test: all
 	./$(NAME)
 
 valgrind: all
-	valgrind --track-fds=all ./$(NAME)
+	valgrind --track-fds=yes ./$(NAME)
 
 print-%:
 	$(info $($*))
