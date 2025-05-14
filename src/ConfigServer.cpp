@@ -24,8 +24,8 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 	return (*this);
 }
 
-std::string ConfigServer::listenHostname(std::string line)
-{
-	std::size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
+// std::string ConfigServer::listenHostname(std::string line)
+// {
+// 	std::size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
 	
-}
+// }

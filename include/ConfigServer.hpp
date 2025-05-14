@@ -15,11 +15,10 @@ class ConfigServer
 
 		ConfigServer& operator=(const ConfigServer& other);
 
-		std::string listenHostname(std::string line);
+		// std::string listenHostname(std::string line);
 
 	private: 
 		std::map<std::string, uint16_t> _hostAddress;
-		// std::ifstream& _fs;
 };
 
 #endif
