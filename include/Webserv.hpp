@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include <unordered_map>
 
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
@@ -40,7 +41,7 @@ class Server
         // static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount);
-        // static void acceptConnection(const std::unique_ptr<Server>& server);
+        static void acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds);
     private:
         std::string _serverName;
         int _listener;
@@ -48,6 +49,8 @@ class Server
         static bool _isRunning;
         static int _epfd;
         static std::array<struct epoll_event, FD_LIMIT> _events;
+
+        std::unordered_map<int, std::string> fdBuffers;
 };
 
 

@@ -66,13 +66,51 @@ int main()
     return 0;
 }
 
-// void Server::acceptConnection(const std::unique_ptr<Server>& server)
-// {
-
-// }
-void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount)
+void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds)
 {
-    int errHndl = 0;
+	while (true)
+	{
+		socklen_t in_len = sizeof(struct sockaddr);
+		struct sockaddr in_addr;
+		int infd = accept(server->_listener, &in_addr, &in_len);
+		if(infd == -1)
+		{
+			if((errno == EAGAIN) ||
+			(errno == EWOULDBLOCK))
+			{
+				break;
+			}
+			else
+			{
+				perror("accept");
+				break;
+			}
+		}
+		char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+		if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
+			sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+		{
+			printf("%s: Accepted connection on descriptor %d"
+				"(host=%s, port=%s)\n", server->_serverName.c_str(), infd, hbuf, sbuf);
+		}
+
+		if(make_socket_non_blocking(infd) == -1)
+			abort();
+		
+		struct epoll_event  current_event;
+		current_event.data.fd = infd;
+		current_event.events = EPOLLIN | EPOLLET;
+		if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
+		{
+			perror("epoll_ctl");
+			abort();
+		}
+		fds.setFD(infd);
+	}
+}
+void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCount)
+{
+    // int errHndl = 0;
 	for (int i = 0; i < eventCount; ++i)
 	{
 		struct epoll_event &currentEvent = _events[i];
@@ -85,69 +123,24 @@ void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCou
 			continue;
 		}
 
-		for (const std::unique_ptr<Server>& server : servers)
+		for (const std::unique_ptr<Server> &server : servers)
 		{
 			if (server->_listener == currentEvent.data.fd)
 			{
-				while(1)
-				{
-					struct sockaddr in_addr;
-					socklen_t in_len;
-					int infd;
-					char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-
-					in_len = sizeof(in_addr);
-					infd = accept(server->_listener, &in_addr, &in_len);
-					if(infd == -1)
-					{
-						if((errno == EAGAIN) ||
-						(errno == EWOULDBLOCK))
-						{
-							break;
-						}
-						else
-						{
-							perror("accept");
-							break;
-						}
-					}
-					errHndl = getnameinfo(&in_addr, in_len,
-									hbuf, sizeof(hbuf),
-									sbuf, sizeof(sbuf),
-									NI_NUMERICHOST | NI_NUMERICSERV);
-					if(errHndl == 0)
-					{
-						printf("%s: Accepted connection on descriptor %d"
-							"(host=%s, port=%s)\n", server->_serverName.c_str(), infd, hbuf, sbuf);
-					}
-
-					errHndl = make_socket_non_blocking(infd);
-					if(errHndl == -1)
-						abort();
-					
-					struct epoll_event  current_event;
-					current_event.data.fd = infd;
-					current_event.events = EPOLLIN | EPOLLET;
-					errHndl = epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event);
-					if(errHndl == -1)
-					{
-						perror("epoll_ctl");
-						abort();
-					}
-					fds.setFD(infd);
-				}
+				acceptConnection(server, fds);
 			}
 			else
 			{
 				bool done = false;
+				std::string whole_package;
 				while(1)
 				{
 					ssize_t count;
-					char buf[512];
-
-					count = read(currentEvent.data.fd, buf, sizeof(buf));
+					char buff[10];
+					count = read(currentEvent.data.fd, buff, sizeof(buff) - 1);
 					if(count == -1)
 					{
+						std::cout << "never get here. errno: " << errno << std::endl;
 						if(errno != EAGAIN)
 						{
 							perror("read");
@@ -155,29 +148,21 @@ void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCou
 						}
 						break;
 					}
-					else if(count == 0)
+					whole_package.append(buff, count);
+					if(count == 0)
 					{
+						std::cout << "WRONG" << std::endl;
 						done = true;
+						std::cout << whole_package << std::endl;
+						write(currentEvent.data.fd, whole_package.c_str(), whole_package.size());
 						break;
 					}
-					if (strncmp(buf, "exit", 4) == 0){
-						_isRunning = false;
-						done = true;
-					}
-					buf[count] = '\n';
-					errHndl = write(1, buf, count+1);
-					if(errHndl == -1)
-					{
-						perror("write");
-						abort();
-					}
-
-					errHndl = write(currentEvent.data.fd, buf, count+1);
-					if(errHndl == -1)
-					{
-						perror("socket write");
-						abort();
-					}
+					std::cout << "not once" << std::endl;
+					std::cout << whole_package << std::endl;
+					// if (strncmp(buff, "exit", 4) == 0){
+					// 	_isRunning = false;
+					// 	done = true;
+					// }
 				}
 				if(done == true)
 				{
