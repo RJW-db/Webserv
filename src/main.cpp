@@ -29,6 +29,7 @@
 // struct addrinfo *get_server_addrinfo(void);
 // int              bind_to_socket(struct addrinfo *server);
 
+
 int main()
 {
     // poll_usages();
@@ -50,11 +51,14 @@ int main()
 	// 	servers.push_back(std::make_unique<Server>());
 	// }
 
+	tmp_t serverConfig[2];
+	serverConfig[0] = (tmp_t){"Alpha", "8080"};
+	serverConfig[1] = (tmp_t){"Beta", "6789"};
+
     ServerList servers;
-	const char *ports[2] = {"8080", "8090"};
     size_t amount_servers = 2;
 	for (size_t i = 0; i < amount_servers; ++i) {
-		servers.push_back(std::make_unique<Server>(ports[i]));
+		servers.push_back(std::make_unique<Server>(serverConfig + i));
 	}
 
     // Run all servers
@@ -109,7 +113,7 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
     events = new epoll_event[64];
     if (events == NULL)
     {
-        std::cerr << "Server calloc: " << strerror(errno);
+        std::cerr << "Server new: " << strerror(errno);
         return -1;
     }
     int errHndl = 0;
@@ -170,8 +174,8 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
 										NI_NUMERICHOST | NI_NUMERICSERV);
 						if(errHndl == 0)
 						{
-							printf("Accepted connection on descriptor %d"
-								"(host=%s, port=%s)\n", infd, hbuf, sbuf);
+							printf("%s: Accepted connection on descriptor %d"
+								"(host=%s, port=%s)\n", server->_serverName.c_str(), infd, hbuf, sbuf);
 						}
 
 						errHndl = make_socket_non_blocking(infd);
@@ -192,7 +196,6 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
 				else
 				{
 					bool done = false;
-					std::cout << events[i].events << std::endl;
 					while(1)
 					{
 						ssize_t count;
@@ -238,7 +241,7 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
 						{
 							perror("epoll_ctl: EPOLL_CTL_DEL");
 						}
-						printf("Closed connection on descriptor %d\n", events[i].data.fd);
+						printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), events[i].data.fd);
 						fds.closeFD(events[i].data.fd);
 					}
 				}

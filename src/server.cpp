@@ -20,9 +20,10 @@
 #endif
 
 
-Server::Server(const char *port)
+Server::Server(tmp_t *serverConf)
 {
-	ServerListenFD listenerFD(port);
+	ServerListenFD listenerFD(serverConf->port);
+	_serverName = serverConf->hostname;
 	_listener = listenerFD.getFD();
 }
 

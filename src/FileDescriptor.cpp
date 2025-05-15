@@ -5,8 +5,7 @@
 std::vector<int> FileDescriptor::_fds = {};
 FileDescriptor::FileDescriptor()
 {
-	// _fds.fill(-1);
-	_fds.reserve(1000);
+	_fds.reserve(FD_LIMIT);
 }
 
 FileDescriptor::~FileDescriptor()
@@ -19,7 +18,6 @@ FileDescriptor::~FileDescriptor()
 			std::cout << "Closing: " << fd << std::endl;
 		}
 	}
-	// _fds.size();
 }
 
 void	FileDescriptor::setFD(int fd)

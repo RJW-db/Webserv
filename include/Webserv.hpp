@@ -16,6 +16,13 @@
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
+
+typedef struct _tmp
+{
+	std::string hostname;
+	const char *port;
+}	tmp_t;
+
 class Server;
 using ServerList = std::vector<std::unique_ptr<Server>>;
 
@@ -23,7 +30,7 @@ using ServerList = std::vector<std::unique_ptr<Server>>;
 class Server
 {
     public:
-        Server(const char *port);
+        Server(tmp_t *serverConf);
         ~Server();
 
         // int run(FileDescriptor& fds);
@@ -33,6 +40,7 @@ class Server
 
     private:
         int _listener;
+        std::string _serverName;
         // int epfd;
         // struct epoll_event *events;
 
