@@ -42,19 +42,19 @@ int main()
 	// exit(0);
 	FileDescriptor fds;
 
-	// Server surf;
-	// std::vector<Server> servers;
-	// // servers.push_back(Server());
-	// servers.push_back(surf);
-	// Server::runServers(servers, fds);
 
-
+    // ServerList servers;
+	// std::vector<std::string> ports = {"8080", "8090"};
+    // size_t amount_servers = 1;
+	// for (size_t i = 0; i < amount_servers; ++i) {
+	// 	servers.push_back(std::make_unique<Server>());
+	// }
 
     ServerList servers;
-
-    size_t amount_servers = 1;
+	const char *ports[2] = {"8080", "8090"};
+    size_t amount_servers = 2;
 	for (size_t i = 0; i < amount_servers; ++i) {
-		servers.push_back(std::make_unique<Server>());
+		servers.push_back(std::make_unique<Server>(ports[i]));
 	}
 
     // Run all servers

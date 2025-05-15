@@ -19,9 +19,10 @@
 #include <sys/epoll.h>
 #endif
 
-Server::Server()
+
+Server::Server(const char *port)
 {
-	ServerListenFD listenerFD;
+	ServerListenFD listenerFD(port);
 	_listener = listenerFD.getFD();
 }
 

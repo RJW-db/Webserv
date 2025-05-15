@@ -19,8 +19,7 @@
 # include <sys/epoll.h>
 #endif
 
-
-ServerListenFD::ServerListenFD()
+ServerListenFD::ServerListenFD(const char *port) : _port(port)
 {
 	create_listener_socket();
 }
@@ -73,7 +72,7 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 	serverSetup.ai_socktype = SOCK_STREAM; // TCP stream sockets
 	serverSetup.ai_flags = AI_PASSIVE;     // Use my IP
 
-	errHndl = getaddrinfo(NULL, PORT, &serverSetup, &server);
+	errHndl = getaddrinfo(NULL, _port, &serverSetup, &server);
 	if (errHndl != 0)
 	{
 		std::cerr << "Server getaddrinfo: " << gai_strerror(errHndl)
