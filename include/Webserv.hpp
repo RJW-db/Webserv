@@ -33,14 +33,19 @@ class Server
         Server(tmp_t *serverConf);
         ~Server();
 
+        static int epollInit(ServerList &servers);
         // int run(FileDescriptor& fds);
         static int make_socket_non_blocking(int sfd);
         // static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
-
+        static void handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount);
     private:
-        int _listener;
         std::string _serverName;
+        int _listener;
+
+        static bool _isRunning;
+        static int _epfd;
+        static struct epoll_event *_events;
         // int epfd;
         // struct epoll_event *events;
 

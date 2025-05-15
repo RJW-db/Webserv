@@ -19,6 +19,9 @@
 #include <sys/epoll.h>
 #endif
 
+bool Server::_isRunning = true;
+int Server::_epfd = -1;
+struct epoll_event* Server::_events = nullptr;
 
 Server::Server(tmp_t *serverConf)
 {
@@ -50,5 +53,36 @@ int Server::make_socket_non_blocking(int sfd)
 		std::cerr << "fcntl: " << strerror(errno);
 		return -1;
 	}
+	return 0;
+}
+
+int Server::epollInit(ServerList &servers)
+{
+    _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
+    if (_epfd == -1)
+    {
+        std::cerr << "Server epoll_create: " << strerror(errno);
+        return -1;
+    }
+
+	struct epoll_event current_event;
+	for (const std::unique_ptr<Server>& server : servers)
+	{
+		current_event.data.fd = server->_listener;
+		current_event.events = EPOLLIN | EPOLLET;
+		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, server->_listener, &current_event) == -1)
+		{
+			std::cerr << "Server epoll_ctl: " << strerror(errno) << std::endl;
+			close(_epfd);
+			return -1;
+		}
+	}
+
+    _events = new epoll_event[FD_LIMIT];
+    if (_events == NULL)
+    {
+        std::cerr << "Server new: " << strerror(errno);
+        return -1;
+    }
 	return 0;
 }
