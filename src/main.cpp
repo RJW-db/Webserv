@@ -66,25 +66,28 @@ int main()
     return 0;
 }
 
+// void Server::acceptConnection(const std::unique_ptr<Server>& server)
+// {
 
+// }
 void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount)
 {
     int errHndl = 0;
-
 	for (int i = 0; i < eventCount; ++i)
 	{
-		if ((_events[i].events & EPOLLERR) ||
-			(_events[i].events & EPOLLHUP) ||
-			(_events[i].events & EPOLLIN) == 0)
+		struct epoll_event &currentEvent = _events[i];
+		if ((currentEvent.events & EPOLLERR) ||
+			(currentEvent.events & EPOLLHUP) ||
+			(currentEvent.events & EPOLLIN) == 0)
 		{
 			fprintf(stderr, "epoll error\n");
-			close(_events[i].data.fd);
+			close(currentEvent.data.fd);
 			continue;
 		}
 
 		for (const std::unique_ptr<Server>& server : servers)
 		{
-			if (server->_listener == _events[i].data.fd)
+			if (server->_listener == currentEvent.data.fd)
 			{
 				while(1)
 				{
@@ -142,7 +145,7 @@ void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCou
 					ssize_t count;
 					char buf[512];
 
-					count = read(_events[i].data.fd, buf, sizeof(buf));
+					count = read(currentEvent.data.fd, buf, sizeof(buf));
 					if(count == -1)
 					{
 						if(errno != EAGAIN)
@@ -169,7 +172,7 @@ void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCou
 						abort();
 					}
 
-					errHndl = write(_events[i].data.fd, buf, count+1);
+					errHndl = write(currentEvent.data.fd, buf, count+1);
 					if(errHndl == -1)
 					{
 						perror("socket write");
@@ -178,12 +181,12 @@ void Server::handleEvents(ServerList& servers, FileDescriptor& fds, int eventCou
 				}
 				if(done == true)
 				{
-					if (epoll_ctl(_epfd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
+					if (epoll_ctl(_epfd, EPOLL_CTL_DEL, currentEvent.data.fd, NULL) == -1)
 					{
 						perror("epoll_ctl: EPOLL_CTL_DEL");
 					}
-					printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), _events[i].data.fd);
-					fds.closeFD(_events[i].data.fd);
+					printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), currentEvent.data.fd);
+					fds.closeFD(currentEvent.data.fd);
 				}
 			}
 		}
@@ -198,8 +201,8 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
         int eventCount;
 
         fprintf(stdout, "Blocking and waiting for epoll event...\n");
-        eventCount = epoll_wait(_epfd, _events, FD_LIMIT, -1);
-        // n = epoll_wait(_epfd, events, FD_LIMIT, 5000);
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+        // eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 5000);
         if (eventCount == -1) // for use only goes wrong with EINTR(signals)
         {
             std::cerr << "Server epoll_wait: " << strerror(errno);
@@ -209,7 +212,5 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
 
 		handleEvents(servers, fds, eventCount);
     }
-    close(_epfd);
-    delete[] _events;
     return 0;
 }

@@ -21,7 +21,7 @@
 
 bool Server::_isRunning = true;
 int Server::_epfd = -1;
-struct epoll_event* Server::_events = nullptr;
+std::array<struct epoll_event, FD_LIMIT> Server::_events;
 
 Server::Server(tmp_t *serverConf)
 {
@@ -34,6 +34,7 @@ Server::Server(tmp_t *serverConf)
 Server::~Server()
 {
 	close(_listener);
+	close(_epfd);
 }
 
 
@@ -65,9 +66,9 @@ int Server::epollInit(ServerList &servers)
         return -1;
     }
 
-	struct epoll_event current_event;
 	for (const std::unique_ptr<Server>& server : servers)
 	{
+		struct epoll_event current_event;
 		current_event.data.fd = server->_listener;
 		current_event.events = EPOLLIN | EPOLLET;
 		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, server->_listener, &current_event) == -1)
@@ -77,12 +78,5 @@ int Server::epollInit(ServerList &servers)
 			return -1;
 		}
 	}
-
-    _events = new epoll_event[FD_LIMIT];
-    if (_events == NULL)
-    {
-        std::cerr << "Server new: " << strerror(errno);
-        return -1;
-    }
 	return 0;
 }

@@ -12,6 +12,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <array>
 
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
@@ -39,16 +40,14 @@ class Server
         // static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount);
+        // static void acceptConnection(const std::unique_ptr<Server>& server);
     private:
         std::string _serverName;
         int _listener;
 
         static bool _isRunning;
         static int _epfd;
-        static struct epoll_event *_events;
-        // int epfd;
-        // struct epoll_event *events;
-
+        static std::array<struct epoll_event, FD_LIMIT> _events;
 };
 
 
