@@ -13,8 +13,12 @@
 #include <memory>
 #include <vector>
 
-
+// #include <FileDescriptor.hpp>
 class FileDescriptor;
+
+class Server;
+using ServerList = std::vector<std::unique_ptr<Server>>;
+
 
 class Server
 {
@@ -22,10 +26,10 @@ class Server
 		Server();
 		~Server();
 
-		int run(FileDescriptor& fds);
+		// int run(FileDescriptor& fds);
 		static int make_socket_non_blocking(int sfd);
-		static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
-		// static int runServers(std::vector<std::unique_ptr<Server> >& servers, FileDescriptor& fds);
+		// static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
+		static int runServers(ServerList& servers, FileDescriptor& fds);
 
 	private:
 		int _listener;
@@ -33,6 +37,7 @@ class Server
 		// struct epoll_event *events;
 
 };
+
 
 class ServerListenFD
 {

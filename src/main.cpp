@@ -41,20 +41,24 @@ int main()
 
 	// exit(0);
 	FileDescriptor fds;
-    // Server surf;
 
-	// std::unique_ptr<Server> surf;
-	// std::vector<std::unique_ptr<Server>> servers;
+	// Server surf;
+	// std::vector<Server> servers;
+	// // servers.push_back(Server());
 	// servers.push_back(surf);
-    // Server::runServers(servers, fds);
+	// Server::runServers(servers, fds);
 
-	Server surf;
-	std::vector<Server> servers;
-	// servers.push_back(Server());
-	servers.push_back(surf);
-	Server::runServers(servers, fds);
-	// std::vector<std::unique_ptr<Server>> servers;
-	// Server* check = new Server[3];
+
+
+    ServerList servers;
+
+    size_t amount_servers = 1;
+	for (size_t i = 0; i < amount_servers; ++i) {
+		servers.push_back(std::make_unique<Server>());
+	}
+
+    // Run all servers
+    Server::runServers(servers, fds);
     return 0;
 }
 
@@ -72,7 +76,7 @@ int main()
 // 	epoll_data_t data;        /* User data variable */
 // };
 
-int Server::runServers(std::vector<Server>& servers, FileDescriptor& fds)
+int Server::runServers(ServerList& servers, FileDescriptor& fds)
 {
     // int listener = create_listener_socket();
     // printf("listener %d\n", listener);
@@ -90,11 +94,11 @@ int Server::runServers(std::vector<Server>& servers, FileDescriptor& fds)
         return -1;
     }
 
-	for (const Server &server : servers)
+	for (const std::unique_ptr<Server>& server : servers)
 	{
-		current_event.data.fd = server._listener;
+		current_event.data.fd = server->_listener;
 		current_event.events = EPOLLIN | EPOLLET;
-		if (epoll_ctl(epfd, EPOLL_CTL_ADD, server._listener, &current_event) == -1)
+		if (epoll_ctl(epfd, EPOLL_CTL_ADD, server->_listener, &current_event) == -1)
 		{
 			std::cerr << "Server epoll_ctl: " << strerror(errno) << std::endl;
 			close(epfd);
@@ -134,9 +138,9 @@ int Server::runServers(std::vector<Server>& servers, FileDescriptor& fds)
                 continue;
             }
 
-			for (Server &server : servers)
+			for (const std::unique_ptr<Server>& server : servers)
 			{
-				if (server._listener == events[i].data.fd)
+				if (server->_listener == events[i].data.fd)
 				{
 					while(1)
 					{
@@ -146,7 +150,7 @@ int Server::runServers(std::vector<Server>& servers, FileDescriptor& fds)
 						char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 
 						in_len = sizeof(in_addr);
-						infd = accept(server._listener, &in_addr, &in_len);
+						infd = accept(server->_listener, &in_addr, &in_len);
 						if(infd == -1)
 						{
 							if((errno == EAGAIN) ||
