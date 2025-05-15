@@ -1,6 +1,5 @@
 #include <Parsing.hpp>
 #include <ConfigServer.hpp>
-#include <fstream>
 #include <unistd.h>
 #include <iostream>
 #include <stdlib.h>
@@ -35,7 +34,7 @@ void Parsing::foundServer(std::fstream& fs, std::string line)
 
 	if (_countServ == 0)
 	{
-		_confServers = new ConfigServer[_countServ + 1];
+		_confServers = new ConfigServer[_countServ + 1] { ConfigServer(fs) };
 	}
 	else
 	{
