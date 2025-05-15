@@ -41,10 +41,18 @@ int main()
 
 	// exit(0);
 	FileDescriptor fds;
-    Server surf;
+    // Server surf;
 
-    surf.run(fds);
+	// std::unique_ptr<Server> surf;
+	// std::vector<std::unique_ptr<Server>> servers;
+	// servers.push_back(surf);
+    // Server::runServers(servers, fds);
 
+	Server surf;
+	std::vector<Server> servers;
+	// servers.push_back(Server());
+	servers.push_back(surf);
+	Server::runServers(servers, fds);
 	// std::vector<std::unique_ptr<Server>> servers;
 	// Server* check = new Server[3];
     return 0;
@@ -64,7 +72,7 @@ int main()
 // 	epoll_data_t data;        /* User data variable */
 // };
 
-int Server::run(FileDescriptor &fds)
+int Server::runServers(std::vector<Server>& servers, FileDescriptor& fds)
 {
     // int listener = create_listener_socket();
     // printf("listener %d\n", listener);
@@ -81,15 +89,19 @@ int Server::run(FileDescriptor &fds)
         std::cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
-    current_event.data.fd = _listener;
-    current_event.events = EPOLLIN | EPOLLET;
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, _listener, &current_event) == -1)
-    {
-        std::cerr << "Server epoll_ctl: " << strerror(errno);
-        return -1;
-    }
-    // events = (epoll_event *)calloc(64, sizeof(event));
-    // events = (epoll_event *)calloc(64, sizeof(event));
+
+	for (const Server &server : servers)
+	{
+		current_event.data.fd = server._listener;
+		current_event.events = EPOLLIN | EPOLLET;
+		if (epoll_ctl(epfd, EPOLL_CTL_ADD, server._listener, &current_event) == -1)
+		{
+			std::cerr << "Server epoll_ctl: " << strerror(errno) << std::endl;
+			close(epfd);
+			return -1;
+		}
+	}
+
     events = new epoll_event[64];
     if (events == NULL)
     {
@@ -121,108 +133,112 @@ int Server::run(FileDescriptor &fds)
                 close(events[i].data.fd);
                 continue;
             }
-            else if (_listener == events[i].data.fd)
-            {
-                while(1)
-                {
-                    struct sockaddr in_addr;
-                    socklen_t in_len;
-                    int infd;
-                    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 
-                    in_len = sizeof(in_addr);
-                    infd = accept(_listener, &in_addr, &in_len);
-                    if(infd == -1)
-                    {
-                        if((errno == EAGAIN) ||
-                           (errno == EWOULDBLOCK))
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            perror("accept");
-                            break;
-                        }
-                    }
-                    errHndl = getnameinfo(&in_addr, in_len,
-                                    hbuf, sizeof(hbuf),
-                                    sbuf, sizeof(sbuf),
-                                    NI_NUMERICHOST | NI_NUMERICSERV);
-                    if(errHndl == 0)
-                    {
-                        printf("Accepted connection on descriptor %d"
-                              "(host=%s, port=%s)\n", infd, hbuf, sbuf);
-                    }
-
-                    errHndl = make_socket_non_blocking(infd);
-                    if(errHndl == -1)
-                        abort();
-
-                    current_event.data.fd = infd;
-                    current_event.events = EPOLLIN | EPOLLET;
-                    errHndl = epoll_ctl(epfd, EPOLL_CTL_ADD, infd, &current_event);
-                    if(errHndl == -1)
-                    {
-                        perror("epoll_ctl");
-                        abort();
-                    }
-					fds.setFD(infd);
-                }
-            }
-            else
-            {
-                bool done = false;
-                std::cout << events[i].events << std::endl;
-                while(1)
-                {
-                    ssize_t count;
-                    char buf[512];
-
-                    count = read(events[i].data.fd, buf, sizeof(buf));
-                    if(count == -1)
-                    {
-                        if(errno != EAGAIN)
-                        {
-                            perror("read");
-                            done = true;
-                        }
-                        break;
-                    }
-                    else if(count == 0)
-                    {
-                        done = true;
-                        break;
-                    }
-                    if (strncmp(buf, "exit", 4) == 0){
-                        client_said_quit_server = false;
-                        done = true;
-                    }
-                    buf[count] = '\n';
-                    errHndl = write(1, buf, count+1);
-                    if(errHndl == -1)
-                    {
-                        perror("write");
-                        abort();
-                    }
-
-                    errHndl = write(events[i].data.fd, buf, count+1);
-                    if(errHndl == -1)
-                    {
-                        perror("socket write");
-                        abort();
-                    }
-                }
-                if(done == true)
-                {
-					if (epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL) == -1)
+			for (Server &server : servers)
+			{
+				if (server._listener == events[i].data.fd)
+				{
+					while(1)
 					{
-						perror("epoll_ctl: EPOLL_CTL_DEL");
+						struct sockaddr in_addr;
+						socklen_t in_len;
+						int infd;
+						char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+
+						in_len = sizeof(in_addr);
+						infd = accept(server._listener, &in_addr, &in_len);
+						if(infd == -1)
+						{
+							if((errno == EAGAIN) ||
+							(errno == EWOULDBLOCK))
+							{
+								break;
+							}
+							else
+							{
+								perror("accept");
+								break;
+							}
+						}
+						errHndl = getnameinfo(&in_addr, in_len,
+										hbuf, sizeof(hbuf),
+										sbuf, sizeof(sbuf),
+										NI_NUMERICHOST | NI_NUMERICSERV);
+						if(errHndl == 0)
+						{
+							printf("Accepted connection on descriptor %d"
+								"(host=%s, port=%s)\n", infd, hbuf, sbuf);
+						}
+
+						errHndl = make_socket_non_blocking(infd);
+						if(errHndl == -1)
+							abort();
+
+						current_event.data.fd = infd;
+						current_event.events = EPOLLIN | EPOLLET;
+						errHndl = epoll_ctl(epfd, EPOLL_CTL_ADD, infd, &current_event);
+						if(errHndl == -1)
+						{
+							perror("epoll_ctl");
+							abort();
+						}
+						fds.setFD(infd);
 					}
-					printf("Closed connection on descriptor %d\n", events[i].data.fd);
-					fds.closeFD(events[i].data.fd);
-                }
-            }
+				}
+				else
+				{
+					bool done = false;
+					std::cout << events[i].events << std::endl;
+					while(1)
+					{
+						ssize_t count;
+						char buf[512];
+
+						count = read(events[i].data.fd, buf, sizeof(buf));
+						if(count == -1)
+						{
+							if(errno != EAGAIN)
+							{
+								perror("read");
+								done = true;
+							}
+							break;
+						}
+						else if(count == 0)
+						{
+							done = true;
+							break;
+						}
+						if (strncmp(buf, "exit", 4) == 0){
+							client_said_quit_server = false;
+							done = true;
+						}
+						buf[count] = '\n';
+						errHndl = write(1, buf, count+1);
+						if(errHndl == -1)
+						{
+							perror("write");
+							abort();
+						}
+
+						errHndl = write(events[i].data.fd, buf, count+1);
+						if(errHndl == -1)
+						{
+							perror("socket write");
+							abort();
+						}
+					}
+					if(done == true)
+					{
+						if (epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL) == -1)
+						{
+							perror("epoll_ctl: EPOLL_CTL_DEL");
+						}
+						printf("Closed connection on descriptor %d\n", events[i].data.fd);
+						fds.closeFD(events[i].data.fd);
+					}
+				}
+			}
         }
     }
     close(epfd);

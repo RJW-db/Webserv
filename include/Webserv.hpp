@@ -9,6 +9,11 @@
 
 #define PORT "8080"
 
+#include <iostream>
+#include <memory>
+#include <vector>
+
+
 class FileDescriptor;
 
 class Server
@@ -19,6 +24,8 @@ class Server
 
 		int run(FileDescriptor& fds);
 		static int make_socket_non_blocking(int sfd);
+		static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
+		// static int runServers(std::vector<std::unique_ptr<Server> >& servers, FileDescriptor& fds);
 
 	private:
 		int _listener;
