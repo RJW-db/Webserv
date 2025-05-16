@@ -68,7 +68,7 @@ int Server::epollInit(ServerList &servers)
         return -1;
     }
 
-	for (const std::unique_ptr<Server>& server : servers)
+	for (const std::unique_ptr<Server> &server : servers)
 	{
 		struct epoll_event current_event;
 		current_event.data.fd = server->_listener;

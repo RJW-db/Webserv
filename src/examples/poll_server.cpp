@@ -1,5 +1,5 @@
 /*
-	c++ poll_server.cpp -o pollServer  && ./pollServer
+	c++ poll_server.cpp -o pollServer  & &./pollServer
 	other terminal
 		telnet 10.11.1.15 9034
 */
@@ -151,7 +151,7 @@ int main(void)
 		for(int i = 0; i < fd_count; i++) {
 
 			// Check if someone's ready to read
-			if (pfds[i].revents & (POLLIN | POLLHUP)) { // We got one!!
+			if (pfds[i].revents  &(POLLIN | POLLHUP)) { // We got one!!
 
 				if (pfds[i].fd == listener) {
 					// If listener is ready to read, handle new connection
@@ -201,7 +201,7 @@ int main(void)
 							// Send to everyone!
 							int dest_fd = pfds[j].fd;
 							// Except the listener and ourselves
-							if (dest_fd != listener && dest_fd != sender_fd) {
+							if (dest_fd != listener & &dest_fd != sender_fd) {
 								if (send(dest_fd, buf, nbytes, 0) == -1) {
 									perror("send");
 								}

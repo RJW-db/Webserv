@@ -85,7 +85,6 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 int ServerListenFD::bind_to_socket(struct addrinfo *server)
 {
 	struct addrinfo *p;
-	int              _listener;
 	for (p = server; p != NULL; p = p->ai_next)
 	{
 		_listener =

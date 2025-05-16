@@ -43,12 +43,12 @@
 // 			continue;
 // 		}
 
-// 		if (fds[0].revents & POLLIN) {
+// 		if (fds[0].revents  &POLLIN) {
 // 			std::cout << "stdin is readable" << std::endl;
 // 			break;
 // 		}
 
-// 		if (fds[1].revents & POLLOUT) {
+// 		if (fds[1].revents  &POLLOUT) {
 // 			std::cout << "stdout is writable" << std::endl;
 // 			// sleep(3);
 			

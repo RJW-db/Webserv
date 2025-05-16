@@ -8,8 +8,8 @@
 	only need this part "fe80::7a7b:8aff:fed8:a67e"
 
 2:  first terminal
-c++ listener.cpp -o listen && ./listen
+c++ listener.cpp -o listen & &./listen
 
 3:	second terminal
-c++ talker.cpp -o talker && ./talker fe80::7a7b:8aff:fed8:a67e "Sam you suck\!"
+c++ talker.cpp -o talker & &./talker fe80::7a7b:8aff:fed8:a67e "Sam you suck\!"
 
