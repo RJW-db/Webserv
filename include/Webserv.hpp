@@ -40,7 +40,7 @@ class Server
         static int make_socket_non_blocking(int sfd);
         // static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
-        static void handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount);
+        static void handleEvents(ServerList& servers, FileDescriptor& fds, size_t eventCount);
         static void acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds);
         static void processClientRequest(const std::unique_ptr<Server> &server, FileDescriptor& fds);
     private:
