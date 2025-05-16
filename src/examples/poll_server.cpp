@@ -103,7 +103,7 @@ void del_from_pfds(struct pollfd pfds[], int i, int *fd_count)
 
 	(*fd_count)--;
 }
-
+#include <iostream>
 // Main
 int main(void)
 {
@@ -140,6 +140,7 @@ int main(void)
 	// Main loop
 	for(;;) {
 		int poll_count = poll(pfds, fd_count, -1);
+		std::cout << "encountered poll" << std::endl;
 
 		if (poll_count == -1) {
 			perror("poll");
