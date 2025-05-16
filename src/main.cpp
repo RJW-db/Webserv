@@ -43,6 +43,7 @@ int main()
 	FileDescriptor fds;
 
 
+
     // ServerList servers;
 	// std::vector<std::string> ports = {"8080", "8090"};
     // size_t amount_servers = 1;
@@ -65,7 +66,7 @@ int main()
     return 0;
 }
 
-void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds)
+void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor &fds)
 {
 	while (true)
 	{
@@ -106,15 +107,16 @@ void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescrip
 		fds.setFD(infd);
 	}
 }
-void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCount)
+
+void Server::handleEvents(ServerList &servers, FileDescriptor &fds, size_t eventCount)
 {
     // int errHndl = 0;
-	for (int i = 0; i < eventCount; ++i)
+	for (size_t i = 0; i < eventCount; ++i)
 	{
 		struct epoll_event &currentEvent = _events[i];
-		if ((currentEvent.events & EPOLLERR) ||
-			(currentEvent.events & EPOLLHUP) ||
-			(currentEvent.events & EPOLLIN) == 0)
+		if ((currentEvent.events  &EPOLLERR) ||
+			(currentEvent.events  &EPOLLHUP) ||
+			(currentEvent.events  &EPOLLIN) == 0)
 		{
 			fprintf(stderr, "epoll error\n");
 			close(currentEvent.data.fd);
@@ -136,7 +138,7 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCou
 				ssize_t count;
 				char buff[5];
 				count = recv(clientFD, buff, sizeof(buff), 0);
-				if (count < sizeof(buff))
+				if (count < static_cast<ssize_t>(sizeof(buff)))
 				{
 					done = true;
 				}
@@ -149,7 +151,7 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCou
 					if (errno != EAGAIN)
 						std::cerr << "recv: " << strerror(errno);
 				}
-				_fdBuffers[clientFD].append(buff, count);
+				_fdBuffers[clientFD].append(buff, static_cast<size_t>(count));
 
 				if(done == true)
 				{
@@ -165,7 +167,7 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCou
 	}
 }
 
-int Server::runServers(ServerList& servers, FileDescriptor& fds)
+int Server::runServers(ServerList &servers, FileDescriptor &fds)
 {
 
     while (_isRunning == true)
@@ -184,7 +186,7 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
             return -1;
         }
         // fprintf(stdout, "Received epoll event\n");
-		handleEvents(servers, fds, eventCount);
+		handleEvents(servers, fds, static_cast<size_t>(eventCount));
     }
     return 0;
 }

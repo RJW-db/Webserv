@@ -13,4 +13,4 @@ now the server is running.
 
 
 cd client
-c++ main.cpp && ./a.out
+c++ main.cpp & &./a.out

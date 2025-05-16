@@ -11,16 +11,18 @@ class ConfigServer
 {
 	public:
 		// ConfigServer(std::fstream &fs);
-		ConfigServer(const ConfigServer& other);
+		ConfigServer(const ConfigServer &other);
 		~ConfigServer();
 
 
-		ConfigServer& operator=(const ConfigServer& other);
+		ConfigServer &operator=(const ConfigServer &other);
 
+		
 		std::string listenHostname(std::string line);
 
 	private: 
 		std::multimap<std::string, uint16_t> _hostAddress;
+		static std::fstream &fs;
 };
 
 #endif

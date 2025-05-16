@@ -4,10 +4,12 @@
 #include <iostream>
 #include <stdlib.h>
 
-bool	skipLine(std::string& line, std::size_t& skipSpace)
+using namespace std;
+
+bool	skipLine(string &line, size_t &skipSpace)
 {
 	skipSpace = line.find_first_not_of(" \t\f\v\r");
-	if (std::string::npos == skipSpace || line[skipSpace] == '#')
+	if (string::npos == skipSpace || line[skipSpace] == '#')
 	{
 		return true;
 	}
@@ -16,73 +18,133 @@ bool	skipLine(std::string& line, std::size_t& skipSpace)
 
 
 
-// std::string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
-void Parsing::foundServer(std::fstream& fs, std::string line)
-{
-	std::size_t skipSpace;
-	do
-	{
-		if (skipLine(line, skipSpace) == true)
-			continue;
-		if (line[skipSpace] == '{')
-			break ;
-		else
-			throw std::runtime_error("Opening curly bracket not found");
-	} while (std::getline(fs, line));
 
-	line = line.substr(skipSpace + 1);
+// void Parsing::foundServer(fstream &fs, string line)
+// {
+	// size_t skipSpace;
+	// do
+	// {
+	// 	if (skipLine(line, skipSpace) == true)
+	// 		continue;
+	// 	if (line[skipSpace] == '{')
+	// 		break ;
+	// 	else
+	// 		throw runtime_error("Opening curly bracket not found");
+	// } while (getline(fs, line));
 
-	if (_countServ == 0)
-	{
-		_confServers = new ConfigServer[_countServ + 1] { ConfigServer(fs) };
-	}
-	else
-	{
-		ConfigServer *confServers = new ConfigServer[_countServ + 1];
-		for (uint8_t i = 0; i < _countServ; i++)
-			confServers[i] = _confServers[i];
-		delete[] _confServers;
-		_confServers = confServers;
-	}
+	// line = line.substr(skipSpace + 1);
 
-	// std::cout << line << std::endl;
+	// if (_countServ == 0)
+	// {
+	// 	_confServers = new ConfigServer[_countServ + 1] { ConfigServer(fs) };
+	// }
+	// else
+	// {
+	// 	ConfigServer *confServers = new ConfigServer[_countServ + 1];
+	// 	for (uint8_t i = 0; i < _countServ; i++)
+	// 		confServers[i] = _confServers[i];
+	// 	delete[] _confServers;
+	// 	_confServers = confServers;
+	// }
+
+	// cout << line << endl;
 	// exit(0);
     // do
     // {
-    //     std::size_t skipSpace;
+    //     size_t skipSpace;
     //     if (skipLine(line, skipSpace) == true)
     //         continue; // Empty line, or #(comment)
     //     line.find("{");
     //     (void)fs;
-    // } while (std::getline(fs, line));
+    // } while (getline(fs, line));
+// }
+
+
+// string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
+
+
+// sockaddr_in Parsing::listenHostname()
+// { //to do should we store in addrinfo immediately? and how to handle fstream
+// 	sockaddr_in sockadr;
+// 	std::size_t skipHostname = _lines[0].find_first_not_of("0123456789.");
+// 	if (_lines[0][skipHostname] == ';')
+// 	{
+// 		if (_lines[0].find('.') < skipHostname)
+// 			throw std::runtime_error("listen port contains .");
+// 		sockadr.sin_port = stoi(_lines[0]);
+// 		if (sockadr.sin_port <= 0)
+// 			throw runtime_error("error found in port handling conf");
+// 		// sockadr.sin_addr.s_addr = htonl();
+	
+// 		return (line.substr(skipSpace + skipHostname + 1));
+// 	}
+// 	else if (line[skipHostname + skipSpace] == ':')
+// 	{
+// 		std::string hostname = line.substr(skipSpace, skipHostname - skipSpace);
+// 		_hostAddress.insert({hostname, std::stoi(line.substr(skipSpace + skipHostname + 1))}); //to do check for missing port
+// 		std::size_t pos = line.find_first_not_of("0123456789", skipSpace + skipHostname + 1);
+// 		if (pos != std::string::npos & &line[skipSpace + skipHostname + pos] == ';')
+// 			throw std::runtime_error("invalid character found after listen hostname and port");
+// 		return (line.substr(skipSpace + skipHostname + pos));
+// 	}
+// 	else
+// 		throw std::runtime_error("invalid character found after listen");
+// }
+
+void Parsing::readServer()
+{
+	
+	configServer_t curConf;
+	while (1)
+	{
+	}
+	// _configs.push_back(curConf);
+
 }
 
-Parsing::Parsing(const char *input) : _confServers(NULL), _countServ(0)
+Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 {
-	std::fstream fs;
-	fs.open(input, std::fstream::in);
+	fstream fs;
+	fs.open(input, fstream::in);
 
 	if (fs.is_open() == false)
-		throw std::runtime_error("klopt");
-	std::string line;
-	std::string all_lines;
-	while (std::getline(fs, line))
+		throw runtime_error("klopt");
+	string line;
+	size_t skipSpace;
+	while (getline(fs, line))
 	{
-		std::size_t skipSpace;
 		if (skipLine(line, skipSpace) == true)
 			continue; // Empty line, or #(comment)
-		if (line.find("server", skipSpace) == skipSpace)
-		{
-			std::cout << "bur" << std::endl;
-			foundServer(fs, line.substr(skipSpace + 6));
-		}
-		else
-		{
-			throw std::runtime_error("Invalid found in .conf");
-		}
+		line = line.substr(skipSpace);
+		size_t commentindex = line.find('#');
+		if (commentindex != string::npos)
+			line = line.substr(0, commentindex); // remove comments after text
+		
+		_lines.push_back(line);
 	}
 	fs.close();
+	if (_lines[0].find("server", 0, 6) != string::npos)
+	{
+		_lines[0] = _lines[0].substr(6);
+		if (skipLine(_lines[0], skipSpace) == true)
+			_lines.erase(_lines.begin());
+		if (_lines[0][0] == '{')
+		{
+			_lines[0] = _lines[0].substr(1);
+			if (skipLine(_lines[0], skipSpace) == true)
+				_lines.erase(_lines.begin());
+			
+		}
+			cout << "found curly" << endl;
 
+	}
+	else
+		throw runtime_error("help");
+	cout << "found server" << endl;
+	// for (string line: _lines)
+	// {
+	// 	cout << line << endl;
+	// }
 
 }
 

@@ -1,4 +1,4 @@
-2616 is obseleted by 9110 & 9112
+2616 is obseleted by 9110  &9112
 https://datatracker.ietf.org/doc/html/rfc2616#section-5
 Essential RFC 2616 Sections for HTTP Server Implementation
 Section 5: Request
