@@ -15,18 +15,19 @@
 #include <array>
 #include <unordered_map>
 
+using namespace std;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
 
 typedef struct _tmp
 {
-	std::string hostname;
+	string hostname;
 	const char *port;
 }	tmp_t;
 
 class Server;
-using ServerList = std::vector<std::unique_ptr<Server>>;
+using ServerList = vector<unique_ptr<Server>>;
 
 
 class Server
@@ -36,22 +37,24 @@ class Server
         ~Server();
 
         static int epollInit(ServerList &servers);
-        // int run(FileDescriptor &fds);
-        static int make_socket_non_blocking(int sfd);
-        // static int runServers(std::vector<Server>& servers, FileDescriptor& fds);
+        // int run(FileDescriptor& fds);
+        // static int runServers(vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, size_t eventCount);
-        static void acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds);
-        static void processClientRequest(const std::unique_ptr<Server> &server, FileDescriptor& fds);
+        static void acceptConnection(const unique_ptr<Server> &server, FileDescriptor& fds);
+        static void processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD);
+        
+        static int make_socket_non_blocking(int sfd);
+
     private:
-        std::string _serverName;
+        string _serverName;
         int _listener;
 
         static bool _isRunning;
         static int _epfd;
-        static std::array<struct epoll_event, FD_LIMIT> _events;
+        static array<struct epoll_event, FD_LIMIT> _events;
 
-        static std::unordered_map<int, std::string> _fdBuffers;
+        static unordered_map<int, string> _fdBuffers;
 };
 
 

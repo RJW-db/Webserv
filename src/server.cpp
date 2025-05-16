@@ -1,5 +1,6 @@
 #include <Webserv.hpp>
 #include <iostream>
+#include <FileDescriptor.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -81,4 +82,131 @@ int Server::epollInit(ServerList &servers)
 		}
 	}
 	return 0;
+}
+
+int Server::runServers(ServerList &servers, FileDescriptor &fds)
+{
+
+    while (_isRunning == true)
+    {
+        int eventCount;
+
+        fprintf(stdout, "Blocking and waiting for epoll event...\n");
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+        if (eventCount == -1) // for use only goes wrong with EINTR(signals)
+        {
+            cerr << "Server epoll_wait: " << strerror(errno);
+            return -1;
+        }
+        // fprintf(stdout, "Received epoll event\n");
+		handleEvents(servers, fds, static_cast<size_t>(eventCount));
+    }
+    return 0;
+}
+
+void Server::handleEvents(ServerList &servers, FileDescriptor &fds, size_t eventCount)
+{
+    // int errHndl = 0;
+	for (size_t i = 0; i < eventCount; ++i)
+	{
+		struct epoll_event &currentEvent = _events[i];
+		if ((currentEvent.events & EPOLLERR) ||
+			(currentEvent.events & EPOLLHUP) ||
+			(currentEvent.events & EPOLLIN) == 0)
+		{
+			fprintf(stderr, "epoll error\n");
+			close(currentEvent.data.fd);
+			continue;
+		}
+
+		for (const unique_ptr<Server> &server : servers)
+		{
+			int clientFD = currentEvent.data.fd;
+			if (server->_listener == clientFD)
+			{
+				acceptConnection(server, fds);
+			}
+			else
+			{
+				processClientRequest(server, fds, clientFD);
+			}
+		}
+	}
+}
+
+void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &fds)
+{
+	while (true)
+	{
+		socklen_t in_len = sizeof(struct sockaddr);
+		struct sockaddr in_addr;
+		int infd = accept(server->_listener, &in_addr, &in_len);
+		if(infd == -1)
+		{
+			if(errno == EAGAIN)
+			{
+				break;
+			}
+			else
+			{
+				perror("accept");
+				break;
+			}
+		}
+		char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+		if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
+			sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+		{
+			printf("%s: Accepted connection on descriptor %d"
+				"(host=%s, port=%s)\n", server->_serverName.c_str(), infd, hbuf, sbuf);
+		}
+
+		if(make_socket_non_blocking(infd) == -1)
+			abort();
+		
+		struct epoll_event  current_event;
+		current_event.data.fd = infd;
+		current_event.events = EPOLLIN /* | EPOLLET */;
+		if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
+		{
+			perror("epoll_ctl");
+			abort();
+		}
+		fds.setFD(infd);
+	}
+}
+
+void Server::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
+{
+	bool 	done = false;
+	char	buff[5];
+
+	ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
+	if (bytesReceived < 0)
+	{
+		fds.closeFD(clientFD);
+		if(errno == EINTR)
+		{
+			//	STOP SERVER CLEAN UP
+		}
+		if (errno != EAGAIN)
+			cerr << "recv: " << strerror(errno);
+	}
+	size_t receivedBytes = static_cast<size_t>(bytesReceived);
+	if (receivedBytes < sizeof(buff) ||
+		(receivedBytes == sizeof(buff) && buff[4] == '\n')) // buff[5], using telnet typing "hier dan", \n has to be checked
+		// receivedBytes == 0)  // Client disconnected
+	{
+		done = true;
+	}
+	_fdBuffers[clientFD].append(buff, receivedBytes);
+	if(done == true)
+	{
+		send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);
+		write(1, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size());
+		if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
+			perror("epoll_ctl: EPOLL_CTL_DEL");
+		printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+		fds.closeFD(clientFD);
+	}
 }
