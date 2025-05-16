@@ -50,7 +50,7 @@ class Server
         static int _epfd;
         static std::array<struct epoll_event, FD_LIMIT> _events;
 
-        std::unordered_map<int, std::string> fdBuffers;
+        static std::unordered_map<int, std::string> _fdBuffers;
 };
 
 

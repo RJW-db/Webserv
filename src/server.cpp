@@ -23,6 +23,8 @@ bool Server::_isRunning = true;
 int Server::_epfd = -1;
 std::array<struct epoll_event, FD_LIMIT> Server::_events;
 
+std::unordered_map<int, std::string> Server::_fdBuffers;
+
 Server::Server(tmp_t *serverConf)
 {
 	ServerListenFD listenerFD(serverConf->port);

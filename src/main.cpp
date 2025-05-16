@@ -37,7 +37,6 @@ int main()
     // getaddrinfo_usage();
     // server();
 
-
 	// Parsing sam("./config/default.conf");
 
 	// exit(0);
@@ -75,8 +74,7 @@ void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescrip
 		int infd = accept(server->_listener, &in_addr, &in_len);
 		if(infd == -1)
 		{
-			if((errno == EAGAIN) ||
-			(errno == EWOULDBLOCK))
+			if(errno == EAGAIN)
 			{
 				break;
 			}
@@ -99,7 +97,7 @@ void Server::acceptConnection(const std::unique_ptr<Server> &server, FileDescrip
 		
 		struct epoll_event  current_event;
 		current_event.data.fd = infd;
-		current_event.events = EPOLLIN | EPOLLET;
+		current_event.events = EPOLLIN /* | EPOLLET */;
 		if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
 		{
 			perror("epoll_ctl");
@@ -125,53 +123,42 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, int eventCou
 
 		for (const std::unique_ptr<Server> &server : servers)
 		{
-			if (server->_listener == currentEvent.data.fd)
+			int clientFD = currentEvent.data.fd;
+			if (server->_listener == clientFD)
 			{
 				acceptConnection(server, fds);
 			}
 			else
 			{
 				bool done = false;
-				std::string whole_package;
-				while(1)
+
+				std::cout << "check" << std::endl;
+				ssize_t count;
+				char buff[5];
+				count = recv(clientFD, buff, sizeof(buff), 0);
+				if (count < sizeof(buff))
 				{
-					ssize_t count;
-					char buff[10];
-					count = read(currentEvent.data.fd, buff, sizeof(buff) - 1);
-					if(count == -1)
-					{
-						std::cout << "never get here. errno: " << errno << std::endl;
-						if(errno != EAGAIN)
-						{
-							perror("read");
-							done = true;
-						}
-						break;
-					}
-					whole_package.append(buff, count);
-					if(count == 0)
-					{
-						std::cout << "WRONG" << std::endl;
-						done = true;
-						std::cout << whole_package << std::endl;
-						write(currentEvent.data.fd, whole_package.c_str(), whole_package.size());
-						break;
-					}
-					std::cout << "not once" << std::endl;
-					std::cout << whole_package << std::endl;
-					// if (strncmp(buff, "exit", 4) == 0){
-					// 	_isRunning = false;
-					// 	done = true;
-					// }
+					done = true;
 				}
+				if (count < 0)
+				{
+					if(errno == EINTR)
+					{
+						//	STOP SERVER CLEAN UP
+					}
+					if (errno != EAGAIN)
+						std::cerr << "recv: " << strerror(errno);
+				}
+				_fdBuffers[clientFD].append(buff, count);
+
 				if(done == true)
 				{
-					if (epoll_ctl(_epfd, EPOLL_CTL_DEL, currentEvent.data.fd, NULL) == -1)
-					{
+					send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);
+					write(1, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size());
+					if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
 						perror("epoll_ctl: EPOLL_CTL_DEL");
-					}
-					printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), currentEvent.data.fd);
-					fds.closeFD(currentEvent.data.fd);
+					printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+					fds.closeFD(clientFD);
 				}
 			}
 		}
@@ -187,14 +174,16 @@ int Server::runServers(ServerList& servers, FileDescriptor& fds)
 
         fprintf(stdout, "Blocking and waiting for epoll event...\n");
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+		// if (eventCount != 0)
+		// 	std::cout << "hallo" << std::endl;
         // eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 5000);
+		// std::cout << "already? errno: " << errno << "\t eventcount:" << eventCount << std::endl;
         if (eventCount == -1) // for use only goes wrong with EINTR(signals)
         {
             std::cerr << "Server epoll_wait: " << strerror(errno);
             return -1;
         }
-        fprintf(stdout, "Received epoll event\n");
-
+        // fprintf(stdout, "Received epoll event\n");
 		handleEvents(servers, fds, eventCount);
     }
     return 0;
