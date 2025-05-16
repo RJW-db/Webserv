@@ -42,6 +42,7 @@ class Server
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, int eventCount);
         static void acceptConnection(const std::unique_ptr<Server> &server, FileDescriptor& fds);
+        static void processClientRequest(const std::unique_ptr<Server> &server, FileDescriptor& fds);
     private:
         std::string _serverName;
         int _listener;
