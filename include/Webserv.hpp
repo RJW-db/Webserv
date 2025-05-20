@@ -7,13 +7,16 @@
 // 4th is listener FD, 5th FD is client.
 #define FD_LIMIT 1024 - RESERVED_FDS
 
+#define CLIENT_BUFFER_SIZE 4096
 #define PORT "8080"
 
+# define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
 #include <iostream>
 #include <memory>
 #include <vector>
 #include <array>
 #include <unordered_map>
+
 
 using namespace std;
 // #include <FileDescriptor.hpp>
@@ -46,15 +49,17 @@ class Server
         
         static int make_socket_non_blocking(int sfd);
 
+        static string directoryCheck(string &path);
+
     private:
         string _serverName;
         int _listener;
 
-        static bool _isRunning;
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 
         static unordered_map<int, string> _fdBuffers;
+
 };
 
 

@@ -49,7 +49,8 @@ string ConfigServer::error_page(string line)
 		// check vector list and add all to map with page
 	}
 	uint32_t error_page = stoi(line); // check for too high and if invalid character found
-	
+	(void)error_page;
+	return "nothing";
 }
 
 string ConfigServer::root(string line, bool &findColon)
@@ -73,8 +74,8 @@ string ConfigServer::root(string line, bool &findColon)
 }
 
 string ConfigServer::listenHostname(string line, bool &findColon)
-{ // to do should we store in addrinfo immediately? and how to handle fstream
-    cout << line << endl;
+{
+	// to do should we store in addrinfo immediately? and how to handle fstream
 	size_t skipHostname = line.find_first_not_of("0123456789.");
 	size_t index =  line.find_first_not_of(" \t\f\v\r0123456789.");
     string hostname = "0.0.0.0";

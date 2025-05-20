@@ -160,7 +160,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 			_lines[0] = _lines[0].substr(1);
 			if (skipLine(_lines[0], skipSpace) == true)
 				_lines.erase(_lines.begin());
-			cout << "found server" << endl;
+			// cout << "found server" << endl;
 			readServer();
 		}
 	}

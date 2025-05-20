@@ -20,48 +20,38 @@
 #include <sys/epoll.h>
 #endif
 
+#include <dirent.h>
+
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <signal.h>
+volatile sig_atomic_t g_signal_status = 0;
 
 
 // int              create_listener_socket(void);
 // struct addrinfo *get_server_addrinfo(void);
 // int              bind_to_socket(struct addrinfo *server);
 
-
-int main()
+void examples(void)
 {
-	// ConfigServer sam;
-	Parsing sam("config/default.conf");
-
-
-
-	// sam.listenHostname("    192.168.0.1:80    ;", );
-
-
-	char ipStr[INET_ADDRSTRLEN];
-	// cout << sam._hostAddress.begin()->first << endl;
-	sockaddr_in *addr_in = reinterpret_cast<sockaddr_in *>(&sam._configs[0]._hostAddress.begin()->second);
-
-	// sockaddr_in *addr_in = reinterpret_cast<sockaddr_in *>(&sam._hostAddress.begin()->second);
-
-	if (inet_ntop(AF_INET, &(addr_in->sin_addr), ipStr, INET_ADDRSTRLEN) != nullptr) {
-		cout << "IP Address: " << ipStr << endl;
-		cout << "Port: " << ntohs(addr_in->sin_port) << endl;
-	} else {
-		perror("inet_ntop failed");
-	}
     // poll_usages();
     // epoll_usage();
     // getaddrinfo_usage();
     // server();
+}
 
-	// Parsing sam("./config/default.conf");
+void customHandler(int signum)
+{
+	g_signal_status = signum;
+}
 
-	// exit(0);
-	
-	
+int main()
+{
+	signal(SIGINT, customHandler);
+	// examples();
+	// // ConfigServer sam;
+	// Parsing sam("config/default.conf");
 	
 	
 	// FileDescriptor	fds;
@@ -77,6 +67,10 @@ int main()
 
 	// Server::epollInit(servers);
     // Server::runServers(servers, fds);
-    // return 0;
-}
 
+
+
+	string path = "rde-brui";
+	cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
+    return 0;
+}

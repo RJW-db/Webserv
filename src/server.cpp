@@ -19,8 +19,13 @@
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif
+#include <sys/socket.h>
 
-bool Server::_isRunning = true;
+#include <dirent.h>
+
+#include <signal.h>
+extern volatile sig_atomic_t g_signal_status;
+
 int Server::_epfd = -1;
 std::array<struct epoll_event, FD_LIMIT> Server::_events;
 
@@ -40,6 +45,27 @@ Server::~Server()
 	close(_epfd);
 }
 
+string Server::directoryCheck(string &path)
+{
+	DIR *d = opendir("/home");	// path = rde-brui
+	if (d == NULL) {
+		perror("opendir");
+		return nullptr;
+	}
+
+	struct dirent *directoryEntry;
+	while ((directoryEntry = readdir(d)) != NULL) {
+		// printf("%s\n", directoryEntry->d_name);
+		if (string(directoryEntry->d_name) == path)
+		{
+			closedir(d);
+			return (path);
+		}
+	}
+	
+	closedir(d);
+	return (nullptr);
+}
 
 int Server::make_socket_non_blocking(int sfd)
 {
@@ -86,21 +112,29 @@ int Server::epollInit(ServerList &servers)
 
 int Server::runServers(ServerList &servers, FileDescriptor &fds)
 {
+	try
+	{
+		while (g_signal_status == 0)
+		{
+			int eventCount;
+	
+			fprintf(stdout, "Blocking and waiting for epoll event...\n");
+			eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+			if (eventCount == -1) // for use only goes wrong with EINTR(signals)
+			{
+				break ;
+				throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
+			}
+			// fprintf(stdout, "Received epoll event\n");
+			handleEvents(servers, fds, static_cast<size_t>(eventCount));
+		}
+		cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << endl;
+	}
 
-    while (_isRunning == true)
-    {
-        int eventCount;
-
-        fprintf(stdout, "Blocking and waiting for epoll event...\n");
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
-        if (eventCount == -1) // for use only goes wrong with EINTR(signals)
-        {
-            cerr << "Server epoll_wait: " << strerror(errno);
-            return -1;
-        }
-        // fprintf(stdout, "Received epoll event\n");
-		handleEvents(servers, fds, static_cast<size_t>(eventCount));
-    }
     return 0;
 }
 
@@ -143,15 +177,9 @@ void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &
 		int infd = accept(server->_listener, &in_addr, &in_len);
 		if(infd == -1)
 		{
-			if(errno == EAGAIN)
-			{
-				break;
-			}
-			else
-			{
+			if(errno != EAGAIN)
 				perror("accept");
-				break;
-			}
+			break;
 		}
 		char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 		if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
@@ -178,8 +206,7 @@ void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &
 
 void Server::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
 {
-	bool 	done = false;
-	char	buff[5];
+	char	buff[CLIENT_BUFFER_SIZE];
 
 	ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
 	if (bytesReceived < 0)
@@ -193,17 +220,13 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
 			cerr << "recv: " << strerror(errno);
 	}
 	size_t receivedBytes = static_cast<size_t>(bytesReceived);
-	if (receivedBytes < sizeof(buff) ||
-		(receivedBytes == sizeof(buff) && buff[4] == '\n')) // buff[5], using telnet typing "hier dan", \n has to be checked
-		// receivedBytes == 0)  // Client disconnected
-	{
-		done = true;
-	}
 	_fdBuffers[clientFD].append(buff, receivedBytes);
-	if(done == true)
+	if (receivedBytes < sizeof(buff) ||
+		(receivedBytes == sizeof(buff) && buff[CLIENT_BUFFER_SIZE - 1] == '\n'))
 	{
 		send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);
 		write(1, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size());
+		_fdBuffers[clientFD].clear();
 		if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
 			perror("epoll_ctl: EPOLL_CTL_DEL");
 		printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
