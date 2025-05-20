@@ -8,6 +8,7 @@
 #include <sys/socket.h> //sockaddr
 #include <netinet/in.h> //scokaddr_in
 #include <iostream>
+#include <vector>
 
 using namespace std;
 class ConfigServer
@@ -22,11 +23,15 @@ class ConfigServer
 		ConfigServer &operator=(const ConfigServer &other);
 
 		
-		string listenHostname(string line);
+		string listenHostname(string line, bool &findColon);
+		string root(string line, bool &findColon);
+		string error_page(string line);
 		// void	addHostPort(string line);
 
 		unordered_map<string, sockaddr> _hostAddress;
-	private: 
+		string _root;
+		private: 
+			vector<uint16_t> ErrorCodesWithoutPage;
 };
 
 #endif

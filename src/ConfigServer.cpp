@@ -42,57 +42,54 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-// void ConfigServer::addHostPort(string line, string hostname)
-// {
+string ConfigServer::error_page(string line)
+{
+	if (line[0] == '/')
+	{
+		// check vector list and add all to map with page
+	}
+	uint32_t error_page = stoi(line); // check for too high and if invalid character found
+	
+}
 
-// }
+string ConfigServer::root(string line, bool &findColon)
+{
+	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
+	if (lenRoot == string::npos)
+	{
+		findColon = false;
+		_root = line;
+		return line;
+	}
+	_root = line.substr(0, lenRoot);
+	size_t indexColon = line.find(";", 0);
+	if (indexColon != string::npos)
+	{
+		findColon = true;
+		return line.substr(indexColon + 1);
+	}
+	findColon = false;
+	return line;
+}
 
-string ConfigServer::listenHostname(string line)
-{ //to do should we store in addrinfo immediately? and how to handle fstream
-    size_t   skipSpace = line.find_first_not_of(" \t\f\v\r");
-    size_t   skipHostname = line.find_first_not_of("0123456789.", skipSpace);
-    sockaddr in;
-	string      hostname;
-    if (line[skipHostname] == ';')
+string ConfigServer::listenHostname(string line, bool &findColon)
+{ // to do should we store in addrinfo immediately? and how to handle fstream
+    cout << line << endl;
+	size_t skipHostname = line.find_first_not_of("0123456789.");
+	size_t index =  line.find_first_not_of(" \t\f\v\r0123456789.");
+    string hostname = "0.0.0.0";
+    if (index == string::npos || line[index] == ';' )
     {
-        if (line.find('.', skipSpace) < skipHostname - skipSpace)
+        if (line.find('.') < skipHostname)
             throw runtime_error("listen port contains .");
-		hostname = "0.0.0.0";
-        // sockaddr_in ipv4;
-        // ipv4.sin_addr.s_addr =
-        //     static_cast<in_addr_t>(htonl(convertIpBinary("0.0.0.0")));
-        // uint32_t port = stoi(line.substr(skipSpace));
-        // if (port == 0 || port > 65535)
-        //     throw runtime_error("invalid port entered for listen");
-        // ipv4.sin_port = htons(static_cast<uint16_t>(port));
-        // in = *reinterpret_cast<sockaddr *>(&ipv4);
-        // _hostAddress.insert({"0.0.0.0", in});
-        // return (line.substr(skipHostname + 1));
     }
-    else if (line[skipHostname] == ':')
+    else if (line[index] == ':')
     {
-        hostname = line.substr(skipSpace, skipHostname - skipSpace);
-		// cout << hostname << endl;
+        hostname = line.substr(0, skipHostname);
         line = line.substr(skipHostname + 1);
-		// cout << line << endl;
-
-        // sockaddr_in ipv4;
-        // ipv4.sin_addr.s_addr =
-        //     static_cast<in_addr_t>(htonl(convertIpBinary(hostname)));
-        // uint32_t port = stoi(line.substr(skipHostname + 1));
-        // if (port == 0 || port > 65535)
-        //     throw runtime_error("invalid port entered for listen");
-        // ipv4.sin_port = htons(static_cast<uint16_t>(port));
-        // in = *reinterpret_cast<sockaddr *>(&ipv4);
-        // _hostAddress.insert({hostname, in});
-        // size_t pos = line.find_first_not_of("0123456789", skipHostname + 1);
-        // if (pos != string::npos && line[skipHostname + pos] == ';')
-        //     throw runtime_error(
-        //         "invalid character found after listen hostname and port");
-        // return (line.substr(pos));
     }
-    else
-        throw runtime_error("invalid character found after listen");
+	else
+		throw runtime_error("invalid character found after listen");
     sockaddr_in ipv4;
     ipv4.sin_addr.s_addr =
         static_cast<in_addr_t>(htonl(convertIpBinary(hostname)));
@@ -100,11 +97,18 @@ string ConfigServer::listenHostname(string line)
     if (port == 0 || port > 65535)
         throw runtime_error("invalid port entered for listen");
     ipv4.sin_port = htons(static_cast<uint16_t>(port));
-    in = *reinterpret_cast<sockaddr *>(&ipv4);
+    sockaddr in = *reinterpret_cast<sockaddr *>(&ipv4);
     _hostAddress.insert({hostname, in});
     size_t pos = line.find_first_not_of("0123456789 \t\f\v\r");
-	if (line[pos] != ';' || pos == string::npos)
-		throw runtime_error(
-			"invalid character found after listen hostname and port");
+    if (pos == string::npos) // didn't find any invalid character after port
+	{
+		findColon = false;
+		return (line);
+	}
+    else if (line[pos] != ';')
+        throw runtime_error(
+            "invalid character found after listen hostname and port");
+    else
+        findColon = true;
     return (line.substr(pos));
 }

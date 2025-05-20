@@ -14,3 +14,8 @@ our defaults when not given.
         Methods allowed (probably GET only by default)
         No CGI
         No upload
+
+for location can store: root, error-page, client_max_body_size
+
+server_name example.com www.example.com;
+error_page 500 502 503 504 /50x.html;

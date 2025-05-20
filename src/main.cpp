@@ -32,13 +32,19 @@
 
 int main()
 {
-	ConfigServer sam;
+	// ConfigServer sam;
+	Parsing sam("config/default.conf");
 
-	sam.listenHostname("    192.168.0.1:80    ;");
+
+
+	// sam.listenHostname("    192.168.0.1:80    ;", );
+
 
 	char ipStr[INET_ADDRSTRLEN];
 	// cout << sam._hostAddress.begin()->first << endl;
-	sockaddr_in *addr_in = reinterpret_cast<sockaddr_in *>(&sam._hostAddress.begin()->second);
+	sockaddr_in *addr_in = reinterpret_cast<sockaddr_in *>(&sam._configs[0]._hostAddress.begin()->second);
+
+	// sockaddr_in *addr_in = reinterpret_cast<sockaddr_in *>(&sam._hostAddress.begin()->second);
 
 	if (inet_ntop(AF_INET, &(addr_in->sin_addr), ipStr, INET_ADDRSTRLEN) != nullptr) {
 		cout << "IP Address: " << ipStr << endl;

@@ -60,7 +60,6 @@ bool	skipLine(string &line, size_t &skipSpace)
 // }
 
 
-// string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 
 
 // sockaddr_in Parsing::listenHostname()
@@ -91,15 +90,43 @@ bool	skipLine(string &line, size_t &skipSpace)
 // 		throw std::runtime_error("invalid character found after listen");
 // }
 
+
+// string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::readServer()
 {
-	
-	configServer_t curConf;
+	string (ConfigServer::*funcs[2])(string, bool &) = {&ConfigServer::listenHostname, &ConfigServer::root};
+	const string cmds_strings[2] = {"listen", "root"};
+	ConfigServer curConf;
 	while (1)
 	{
-	}
-	// _configs.push_back(curConf);
+		bool findColon;
+		size_t skipSpace = _lines[0].find_first_not_of(" \t\f\v\r");
+		_lines[0] = _lines[0].substr(skipSpace);
+		for (size_t i = 0; i < 1; i++)
+		{
+			if (_lines[0].find(cmds_strings[i].c_str(), 0, cmds_strings[i].size()) != string::npos)
+			{
+				_lines[0] = _lines[0].substr(cmds_strings[i].size());
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				skipSpace = _lines[0].find_first_not_of(" \t\f\v\r");
+				_lines[0] = _lines[0].substr(skipSpace);
+				_lines[0] = (curConf.*(funcs[i]))(_lines[0], findColon);
+				if (findColon == false)
+				{
+					_lines.erase(_lines.begin());
+					if (_lines[0][_lines[0].find_first_not_of(" \t\f\v\r")] != ';')
+						throw runtime_error("no semi colon found after cmd");
+				}
+			}
+			// if (_lines[0].find("location", 0, 8))
+			// {
 
+			// }
+		}
+		break ;
+	}
+	_configs.insert(_configs.end(), curConf);
 }
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
@@ -108,7 +135,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 	fs.open(input, fstream::in);
 
 	if (fs.is_open() == false)
-		throw runtime_error("klopt");
+		throw runtime_error("inputfile couldn't be");
 	string line;
 	size_t skipSpace;
 	while (getline(fs, line))
@@ -133,14 +160,12 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 			_lines[0] = _lines[0].substr(1);
 			if (skipLine(_lines[0], skipSpace) == true)
 				_lines.erase(_lines.begin());
-			
+			cout << "found server" << endl;
+			readServer();
 		}
-			cout << "found curly" << endl;
-
 	}
 	else
 		throw runtime_error("help");
-	cout << "found server" << endl;
 	// for (string line: _lines)
 	// {
 	// 	cout << line << endl;
