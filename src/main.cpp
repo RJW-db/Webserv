@@ -29,11 +29,29 @@
 volatile sig_atomic_t g_signal_status = 0;
 
 
-// int              create_listener_socket(void);
-// struct addrinfo *get_server_addrinfo(void);
-// int              bind_to_socket(struct addrinfo *server);
+// Static Functions
+static void examples(void);
+static void serverTest(void);
+static void parsingtest(void);
+static void openDir(void);
+static void customHandler(int signum);
 
-void examples(void)
+int main()
+{
+	signal(SIGINT, customHandler);
+	examples();
+	openDir();
+
+	serverTest();
+	parsingtest();
+
+
+	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
+    return 0;
+}
+
+
+static void examples(void)
 {
     // poll_usages();
     // epoll_usage();
@@ -41,36 +59,36 @@ void examples(void)
     // server();
 }
 
-void customHandler(int signum)
+
+
+static void serverTest(void)
 {
-	g_signal_status = signum;
+	FileDescriptor	fds;
+    ServerList servers;
+
+	servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
+
+	Server::epollInit(servers);
+    Server::runServers(servers, fds);
+
+	std::vector<tmp_t> servConf;
+	servConf.push_back((tmp_t){"Alpha", "8080"});
 }
 
-int main()
+static void parsingtest(void)
 {
-	signal(SIGINT, customHandler);
-	// examples();
 	// // ConfigServer sam;
 	// Parsing sam("config/default.conf");
-	
-	
-	// FileDescriptor	fds;
-	// tmp_t			serverConfig[2];
-	// serverConfig[0] = (tmp_t){"Alpha", "8080"};
-	// // serverConfig[1] = (tmp_t){"Beta", "6789"};
+}
 
-    // ServerList servers;
-    // size_t amount_servers = 1;
-	// for (size_t i = 0; i < amount_servers; ++i) {
-	// 	servers.push_back(make_unique<Server>(serverConfig + i));
-	// }
+static void openDir(void)
+{
+	// string path = "rde-brui";
+	// cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
+}
 
-	// Server::epollInit(servers);
-    // Server::runServers(servers, fds);
-
-
-
-	string path = "rde-brui";
-	cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
-    return 0;
+static void customHandler(int signum)
+{
+	g_signal_status = signum;
 }

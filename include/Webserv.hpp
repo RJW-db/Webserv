@@ -32,7 +32,6 @@ typedef struct _tmp
 class Server;
 using ServerList = vector<unique_ptr<Server>>;
 
-
 class Server
 {
     public:
@@ -50,6 +49,17 @@ class Server
         static int make_socket_non_blocking(int sfd);
 
         static string directoryCheck(string &path);
+
+        class ClientException : public std::exception
+		{
+            private:
+                std::string _message;
+			public:
+                explicit ClientException(const std::string &message) : _message(message) {}
+                virtual const char* what() const throw() {
+                    return _message.c_str();
+                }
+		};
 
     private:
         string _serverName;
@@ -75,7 +85,6 @@ class ServerListenFD
         int create_listener_socket();
         struct addrinfo *get_server_addrinfo(void);
         int bind_to_socket(struct addrinfo *server);
-
     private:
         int         _listener;
         const char *_port;
@@ -85,4 +94,10 @@ void	poll_usages(void);
 void	epoll_usage(void);
 int		getaddrinfo_usage(void);
 int		server(void);
+
+void parseHttpRequest(string &request);
+std::string escape_special_chars(const std::string& input);
+
+void httpRequestLogger(string str);
+
 #endif

@@ -39,6 +39,7 @@ SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp						server.cpp							serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp					FileDescriptor.cpp				\
+					HttpRequest.cpp					loggingErrors.cpp								\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -82,7 +83,8 @@ fclean:	clean
 	@printf "$(REMOVED)" $(NAME) $(CUR_DIR)
 
 re:
-	$(MAKE) $(PRINT_NO_DIR) fclean all
+	$(MAKE) $(PRINT_NO_DIR) fclean
+	$(MAKE) $(PRINT_NO_DIR) all
 
 test: all
 	./$(NAME)

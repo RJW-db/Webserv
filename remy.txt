@@ -28,3 +28,7 @@ pwd
 inside the project
 /home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --check-level=exhaustive --enable=all src -I include
 /home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --suppress=missingIncludeSystem --check-level=exhaustive --enable=all src -I include > /dev/null
+
+
+
+cat clientHttpRequest.txt | telnet 10.10.2.9 8080
