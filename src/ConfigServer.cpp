@@ -54,11 +54,16 @@ string ConfigServer::error_page(string line, bool &findColon)
 			nameLen = line.length();
 		else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
 			throw runtime_error("invalid character found after error_page");
-		string error_page;
-		error_page = line.substr(0, nameLen);
+		string error_page = line.substr(0, nameLen);
 		for(uint16_t error_code : ErrorCodesWithoutPage)
 		{
-			ErrorCodesWithPage.insert({error_code, error_page});
+			if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
+				ErrorCodesWithPage.at(error_code) = error_page;
+				// if (ErrorCodesWithPage.count(error_code) > 0)
+				// 	ErrorCodesWithPage.erase(ErrorCodesWithPage.find(error_code));
+			else
+				ErrorCodesWithPage.insert({error_code, error_page});
+			cout << "hier" << endl;
 		}
 		findColon = true;
 		ErrorCodesWithoutPage.clear();
