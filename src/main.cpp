@@ -48,10 +48,16 @@ void customHandler(int signum)
 
 int main()
 {
-	signal(SIGINT, customHandler);
+	// signal(SIGINT, customHandler);
+
+	
 	// examples();
 	// // ConfigServer sam;
-	// Parsing sam("config/default.conf");
+	Parsing sam("config/default.conf");
+	for (const auto& [errorCode, errorPage] : sam._configs[0].ErrorCodesWithPage)
+	{
+		std::cout << errorCode << ": " << errorPage << std::endl;
+	}
 	
 	
 	// FileDescriptor	fds;
@@ -70,7 +76,7 @@ int main()
 
 
 
-	string path = "rde-brui";
-	cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
+	// string path = "rde-brui";
+	// cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
     return 0;
 }

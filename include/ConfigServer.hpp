@@ -2,6 +2,7 @@
 #define CONFIGSERVER_HPP
 
 #include <unordered_map>
+#include <map>
 #include <string>
 #include <stdint.h>	// uint16_t, cstdint doesn't exist in std=98
 #include <fstream>
@@ -25,11 +26,12 @@ class ConfigServer
 		
 		string listenHostname(string line, bool &findColon);
 		string root(string line, bool &findColon);
-		string error_page(string line);
+		string error_page(string line, bool &findColon);
 		// void	addHostPort(string line);
 
 		unordered_map<string, sockaddr> _hostAddress;
 		string _root;
+		map<uint16_t, string> ErrorCodesWithPage;
 		private: 
 			vector<uint16_t> ErrorCodesWithoutPage;
 };
