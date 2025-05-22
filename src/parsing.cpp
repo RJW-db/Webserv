@@ -90,12 +90,19 @@ bool	skipLine(string &line, size_t &skipSpace)
 // 		throw std::runtime_error("invalid character found after listen");
 // }
 
+string ClientMaxBodysize(string line, bool &findColon)
+{
+	(void)line;
+	(void)findColon;
+	std::cout << line << std::endl;
+	return line;
+}
 
 // string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::readServer()
 {
-	string (ConfigServer::*funcs[2])(string, bool &) = {&ConfigServer::listenHostname, &ConfigServer::root};
-	const string cmds_strings[2] = {"listen", "root"};
+	string (ConfigServer::*funcs[3])(string, bool &) = {&ConfigServer::listenHostname, &ConfigServer::root, &ConfigServer::ClientMaxBodysize};
+	const string cmds_strings[3] = {"listen", "root", "client_max_body_size"};
 	ConfigServer curConf;
 	while (1)
 	{
@@ -129,6 +136,8 @@ void Parsing::readServer()
 	_configs.insert(_configs.end(), curConf);
 }
 
+// ClientMaxBodysize()
+// client_max_body_size 10M;
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 {
 	fstream fs;

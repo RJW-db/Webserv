@@ -25,6 +25,7 @@ class ConfigServer
 		
 		string listenHostname(string line, bool &findColon);
 		string root(string line, bool &findColon);
+		string ClientMaxBodysize(string line, bool &findColon);
 		string error_page(string line);
 		// void	addHostPort(string line);
 
