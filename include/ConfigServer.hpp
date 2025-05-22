@@ -33,8 +33,13 @@ class ConfigServer
 		unordered_map<string, sockaddr> _hostAddress;
 		string _root;
 		map<uint16_t, string> ErrorCodesWithPage;
+		size_t clientBodySize;
 		private: 
 			vector<uint16_t> ErrorCodesWithoutPage;
 };
+
+
+string ftSkipspace(string &line);
+
 
 #endif

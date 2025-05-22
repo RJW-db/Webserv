@@ -105,7 +105,7 @@ string ftSkipspace(string &line)
 void Parsing::readServer()
 {
 	string (ConfigServer::*funcs[3])(string, bool &) = {&ConfigServer::listenHostname, &ConfigServer::root, &ConfigServer::ClientMaxBodysize};
-	const string cmds_strings[3] = {"listen", "root", "client_max_body_size"};
+	const std::array<std::string, 3> cmds_strings = {"listen", "root", "client_max_body_size"};
 	ConfigServer curConf;
 	int i = 0;
 	while (1)
@@ -113,14 +113,14 @@ void Parsing::readServer()
 		bool findColon;
 		size_t skipSpace;
 		_lines[0] = ftSkipspace(_lines[0]);
-		for (size_t i = 0; i < 2; i++)
+		for (size_t i = 0; i < cmds_strings.max_size(); i++)
 		{
-			if (_lines[0].find(cmds_strings[i].c_str(), 0, cmds_strings[i].size()) != string::npos)
+			if (strncmp(_lines[0].c_str(), cmds_strings[i].c_str(), cmds_strings[i].size()) == 0)
 			{
 				_lines[0] = _lines[0].substr(cmds_strings[i].size());
 				if (skipLine(_lines[0], skipSpace) == true)
 					_lines.erase(_lines.begin());
-				if (string(" \t\f\v\r").find(_lines[0][0]) != std::string::npos)
+				else if (string(" \t\f\v\r").find(_lines[0][0]) == std::string::npos)
 					throw runtime_error("no space found after command");
 				_lines[0] = ftSkipspace(_lines[0]);
 				_lines[0] = (curConf.*(funcs[i]))(_lines[0], findColon);
@@ -131,15 +131,11 @@ void Parsing::readServer()
 						throw runtime_error("no semi colon found after cmd");
 				}
 			}
-			// if (_lines[0].find("location", 0, 8))
-			// {
-
-			// }
 		}
-		if (_lines[0].find("error_page", 0 , 10) != string::npos)
+		if (strncmp("error_page", cmds_strings[i].c_str(), 10) == 0)
 		{
 			_lines[0] = _lines[0].substr(10);
-			if (string(" \t\f\v\r").find(_lines[0][0]) == std::string::npos)
+			if (string(" \t\f\v\r\n").find(_lines[0][0]) == std::string::npos)
 				throw runtime_error("no space found after command");
 			while (1)
 			{

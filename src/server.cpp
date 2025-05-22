@@ -233,6 +233,11 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
             std::cerr << e.what() << endl;  // should use to log to file
             string msgToClient = "HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
             send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
+            _fdBuffers[clientFD].clear();
+            if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
+                perror("epoll_ctl: EPOLL_CTL_DEL");
+            printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+            return ;
         }
         // parseHttpRequest(_fdBuffers[clientFD]);
         send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);

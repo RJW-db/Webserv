@@ -39,12 +39,11 @@ static void openDir(void);
 int main()
 {
 	// signal(SIGINT, customHandler);
-	examples();
-	openDir();
+	// examples();
+	// openDir();
 
 	serverTest();
-	parsingtest();
-
+	// parsingtest();
 
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;
@@ -63,23 +62,24 @@ static void examples(void)
 
 static void serverTest(void)
 {
-	// FileDescriptor	fds;
-    // ServerList servers;
+	FileDescriptor	fds;
+    ServerList servers;
 
-	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
-	// // servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
+	servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
 
-	// Server::epollInit(servers);
-    // Server::runServers(servers, fds);
+	Server::epollInit(servers);
+    Server::runServers(servers, fds);
 
-	// std::vector<tmp_t> servConf;
-	// servConf.push_back((tmp_t){"Alpha", "8080"});
+	std::vector<tmp_t> servConf;
+	servConf.push_back((tmp_t){"Alpha", "8080"});
 }
 
 static void parsingtest(void)
 {
 	// ConfigServer sam;
 	Parsing sam("config/default.conf");
+	cout << "size :" << sam._configs[0].clientBodySize << endl;
 }
 
 static void openDir(void)

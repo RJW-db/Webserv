@@ -18,6 +18,7 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 	{
 		_hostAddress = other._hostAddress;
 		ErrorCodesWithPage = other.ErrorCodesWithPage;
+		clientBodySize = other.clientBodySize;
 	}
 	return (*this);
 }
@@ -80,7 +81,7 @@ string ConfigServer::error_page(string line, bool &findColon)
 		if (error_num < 300 || error_num > 599)
 			throw runtime_error("error code invalid must be between 300 and 599");
 		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
-		return (line.substr(pos));
+		return (line.substr(pos + 1));
 	}
 }
 
@@ -142,16 +143,41 @@ string ConfigServer::listenHostname(string line, bool &findColon)
             "invalid character found after listen hostname and port");
     else
         findColon = true;
-    return (line.substr(pos));
+    return (line.substr(pos + 1));
 }
 
 string ConfigServer::ClientMaxBodysize(string line, bool &findColon)
 {
-	std::cout << "hier" << std::endl;
+	// std::cout << "hier" << std::endl;
 	(void)line;
 	(void)findColon;
-	std::cout << line << std::endl;
+	// std::cout << line << std::endl;
+	size_t len;
 
-	
-	return line;
+	clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
+	line = line.substr(len);
+	if (string("kKmMgG").find(line[0]) != string::npos)
+	{
+		if (isupper(line[0]) != 0)
+			line[0] -= 32;
+		if (line[0] == 'g')
+			clientBodySize *= 1024;
+		if (line[0] == 'g' || line[0] == 'm')
+			clientBodySize *= 1024;
+		if (line[0] == 'g' || line[0] == 'm' || line[0] == 'k')
+			clientBodySize *= 1024;
+	}
+	// std::cout << line << std::endl;
+	size_t k = line.find_first_not_of(" \t\f\v\r", 1);
+	if (k == string::npos)
+	{
+		findColon = false;
+		return line.substr(1);
+	}
+	if (line[k] != ';')
+	{
+		throw runtime_error("Syntax error");
+	}
+	findColon = true;
+	return line.substr(k + 1);
 }

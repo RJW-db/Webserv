@@ -8,6 +8,7 @@
 #include <vector>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <array>
 using namespace std;
 
 // typedef struct configServer
