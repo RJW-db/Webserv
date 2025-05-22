@@ -90,13 +90,6 @@ bool	skipLine(string &line, size_t &skipSpace)
 // 		throw std::runtime_error("invalid character found after listen");
 // }
 
-string ClientMaxBodysize(string line, bool &findColon)
-{
-	(void)line;
-	(void)findColon;
-	std::cout << line << std::endl;
-	return line;
-}
 
 
 string ftSkipspace(string &line)

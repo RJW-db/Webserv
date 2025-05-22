@@ -144,3 +144,14 @@ string ConfigServer::listenHostname(string line, bool &findColon)
         findColon = true;
     return (line.substr(pos));
 }
+
+string ConfigServer::ClientMaxBodysize(string line, bool &findColon)
+{
+	std::cout << "hier" << std::endl;
+	(void)line;
+	(void)findColon;
+	std::cout << line << std::endl;
+
+	
+	return line;
+}
