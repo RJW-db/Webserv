@@ -98,26 +98,38 @@ string ClientMaxBodysize(string line, bool &findColon)
 	return line;
 }
 
+
+string ftSkipspace(string &line)
+{
+	size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
+	if (skipSpace != 0 && skipSpace != string::npos)
+		return line.substr(skipSpace);
+	return line;
+}
+
+
 // string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::readServer()
 {
 	string (ConfigServer::*funcs[3])(string, bool &) = {&ConfigServer::listenHostname, &ConfigServer::root, &ConfigServer::ClientMaxBodysize};
 	const string cmds_strings[3] = {"listen", "root", "client_max_body_size"};
 	ConfigServer curConf;
+	int i = 0;
 	while (1)
 	{
 		bool findColon;
-		size_t skipSpace = _lines[0].find_first_not_of(" \t\f\v\r");
-		_lines[0] = _lines[0].substr(skipSpace);
-		for (size_t i = 0; i < 1; i++)
+		size_t skipSpace;
+		_lines[0] = ftSkipspace(_lines[0]);
+		for (size_t i = 0; i < 2; i++)
 		{
 			if (_lines[0].find(cmds_strings[i].c_str(), 0, cmds_strings[i].size()) != string::npos)
 			{
 				_lines[0] = _lines[0].substr(cmds_strings[i].size());
 				if (skipLine(_lines[0], skipSpace) == true)
 					_lines.erase(_lines.begin());
-				skipSpace = _lines[0].find_first_not_of(" \t\f\v\r");
-				_lines[0] = _lines[0].substr(skipSpace);
+				if (string(" \t\f\v\r").find(_lines[0][0]) != std::string::npos)
+					throw runtime_error("no space found after command");
+				_lines[0] = ftSkipspace(_lines[0]);
 				_lines[0] = (curConf.*(funcs[i]))(_lines[0], findColon);
 				if (findColon == false)
 				{
@@ -131,8 +143,39 @@ void Parsing::readServer()
 
 			// }
 		}
-		break ;
+		if (_lines[0].find("error_page", 0 , 10) != string::npos)
+		{
+			_lines[0] = _lines[0].substr(10);
+			if (string(" \t\f\v\r").find(_lines[0][0]) == std::string::npos)
+				throw runtime_error("no space found after command");
+			while (1)
+			{
+				bool findColon = false;
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				_lines[0] = ftSkipspace(_lines[0]);
+				_lines[0] = curConf.error_page(_lines[0], findColon);
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				if (findColon == true)
+				{
+					_lines[0] = ftSkipspace(_lines[0]);
+					if (_lines[0][0] != ';')
+						throw runtime_error("no semi colon found after error_page");
+					_lines[0] = _lines[0].substr(1);
+					_lines[0] = ftSkipspace(_lines[0]);
+					if (skipLine(_lines[0], skipSpace) == true)
+						_lines.erase(_lines.begin());
+					break ;
+				}
+			}
+		}
+		if (i == 3)
+			break ;
+		++i;
 	}
+	
+	// _configs.insert(_configs.end(), curConf);
 	_configs.insert(_configs.end(), curConf);
 }
 

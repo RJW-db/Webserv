@@ -17,6 +17,7 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 	if (this != &other)
 	{
 		_hostAddress = other._hostAddress;
+		ErrorCodesWithPage = other.ErrorCodesWithPage;
 	}
 	return (*this);
 }
@@ -42,15 +43,45 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string ConfigServer::error_page(string line)
+string ConfigServer::error_page(string line, bool &findColon) 
 {
 	if (line[0] == '/')
 	{
-		// check vector list and add all to map with page
+		if (ErrorCodesWithoutPage.size() == 0)
+			throw runtime_error("no error codes in config for error_page");
+		size_t nameLen = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
+		if (nameLen == string::npos)
+			nameLen = line.length();
+		else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
+			throw runtime_error("invalid character found after error_page");
+		string error_page = line.substr(0, nameLen);
+		for(uint16_t error_code : ErrorCodesWithoutPage)
+		{
+			if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
+				ErrorCodesWithPage.at(error_code) = error_page;
+				// if (ErrorCodesWithPage.count(error_code) > 0)
+				// 	ErrorCodesWithPage.erase(ErrorCodesWithPage.find(error_code));
+			else
+				ErrorCodesWithPage.insert({error_code, error_page});
+			cout << "hier" << endl;
+		}
+		findColon = true;
+		ErrorCodesWithoutPage.clear();
+		return (line.substr(nameLen));
 	}
-	uint32_t error_page = stoi(line); // check for too high and if invalid character found
-	(void)error_page;
-	return "nothing";
+	else
+	{
+		if (line[0] == ';')
+			throw runtime_error("syntax error no error_page");
+		size_t pos;
+		size_t error_num = stoi(line, &pos);
+		// if (pos == 0) 
+		// 	throw runtime_error("invalid argument entered error_page");
+		if (error_num < 300 || error_num > 599)
+			throw runtime_error("error code invalid must be between 300 and 599");
+		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
+		return (line.substr(pos));
+	}
 }
 
 string ConfigServer::root(string line, bool &findColon)
