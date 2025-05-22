@@ -27,7 +27,7 @@ class ConfigServer
 		string listenHostname(string line, bool &findColon);
 		string root(string line, bool &findColon);
 		string ClientMaxBodysize(string line, bool &findColon);
-		string error_page(string line);
+		string error_page(string line, bool &findColon);
 		// void	addHostPort(string line);
 
 		unordered_map<string, sockaddr> _hostAddress;
