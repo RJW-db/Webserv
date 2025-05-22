@@ -66,8 +66,9 @@ string ConfigServer::error_page(string line, bool &findColon)
 	}
 	else
 	{
+		if (line[0] == ';')
+			throw runtime_error("syntax error no error_page");
 		size_t pos;
-		cout << line << endl;
 		size_t error_num = stoi(line, &pos);
 		// if (pos == 0) 
 		// 	throw runtime_error("invalid argument entered error_page");
