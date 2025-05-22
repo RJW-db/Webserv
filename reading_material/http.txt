@@ -1,0 +1,7 @@
+https://stackoverflow.com/questions/70550983/http-request-using-sockets-on-c?utm_source=chatgpt.com
+
+http://www.exampleweb.com/folder/file.php?parameter=value&parameter2=value2
+the scheme http
+the host name www.exampleweb.com
+the resource path /folder/file.php
+the query ?parameter=value&parameter2=value2

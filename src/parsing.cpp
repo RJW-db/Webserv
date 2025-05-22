@@ -90,13 +90,6 @@ bool	skipLine(string &line, size_t &skipSpace)
 // 		throw std::runtime_error("invalid character found after listen");
 // }
 
-string ClientMaxBodysize(string line, bool &findColon)
-{
-	(void)line;
-	(void)findColon;
-	std::cout << line << std::endl;
-	return line;
-}
 
 // string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::readServer()

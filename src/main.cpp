@@ -34,7 +34,7 @@ static void examples(void);
 static void serverTest(void);
 static void parsingtest(void);
 static void openDir(void);
-static void customHandler(int signum);
+// static void customHandler(int signum);
 
 int main()
 {
@@ -88,7 +88,7 @@ static void openDir(void)
 	// cout << "folder \"" << Server::directoryCheck(path) << "\" exists" << endl;
 }
 
-static void customHandler(int signum)
-{
-	g_signal_status = signum;
-}
+// static void customHandler(int signum)
+// {
+// 	g_signal_status = signum;
+// }
