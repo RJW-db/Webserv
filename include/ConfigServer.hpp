@@ -10,26 +10,11 @@
 #include <netinet/in.h> //scokaddr_in
 #include <iostream>
 #include <vector>
+#include <Location.hpp>
 
 using namespace std;
 
-class Aconfig
-{
-	public:
-		virtual ~Aconfig() = default; // Ensures proper cleanup of derived classes
 
-		string error_page(string line, bool &findColon);
-		string root(string line, bool &findColon);
-		string ClientMaxBodysize(string line, bool &findColon);
-		size_t clientBodySize;
-
-	protected:
-		Aconfig() = default;
-		map<uint16_t, string> ErrorCodesWithPage;
-		vector<uint16_t> ErrorCodesWithoutPage;
-		string _root;
-	private :
-};
 
 class ConfigServer : public Aconfig
 {
@@ -52,21 +37,13 @@ class ConfigServer : public Aconfig
 
 		unordered_map<string, sockaddr> _hostAddress;
 		// map<uint16_t, string> ErrorCodesWithPage;
+		vector<Location> locations;
 		private: 
 			// vector<uint16_t> ErrorCodesWithoutPage;
 };
 
 
-class Location
-{
-	public :
-		Location();
-		Location(const Location &other);
-		Location operator=(const Location &other);
-		~Location();
 
-
-};
 
 string ftSkipspace(string &line);
 

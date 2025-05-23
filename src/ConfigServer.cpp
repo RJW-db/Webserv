@@ -63,8 +63,6 @@ string Aconfig::error_page(string line, bool &findColon)
 		{
 			if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
 				ErrorCodesWithPage.at(error_code) = error_page;
-				// if (ErrorCodesWithPage.count(error_code) > 0)
-				// 	ErrorCodesWithPage.erase(ErrorCodesWithPage.find(error_code));
 			else
 				ErrorCodesWithPage.insert({error_code, error_page});
 			cout << "hier" << endl;
@@ -87,6 +85,8 @@ string Aconfig::error_page(string line, bool &findColon)
 		return (line.substr(pos + 1));
 	}
 }
+
+
 
 string Aconfig::root(string line, bool &findColon)
 {

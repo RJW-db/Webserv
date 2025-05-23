@@ -1,7 +1,4 @@
-miniRT
 .vscode
 .build
 .DS_Store
-extern_libraries/libft/libft.a
-extern_libraries/libft/.objects
-extern_libraries/MLX42/build
+Webserv

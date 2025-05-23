@@ -45,12 +45,12 @@ Server::~Server()
     close(_epfd);
 }
 
-string Server::directoryCheck(string &path)
+bool Server::directoryCheck(string &path)
 {
     DIR *d = opendir("/home");	// path = rde-brui
     if (d == NULL) {
         perror("opendir");
-        return nullptr;
+        return false;
     }
 
     struct dirent *directoryEntry;
@@ -59,12 +59,12 @@ string Server::directoryCheck(string &path)
         if (string(directoryEntry->d_name) == path)
         {
             closedir(d);
-            return (path);
+            return (true);
         }
     }
     
     closedir(d);
-    return (nullptr);
+    return (false);
 }
 
 int Server::make_socket_non_blocking(int sfd)

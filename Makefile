@@ -39,8 +39,8 @@ SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp						server.cpp							serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp					FileDescriptor.cpp				\
-					HttpRequest.cpp					loggingErrors.cpp								\
-					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp		examples/server.cpp
+					HttpRequest.cpp					loggingErrors.cpp					Location.cpp			\
+					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
 #		Find all .c files in the specified directories
@@ -53,7 +53,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	Webserv.hpp			Parsing.hpp		ConfigServer.hpp
+INCS			:=	Webserv.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

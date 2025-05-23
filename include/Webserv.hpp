@@ -48,7 +48,7 @@ class Server
         
         static int make_socket_non_blocking(int sfd);
 
-        static string directoryCheck(string &path);
+        static bool directoryCheck(string &path);
 
         class ClientException : public std::exception
 		{

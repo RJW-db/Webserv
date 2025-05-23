@@ -25,17 +25,17 @@ class Parsing
 		vector<ConfigServer> _configs;
 
 	private:
-		void readServer();
-		void readLocation(ConfigServer &curConf);
+          template <typename T>
+          void readBlock(T &block, const std::array<std::string, 3> &cmds_strings, 
+					string (T::*funcs[])(string, bool &),
+                    const std::array<std::string, 1> &whileCmdsStrings,
+                    string (T::*whileFuncs[])(string, bool &));
 
+          // void foundServer(std::fstream &fs, std::string line);
 
-
-
-		// void foundServer(std::fstream &fs, std::string line);
-
-		// ConfigServer	*_confServers;
-		// uint8_t 		_countServ;
-		std::vector<std::string> _lines;
+          // ConfigServer	*_confServers;
+          // uint8_t 		_countServ;
+          std::vector<std::string> _lines;
 
 };
 
