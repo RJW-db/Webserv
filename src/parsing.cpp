@@ -101,6 +101,27 @@ string ftSkipspace(string &line)
 }
 
 
+void Parsing::readLocation(ConfigServer &curConf)
+{
+	if (strncmp(_lines[0].c_str(), "location", 8) == 0)
+	{
+		size_t skipSpace;
+		_lines[0] = _lines[0].substr(8);
+		if (skipLine(_lines[0], skipSpace) == true)
+			_lines.erase(_lines.begin());
+		_lines[0] = ftSkipspace(_lines[0]);
+		if (_lines[0][0] != '{')
+			throw runtime_error("Opening curly bracket missing for location");
+		_lines[0] = _lines[0].substr(1);
+		while (1)
+		{
+			_lines[0] = ftSkipspace(_lines[0]);
+			
+		}
+		
+	}
+}
+
 // string	findTerms[10] = {"listen", "location", "root", "server_name", "error_page", "client_max_body_size"};
 void Parsing::readServer()
 {
@@ -108,7 +129,7 @@ void Parsing::readServer()
 	const std::array<std::string, 3> cmds_strings = {"listen", "root", "client_max_body_size"};
 	ConfigServer curConf;
 	int i = 0;
-	while (1)
+	while (1) // need to add check for end and invalid command
 	{
 		bool findColon;
 		size_t skipSpace;
@@ -132,7 +153,7 @@ void Parsing::readServer()
 				}
 			}
 		}
-		if (strncmp("error_page", cmds_strings[i].c_str(), 10) == 0)
+		if (strncmp(_lines[0].c_str(), "error_page", 10) == 0)
 		{
 			_lines[0] = _lines[0].substr(10);
 			if (string(" \t\f\v\r\n").find(_lines[0][0]) == std::string::npos)
@@ -159,7 +180,7 @@ void Parsing::readServer()
 				}
 			}
 		}
-		if (i == 3)
+		if (i == 100)
 			break ;
 		++i;
 	}
@@ -191,7 +212,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 		_lines.push_back(line);
 	}
 	fs.close();
-	if (_lines[0].find("server", 0, 6) != string::npos)
+	if (strncmp(_lines[0].c_str(), "server", 6) == 0)
 	{
 		_lines[0] = _lines[0].substr(6);
 		if (skipLine(_lines[0], skipSpace) == true)

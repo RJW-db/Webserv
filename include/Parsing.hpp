@@ -26,6 +26,8 @@ class Parsing
 
 	private:
 		void readServer();
+		void readLocation(ConfigServer &curConf);
+
 
 
 

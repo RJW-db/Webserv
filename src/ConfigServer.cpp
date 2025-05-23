@@ -1,5 +1,8 @@
 #include <ConfigServer.hpp>
 
+// Aconfig::~Aconfig()
+// {}
+
 ConfigServer::ConfigServer()
 {
 	
@@ -44,7 +47,7 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string ConfigServer::error_page(string line, bool &findColon) 
+string Aconfig::error_page(string line, bool &findColon) 
 {
 	if (line[0] == '/')
 	{
@@ -85,7 +88,7 @@ string ConfigServer::error_page(string line, bool &findColon)
 	}
 }
 
-string ConfigServer::root(string line, bool &findColon)
+string Aconfig::root(string line, bool &findColon)
 {
 	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
 	if (lenRoot == string::npos)
@@ -146,7 +149,7 @@ string ConfigServer::listenHostname(string line, bool &findColon)
     return (line.substr(pos + 1));
 }
 
-string ConfigServer::ClientMaxBodysize(string line, bool &findColon)
+string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 {
 	// std::cout << "hier" << std::endl;
 	(void)line;

@@ -42,8 +42,8 @@ int main()
 	// examples();
 	// openDir();
 
-	serverTest();
-	// parsingtest();
+	// serverTest();
+	parsingtest();
 
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;
