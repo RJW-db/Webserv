@@ -47,7 +47,7 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string Aconfig::error_page(string line, bool &findColon) 
+string Aconfig::error_page(string line, bool &findColon) // need to check for colon inside function for scalability
 {
 	if (line[0] == '/')
 	{

@@ -233,17 +233,22 @@ void Parsing::readBlock(T &block,
                 }
             }
         }
-		if (strncmp(_lines[0].c_str(), "location", 8) == 0) //TODO check if in server lock
+		// if constexpr (std::is_same<T, ConfigServer>::value && strncmp(_lines[0].c_str(), "location", 8) == 0) //TODO check if in server lock
+		if constexpr (std::is_same<T, ConfigServer>::value)
 		{
-			Location location;
-			const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
-				{"root", &Location::root},
-				{"client_max_body_size", &Location::ClientMaxBodysize}
-			};
-			const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
-				{"error_page", &Location::error_page}
-			};
-			readBlock(location, cmds, whileCmds);
+			if (strncmp(_lines[0].c_str(), "location", 8) == 0)
+			{
+				Location location;
+				const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
+					{"root", &Location::root},
+					{"client_max_body_size", &Location::ClientMaxBodysize}
+				};
+				const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
+					{"error_page", &Location::error_page}
+				};
+				readBlock(location, cmds, whileCmds);
+				block.locations.push_back(location);
+			}
 		}
 		if (++j == 100)
 			break ;

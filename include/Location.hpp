@@ -16,9 +16,11 @@ class Location : public Aconfig
 		~Location() = default;
 
 		string setPath(string line);
+		string methods(string line, bool &findColon);
 
 	private :
 		string _path;
+		array<string, 3> _methods;
 };
 
 #endif
