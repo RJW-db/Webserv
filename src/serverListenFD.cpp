@@ -55,7 +55,7 @@ int ServerListenFD::create_listener_socket()
 	// TODO test with 1~5 maximum pending queue of people connecting
 	if (listen(_listener, SOMAXCONN) == -1)
 	{
-		std::cerr << "Server listen: " << strerror(errno);
+		cerr << "Server listen: " << strerror(errno);
 		return -1;
 	}
 	return _listener;
@@ -67,7 +67,7 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 	struct addrinfo *server;
 	int              errHndl;
 
-	std::memset(&serverSetup, 0, sizeof(serverSetup));
+	memset(&serverSetup, 0, sizeof(serverSetup));
 	serverSetup.ai_family = AF_UNSPEC;     // Use IPv4 or IPv6
 	serverSetup.ai_socktype = SOCK_STREAM; // TCP stream sockets
 	serverSetup.ai_flags = AI_PASSIVE;     // Use my IP
@@ -75,8 +75,8 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 	errHndl = getaddrinfo(NULL, _port, &serverSetup, &server);
 	if (errHndl != 0)
 	{
-		std::cerr << "Server getaddrinfo: " << gai_strerror(errHndl)
-				<< std::endl;
+		cerr << "Server getaddrinfo: " << gai_strerror(errHndl)
+				<< endl;
 		return NULL;
 	}
 	return server;
@@ -102,7 +102,7 @@ int ServerListenFD::bind_to_socket(struct addrinfo *server)
 		}
 		return _listener;
 	}
-	std::cerr << "Server bind_to_socket: " << strerror(errno);
+	cerr << "Server bind_to_socket: " << strerror(errno);
 	return -1;
 }
 

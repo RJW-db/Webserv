@@ -42,8 +42,19 @@ int main()
 	// examples();
 	// openDir();
 
-	// serverTest();
-	parsingtest();
+	serverTest();
+	// parsingtest();
+
+
+	// string example = "  \t\tHost \t\t  : 10.10.3.26:8080";
+	// size_t colonPos = example.find(':');
+    // std::string key = example.substr(0, colonPos);
+
+	// std::cout << escape_special_chars(key) << std::endl;
+	// key.erase(0, key.find_first_not_of(" \t"));
+	// std::cout << escape_special_chars(key) << std::endl;
+    // key.erase(key.find_last_not_of(" \t") + 1);
+	// std::cout << escape_special_chars(key) << std::endl;
 
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;
