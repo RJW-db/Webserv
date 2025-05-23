@@ -26,10 +26,9 @@ class Parsing
 
 	private:
           template <typename T>
-          void readBlock(T &block, const std::array<std::string, 3> &cmds_strings, 
-					string (T::*funcs[])(string, bool &),
-                    const std::array<std::string, 1> &whileCmdsStrings,
-                    string (T::*whileFuncs[])(string, bool &));
+		  void readBlock(T &block, 
+			const map<string, string (T::*)(string, bool &)> &cmds, 
+			const map<string, string (T::*)(string, bool &)> &whileCmds);
 
           // void foundServer(std::fstream &fs, std::string line);
 

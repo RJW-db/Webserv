@@ -173,10 +173,9 @@ string ftSkipspace(string &line)
 //                         const std::array<std::string, 1> &whileCmdsStrings = {}, 
 //                         string (T::*whileFuncs[])(string, bool &) = nullptr)
 template <typename T>
-void Parsing::readBlock(T &block, const std::array<std::string, 3> &cmds_strings, 
-	                        string (T::*funcs[])(string, bool &), 
-	                        const std::array<std::string, 1> &whileCmdsStrings, 
-	                        string (T::*whileFuncs[])(string, bool &))
+void Parsing::readBlock(T &block, 
+	const map<string, string (T::*)(string, bool &)> &cmds, 
+	const map<string, string (T::*)(string, bool &)> &whileCmds)
 {
     size_t skipSpace;
     bool findColon;
@@ -185,17 +184,17 @@ void Parsing::readBlock(T &block, const std::array<std::string, 3> &cmds_strings
 	while (1)
     {
         _lines[0] = ftSkipspace(_lines[0]);
-        for (size_t i = 0; i < cmds_strings.size(); i++)
+        for (const auto &cmd : cmds)
         {
-            if (strncmp(_lines[0].c_str(), cmds_strings[i].c_str(), cmds_strings[i].size()) == 0)
+            if (strncmp(_lines[0].c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
             {
-                _lines[0] = _lines[0].substr(cmds_strings[i].size());
+                _lines[0] = _lines[0].substr(cmd.first.size());
                 if (skipLine(_lines[0], skipSpace))
                     _lines.erase(_lines.begin());
                 else if (string(" \t\f\v\r").find(_lines[0][0]) == std::string::npos)
                     throw runtime_error("no space found after command");
                 _lines[0] = ftSkipspace(_lines[0]);
-                _lines[0] = (block.*(funcs[i]))(_lines[0], findColon);
+                _lines[0] = (block.*(cmd.second))(_lines[0], findColon);
                 if (!findColon)
                 {
                     _lines.erase(_lines.begin());
@@ -204,11 +203,11 @@ void Parsing::readBlock(T &block, const std::array<std::string, 3> &cmds_strings
                 }
             }
         }
-        for (size_t i = 0; i < whileCmdsStrings.size(); i++)
+        for (const auto &whileCmd : whileCmds)
         {
-            if (strncmp(_lines[0].c_str(), whileCmdsStrings[i].c_str(), whileCmdsStrings[i].size()) == 0)
+            if (strncmp(_lines[0].c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
             {
-                _lines[0] = _lines[0].substr(whileCmdsStrings[i].size());
+                _lines[0] = _lines[0].substr(whileCmd.first.size());
                 if (string(" \t\f\v\r\n").find(_lines[0][0]) == std::string::npos)
                     throw runtime_error("no space found after command");
                 while (1)
@@ -217,7 +216,7 @@ void Parsing::readBlock(T &block, const std::array<std::string, 3> &cmds_strings
                     if (skipLine(_lines[0], skipSpace))
                         _lines.erase(_lines.begin());
                     _lines[0] = ftSkipspace(_lines[0]);
-                    _lines[0] = (block.*(whileFuncs[i]))(_lines[0], findColon);
+                    _lines[0] = (block.*(whileCmd.second))(_lines[0], findColon);
                     if (skipLine(_lines[0], skipSpace))
                         _lines.erase(_lines.begin());
                     if (findColon)
@@ -237,10 +236,14 @@ void Parsing::readBlock(T &block, const std::array<std::string, 3> &cmds_strings
 		if (strncmp(_lines[0].c_str(), "location", 8) == 0) //TODO check if in server lock
 		{
 			Location location;
-			// readBlock(location, false);
-			// if (constexpr (std::is_same<T, ConfigServer>::value))
-			block.locations.push_back(location);
-				
+			const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
+				{"root", &Location::root},
+				{"client_max_body_size", &Location::ClientMaxBodysize}
+			};
+			const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
+				{"error_page", &Location::error_page}
+			};
+			readBlock(location, cmds, whileCmds);
 		}
 		if (++j == 100)
 			break ;
@@ -284,18 +287,13 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 				_lines.erase(_lines.begin());
 			// cout << "found server" << endl;
 			ConfigServer curConf;
-			const std::array<std::string, 3> cmds_strings = {"listen", "root", "client_max_body_size"};
-			string (ConfigServer::*funcs[3])(string, bool &) = {
-			    &ConfigServer::listenHostname,
-			    &ConfigServer::root,
-			    &ConfigServer::ClientMaxBodysize
-			};
-
-			const std::array<std::string, 1> whileCmdsStrings = {"error_page"};
-			string (ConfigServer::*whileFuncs[1])(string, bool &) = {
-			    &ConfigServer::error_page
-			};
-			readBlock(curConf, cmds_strings, funcs, whileCmdsStrings, whileFuncs);
+			const std::map<std::string, string (ConfigServer::*)(string, bool &)> cmds = {
+				{"listen", &ConfigServer::listenHostname},
+				{"root", &ConfigServer::root},
+				{"client_max_body_size", &ConfigServer::ClientMaxBodysize}};
+			const std::map<std::string, string (ConfigServer::*)(string, bool &)> whileCmds = {
+					{"error_page", &ConfigServer::error_page}};
+			readBlock(curConf, cmds, whileCmds);
 			_configs.push_back(curConf);
 		}
 	}
