@@ -61,9 +61,44 @@ string ValidateHEAD(const string &head)
     return method;
 }
 
+void    headerNameContentType(string &type)
+{
+    if (type != "application/x-www-form-urlencoded" && // Standard HTML form data
+        type != "multipart/form-data" &&               // Used for file uploads
+        type != "application/json" &&
+        type != "text/plain")
+    {
+        throw Server::ClientException("Invalid HTTP request, we don't handle this Content-Type: " + type);
+    }
+}
+#include <algorithm>
+#include <string>
 void    headerNameContentLength(string &length)
 {
+    try
+    {
+        long long value = stoll(length); // Attempt to convert to a number
+        if (value < 0) // Ensure the value is non-negative
+        {
+            throw Server::ClientException("Invalid HTTP request, Content-Length cannot be negative: " + length);
+        }
+        if (true/* value > client_max_body_size */)
+        {
+            throw Server::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
+        }
+    }
+    catch (const std::invalid_argument &)
+    {
+        throw Server::ClientException("Invalid HTTP request, Content-Length contains non-digit characters: " + length);
+    }
+    catch (const std::out_of_range &)
+    {
+        throw Server::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
+    }
+    // if content-type is multipart/form-data, lenght should be bigger then 0
     // check if positive and only digits
+
+    // if (client_max_body_size)
     (void)length;
 }
 
@@ -116,7 +151,8 @@ void validateLines(const std::string &line, unordered_set<string> &requiredHeade
     // headerValue     example.com
     static const std::unordered_map<std::string, void(*)(std::string&)> headerHandlers = {
         {"Host", headerNameHost},
-        {"Content-length", headerNameContentLength}
+        {"Content-length", headerNameContentLength},
+        {"Content-Type", headerNameContentType}
     };
 
     unordered_map<string, void(*)(string&)>::const_iterator it = headerHandlers.find(key);
