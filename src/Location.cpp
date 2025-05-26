@@ -8,11 +8,14 @@ Location::Location(const Location &other)
 	*this = other;
 }
 
-Location Location::operator=(const Location &other)
+Location &Location::operator=(const Location &other)
 {
 	if (this != &other)
 	{
 		_path = other._path;
+		_root = other._root;
+		_methods = other._methods;
+		_indexPage = other._indexPage;
 	}
 	return (*this);
 }
@@ -24,7 +27,7 @@ string Location::setPath(string line)
 {
 	size_t len = line.find_first_of(" \t\f\v\r{");
 	if (len == string::npos)
-	len = line.length();
+		len = line.length();
 	_path = line.substr(0, len);
 	if (Server::directoryCheck(_path) == false)
 		throw runtime_error("invalid directory path given for location");
@@ -43,7 +46,6 @@ string Location::methods(string line, bool &findClosingCurly)
 	};
 
 	static bool find[total] = {0};
-
 	if (find[SemiColon] == true)
 	{
 		if (line[0] != '}')
@@ -80,14 +82,12 @@ string Location::methods(string line, bool &findClosingCurly)
 		find[OpeningCurly] = true;
 		return (line.substr(1));
 	}
-
-
-	size_t len = line.find_first_of(" \t\f\v\r;");
+	size_t len = line.find_first_of(" \t\f\v\r{");
 	if (len == string::npos)
 	{
 		len = line.length();
 	}
-	size_t index = _methods.size();
+	size_t index = (!_methods[0].empty() + !_methods[1].empty());
 	if (index > 1)
 		throw runtime_error("Too many methods added");
 	_methods[index] = line.substr(0, len);
@@ -99,6 +99,22 @@ string Location::methods(string line, bool &findClosingCurly)
 		if (strncmp(_methods[0].c_str(), _methods[index].c_str(), _methods[0].size()) == 0)
 			throw runtime_error("Method already entered before");
 	}
-	return (line.substr());
+	return (line.substr(len));
 }
 
+string Location::indexPage(string line, bool &findColon)
+{
+	if (line[0] == ';')
+	{
+		findColon = true;
+		return line.substr(1);
+	}
+	size_t len = line.find_first_of(" \t\f\v\r;*?|><:\\");
+	if (len == string::npos)
+		len = line.length();
+	if (string("*?|><:\\").find(line[len]) != string::npos)
+		throw runtime_error("invalid character found in filename");
+	string indexPage = line.substr(0, len);
+	_indexPage.push_back(indexPage);
+	return (line.substr(len));
+}

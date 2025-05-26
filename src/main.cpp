@@ -41,12 +41,8 @@ int main()
 	// signal(SIGINT, customHandler);
 	// examples();
 	// openDir();
-	string line = "GET ;";
-	size_t index = line.find_first_of(" ");
-	cout << index <<endl;
-	cout << line.substr(0, index) << endl;
 	// serverTest();
-	// parsingtest();
+	parsingtest();
 
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;
@@ -82,7 +78,11 @@ static void parsingtest(void)
 {
 	// ConfigServer sam;
 	Parsing sam("config/default.conf");
-	cout << "size :" << sam._configs[0].clientBodySize << endl;
+	// std::cout << sam._configs[0].locations.size() << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[0] << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[2] << std::endl;
+	// cout << "methods :" << sam._configs[0].locations[0]._methods[0] << endl;
 }
 
 static void openDir(void)

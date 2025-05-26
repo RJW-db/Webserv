@@ -28,7 +28,7 @@ CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS		+=	-fsanitize=address
+CCPFLAGS		+=	-fsanitize=address
 
 #		Directories
 BUILD_DIR		:=	.build/

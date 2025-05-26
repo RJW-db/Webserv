@@ -179,8 +179,6 @@ void Parsing::readBlock(T &block,
 {
     size_t skipSpace;
     bool findColon;
-	size_t j = 0;
-	cout << "hier" << endl;
 	while (1)
     {
         _lines[0] = ftSkipspace(_lines[0]);
@@ -200,7 +198,12 @@ void Parsing::readBlock(T &block,
                     _lines.erase(_lines.begin());
                     if (_lines[0][_lines[0].find_first_not_of(" \t\f\v\r")] != ';')
                         throw runtime_error("no semi colon found after cmd");
+					if (skipLine(_lines[0], skipSpace))
+                        _lines.erase(_lines.begin());
+					_lines[0] = ftSkipspace(_lines[0]);
                 }
+				if (skipLine(_lines[0], skipSpace))
+					_lines.erase(_lines.begin());
             }
         }
         for (const auto &whileCmd : whileCmds)
@@ -242,23 +245,43 @@ void Parsing::readBlock(T &block,
 		{
 			if (strncmp(_lines[0].c_str(), "location", 8) == 0)
 			{
+				_lines[0] = _lines[0].substr(8);
 				Location location;
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				_lines[0] = ftSkipspace(_lines[0]);
+				_lines[0] = location.setPath(_lines[0]);
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				_lines[0] = ftSkipspace(_lines[0]);
+				if (_lines[0][0] != '{')
+					throw runtime_error("couldn't find opening curly bracket for location");
+				_lines[0] = _lines[0].substr(1);
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				_lines[0] = ftSkipspace(_lines[0]);
 				const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
 					{"root", &Location::root},
 					{"client_max_body_size", &Location::ClientMaxBodysize}
 				};
 				const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
-					{"error_page", &Location::error_page}
+					{"error_page", &Location::error_page}, 
+					{"limit_except", &Location::methods}, 
+					{"index", &Location::indexPage}
 				};
 				readBlock(location, cmds, whileCmds);
-				block.locations.push_back(location);
+				block._locations.push_back(location);
+
 			}
 		}
-		if (++j == 100)
-			break ;
-        if (_lines.empty())
-            break;
-    }
+		if (_lines[0][0] == '}')
+		{
+			_lines[0].substr(1);
+			if (skipLine(_lines[0], skipSpace) == true)
+				_lines.erase(_lines.begin());
+			return ;
+		}
+	}
 }
 
 // ClientMaxBodysize()
@@ -304,6 +327,11 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 					{"error_page", &ConfigServer::error_page}};
 			readBlock(curConf, cmds, whileCmds);
 			_configs.push_back(curConf);
+			// std::cout << "Number of location blocks _configs: " << _configs[0].locations.size() << std::endl;
+
+			// std::cout << "Number of location blocks curConf: " << curConf.locations.size() << std::endl;
+			
+			// cout << curConf.locations.size() << endl;
 		}
 	}
 	else

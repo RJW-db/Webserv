@@ -47,24 +47,25 @@ Server::~Server()
 
 bool Server::directoryCheck(string &path)
 {
-    DIR *d = opendir("/home");	// path = rde-brui
+    DIR *d = opendir(path.c_str());	// path = rde-brui
     if (d == NULL) {
         perror("opendir");
         return false;
     }
 
-    struct dirent *directoryEntry;
-    while ((directoryEntry = readdir(d)) != NULL) {
-        // printf("%s\n", directoryEntry->d_name);
-        if (string(directoryEntry->d_name) == path)
-        {
-            closedir(d);
-            return (true);
-        }
-    }
+    // struct dirent *directoryEntry;
+    // while ((directoryEntry = readdir(d)) != NULL) {
+    //     printf("%s\n", directoryEntry->d_name);
+    //     if (string(directoryEntry->d_name) == path)
+    //     {
+    //         closedir(d);
+    //         return (true);
+    //     }
+    // }
     
     closedir(d);
-    return (false);
+    return (true);
+    // return (false);
 }
 
 int Server::make_socket_non_blocking(int sfd)
