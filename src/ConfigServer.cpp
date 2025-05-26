@@ -22,6 +22,7 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 		_hostAddress = other._hostAddress;
 		ErrorCodesWithPage = other.ErrorCodesWithPage;
 		clientBodySize = other.clientBodySize;
+		_locations = other._locations;
 	}
 	return (*this);
 }

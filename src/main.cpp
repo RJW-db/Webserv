@@ -90,7 +90,11 @@ static void parsingtest(void)
 {
 	// ConfigServer sam;
 	Parsing sam("config/default.conf");
-	cout << "size :" << sam._configs[0].clientBodySize << endl;
+	// std::cout << sam._configs[0].locations.size() << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[0] << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
+	std::cout << sam._configs[0]._locations[0]._indexPage[2] << std::endl;
+	// cout << "methods :" << sam._configs[0].locations[0]._methods[0] << endl;
 }
 
 static void openDir(void)

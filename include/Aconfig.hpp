@@ -17,11 +17,11 @@ class Aconfig
 		string indexPage(string line, bool &findColon);
 		
 		size_t clientBodySize;
-		protected:
+		string _root;
+	protected:
 		Aconfig() = default;
 		map<uint16_t, string> ErrorCodesWithPage;
 		vector<uint16_t> ErrorCodesWithoutPage;
-		string _root;
 		vector<string> _indexPage;
 };
 

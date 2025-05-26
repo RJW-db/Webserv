@@ -37,7 +37,7 @@ class ConfigServer : public Aconfig
 
 		unordered_map<string, sockaddr> _hostAddress;
 		// map<uint16_t, string> ErrorCodesWithPage;
-		vector<Location> locations;
+		vector<Location> _locations;
 		private: 
 			// vector<uint16_t> ErrorCodesWithoutPage;
 };
