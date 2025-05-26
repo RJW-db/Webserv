@@ -210,7 +210,8 @@ void Parsing::readBlock(T &block,
                 _lines[0] = _lines[0].substr(whileCmd.first.size());
                 if (string(" \t\f\v\r\n").find(_lines[0][0]) == std::string::npos)
                     throw runtime_error("no space found after command");
-                while (1)
+				size_t run = 0;
+                while (++run)
                 {
                     findColon = false;
                     if (skipLine(_lines[0], skipSpace))
@@ -219,31 +220,39 @@ void Parsing::readBlock(T &block,
                     _lines[0] = (block.*(whileCmd.second))(_lines[0], findColon);
                     if (skipLine(_lines[0], skipSpace))
                         _lines.erase(_lines.begin());
-                    if (findColon)
+                    if (findColon == true)
                     {
-                        _lines[0] = ftSkipspace(_lines[0]);
-                        if (_lines[0][0] != ';')
-                            throw runtime_error("no semi colon found after error_page");
-                        _lines[0] = _lines[0].substr(1);
-                        _lines[0] = ftSkipspace(_lines[0]);
-                        if (skipLine(_lines[0], skipSpace))
-                            _lines.erase(_lines.begin());
-                        break;
+						if (run == 1)
+							throw runtime_error(string("no arguments after") + whileCmd.first);
+						break ;
+                        // _lines[0] = ftSkipspace(_lines[0]);
+                        // if (_lines[0][0] != ';')
+                        //     throw runtime_error("no semi colon found after error_page");
+                        // _lines[0] = _lines[0].substr(1);
+                        // _lines[0] = ftSkipspace(_lines[0]);
+                        // if (skipLine(_lines[0], skipSpace))
+                        //     _lines.erase(_lines.begin());
+                        // break;
                     }
                 }
             }
         }
-		if (strncmp(_lines[0].c_str(), "location", 8) == 0) //TODO check if in server lock
+		// if constexpr (std::is_same<T, ConfigServer>::value && strncmp(_lines[0].c_str(), "location", 8) == 0) //TODO check if in server lock
+		if constexpr (std::is_same<T, ConfigServer>::value)
 		{
-			Location location;
-			const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
-				{"root", &Location::root},
-				{"client_max_body_size", &Location::ClientMaxBodysize}
-			};
-			const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
-				{"error_page", &Location::error_page}
-			};
-			readBlock(location, cmds, whileCmds);
+			if (strncmp(_lines[0].c_str(), "location", 8) == 0)
+			{
+				Location location;
+				const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
+					{"root", &Location::root},
+					{"client_max_body_size", &Location::ClientMaxBodysize}
+				};
+				const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
+					{"error_page", &Location::error_page}
+				};
+				readBlock(location, cmds, whileCmds);
+				block.locations.push_back(location);
+			}
 		}
 		if (++j == 100)
 			break ;

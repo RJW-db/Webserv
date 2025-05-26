@@ -65,7 +65,7 @@ static void examples(void)
 {
     // poll_usages();
     // epoll_usage();
-    // getaddrinfo_usage();
+    // getaddrinfo_usage();conflicts
     // server();
 }
 

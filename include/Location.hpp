@@ -3,6 +3,7 @@
 
 #include <Webserv.hpp>
 #include <Aconfig.hpp>
+#include <cstring>
 #include <string>
 
 using namespace std;
@@ -16,9 +17,11 @@ class Location : public Aconfig
 		~Location() = default;
 
 		string setPath(string line);
+		string methods(string line, bool &findColon);
 
 	private :
 		string _path;
+		array<string, 2> _methods;
 };
 
 #endif

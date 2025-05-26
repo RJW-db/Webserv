@@ -1,0 +1,4 @@
+check if stoi should throw errors for letters in Configserver or check before
+
+methods POST GET; doesn't work for nginx:  limit_except GET POST {deny all;}
+
