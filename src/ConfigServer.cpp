@@ -47,9 +47,15 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string Aconfig::error_page(string line, bool &findColon) // need to check for colon inside function for scalability
+string Aconfig::error_page(string line, bool &findColon)
 {
-	if (line[0] == '/')
+	static bool foundPage = false;
+	if (foundPage == true && line[0] == ';')
+	{
+		findColon = true;
+		return line.substr(1);
+	}
+	if (line[0] == '/') // how to check this is last in string
 	{
 		if (ErrorCodesWithoutPage.size() == 0)
 			throw runtime_error("no error codes in config for error_page");
@@ -65,28 +71,23 @@ string Aconfig::error_page(string line, bool &findColon) // need to check for co
 				ErrorCodesWithPage.at(error_code) = error_page;
 			else
 				ErrorCodesWithPage.insert({error_code, error_page});
-			cout << "hier" << endl;
 		}
-		findColon = true;
 		ErrorCodesWithoutPage.clear();
+		foundPage = true;
 		return (line.substr(nameLen));
 	}
 	else
 	{
 		if (line[0] == ';')
-			throw runtime_error("syntax error no error_page");
+			throw runtime_error("no error page given for error codes");
 		size_t pos;
 		size_t error_num = stoi(line, &pos);
-		// if (pos == 0) 
-		// 	throw runtime_error("invalid argument entered error_page");
 		if (error_num < 300 || error_num > 599)
 			throw runtime_error("error code invalid must be between 300 and 599");
 		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
 		return (line.substr(pos + 1));
 	}
 }
-
-
 
 string Aconfig::root(string line, bool &findColon)
 {
@@ -183,4 +184,21 @@ string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 	}
 	findColon = true;
 	return line.substr(k + 1);
+}
+
+string Aconfig::indexPage(string line, bool &findColon)
+{
+	if (line[0] == ';')
+	{
+		findColon = true;
+		return line.substr(1);
+	}
+	size_t len = line.find_first_not_of(" \t\f\v\r;#?&%=+\\:");
+	if (len == 0)
+		throw (runtime_error("invalid index given after index"));
+	if (len == string::npos)
+		len = line.length();
+	string indexPage = line.substr(0, len);
+	_indexPage.push_back(indexPage);
+	return (line.substr(len + 1));
 }

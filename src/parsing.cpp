@@ -210,7 +210,8 @@ void Parsing::readBlock(T &block,
                 _lines[0] = _lines[0].substr(whileCmd.first.size());
                 if (string(" \t\f\v\r\n").find(_lines[0][0]) == std::string::npos)
                     throw runtime_error("no space found after command");
-                while (1)
+				size_t run = 0;
+                while (++run)
                 {
                     findColon = false;
                     if (skipLine(_lines[0], skipSpace))
@@ -219,16 +220,19 @@ void Parsing::readBlock(T &block,
                     _lines[0] = (block.*(whileCmd.second))(_lines[0], findColon);
                     if (skipLine(_lines[0], skipSpace))
                         _lines.erase(_lines.begin());
-                    if (findColon)
+                    if (findColon == true)
                     {
-                        _lines[0] = ftSkipspace(_lines[0]);
-                        if (_lines[0][0] != ';')
-                            throw runtime_error("no semi colon found after error_page");
-                        _lines[0] = _lines[0].substr(1);
-                        _lines[0] = ftSkipspace(_lines[0]);
-                        if (skipLine(_lines[0], skipSpace))
-                            _lines.erase(_lines.begin());
-                        break;
+						if (run == 1)
+							throw runtime_error(string("no arguments after") + whileCmd.first);
+						break ;
+                        // _lines[0] = ftSkipspace(_lines[0]);
+                        // if (_lines[0][0] != ';')
+                        //     throw runtime_error("no semi colon found after error_page");
+                        // _lines[0] = _lines[0].substr(1);
+                        // _lines[0] = ftSkipspace(_lines[0]);
+                        // if (skipLine(_lines[0], skipSpace))
+                        //     _lines.erase(_lines.begin());
+                        // break;
                     }
                 }
             }

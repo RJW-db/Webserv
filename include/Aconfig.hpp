@@ -14,6 +14,7 @@ class Aconfig
 		string error_page(string line, bool &findColon);
 		string root(string line, bool &findColon);
 		string ClientMaxBodysize(string line, bool &findColon);
+		string indexPage(string line, bool &findColon);
 		
 		size_t clientBodySize;
 		protected:
@@ -21,6 +22,7 @@ class Aconfig
 		map<uint16_t, string> ErrorCodesWithPage;
 		vector<uint16_t> ErrorCodesWithoutPage;
 		string _root;
+		vector<string> _indexPage;
 };
 
 #endif

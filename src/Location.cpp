@@ -38,7 +38,9 @@ string Location::methods(string line, bool &findColon)
 	{
 		len = line.length();
 	}
-	
-	_methods[_methods.size()] = line.substr(0, len);
+	size_t index = _methods.size();
+	if (index > 2)
+		throw runtime_error("Too many methods added");
 
 }
+
