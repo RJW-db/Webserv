@@ -3,6 +3,7 @@
 
 #include <Webserv.hpp>
 #include <Aconfig.hpp>
+#include <cstring>
 #include <string>
 
 using namespace std;
@@ -20,7 +21,7 @@ class Location : public Aconfig
 
 	private :
 		string _path;
-		array<string, 3> _methods;
+		array<string, 2> _methods;
 };
 
 #endif

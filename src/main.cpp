@@ -41,9 +41,12 @@ int main()
 	// signal(SIGINT, customHandler);
 	// examples();
 	// openDir();
-
+	string line = "GET ;";
+	size_t index = line.find_first_of(" ");
+	cout << index <<endl;
+	cout << line.substr(0, index) << endl;
 	// serverTest();
-	parsingtest();
+	// parsingtest();
 
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;

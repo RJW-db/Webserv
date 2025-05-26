@@ -80,6 +80,8 @@ string Aconfig::error_page(string line, bool &findColon)
 	{
 		if (line[0] == ';')
 			throw runtime_error("no error page given for error codes");
+		if (foundPage == true)
+			throw runtime_error("invalid input after error page");
 		size_t pos;
 		size_t error_num = stoi(line, &pos);
 		if (error_num < 300 || error_num > 599)
