@@ -12,8 +12,8 @@ Location &Location::operator=(const Location &other)
 {
 	if (this != &other)
 	{
+		Aconfig::operator=(other);
 		_path = other._path;
-		_root = other._root;
 		_methods = other._methods;
 		_indexPage = other._indexPage;
 	}
@@ -115,6 +115,8 @@ string Location::indexPage(string line, bool &findColon)
 	if (string("*?|><:\\").find(line[len]) != string::npos)
 		throw runtime_error("invalid character found in filename");
 	string indexPage = line.substr(0, len);
+	// if () // TODO access() to see if file exist/accesible at end of serverblock
 	_indexPage.push_back(indexPage);
 	return (line.substr(len));
 }
+
