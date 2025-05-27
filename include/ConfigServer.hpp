@@ -29,6 +29,7 @@ class ConfigServer : public Aconfig
 
 		
 		string listenHostname(string line, bool &findColon);
+		string serverName(string line, bool &findColon);
 		// string error_page(string line, bool &findColon) override;
         // string root(string line, bool &findColon) override;
         // string ClientMaxBodysize(string line, bool &findColon) override;
@@ -38,6 +39,7 @@ class ConfigServer : public Aconfig
 		unordered_map<string, sockaddr> _hostAddress;
 		// map<uint16_t, string> ErrorCodesWithPage;
 		vector<Location> _locations;
+		string _serverName;
 		private: 
 			// vector<uint16_t> ErrorCodesWithoutPage;
 };

@@ -19,9 +19,8 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 {
 	if (this != &other)
 	{
+		Aconfig::operator=(other);
 		_hostAddress = other._hostAddress;
-		ErrorCodesWithPage = other.ErrorCodesWithPage;
-		clientBodySize = other.clientBodySize;
 		_locations = other._locations;
 	}
 	return (*this);
@@ -37,9 +36,9 @@ static uint32_t convertIpBinary(string ip)
 		size_t   index = 0;
         ipPart = stoi(ip, &index, 10);
         if (index > 3 || (i < 3 && ip[index] == '\0'))
-		throw runtime_error("invalid ipv4 address entered hostname");
+			throw runtime_error("invalid ipv4 address entered hostname");
         if (ipPart > 255)
-		throw runtime_error("too large ipv4 address entered");
+			throw runtime_error("too large ipv4 address entered");
         if (i < 3)
 			ip = ip.substr(index + 1);
         result += ipPart << bitwise;
@@ -48,72 +47,8 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string Aconfig::error_page(string line, bool &findColon)
-{
-	static bool foundPage = false;
-	if (foundPage == true && line[0] == ';')
-	{
-		findColon = true;
-		return line.substr(1);
-	}
-	if (line[0] == '/') // how to check this is last in string
-	{
-		if (ErrorCodesWithoutPage.size() == 0)
-			throw runtime_error("no error codes in config for error_page");
-		size_t nameLen = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
-		if (nameLen == string::npos)
-			nameLen = line.length();
-		else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
-			throw runtime_error("invalid character found after error_page");
-		string error_page = line.substr(0, nameLen);
-		for(uint16_t error_code : ErrorCodesWithoutPage)
-		{
-			if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
-				ErrorCodesWithPage.at(error_code) = error_page;
-			else
-				ErrorCodesWithPage.insert({error_code, error_page});
-		}
-		ErrorCodesWithoutPage.clear();
-		foundPage = true;
-		return (line.substr(nameLen));
-	}
-	else
-	{
-		if (line[0] == ';')
-			throw runtime_error("no error page given for error codes");
-		if (foundPage == true)
-			throw runtime_error("invalid input after error page");
-		size_t pos;
-		size_t error_num = stoi(line, &pos);
-		if (error_num < 300 || error_num > 599)
-			throw runtime_error("error code invalid must be between 300 and 599");
-		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
-		return (line.substr(pos + 1));
-	}
-}
-
-string Aconfig::root(string line, bool &findColon)
-{
-	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
-	if (lenRoot == string::npos)
-	{
-		findColon = false;
-		_root = line;
-		return line;
-	}
-	_root = line.substr(0, lenRoot);
-	size_t indexColon = line.find(";", 0);
-	if (indexColon != string::npos)
-	{
-		findColon = true;
-		return line.substr(indexColon + 1);
-	}
-	findColon = false;
-	return line;
-}
-
 string ConfigServer::listenHostname(string line, bool &findColon)
-{
+{ 
 	// to do should we store in addrinfo immediately? and how to handle fstream
 	size_t skipHostname = line.find_first_not_of("0123456789.");
 	size_t index =  line.find_first_not_of(" \t\f\v\r0123456789.");
@@ -133,75 +68,44 @@ string ConfigServer::listenHostname(string line, bool &findColon)
     sockaddr_in ipv4;
     ipv4.sin_addr.s_addr =
         static_cast<in_addr_t>(htonl(convertIpBinary(hostname)));
-    uint32_t port = stoi(line);
+		uint32_t port = stoi(line, &index);
     if (port == 0 || port > 65535)
         throw runtime_error("invalid port entered for listen");
     ipv4.sin_port = htons(static_cast<uint16_t>(port));
     sockaddr in = *reinterpret_cast<sockaddr *>(&ipv4);
+	in.sa_family = AF_INET;
     _hostAddress.insert({hostname, in});
-    size_t pos = line.find_first_not_of("0123456789 \t\f\v\r");
-    if (pos == string::npos) // didn't find any invalid character after port
-	{
-		findColon = false;
-		return (line);
-	}
-    else if (line[pos] != ';')
-        throw runtime_error(
-            "invalid character found after listen hostname and port");
-    else
-        findColon = true;
-    return (line.substr(pos + 1));
+	return (handleNearEndOfLine(line, index, findColon, "listenHostname"));
 }
 
-string Aconfig::ClientMaxBodysize(string line, bool &findColon)
+// UTILITY FUNCTION
+string handleNearEndOfLine(string &line, size_t pos, bool &findColon, string err)
 {
-	// std::cout << "hier" << std::endl;
-	(void)line;
-	(void)findColon;
-	// std::cout << line << std::endl;
-	size_t len;
-
-	clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
-	line = line.substr(len);
-	if (string("kKmMgG").find(line[0]) != string::npos)
-	{
-		if (isupper(line[0]) != 0)
-			line[0] -= 32;
-		if (line[0] == 'g')
-			clientBodySize *= 1024;
-		if (line[0] == 'g' || line[0] == 'm')
-			clientBodySize *= 1024;
-		if (line[0] == 'g' || line[0] == 'm' || line[0] == 'k')
-			clientBodySize *= 1024;
-	}
-	// std::cout << line << std::endl;
-	size_t k = line.find_first_not_of(" \t\f\v\r", 1);
+	size_t k = line.find_first_not_of(" \t\f\v\r", pos);
 	if (k == string::npos)
 	{
 		findColon = false;
-		return line.substr(1);
+		return line;
 	}
 	if (line[k] != ';')
 	{
-		throw runtime_error("Syntax error");
+		throw runtime_error(err + ": invalid character before semi colon");
 	}
 	findColon = true;
 	return line.substr(k + 1);
 }
 
-string Aconfig::indexPage(string line, bool &findColon)
+string ConfigServer::serverName(string line, bool &findColon)
 {
-	if (line[0] == ';')
-	{
-		findColon = true;
-		return line.substr(1);
-	}
-	size_t len = line.find_first_not_of(" \t\f\v\r;#?&%=+\\:");
-	if (len == 0)
-		throw (runtime_error("invalid index given after index"));
+	if (!_serverName.empty())
+		throw runtime_error("Parsing: tried creating second upload_store");
+	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
-		len = line.length();
-	string indexPage = line.substr(0, len);
-	_indexPage.push_back(indexPage);
-	return (line.substr(len + 1));
+	{
+		findColon = false;
+		_serverName = line;
+		return line;
+	}
+	_serverName = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "server_name"));
 }

@@ -12,10 +12,11 @@ Location &Location::operator=(const Location &other)
 {
 	if (this != &other)
 	{
+		Aconfig::operator=(other);
 		_path = other._path;
-		_root = other._root;
 		_methods = other._methods;
 		_indexPage = other._indexPage;
+		_upload_store = other._upload_store;
 	}
 	return (*this);
 }
@@ -115,6 +116,33 @@ string Location::indexPage(string line, bool &findColon)
 	if (string("*?|><:\\").find(line[len]) != string::npos)
 		throw runtime_error("invalid character found in filename");
 	string indexPage = line.substr(0, len);
+	// if () // TODO access() to see if file exist/accesible at end of serverblock
 	_indexPage.push_back(indexPage);
 	return (line.substr(len));
 }
+
+string Location::uploadStore(string line, bool &findColon)
+{
+	if (!_upload_store.empty())
+		throw runtime_error("Parsing: tried creating second upload_store");
+	size_t len = line.find_first_of(" \t\f\v\r;");
+	if (len == string::npos)
+	{
+		findColon = false;
+		_upload_store = line;
+		return line;
+	}
+	_upload_store = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "upload_store"));
+}
+
+// string Location::cgi(string line)
+// {
+// 	size_t len = line.find_first_of(" \t\f\v\r{");
+// 	if (len == string::npos)
+// 		len = line.length();
+// 	_path = line.substr(0, len);
+// 	if (Server::directoryCheck(_path) == false)
+// 		throw runtime_error("invalid directory path given for location");
+// 	return (line.substr(len));
+// }

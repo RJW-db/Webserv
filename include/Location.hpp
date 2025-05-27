@@ -19,10 +19,13 @@ class Location : public Aconfig
 		string setPath(string line);
 		string methods(string line, bool &findColon);
 		string indexPage(string line , bool &findColon);
+		string uploadStore(string line , bool &findColon);
 
 		string _path;
 		array<string, 2> _methods;
 		vector<string> _indexPage;
+		string _upload_store;
+
 	private :
 };
 

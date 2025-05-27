@@ -56,6 +56,8 @@ int main()
     // key.erase(key.find_last_not_of(" \t") + 1);
 	// std::cout << escape_special_chars(key) << std::endl;
 
+
+
 	// httpRequestLogger(std::string("Syntax error in request: GET /favicon.ico HTTP/1.1\r\n"));
     return 0;
 }
@@ -89,11 +91,39 @@ static void serverTest(void)
 static void parsingtest(void)
 {
 	// ConfigServer sam;
-	Parsing sam("config/default.conf");
-	// std::cout << sam._configs[0].locations.size() << std::endl;
-	std::cout << sam._configs[0]._locations[0]._indexPage[0] << std::endl;
-	std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
-	std::cout << sam._configs[0]._locations[0]._indexPage[2] << std::endl;
+	try
+	{
+		Parsing sam("config/default.conf");
+		// for (const auto& entry : sam._configs[0]._hostAddress) {
+		// 	const std::string& key = entry.first;
+		// 	const sockaddr& addr = entry.second;
+	
+		// 	if (addr.sa_family == AF_INET) { // IPv4
+		// 		const sockaddr_in* addr_in = reinterpret_cast<const sockaddr_in*>(&addr);
+		// 		std::string ip = inet_ntoa(addr_in->sin_addr); // Convert IP to string
+		// 		uint16_t port = ntohs(addr_in->sin_port);      // Convert port to host byte order
+		// 		cout << "port" << port << endl;
+	
+		// 		std::cout << "Key: " << key << ", IP: " << ip << ", Port: " << port << std::endl;
+		// 	} else {
+		// 		std::cout << "Key: " << key << ", Unsupported address family" << std::endl;
+		// 	}
+		// }
+		
+		std::cout << sam._configs[0]._locations[0]._autoIndex << std::endl;
+		std::cout << sam._configs[0]._root << std::endl;
+		std::cout << sam._configs[0].clientBodySize << std::endl;
+		std::cout << sam._configs[0]._returnRedirect.first << " " << sam._configs[0]._returnRedirect.second << std::endl;
+		std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
+
+	
+
 	// cout << "methods :" << sam._configs[0].locations[0]._methods[0] << endl;
 }
 
