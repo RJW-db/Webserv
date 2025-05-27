@@ -178,6 +178,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
                 {"listen", &ConfigServer::listenHostname},
                 {"root", &ConfigServer::root},
                 {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
+                {"server_name", &ConfigServer::serverName},
                 {"autoindex", &Location::autoIndex}};
             const std::map<std::string, string (ConfigServer::*)(string, bool &)> whileCmds = {
                     {"error_page", &ConfigServer::error_page},

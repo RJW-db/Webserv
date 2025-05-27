@@ -94,3 +94,18 @@ string handleNearEndOfLine(string &line, size_t pos, bool &findColon, string err
 	findColon = true;
 	return line.substr(k + 1);
 }
+
+string ConfigServer::serverName(string line, bool &findColon)
+{
+	if (!_serverName.empty())
+		throw runtime_error("Parsing: tried creating second upload_store");
+	size_t len = line.find_first_of(" \t\f\v\r;");
+	if (len == string::npos)
+	{
+		findColon = false;
+		_serverName = line;
+		return line;
+	}
+	_serverName = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "server_name"));
+}

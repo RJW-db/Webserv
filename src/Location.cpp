@@ -135,3 +135,14 @@ string Location::uploadStore(string line, bool &findColon)
 	_upload_store = line.substr(0, len);
 	return (handleNearEndOfLine(line, len, findColon, "upload_store"));
 }
+
+// string Location::cgi(string line)
+// {
+// 	size_t len = line.find_first_of(" \t\f\v\r{");
+// 	if (len == string::npos)
+// 		len = line.length();
+// 	_path = line.substr(0, len);
+// 	if (Server::directoryCheck(_path) == false)
+// 		throw runtime_error("invalid directory path given for location");
+// 	return (line.substr(len));
+// }
