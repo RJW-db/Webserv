@@ -100,4 +100,8 @@ std::string escape_special_chars(const std::string& input);
 
 void httpRequestLogger(string str);
 
+string  extractMethod(const string &header);
+string  extractHeader(const string &header, const string &key);
+void    sendErrorResponse(int clientFD, const std::string &message);
+void    handleRequest(int clientFD, string &method, string &header, string &body);
 #endif

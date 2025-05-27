@@ -110,8 +110,6 @@ void    headerNameHost(string &host)
         throw Server::ClientException("Invalid HTTP request, malformed header field: " + host);
     }
     string value = host.substr(colonPos + 1);
-    std::cout << value << std::endl;
-    std::cout << value << std::endl;
     if (value != "8080") // TODO 8080 is now hardcoded
     {
         throw Server::ClientException("Invalid HTTP request, wrong port: " + value);
@@ -232,7 +230,92 @@ void parseHttpRequest(string &request)
     // Ensure there is a blank line after headers
     if (end == string::npos || start == request.size())
     {
-        std::cout << "help" << std::endl;
+        // string errorLine = request.substr(0, request.size() - start); // Capture the problematic line
+        // httpRequestLogger(request);
+        // sendErrorResponse(clientFD, "411 Length Required");
+
+        // throw Server::ClientException("Invalid HTTP request, malformed line: " + line);
+        // throw runtime_error("HTTP/1.1 400 Bad Request");// HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>
+    }
+    if (!requiredHeaders.empty())
+    {
+        throw Server::ClientException("Missing required headers in HTTP request");
+    }
+    else
+        std::cout << "connection was established" << std::endl;
+}
+
+
+void    validateHEAD(const string &head)
+{
+    std::istringstream headStream(head);
+    std::string method, path, version;
+    headStream >> method >> path >> version;
+    
+    if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
+    {
+        throw Server::ClientException("Invalid HTTP method: " + method);
+    }
+   
+    if (path.empty() || path.c_str()[0] != '/')
+    {
+        throw Server::ClientException("Invalid HTTP path: " + path);
+    }
+
+    if (version != "HTTP/1.1")
+    {
+        throw Server::ClientException("Invalid HTTP version: " + version);
+    }
+}
+void    validateKeyValues(string request, const string &method)
+{
+    const std::string terminator = "\r\n";
+    size_t start = 0;
+    size_t end = request.find(terminator, start);
+    // Validate the request line (first line)
+    if (end == std::string::npos)
+    {
+        throw Server::ClientException("Invalid HTTP request, missing: \"\\r\\n\"");
+    }
+    unordered_set<string> requiredHeaders ;
+    if (method == "GET")
+        requiredHeaders = {"Host"};
+    else if (method == "POST")
+        requiredHeaders = {"Host", "Content-Length", "Content-Type"};
+    start = end + terminator.length();
+    end = request.find(terminator, start);
+
+    while (end != string::npos)
+    {
+        string line = request.substr(start, end - start);
+
+        if (line.empty()) {
+            if (start != 0) {
+                // Blank line found, stop checking further (end of headers)
+                break;
+            }
+            // Otherwise, continue to the next line
+            start = end + 2; // Move past \r\n
+            end = request.find("\r\n", start);
+            continue;
+        }
+        //  -----TEMPORARY for testing with clientHttpRequst.txt-----
+        if (line.size() == 2 && line[0] == '\r') {
+            break;
+        }
+        //  -----TEMPORARY-----
+
+        validateLines(line, requiredHeaders);
+
+        start = end + 2; // Move past \r\n
+        end = request.find("\r\n", start); // Find the next \r\n
+        string tmp = request.substr(start, end - start);
+    }
+    // Ensure there is a blank line after headers
+    if (end == string::npos || start == request.size())
+    {
+        std::cerr << "Debug Info: end=" << end << ", start=" << start << ", request.size()=" << request.size() << std::endl;
+        throw Server::ClientException("Invalid HTTP request, malformed or incomplete headers.");
         // string errorLine = request.substr(0, request.size() - start); // Capture the problematic line
         // httpRequestLogger(request);
         // throw Server::ClientException("Invalid HTTP request, malformed line: " + line);
@@ -244,4 +327,23 @@ void parseHttpRequest(string &request)
     }
     else
         std::cout << "connection was established" << std::endl;
+}
+void    handleRequest(int clientFD, string &method, string &header, string &body)
+{
+    std::cout << "vor" << std::endl;
+    validateHEAD(header);
+    validateKeyValues(header, method);
+    if (method == "GET")
+    {
+        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+        send(clientFD, response.c_str(), response.size(), 0);
+    }
+    // else if (method == "POST")
+    // {
+
+    // }
+    // else
+    // {
+
+    // }
 }

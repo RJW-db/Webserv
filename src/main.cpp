@@ -45,7 +45,8 @@ int main()
 	serverTest();
 	// parsingtest();
 
-
+// string test = "okenondan";
+// std::cout << test.find("non", 0) << std::endl;
 	// string example = "  \t\tHost \t\t  : 10.10.3.26:8080";
 	// size_t colonPos = example.find(':');
     // std::string key = example.substr(0, colonPos);

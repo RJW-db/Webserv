@@ -26,9 +26,9 @@
 #include <signal.h>
 extern volatile sig_atomic_t g_signal_status;
 
+// Static member variables
 int Server::_epfd = -1;
 std::array<struct epoll_event, FD_LIMIT> Server::_events;
-
 std::unordered_map<int, std::string> Server::_fdBuffers;
 
 Server::Server(tmp_t *serverConf)
@@ -208,10 +208,11 @@ void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &
 void Server::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
 {
     char	buff[CLIENT_BUFFER_SIZE];
-
     ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
+
     if (bytesReceived < 0)
     {
+        _fdBuffers[clientFD].clear();
         fds.closeFD(clientFD);
         if(errno == EINTR)
         {
@@ -219,36 +220,133 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
         }
         if (errno != EAGAIN)
             cerr << "recv: " << strerror(errno);
+        return;
     }
     size_t receivedBytes = static_cast<size_t>(bytesReceived);
     _fdBuffers[clientFD].append(buff, receivedBytes);
-    if (receivedBytes < sizeof(buff) ||
-        (receivedBytes == sizeof(buff) && buff[CLIENT_BUFFER_SIZE - 1] == '\n'))
+
+    // if (receivedBytes < sizeof(buff) ||
+    //     (receivedBytes == sizeof(buff) && buff[CLIENT_BUFFER_SIZE - 1] == '\n'))
+    // {
+    //     try
+    //     {
+    //         parseHttpRequest(_fdBuffers[clientFD]);
+    //     }
+    //     catch(const ClientException &e)
+    //     {
+    //         std::cerr << e.what() << endl;  // should use to log to file
+    //         string msgToClient = "HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
+    //         send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
+    //         _fdBuffers[clientFD].clear();
+    //         if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
+    //             perror("epoll_ctl: EPOLL_CTL_DEL");
+    //         printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+    //         return ;
+    //     }
+    //     // parseHttpRequest(_fdBuffers[clientFD]);
+    //     send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);
+    //     // std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    //     // send(clientFD, response.c_str(), response.size(), 0);
+    //     // write(1, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size());
+    //     _fdBuffers[clientFD].clear();
+    //     if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
+    //         perror("epoll_ctl: EPOLL_CTL_DEL");
+    //     printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+    //     fds.closeFD(clientFD);
+    // }
+
+    size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
+    // size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\r\n");
+    
+    std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+    if (headerEnd == string::npos)
     {
-        try
-        {
-            parseHttpRequest(_fdBuffers[clientFD]);
-        }
-        catch(const ClientException &e)
-        {
-            std::cerr << e.what() << endl;  // should use to log to file
-            string msgToClient = "HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
-            send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
-            _fdBuffers[clientFD].clear();
-            if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
-                perror("epoll_ctl: EPOLL_CTL_DEL");
-            printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
-            return ;
-        }
-        // parseHttpRequest(_fdBuffers[clientFD]);
-        send(clientFD, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size(), 0);
-        // std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-        // send(clientFD, response.c_str(), response.size(), 0);
-        // write(1, _fdBuffers[clientFD].c_str(), _fdBuffers[clientFD].size());
+        std::cout << "newawawwa" << std::endl;
+        sendErrorResponse(clientFD, "400 Bad Request");
         _fdBuffers[clientFD].clear();
-        if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
-            perror("epoll_ctl: EPOLL_CTL_DEL");
-        printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
-        fds.closeFD(clientFD);
+        return;
     }
+
+    string header = _fdBuffers[clientFD].substr(0, headerEnd + 4);
+    string body = _fdBuffers[clientFD].substr(headerEnd + 4);
+    std::cout  << std::endl;
+
+    string method = extractMethod(header);
+    if (method.empty() == true)
+    {
+        sendErrorResponse(clientFD, "400 Bad Request");
+        _fdBuffers[clientFD].clear();
+        return;
+    }
+
+    
+    /* if (method == "GET")
+    {
+        std::cout << "GET requested" << std::endl;
+        _fdBuffers[clientFD].clear();
+        return;
+    }
+    else  */if (method == "POST")
+    {
+        string contentLengthStr = extractHeader(header, "Content-Length:");
+        size_t contentLength = 0;
+        if (contentLengthStr.empty() == false)
+        {
+            contentLength = stoll(contentLengthStr);
+            if (contentLength <= 0)
+            {
+                sendErrorResponse(clientFD, "411 Length Required");
+                _fdBuffers[clientFD].clear();
+                return;
+            }
+            if (body.size() < contentLength)
+                return;
+        }
+    }
+
+
+    // try
+    // {
+    //     handleRequest(clientFD, method, header, body);
+    // }
+    // catch(const ClientException &e)
+    // {
+    //     std::cerr << e.what() << endl;  // should use to log to file
+    //     string msgToClient = "HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
+    //     send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
+    //     _fdBuffers[clientFD].clear();
+    //     if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
+    //         perror("epoll_ctl: EPOLL_CTL_DEL");
+    //     printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+    //     return ;
+    // }
+    handleRequest(clientFD, method, header, body);
+    _fdBuffers[clientFD].clear();
+}
+
+
+string extractMethod(const string &header)
+{
+    size_t methodEnd = header.find(" ");
+
+    if (methodEnd == string::npos) return "";
+    return header.substr(0, methodEnd);
+}
+
+string extractHeader(const string &header, const string &key)
+{
+    size_t start = header.find(key);
+
+    if (start == string::npos) return "";
+    start += key.length() + 1;
+    size_t endPos = header.find("\r\n", start);
+
+    if (start == string::npos) return "";
+    return header.substr(start, endPos - start);
+}
+
+void sendErrorResponse(int clientFD, const std::string &message)
+{
+    std::string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
+    send(clientFD, response.c_str(), response.size(), 0);
 }
