@@ -35,6 +35,7 @@ string Aconfig::root(string line, bool &findColon)
 	return (handleNearEndOfLine(line, lenRoot, findColon, "root"));
 }
 
+
 string Aconfig::error_page(string line, bool &findColon)
 {
 	static bool foundPage = false;

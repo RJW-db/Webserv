@@ -16,6 +16,7 @@ Location &Location::operator=(const Location &other)
 		_path = other._path;
 		_methods = other._methods;
 		_indexPage = other._indexPage;
+		_upload_store = other._upload_store;
 	}
 	return (*this);
 }
@@ -120,3 +121,17 @@ string Location::indexPage(string line, bool &findColon)
 	return (line.substr(len));
 }
 
+string Location::uploadStore(string line, bool &findColon)
+{
+	if (!_upload_store.empty())
+		throw runtime_error("Parsing: tried creating second upload_store");
+	size_t len = line.find_first_of(" \t\f\v\r;");
+	if (len == string::npos)
+	{
+		findColon = false;
+		_upload_store = line;
+		return line;
+	}
+	_upload_store = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "upload_store"));
+}
