@@ -37,13 +37,14 @@ string Aconfig::root(string line, bool &findColon)
 	return (handleNearEndOfLine(line, lenRoot, findColon, "root"));
 }
 
-
+#include <iostream>
 string Aconfig::error_page(string line, bool &findColon)
 {
 	static bool foundPage = false;
 	if (foundPage == true && line[0] == ';')
 	{
 		findColon = true;
+		foundPage = false;
 		return line.substr(1);
 	}
 	if (line[0] == '/') // how to check this is last in string
@@ -104,7 +105,7 @@ string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 		if (line[0] == 'g' || line[0] == 'm' || line[0] == 'k')
 			_clientBodySize *= 1024;
 	}
-	else if (string(" \t\f\v\r;").find(line[0]) != string::npos)
+	else if (string(" \t\f\v\r;").find(line[0]) == string::npos)
 		throw runtime_error("Aconfig: invalid character found after value");
 	if (line[0] == ';')
 	{

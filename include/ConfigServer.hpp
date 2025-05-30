@@ -47,7 +47,8 @@ class ConfigServer : public Aconfig
 
 
 
-string ftSkipspace(string &line);
+// string ftSkipspace(string &line);
+void ftSkipspace(string &line);
 
 
 #endif

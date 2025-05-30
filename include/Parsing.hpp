@@ -30,11 +30,12 @@ class Parsing
 			const map<string, string (T::*)(string, bool &)> &cmds, 
 			const map<string, string (T::*)(string, bool &)> &whileCmds);
 		bool    runReadblock(void);
+		string skipLine(string &line, bool forceSkip);
 		// void foundServer(std::fstream &fs, std::string line);
 
 		// ConfigServer	*_confServers;
 		// uint8_t 		_countServ;
-		std::vector<std::string> _lines;
+		map<int, string> _lines;
 		bool validSyntax;
 };
 
