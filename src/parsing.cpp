@@ -30,7 +30,7 @@ bool    Parsing::runReadblock()
     size_t  skipSpace;
     if (_lines[0][0] == '}')
     {
-        _lines[0].substr(1);
+        _lines[0] =  _lines[0].substr(1);
         if (skipLine(_lines[0], skipSpace) == true)
             _lines.erase(_lines.begin());
         return false;
@@ -140,6 +140,42 @@ void Parsing::readBlock(T &block,
     } while (runReadblock() == true);
 }
 
+static void setLocation(Location &curLocation, ConfigServer &curConf)
+{
+    // what to do for methods (only get if doesn't exist?)
+    // how to check if autoindex turned off for location block?
+    if (curLocation._root.empty())
+        curLocation._root = curConf._root;
+    if (curLocation._clientBodySize == 0)
+        curLocation._clientBodySize = curConf._clientBodySize;
+    if (curLocation._returnRedirect.first == 0)
+        curLocation._returnRedirect = curConf._returnRedirect;
+    for (pair<uint16_t, string> errorCodePages : curConf.ErrorCodesWithPage)
+        curLocation.ErrorCodesWithPage.insert(errorCodePages);
+    if (curLocation._indexPage.empty())
+    {
+        for (string indexPage : curConf._indexPage)
+            curLocation._indexPage.push_back(indexPage);
+    }
+    if (curLocation._upload_store.empty())     //what to do for upload store if post in limit_except
+        curLocation._upload_store = curLocation._root;
+    
+}
+
+static void setConf(ConfigServer &curConf)
+{
+    // we don't need to have returnredirect or indexPage
+    //what to do with no error pages? do we create our own or just have one
+    if (curConf._root.empty())
+        curConf._root = "/var/www"; // what default root should we use?
+    if (curConf._clientBodySize == 0)
+        curConf._clientBodySize = 1024 * 1024;
+    if (curConf._hostAddress.empty())
+    {
+        bool tmp;
+        curConf.listenHostname("80;", tmp);
+    }
+}
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 {

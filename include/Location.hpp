@@ -23,7 +23,6 @@ class Location : public Aconfig
 
 		string _path;
 		array<string, 2> _methods;
-		vector<string> _indexPage;
 		string _upload_store;
 
 	private :

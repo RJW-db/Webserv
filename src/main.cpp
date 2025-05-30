@@ -113,7 +113,7 @@ static void parsingtest(void)
 		
 		std::cout << sam._configs[0]._locations[0]._autoIndex << std::endl;
 		std::cout << sam._configs[0]._root << std::endl;
-		std::cout << sam._configs[0].clientBodySize << std::endl;
+		std::cout << sam._configs[0]._clientBodySize << std::endl;
 		std::cout << sam._configs[0]._returnRedirect.first << " " << sam._configs[0]._returnRedirect.second << std::endl;
 		std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
 	}
