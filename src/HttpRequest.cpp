@@ -64,9 +64,9 @@ string ValidateHEAD(const string &head)
 void    headerNameContentType(string &type)
 {
     if (type != "application/x-www-form-urlencoded" && // Standard HTML form data
-        type != "multipart/form-data" &&               // Used for file uploads
         type != "application/json" &&
-        type != "text/plain")
+        type != "text/plain" &&
+        strncmp("multipart/form-data; boundary=", type.c_str(), 30) != 0)
     {
         throw Server::ClientException("Invalid HTTP request, we don't handle this Content-Type: " + type);
     }
@@ -331,19 +331,81 @@ void    validateKeyValues(string request, const string &method)
 void    handleRequest(int clientFD, string &method, string &header, string &body)
 {
     std::cout << "vor" << std::endl;
+    std::cout << method << std::endl;
     validateHEAD(header);
     validateKeyValues(header, method);
     if (method == "GET")
     {
-        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-        send(clientFD, response.c_str(), response.size(), 0);
-    }
-    // else if (method == "POST")
-    // {
+        // std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+        // send(clientFD, response.c_str(), response.size(), 0);
 
-    // }
+        std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
+        if (!file)
+        {
+            std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+            send(clientFD, notFound.c_str(), notFound.size(), 0);
+            return;
+        }
+
+        // Read file contents
+        std::ostringstream ss;
+        ss << file.rdbuf();
+        std::string fileContent = ss.str();
+
+        // Build response
+        std::ostringstream response;
+        response << "HTTP/1.1 200 OK\r\n";
+        response << "Content-Length: " << fileContent.size() << "\r\n";
+        response << "Content-Type: text/html\r\n";
+        response << "\r\n";
+        response << fileContent;
+
+        std::string responseStr = response.str();
+        send(clientFD, responseStr.c_str(), responseStr.size(), 0);
+    }
+    else if (method == "POST")
+    {
+        std::cout << "hier zijn we\n\n\n" << std::endl;
+        // Submitting a form (e.g., login, registration, contact form)
+        // Uploading a file (e.g., images, documents)
+        // Sending JSON data (e.g., for APIs)
+        // Creating a new resource (e.g., adding a new item to a database)
+        // Triggering an action (e.g., starting a job, sending an email)
+        std::cout << header << std::endl;
+        std::cout << escape_special_chars(body) << std::endl;
+
+        const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
+        size_t position = header.find(boundaryKey);
+
+        size_t boundaryStart = position + boundaryKey.length();
+        size_t boundaryEnd = header.find("\r\n", boundaryStart);
+
+        std::string bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
+        std::cout << "bodyBoundary " << bodyBoundary << std::endl;
+
+        
+        const string bodyKey = "Content-Type: ";
+        size_t fileStart = body.find(bodyKey);
+        fileStart = body.find("\r\n\r\n", fileStart) + 4;
+        size_t fileEnd = body.find("\r\n--" + bodyBoundary, fileStart);
+
+        std::string file = body.substr(fileStart, fileEnd - fileStart);
+        std::cout << "file >" << escape_special_chars(file) << "<" << std::endl;
+        // if (file == string::npos)
+        // {
+        //     std::cout << "not ogod" << std::endl;
+        // }
+        ofstream myfile;
+        // myfile.open("example.txt");
+        // myfile << file;
+        // myfile.close();
+        myfile.open("ssam.png");
+        myfile << file;
+        myfile.close();
+    }
     // else
     // {
 
     // }
+    std::cout << "\t" << method << std::endl;
 }
