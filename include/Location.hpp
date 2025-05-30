@@ -20,10 +20,14 @@ class Location : public Aconfig
 		string methods(string line, bool &findColon);
 		string indexPage(string line , bool &findColon);
 		string uploadStore(string line , bool &findColon);
+		string extension(string line , bool &findColon);
+		string cgiPath(string line , bool &findColon);
 
 		string _path;
-		array<string, 2> _methods;
+		array<string, 3> _methods;
 		string _upload_store;
+		string _cgiExtension;
+		string _cgiPath;
 
 	private :
 };

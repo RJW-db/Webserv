@@ -6,8 +6,14 @@ using namespace std;
 #include <map>
 #include <vector>
 #include <stdexcept>
-#include <stdint.h>
+#include <cstdint>
 	
+enum AUTOINDEX
+{
+	autoIndexNotFound = -1,
+	autoIndexFalse = 0, 
+	autoIndexTrue = 1
+};
 
 class Aconfig
 {
@@ -24,13 +30,13 @@ class Aconfig
 		
 		size_t _clientBodySize; // for nginx could be zero but is impractical
 		string _root;
-		bool	_autoIndex; // how to check if set
+		int8_t _autoIndex;
 		pair<uint16_t, string> _returnRedirect;
 		map<uint16_t, string> ErrorCodesWithPage;
 		vector<string> _indexPage;
 	protected:
+		Aconfig();
 		Aconfig(const Aconfig &other);
-		Aconfig() = default;
 		vector<uint16_t> ErrorCodesWithoutPage;
 };
 

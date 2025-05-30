@@ -140,10 +140,35 @@ void Parsing::readBlock(T &block,
     } while (runReadblock() == true);
 }
 
+static void setErrorPages(map<uint16_t, string> &ErrorCodesWithPage, Aconfig &curConf)
+{
+	uint16_t errorCodes[11] = {400, 403, 404, 405, 413, 431, 500, 501, 502, 503, 504};
+
+	for (uint16_t errorCode : errorCodes)
+	{
+		if (ErrorCodesWithPage.find(errorCode) == ErrorCodesWithPage.end())
+		{
+			string fileName = "webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
+			ErrorCodesWithPage.insert({errorCode, fileName});
+			std::cout << "error page: " << ErrorCodesWithPage.at(errorCode) << " code:" << errorCode << std::endl;
+		}
+		else
+		{
+			ErrorCodesWithPage.at(errorCode).insert(0, curConf._root);
+			ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+			if (ErrorCodesWithPage.at(errorCode)[0] == '/')
+				ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+			std::cout << "error page: " << ErrorCodesWithPage.at(errorCode) << " code:" << errorCode << std::endl;
+		}
+		if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
+			throw runtime_error("couldn't open error page:" + ErrorCodesWithPage.at(errorCode));
+	}
+}
+
 static void setLocation(Location &curLocation, ConfigServer &curConf)
 {
-    // what to do for methods (only get if doesn't exist?)
-    // how to check if autoindex turned off for location block?
+	if (curLocation._autoIndex == autoIndexNotFound)
+		curLocation._autoIndex = curConf._autoIndex;
     if (curLocation._root.empty())
         curLocation._root = curConf._root;
     if (curLocation._clientBodySize == 0)
@@ -157,24 +182,35 @@ static void setLocation(Location &curLocation, ConfigServer &curConf)
         for (string indexPage : curConf._indexPage)
             curLocation._indexPage.push_back(indexPage);
     }
-    if (curLocation._upload_store.empty())     //what to do for upload store if post in limit_except
+    if (curLocation._upload_store.empty())
         curLocation._upload_store = curLocation._root;
-    
+	if (curLocation._methods[0].empty())
+	{
+		curLocation._methods[0] = "GET";
+		curLocation._methods[1] = "POST";
+		curLocation._methods[2] = "DELETE";
+	}
+	setErrorPages(curLocation.ErrorCodesWithPage, curLocation);
 }
 
 static void setConf(ConfigServer &curConf)
 {
-    // we don't need to have returnredirect or indexPage
     //what to do with no error pages? do we create our own or just have one
     if (curConf._root.empty())
         curConf._root = "/var/www"; // what default root should we use?
     if (curConf._clientBodySize == 0)
         curConf._clientBodySize = 1024 * 1024;
+	if (curConf._autoIndex == autoIndexNotFound)
+		curConf._autoIndex = autoIndexFalse;
     if (curConf._hostAddress.empty())
     {
         bool tmp;
-        curConf.listenHostname("80;", tmp);
+        curConf.listenHostname("80;", tmp); //sets sockaddr ip to 0.0.0.0 and port to 80
     }
+
+	for(Location &location : curConf._locations)
+		setLocation(location, curConf);
+	setErrorPages(curConf.ErrorCodesWithPage, curConf);
 }
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
@@ -194,47 +230,43 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
         size_t commentindex = line.find('#');
         if (commentindex != string::npos)
             line = line.substr(0, commentindex); // remove comments after text
-        
         _lines.push_back(line);
     }
     fs.close();
-    if (strncmp(_lines[0].c_str(), "server", 6) == 0)
-    {
-        _lines[0] = _lines[0].substr(6);
-        if (skipLine(_lines[0], skipSpace) == true)
-            _lines.erase(_lines.begin());
-        if (_lines[0][0] == '{')
-        {
-            _lines[0] = _lines[0].substr(1);
-            if (skipLine(_lines[0], skipSpace) == true)
-                _lines.erase(_lines.begin());
-            // cout << "found server" << endl;
-            ConfigServer curConf;
-            const std::map<std::string, string (ConfigServer::*)(string, bool &)> cmds = {
-                {"listen", &ConfigServer::listenHostname},
-                {"root", &ConfigServer::root},
-                {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
-                {"server_name", &ConfigServer::serverName},
-                {"autoindex", &Location::autoIndex}};
-            const std::map<std::string, string (ConfigServer::*)(string, bool &)> whileCmds = {
-                    {"error_page", &ConfigServer::error_page},
-                    {"return", &Location::returnRedirect}};
-            readBlock(curConf, cmds, whileCmds);
-            _configs.push_back(curConf);
-            // std::cout << "Number of location blocks _configs: " << _configs[0].locations.size() << std::endl;
-
-            // std::cout << "Number of location blocks curConf: " << curConf.locations.size() << std::endl;
-            
-            // cout << curConf.locations.size() << endl;
-        }
-    }
-    else
-        throw runtime_error("help");
-    // for (string line: _lines)
-    // {
-    // 	cout << line << endl;
-    // }
-
+	while (1)
+	{
+		if (strncmp(_lines[0].c_str(), "server", 6) == 0)
+		{
+			_lines[0] = _lines[0].substr(6);
+			if (skipLine(_lines[0], skipSpace) == true)
+				_lines.erase(_lines.begin());
+			if (_lines[0][0] == '{')
+			{
+				_lines[0] = _lines[0].substr(1);
+				if (skipLine(_lines[0], skipSpace) == true)
+					_lines.erase(_lines.begin());
+				ConfigServer curConf;
+				const std::map<std::string, string (ConfigServer::*)(string, bool &)> cmds = {
+					{"listen", &ConfigServer::listenHostname},
+					{"root", &ConfigServer::root},
+					{"client_max_body_size", &ConfigServer::ClientMaxBodysize},
+					{"server_name", &ConfigServer::serverName},
+					{"autoindex", &Location::autoIndex}};
+				const std::map<std::string, string (ConfigServer::*)(string, bool &)> whileCmds = {
+					{"error_page", &ConfigServer::error_page},
+					{"return", &ConfigServer::returnRedirect}};
+				readBlock(curConf, cmds, whileCmds);
+				setConf(curConf);
+				_configs.push_back(curConf);
+			}
+			else
+				throw runtime_error("Invalid line found expecting server" + _lines[0]);
+		}
+		else if (_lines.size() == 0)
+			break ; 
+		else
+			throw runtime_error("Couldn't find closing curly bracket server block");
+	}
 }
 
 Parsing::~Parsing()

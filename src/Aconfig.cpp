@@ -1,6 +1,8 @@
 #include <Aconfig.hpp>
 #include <cstring>
 
+Aconfig::Aconfig() : _autoIndex(autoIndexNotFound),  _clientBodySize(0) {}
+
 Aconfig::Aconfig(const Aconfig &other)
 {
 	*this = other;
@@ -88,6 +90,8 @@ string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 	if (isdigit(line[0]) == false)
 		throw runtime_error("Aconfig: first character must be digit");
 	_clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
+	if (_clientBodySize == 0)
+		_clientBodySize = SIZE_MAX;
 	line = line.substr(len);
 	if (string("kKmMgG").find(line[0]) != string::npos)
 	{
@@ -136,9 +140,9 @@ string Aconfig::autoIndex(string line, bool &findColon)
 		len = line.length();
 	string autoIndexing = line.substr(0, len);
 	if (strncmp(autoIndexing.c_str(), "on", 2) == 0)
-		_autoIndex = true;
+		_autoIndex = autoIndexTrue;
 	else if (strncmp(autoIndexing.c_str(), "off", 3) == 0)
-		_autoIndex = false;
+		_autoIndex = autoIndexFalse;
 	else
 		throw runtime_error("Parsing: expected on/off after autoindex: " + autoIndexing);
 	return (handleNearEndOfLine(line, len, findColon, "autoIndex"));

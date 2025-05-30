@@ -19,3 +19,10 @@ for location can store: root, error-page, client_max_body_size
 
 server_name example.com www.example.com;
 error_page 500 502 503 504 /50x.html;
+
+	autoindex
+Try each file in order: It will look for each file listed in the index directive, in the order given.
+If none exist: If none of the specified index files exist in the directory, nginx will not serve an index file.
+Directory listing:
+If autoindex on; is set, nginx will generate and return a directory listing.
+If autoindex off; (the default), nginx will return a 403 Forbidden error.

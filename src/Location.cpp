@@ -21,9 +21,6 @@ Location &Location::operator=(const Location &other)
 	return (*this);
 }
 
-// Location::~Location(){
-// }
-
 string Location::setPath(string line)
 {
 	size_t len = line.find_first_of(" \t\f\v\r{");
@@ -88,16 +85,17 @@ string Location::methods(string line, bool &findClosingCurly)
 	{
 		len = line.length();
 	}
-	size_t index = (!_methods[0].empty() + !_methods[1].empty());
-	if (index > 1)
+	size_t index = (!_methods[0].empty() + !_methods[1].empty() + !_methods[2].empty());
+	if (index > 2)
 		throw runtime_error("Too many methods added");
 	_methods[index] = line.substr(0, len);
 	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
-	strncmp(_methods[index].c_str(), "POST", 4) != 0)
+	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
+	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)
 		throw runtime_error("Invalid methods given after limit_exept");
-	if (index == 1)
+	for (ssize_t i = index - 1; i >= 0; --i)
 	{
-		if (strncmp(_methods[0].c_str(), _methods[index].c_str(), _methods[0].size()) == 0)
+		if (strncmp(_methods[i].c_str(), _methods[index].c_str(), _methods[i].size()) == 0)
 			throw runtime_error("Method already entered before");
 	}
 	return (line.substr(len));
@@ -136,13 +134,33 @@ string Location::uploadStore(string line, bool &findColon)
 	return (handleNearEndOfLine(line, len, findColon, "upload_store"));
 }
 
-// string Location::cgi(string line)
-// {
-// 	size_t len = line.find_first_of(" \t\f\v\r{");
-// 	if (len == string::npos)
-// 		len = line.length();
-// 	_path = line.substr(0, len);
-// 	if (Server::directoryCheck(_path) == false)
-// 		throw runtime_error("invalid directory path given for location");
-// 	return (line.substr(len));
-// }
+string Location::extension(string line, bool &findColon)
+{
+	if (!_cgiExtension.empty())
+		throw runtime_error("Parsing: tried creating second extension");
+	size_t len = line.find_first_of(" \t\f\v\r;");
+	if (len == string::npos)
+	{
+		findColon = false;
+		_cgiExtension = line;
+		return line;
+	}
+	_cgiExtension = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "extension"));
+}
+
+
+string Location::cgiPath(string line, bool &findColon)
+{
+	if (!_cgiPath.empty())
+		throw runtime_error("Parsing: tried creating second cgi_path");
+	size_t len = line.find_first_of(" \t\f\v\r;");
+	if (len == string::npos)
+	{
+		findColon = false;
+		_cgiPath = line;
+		return line;
+	}
+	_cgiPath = line.substr(0, len);
+	return (handleNearEndOfLine(line, len, findColon, "cgi_path"));
+}
