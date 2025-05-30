@@ -8,7 +8,7 @@ ConfigServer::ConfigServer()
 	
 }
 
-ConfigServer::ConfigServer(const ConfigServer &other)
+ConfigServer::ConfigServer(const ConfigServer &other) : Aconfig(other)
 {
 	*this = other;
 }

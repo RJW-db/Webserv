@@ -6,6 +6,7 @@ using namespace std;
 #include <map>
 #include <vector>
 #include <stdexcept>
+#include <stdint.h>
 	
 
 class Aconfig
@@ -21,16 +22,16 @@ class Aconfig
 		string autoIndex(string line, bool &findColon);
 		string returnRedirect(string line, bool &findColon);
 		
-		size_t clientBodySize;
+		size_t _clientBodySize; // for nginx could be zero but is impractical
 		string _root;
-		bool	_autoIndex;
+		bool	_autoIndex; // how to check if set
 		pair<uint16_t, string> _returnRedirect;
+		map<uint16_t, string> ErrorCodesWithPage;
+		vector<string> _indexPage;
 	protected:
 		Aconfig(const Aconfig &other);
 		Aconfig() = default;
-		map<uint16_t, string> ErrorCodesWithPage;
 		vector<uint16_t> ErrorCodesWithoutPage;
-		vector<string> _indexPage;
 };
 
 string handleNearEndOfLine(string &line, size_t pos, bool &findColon, string err);

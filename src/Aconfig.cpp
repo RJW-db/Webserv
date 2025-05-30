@@ -12,7 +12,7 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 	if (this != &other)
 	{
 		ErrorCodesWithPage = other.ErrorCodesWithPage;
-		clientBodySize = other.clientBodySize;
+		_clientBodySize = other._clientBodySize;
 		_autoIndex = other._autoIndex;
 		_root = other._root;
 		_returnRedirect = other._returnRedirect;
@@ -87,18 +87,18 @@ string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 
 	if (isdigit(line[0]) == false)
 		throw runtime_error("Aconfig: first character must be digit");
-	clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
+	_clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
 	line = line.substr(len);
 	if (string("kKmMgG").find(line[0]) != string::npos)
 	{
 		if (isupper(line[0]) != 0)
 			line[0] -= 32;
 		if (line[0] == 'g')
-			clientBodySize *= 1024;
+			_clientBodySize *= 1024;
 		if (line[0] == 'g' || line[0] == 'm')
-			clientBodySize *= 1024;
+			_clientBodySize *= 1024;
 		if (line[0] == 'g' || line[0] == 'm' || line[0] == 'k')
-			clientBodySize *= 1024;
+			_clientBodySize *= 1024;
 	}
 	else if (string(" \t\f\v\r;").find(line[0]) != string::npos)
 		throw runtime_error("Aconfig: invalid character found after value");

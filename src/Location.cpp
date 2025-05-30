@@ -3,7 +3,7 @@
 Location::Location(){
 }
 
-Location::Location(const Location &other)
+Location::Location(const Location &other)  : Aconfig(other)
 {
 	*this = other;
 }
