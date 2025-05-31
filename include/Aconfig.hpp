@@ -22,10 +22,10 @@ class Aconfig
 		Aconfig &operator=(const Aconfig &other);
 		
 		string error_page(string line, bool &findColon);
-		string root(string line, bool &findColon);
-		string ClientMaxBodysize(string line, bool &findColon);
+		bool root(string &line);
+		bool ClientMaxBodysize(string &line);
 		string indexPage(string line, bool &findColon);
-		string autoIndex(string line, bool &findColon);
+		bool autoIndex(string &line);
 		string returnRedirect(string line, bool &findColon);
 		
 		size_t _clientBodySize; // for nginx could be zero but is impractical
@@ -40,6 +40,6 @@ class Aconfig
 		vector<uint16_t> ErrorCodesWithoutPage;
 };
 
-string handleNearEndOfLine(string &line, size_t pos, bool &findColon, string err);
+bool handleNearEndOfLine(string &line, size_t pos, string err);
 
 #endif

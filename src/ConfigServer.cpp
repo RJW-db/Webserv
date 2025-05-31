@@ -47,7 +47,7 @@ static uint32_t convertIpBinary(string ip)
     return (result);
 }
 
-string ConfigServer::listenHostname(string line, bool &findColon)
+bool ConfigServer::listenHostname(string &line)
 { 
 	// to do should we store in addrinfo immediately? and how to handle fstream
 	size_t skipHostname = line.find_first_not_of("0123456789.");
@@ -75,37 +75,35 @@ string ConfigServer::listenHostname(string line, bool &findColon)
     sockaddr in = *reinterpret_cast<sockaddr *>(&ipv4);
 	in.sa_family = AF_INET;
     _hostAddress.insert({hostname, in});
-	return (handleNearEndOfLine(line, index, findColon, "listenHostname"));
+	return (handleNearEndOfLine(line, index, "listenHostname"));
 }
 
 // UTILITY FUNCTION
-string handleNearEndOfLine(string &line, size_t pos, bool &findColon, string err)
+bool handleNearEndOfLine(string &line, size_t pos, string err)
 {
 	size_t k = line.find_first_not_of(" \t\f\v\r", pos);
 	if (k == string::npos)
 	{
-		findColon = false;
-		return line;
+		return false;
 	}
 	if (line[k] != ';')
 	{
 		throw runtime_error(err + ": invalid character before semi colon");
 	}
-	findColon = true;
-	return line.substr(k + 1);
+	line = line.substr(k + 1);
+	return true;
 }
 
-string ConfigServer::serverName(string line, bool &findColon)
+bool ConfigServer::serverName(string &line)
 {
 	if (!_serverName.empty())
 		throw runtime_error("Parsing: tried creating second upload_store");
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
 	{
-		findColon = false;
 		_serverName = line;
-		return line;
+		return (false);
 	}
 	_serverName = line.substr(0, len);
-	return (handleNearEndOfLine(line, len, findColon, "server_name"));
+	return (handleNearEndOfLine(line, len, "server_name"));
 }

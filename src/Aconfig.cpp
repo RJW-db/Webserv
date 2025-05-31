@@ -22,19 +22,18 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 	return (*this);
 }
 
-string Aconfig::root(string line, bool &findColon)
+bool Aconfig::root(string &line)
 {
 	if (!_root.empty())
 		throw runtime_error("Parsing: tried creating second root");
 	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
 	if (lenRoot == string::npos)
 	{
-		findColon = false;
 		_root = line;
-		return line;
+		return false;
 	}
 	_root = line.substr(0, lenRoot);
-	return (handleNearEndOfLine(line, lenRoot, findColon, "root"));
+	return (handleNearEndOfLine(line, lenRoot, "root"));
 }
 
 #include <iostream>
@@ -84,7 +83,7 @@ string Aconfig::error_page(string line, bool &findColon)
 }
 
 
-string Aconfig::ClientMaxBodysize(string line, bool &findColon)
+bool Aconfig::ClientMaxBodysize(string &line)
 {
 	size_t len;
 
@@ -107,15 +106,13 @@ string Aconfig::ClientMaxBodysize(string line, bool &findColon)
 	}
 	else if (string(" \t\f\v\r;").find(line[0]) == string::npos)
 		throw runtime_error("Aconfig: invalid character found after value");
-	if (line[0] == ';')
-	{
-		findColon = true;
-		return (line.substr(1));
-	}
-	return handleNearEndOfLine(line, 1, findColon, "ClientMaxBodysize");
+	// if (line[0] == ';')
+	// {
+	// 	line = line.substr(1);
+	// 	return true;
+	// }
+	return handleNearEndOfLine(line, 1, "ClientMaxBodysize");
 }
-
-
 
 string Aconfig::indexPage(string line, bool &findColon)
 {
@@ -134,7 +131,7 @@ string Aconfig::indexPage(string line, bool &findColon)
 	return (line.substr(len + 1));
 }
 
-string Aconfig::autoIndex(string line, bool &findColon)
+bool Aconfig::autoIndex(string &line)
 {
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
@@ -146,10 +143,9 @@ string Aconfig::autoIndex(string line, bool &findColon)
 		_autoIndex = autoIndexFalse;
 	else
 		throw runtime_error("Parsing: expected on/off after autoindex: " + autoIndexing);
-	return (handleNearEndOfLine(line, len, findColon, "autoIndex"));
+	return (handleNearEndOfLine(line, len, "autoIndex"));
 }
-#include <iostream>
-	// if () // TODO access() to see if file exist/accesible at end of serverblock
+
 string Aconfig::returnRedirect(string line, bool &findColon)
 {
 	size_t len;

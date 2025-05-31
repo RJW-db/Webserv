@@ -28,13 +28,8 @@ class ConfigServer : public Aconfig
 		ConfigServer &operator=(const ConfigServer &other);
 
 		
-		string listenHostname(string line, bool &findColon);
-		string serverName(string line, bool &findColon);
-		// string error_page(string line, bool &findColon) override;
-        // string root(string line, bool &findColon) override;
-        // string ClientMaxBodysize(string line, bool &findColon) override;
-		// string error_page(string line, bool &findColon);
-		// void	addHostPort(string line);
+		bool listenHostname(string &line);
+		bool serverName(string &line);
 
 		unordered_map<string, sockaddr> _hostAddress;
 		// map<uint16_t, string> ErrorCodesWithPage;

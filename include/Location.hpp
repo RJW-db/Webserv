@@ -19,9 +19,9 @@ class Location : public Aconfig
 		string setPath(string line);
 		string methods(string line, bool &findColon);
 		string indexPage(string line , bool &findColon);
-		string uploadStore(string line , bool &findColon);
-		string extension(string line , bool &findColon);
-		string cgiPath(string line , bool &findColon);
+		bool uploadStore(string &line);
+		bool extension(string &line);
+		bool cgiPath(string &line);
 
 		string _path;
 		array<string, 3> _methods;

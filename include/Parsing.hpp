@@ -27,7 +27,7 @@ class Parsing
 	private:
 		template <typename T>
 		void readBlock(T &block, 
-			const map<string, string (T::*)(string, bool &)> &cmds, 
+			const map<string, bool (T::*)(string&)> &cmds, 
 			const map<string, string (T::*)(string, bool &)> &whileCmds);
 		bool    runReadblock(void);
 		string skipLine(string &line, bool forceSkip);

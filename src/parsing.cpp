@@ -52,7 +52,7 @@ bool    Parsing::runReadblock()
 string Parsing::skipLine(string &line, bool forceSkip)
 {
 	size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
-    if (string::npos == skipSpace)
+    if (string::npos == skipSpace || forceSkip)
     {
 		_lines.erase(_lines.begin());
         return _lines.begin()->second;
@@ -62,7 +62,7 @@ string Parsing::skipLine(string &line, bool forceSkip)
 //still need to add check for no lines left
 template <typename T>
 void Parsing::readBlock(T &block, 
-    const map<string, string (T::*)(string, bool &)> &cmds, 
+    const map<string, bool (T::*)(string &)> &cmds, 
     const map<string, string (T::*)(string, bool &)> &whileCmds)
 {
     size_t skipSpace;
@@ -82,7 +82,7 @@ void Parsing::readBlock(T &block,
                 if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
                     throw runtime_error("no space found after command");
                 ftSkipspace(line);
-                line = (block.*(cmd.second))(line, findColon);
+                findColon = (block.*(cmd.second))(line);
                 if (!findColon)
                 {
                 	line = skipLine(line, true);
@@ -137,15 +137,15 @@ void Parsing::readBlock(T &block,
                 line =line.substr(1);
                 line = skipLine(line, false);
                 ftSkipspace(line);
-                const std::map<std::string, string (Location::*)(string, bool &)> cmds = {
+                const map<string, bool (Location::*)(string &)> cmds = {
                     {"root", &Location::root},
                     {"client_max_body_size", &Location::ClientMaxBodysize},
                     {"autoindex", &Location::autoIndex},
-                    {"return", &Location::returnRedirect}, 
                     {"upload_store", &Location::uploadStore}};
-                const std::map<std::string, string (Location::*)(string, bool &)> whileCmds = {
+                const map<string, string (Location::*)(string, bool &)> whileCmds = {
                     {"error_page", &Location::error_page}, 
                     {"limit_except", &Location::methods}, 
+                    {"return", &Location::returnRedirect}, 
                     {"index", &Location::indexPage}};
                 readBlock(location, cmds, whileCmds);
 				line = _lines.begin()->second;
@@ -166,7 +166,6 @@ static void setErrorPages(map<uint16_t, string> &ErrorCodesWithPage, Aconfig &cu
         {
             string fileName = "webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
             ErrorCodesWithPage.insert({errorCode, fileName});
-            std::cout << "error page: " << ErrorCodesWithPage.at(errorCode) << " code:" << errorCode << std::endl;
         }
         else
         {
@@ -174,7 +173,6 @@ static void setErrorPages(map<uint16_t, string> &ErrorCodesWithPage, Aconfig &cu
             ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
             if (ErrorCodesWithPage.at(errorCode)[0] == '/')
                 ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
-            std::cout << "error page: " << ErrorCodesWithPage.at(errorCode) << " code:" << errorCode << std::endl;
         }
         if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
             throw runtime_error("couldn't open error page:" + ErrorCodesWithPage.at(errorCode));
@@ -220,8 +218,8 @@ static void setConf(ConfigServer &curConf)
         curConf._autoIndex = autoIndexFalse;
     if (curConf._hostAddress.empty())
     {
-        bool tmp;
-        curConf.listenHostname("80;", tmp); //sets sockaddr ip to 0.0.0.0 and port to 80
+        string tmp = "80;";
+        curConf.listenHostname(tmp); //sets sockaddr ip to 0.0.0.0 and port to 80
     }
 
     for(Location &location : curConf._locations)
@@ -267,7 +265,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
                     _lines.erase(_lines.begin());
                 }
                 ConfigServer curConf;
-                const std::map<std::string, string (ConfigServer::*)(string, bool &)> cmds = {
+                const std::map<std::string, bool (ConfigServer::*)(string &)> cmds = {
                     {"listen", &ConfigServer::listenHostname},
                     {"root", &ConfigServer::root},
                     {"client_max_body_size", &ConfigServer::ClientMaxBodysize},

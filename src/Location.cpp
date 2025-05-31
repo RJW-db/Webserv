@@ -119,48 +119,45 @@ string Location::indexPage(string line, bool &findColon)
 	return (line.substr(len));
 }
 
-string Location::uploadStore(string line, bool &findColon)
+bool Location::uploadStore(string &line)
 {
 	if (!_upload_store.empty())
 		throw runtime_error("Parsing: tried creating second upload_store");
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
 	{
-		findColon = false;
 		_upload_store = line;
-		return line;
+		return false;
 	}
 	_upload_store = line.substr(0, len);
-	return (handleNearEndOfLine(line, len, findColon, "upload_store"));
+	return (handleNearEndOfLine(line, len, "upload_store"));
 }
 
-string Location::extension(string line, bool &findColon)
+bool Location::extension(string &line)
 {
 	if (!_cgiExtension.empty())
 		throw runtime_error("Parsing: tried creating second extension");
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
 	{
-		findColon = false;
 		_cgiExtension = line;
-		return line;
+		return false;
 	}
 	_cgiExtension = line.substr(0, len);
-	return (handleNearEndOfLine(line, len, findColon, "extension"));
+	return (handleNearEndOfLine(line, len, "extension"));
 }
 
 
-string Location::cgiPath(string line, bool &findColon)
+bool Location::cgiPath(string &line)
 {
 	if (!_cgiPath.empty())
 		throw runtime_error("Parsing: tried creating second cgi_path");
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
 	{
-		findColon = false;
 		_cgiPath = line;
-		return line;
+		return false;
 	}
 	_cgiPath = line.substr(0, len);
-	return (handleNearEndOfLine(line, len, findColon, "cgi_path"));
+	return (handleNearEndOfLine(line, len, "cgi_path"));
 }
