@@ -1,6 +1,7 @@
 #include <Webserv.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <HttpRequest.hpp>
 
 #include <unordered_set>
 #include <arpa/inet.h>
@@ -328,6 +329,39 @@ void    validateKeyValues(string request, const string &method)
     else
         std::cout << "connection was established" << std::endl;
 }
+
+httpRequest_t	getHeaderInfo(string &header)
+{
+	httpRequest_t	httpReq;
+
+
+	const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
+	size_t position = header.find(boundaryKey);
+
+	size_t boundaryStart = position + boundaryKey.length();
+	size_t boundaryEnd = header.find("\r\n", boundaryStart);
+
+	std::string bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
+	std::cout << "bodyBoundary " << bodyBoundary << std::endl;
+	httpReq.bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
+	return httpReq;
+}
+
+void	getBodyInfo(string &body, httpRequest_t &httpReq)
+{
+        const string bodyKey = "Content-Type: ";
+        size_t fileStart = body.find(bodyKey);
+        fileStart = body.find("\r\n\r\n", fileStart) + 4;
+        size_t fileEnd = body.find("\r\n--" + httpReq.bodyBoundary, fileStart);
+
+        // std::string file = body.substr(fileStart, fileEnd - fileStart);
+		httpReq.filename = body.substr(fileStart, fileEnd - fileStart);
+		// if (filename == string::npos)
+        // {
+        //     std::cout << "not ogod" << std::endl;
+        // }
+}
+
 void    handleRequest(int clientFD, string &method, string &header, string &body)
 {
     std::cout << "vor" << std::endl;
@@ -371,37 +405,21 @@ void    handleRequest(int clientFD, string &method, string &header, string &body
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
-        std::cout << header << std::endl;
-        std::cout << escape_special_chars(body) << std::endl;
+        // std::cout << header << std::endl;
+        // std::cout << escape_special_chars(body) << std::endl;
 
-        const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
-        size_t position = header.find(boundaryKey);
+		std::cout << escape_special_chars(header) << std::endl;
 
-        size_t boundaryStart = position + boundaryKey.length();
-        size_t boundaryEnd = header.find("\r\n", boundaryStart);
-
-        std::string bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
-        std::cout << "bodyBoundary " << bodyBoundary << std::endl;
-
-        
-        const string bodyKey = "Content-Type: ";
-        size_t fileStart = body.find(bodyKey);
-        fileStart = body.find("\r\n\r\n", fileStart) + 4;
-        size_t fileEnd = body.find("\r\n--" + bodyBoundary, fileStart);
-
-        std::string file = body.substr(fileStart, fileEnd - fileStart);
-        std::cout << "file >" << escape_special_chars(file) << "<" << std::endl;
-        // if (file == string::npos)
-        // {
-        //     std::cout << "not ogod" << std::endl;
-        // }
+        // std::string file = body.substr(fileStart, fileEnd - fileStart);
+        // std::cout << "file >" << escape_special_chars(file) << "<" << std::endl;
+ 
+		httpRequest_t	httpReq = getHeaderInfo(header);
+		getBodyInfo(body, httpReq);
         ofstream myfile;
-        // myfile.open("example.txt");
-        // myfile << file;
-        // myfile.close();
-        myfile.open("ssam.png");
-        myfile << file;
+        myfile.open("space.jpg");
+        myfile << httpReq.filename;
         myfile.close();
+
     }
     // else
     // {
