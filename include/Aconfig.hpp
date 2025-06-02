@@ -21,12 +21,13 @@ class Aconfig
 		virtual ~Aconfig() = default; // Ensures proper cleanup of derived classes
 		Aconfig &operator=(const Aconfig &other);
 		
-		string error_page(string line, bool &findColon);
+		bool error_page(string &line);
 		bool root(string &line);
 		bool ClientMaxBodysize(string &line);
-		string indexPage(string line, bool &findColon);
+		bool indexPage(string &line);
 		bool autoIndex(string &line);
-		string returnRedirect(string line, bool &findColon);
+		bool returnRedirect(string &line);
+		void setLineNbr(int num);
 		
 		size_t _clientBodySize; // for nginx could be zero but is impractical
 		string _root;
@@ -35,11 +36,14 @@ class Aconfig
 		map<uint16_t, string> ErrorCodesWithPage;
 		vector<string> _indexPage;
 	protected:
-		Aconfig();
-		Aconfig(const Aconfig &other);
-		vector<uint16_t> ErrorCodesWithoutPage;
+	Aconfig();
+	Aconfig(const Aconfig &other);
+	vector<uint16_t> ErrorCodesWithoutPage;
+	int _lineNbr;
+	bool setErrorPage(string &line, bool &foundPage);
+	bool handleNearEndOfLine(string &line, size_t pos, string err);
+
 };
 
-bool handleNearEndOfLine(string &line, size_t pos, string err);
 
 #endif

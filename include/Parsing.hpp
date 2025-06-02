@@ -28,9 +28,10 @@ class Parsing
 		template <typename T>
 		void readBlock(T &block, 
 			const map<string, bool (T::*)(string&)> &cmds, 
-			const map<string, string (T::*)(string, bool &)> &whileCmds);
+			const map<string, bool (T::*)(string &)> &whileCmds);
 		bool    runReadblock(void);
-		string skipLine(string &line, bool forceSkip);
+		template <typename T>
+		void skipLine(string &line, bool forceSkip, T &curConf);
 		// void foundServer(std::fstream &fs, std::string line);
 
 		// ConfigServer	*_confServers;

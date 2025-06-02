@@ -25,7 +25,7 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 bool Aconfig::root(string &line)
 {
 	if (!_root.empty())
-		throw runtime_error("Parsing: tried creating second root");
+		throw runtime_error(to_string(_lineNbr) + ": root: tried setting second root");
 	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
 	if (lenRoot == string::npos)
 	{
@@ -36,25 +36,17 @@ bool Aconfig::root(string &line)
 	return (handleNearEndOfLine(line, lenRoot, "root"));
 }
 
-#include <iostream>
-string Aconfig::error_page(string line, bool &findColon)
+bool Aconfig::setErrorPage(string &line, bool &foundPage)
 {
-	static bool foundPage = false;
-	if (foundPage == true && line[0] == ';')
-	{
-		findColon = true;
-		foundPage = false;
-		return line.substr(1);
-	}
-	if (line[0] == '/') // how to check this is last in string
+	if (line[0] == '/')
 	{
 		if (ErrorCodesWithoutPage.size() == 0)
-			throw runtime_error("no error codes in config for error_page");
+			throw runtime_error(to_string(_lineNbr) + ": error_page: no error codes in config for error_page");
 		size_t nameLen = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
 		if (nameLen == string::npos)
 			nameLen = line.length();
 		else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
-			throw runtime_error("invalid character found after error_page");
+			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid character found after error_page");
 		string error_page = line.substr(0, nameLen);
 		for(uint16_t error_code : ErrorCodesWithoutPage)
 		{
@@ -65,20 +57,38 @@ string Aconfig::error_page(string line, bool &findColon)
 		}
 		ErrorCodesWithoutPage.clear();
 		foundPage = true;
-		return (line.substr(nameLen));
+		line = line.substr(nameLen);
+		return false;
 	}
+}
+
+#include <iostream>
+bool Aconfig::error_page(string &line)
+{
+	static bool foundPage = false;
+	if (foundPage == true)
+	{
+		if (line[0] != ';')
+			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input found after error page given");
+		foundPage = false;
+		line = line.substr(1);
+		return true;
+	}
+	else if (line[0] == '/')
+		return setErrorPage(line, foundPage);
 	else
 	{
 		if (line[0] == ';')
-			throw runtime_error("no error page given for error codes");
+			throw runtime_error(to_string(_lineNbr) + ": error_page: no error page given for error codes");
 		if (foundPage == true)
-			throw runtime_error("invalid input after error page");
+			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input after error page");
 		size_t pos;
 		size_t error_num = stoi(line, &pos);
 		if (error_num < 300 || error_num > 599)
-			throw runtime_error("error code invalid must be between 300 and 599");
+			throw runtime_error(to_string(_lineNbr) + ": error_page: error code invalid must be between 300 and 599");
 		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
-		return (line.substr(pos + 1));
+		line = line.substr(pos + 1);
+		return false;
 	}
 }
 
@@ -88,7 +98,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	size_t len;
 
 	if (isdigit(line[0]) == false)
-		throw runtime_error("Aconfig: first character must be digit");
+		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: first character must be digit: " + line[0]);
 	_clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
 	if (_clientBodySize == 0)
 		_clientBodySize = SIZE_MAX;
@@ -105,30 +115,28 @@ bool Aconfig::ClientMaxBodysize(string &line)
 			_clientBodySize *= 1024;
 	}
 	else if (string(" \t\f\v\r;").find(line[0]) == string::npos)
-		throw runtime_error("Aconfig: invalid character found after value");
-	// if (line[0] == ';')
-	// {
-	// 	line = line.substr(1);
-	// 	return true;
-	// }
-	return handleNearEndOfLine(line, 1, "ClientMaxBodysize");
+		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: invalid character found after value: " + line[0]);
+	return handleNearEndOfLine(line, 1, "client_max_body_size");
 }
 
-string Aconfig::indexPage(string line, bool &findColon)
+bool Aconfig::indexPage(string &line)
 {
 	if (line[0] == ';')
 	{
-		findColon = true;
-		return line.substr(1);
+		if (_indexPage.empty())
+			throw runtime_error(to_string(_lineNbr) + ": index: no index given for indexPage");
+		line = line.substr(1);
+		return true;
 	}
 	size_t len = line.find_first_not_of(" \t\f\v\r;#?&%=+\\:");
 	if (len == 0)
-		throw (runtime_error("invalid index given after index"));
+		throw (runtime_error(to_string(_lineNbr) + ": index: invalid index given after index"));
 	if (len == string::npos)
 		len = line.length();
 	string indexPage = line.substr(0, len);
 	_indexPage.push_back(indexPage);
-	return (line.substr(len + 1));
+	line = line.substr(len + 1);
+	return false;
 }
 
 bool Aconfig::autoIndex(string &line)
@@ -142,44 +150,66 @@ bool Aconfig::autoIndex(string &line)
 	else if (strncmp(autoIndexing.c_str(), "off", 3) == 0)
 		_autoIndex = autoIndexFalse;
 	else
-		throw runtime_error("Parsing: expected on/off after autoindex: " + autoIndexing);
+		throw runtime_error(to_string(_lineNbr) + "autoIndex: expected on/off after autoindex: " + autoIndexing);
 	return (handleNearEndOfLine(line, len, "autoIndex"));
 }
 
-string Aconfig::returnRedirect(string line, bool &findColon)
+bool Aconfig::returnRedirect(string &line)
 {
 	size_t len;
 	if (isdigit(line[0]) != 0)
 	{
 		size_t errorCode = stoi(line, &len);
 		if ((errorCode < 301 || errorCode > 303) && (errorCode < 307 || errorCode > 308))
-			throw runtime_error("Aconfig: invalid error code given");
+			throw runtime_error(to_string(_lineNbr) + ": return: invalid error code given");
 		if (!_returnRedirect.second.empty())
-			throw runtime_error("Aconfig: cant have multiple return redirects");
+			throw runtime_error(to_string(_lineNbr) + ": return: cant have multiple return redirects");
 		if (_returnRedirect.first != 0)
-			throw runtime_error("Aconfig: can't have multiple error code redirects");
+			throw runtime_error(to_string(_lineNbr) + ": return: can't have multiple error code redirects");
 		_returnRedirect.first = errorCode;
-		return (line.substr(len));
+		line = line.substr(len);
+		return false;
 	}
 	else
 	{
 		if (line[0] == ';')
 		{
 			if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
-				throw runtime_error("Aconfig: not enough valid arguments given");
-			findColon = true;
-			return (line.substr(1));
+				throw runtime_error(to_string(_lineNbr) + ": return: not enough valid arguments given");
+			line = line.substr(1);
+			return true;
 		}
 		len = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
 		if (len == 0)
-			throw runtime_error("Aconfig: invalid character found");
+			throw runtime_error(to_string(_lineNbr) + ": return: invalid character found");
 		if (_returnRedirect.first == 0)
-			throw runtime_error("Aconfig: no error code given");
+			throw runtime_error(to_string(_lineNbr) + ": return: no error code given");
 		if (!_returnRedirect.second.empty())
-			throw runtime_error("Aconfig: multiple error pages given");
+			throw runtime_error(to_string(_lineNbr) + ": return: multiple error pages given");
 		if (len == string::npos)
 			len = line.length();
 		_returnRedirect.second = line.substr(0, len);
-		return line.substr(len);
+		line = line.substr(len);
+		return false;
 	}
+}
+
+void Aconfig::setLineNbr(int num)
+{
+	_lineNbr = num;
+}
+
+bool Aconfig::handleNearEndOfLine(string &line, size_t pos, string err)
+{
+	size_t k = line.find_first_not_of(" \t\f\v\r", pos);
+	if (k == string::npos)
+	{
+		return false;
+	}
+	if (line[k] != ';')
+	{
+		throw runtime_error(to_string(_lineNbr) + ": " + err + ": invalid input found before semi colon: " + line[k]);
+	}
+	line = line.substr(k + 1);
+	return true;
 }

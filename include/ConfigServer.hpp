@@ -35,7 +35,9 @@ class ConfigServer : public Aconfig
 		// map<uint16_t, string> ErrorCodesWithPage;
 		vector<Location> _locations;
 		string _serverName; // if not found acts as default
-		private: 
+		private:
+			uint32_t convertIpBinary(string ip);
+
 			// vector<uint16_t> ErrorCodesWithoutPage;
 };
 
