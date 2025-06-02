@@ -39,3 +39,30 @@ typedef struct s_httpRequest
 
 	string filename;
 }	httpRequest_t;
+
+class HttpRequest
+{
+	public:
+		int _clientFD;
+		string &_method;
+		string &_header;
+		string &_body;
+
+		string _hostName;
+		string _contentLength;
+		string _contentType;
+		string_view _bodyBoundary;
+
+		string_view _filename;
+
+		HttpRequest(int clientFD, string &method, string &header, string &body);
+
+		void	handleRequest();
+
+    	unordered_map<string, string_view> parseHeaders(const string& headerBlock);
+		void	getHeaderInfo(string &header);
+		void	getBodyInfo(string &body);
+
+		void	POST();
+		void	GET();
+};

@@ -1,6 +1,7 @@
 #include <Webserv.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <HttpRequest.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -325,7 +326,9 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
     //     printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
     //     return ;
     // }
-    handleRequest(clientFD, method, header, body);
+    // handleRequest(clientFD, method, header, body);
+    HttpRequest request(clientFD, method, header, body);
+    request.handleRequest();
     _fdBuffers[clientFD].clear();
 }
 

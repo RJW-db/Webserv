@@ -32,6 +32,11 @@
 #include <sys/stat.h>
 
 
+HttpRequest::HttpRequest(int clientFD, string &method, string &header, string &body)
+:_clientFD(clientFD), _method(method), _header(header), _body(body)
+{
+}
+
 string ValidateHEAD(const string &head)
 {
     std::istringstream headStream(head);
@@ -330,100 +335,148 @@ void    validateKeyValues(string request, const string &method)
         std::cout << "connection was established" << std::endl;
 }
 
-httpRequest_t	getHeaderInfo(string &header)
+unordered_map<string, string_view> HttpRequest::parseHeaders(const string& headerBlock)
 {
-	httpRequest_t	httpReq;
+    unordered_map<string, string_view> headers;
+    size_t start = 0;
+    while (start < headerBlock.size())
+    {
+        size_t end = headerBlock.find("\r\n", start);
+        if (end == string::npos)
+            throw Server::ClientException("Malformed HTTP request: header line not properly terminated");
 
+        string_view line(&headerBlock[start], end - start);
+        if (line.empty())
+            break; // End of headers
 
-	const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
-	size_t position = header.find(boundaryKey);
+        size_t colon = line.find(':');
+        if (colon != string_view::npos) {
+            // Extract key and value as string_views
+            string_view key = line.substr(0, colon);
+            string_view value = line.substr(colon + 1);
+
+            // Trim whitespace from key
+            key.remove_prefix(key.find_first_not_of(" \t"));
+            key.remove_suffix(key.size() - key.find_last_not_of(" \t") - 1);
+            // Trim whitespace from value
+            value.remove_prefix(value.find_first_not_of(" \t"));
+            value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
+
+            headers[string(key)] = value;
+            // std::cout << "\tkey\t" << key << std::endl;
+        }
+        start = end + 2;
+    }
+    return headers;
+}
+
+void	HttpRequest::getHeaderInfo(string &header)
+{
+    const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
+    size_t position = header.find(boundaryKey);
+
+    if (position == string::npos)
+        throw Server::ClientException("Boundary not found in Content-Type header");
 
 	size_t boundaryStart = position + boundaryKey.length();
 	size_t boundaryEnd = header.find("\r\n", boundaryStart);
 
-	std::string bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
-	std::cout << "bodyBoundary " << bodyBoundary << std::endl;
-	httpReq.bodyBoundary = header.substr(boundaryStart, boundaryEnd - boundaryStart);
-	return httpReq;
+    if (boundaryEnd == string::npos)
+        throw Server::ClientException("Malformed Content-Type header");
+
+    _bodyBoundary = string_view(header).substr(boundaryStart, boundaryEnd - boundaryStart);
 }
 
-void	getBodyInfo(string &body, httpRequest_t &httpReq)
+void	HttpRequest::getBodyInfo(string &body)
 {
-        const string bodyKey = "Content-Type: ";
-        size_t fileStart = body.find(bodyKey);
-        fileStart = body.find("\r\n\r\n", fileStart) + 4;
-        size_t fileEnd = body.find("\r\n--" + httpReq.bodyBoundary, fileStart);
+    const string contentType = "Content-Type: ";
+    size_t position = body.find(contentType);
 
-        // std::string file = body.substr(fileStart, fileEnd - fileStart);
-		httpReq.filename = body.substr(fileStart, fileEnd - fileStart);
-		// if (filename == string::npos)
-        // {
-        //     std::cout << "not ogod" << std::endl;
-        // }
+    if (position == string::npos)
+        throw Server::ClientException("Content-Type header not found in multipart/form-data body part");
+
+    size_t fileStart = body.find("\r\n\r\n", position) + 4;
+    size_t fileEnd = body.find("\r\n--" + string(_bodyBoundary), fileStart);
+
+    if (position == string::npos)
+        throw Server::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
+
+    _filename = string_view(body).substr(fileStart, fileEnd - fileStart);
 }
 
-void    handleRequest(int clientFD, string &method, string &header, string &body)
+void    HttpRequest::GET()
 {
-    std::cout << "vor" << std::endl;
-    std::cout << method << std::endl;
-    validateHEAD(header);
-    validateKeyValues(header, method);
-    if (method == "GET")
+    std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
+    if (!file)
     {
-        // std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-        // send(clientFD, response.c_str(), response.size(), 0);
-
-        std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
-        if (!file)
-        {
-            std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-            send(clientFD, notFound.c_str(), notFound.size(), 0);
-            return;
-        }
-
-        // Read file contents
-        std::ostringstream ss;
-        ss << file.rdbuf();
-        std::string fileContent = ss.str();
-
-        // Build response
-        std::ostringstream response;
-        response << "HTTP/1.1 200 OK\r\n";
-        response << "Content-Length: " << fileContent.size() << "\r\n";
-        response << "Content-Type: text/html\r\n";
-        response << "\r\n";
-        response << fileContent;
-
-        std::string responseStr = response.str();
-        send(clientFD, responseStr.c_str(), responseStr.size(), 0);
+        std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+        send(_clientFD, notFound.c_str(), notFound.size(), 0);
+        return;
     }
-    else if (method == "POST")
+
+    // Read file contents
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    std::string fileContent = ss.str();
+
+    // Build response
+    std::ostringstream response;
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Content-Length: " << fileContent.size() << "\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "\r\n";
+    response << fileContent;
+
+    std::string responseStr = response.str();
+    send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
+}
+
+void    HttpRequest::POST()
+{
+    getHeaderInfo(_header);
+    getBodyInfo(_body);
+    ofstream myfile;
+    myfile.open("space.jpg");
+    myfile << _filename;
+    myfile.close();
+}
+
+void    HttpRequest::handleRequest()
+{
+
+    std::cout << "vor" << std::endl;
+    std::cout << _method << std::endl;
+    validateHEAD(_header);
+    validateKeyValues(_header, _method);
+
+    unordered_map<string, string_view> headers = parseHeaders(_header);
+
+    auto it = headers.find("Host");
+    if (it == headers.end())
+        throw Server::ClientException("Missing Host header");
+    else if (it->second != "127.0.1.1:8080")
+        throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
+
+    if (_method == "GET")
     {
-        std::cout << "hier zijn we\n\n\n" << std::endl;
+        GET();
+    }
+    else if (_method == "POST")
+    {
+        if (headers.find("Content-Type") == headers.end())
+            throw Server::ClientException("Missing Content-Type header");
+        if (headers.find("Content-Length") == headers.end())
+            throw Server::ClientException("Missing Content-Length header");
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
-        // std::cout << header << std::endl;
-        // std::cout << escape_special_chars(body) << std::endl;
-
-		std::cout << escape_special_chars(header) << std::endl;
-
-        // std::string file = body.substr(fileStart, fileEnd - fileStart);
-        // std::cout << "file >" << escape_special_chars(file) << "<" << std::endl;
- 
-		httpRequest_t	httpReq = getHeaderInfo(header);
-		getBodyInfo(body, httpReq);
-        ofstream myfile;
-        myfile.open("space.jpg");
-        myfile << httpReq.filename;
-        myfile.close();
-
+        POST();
     }
     // else
     // {
 
     // }
-    std::cout << "\t" << method << std::endl;
+    std::cout << "\t" << _method << std::endl;
 }

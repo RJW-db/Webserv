@@ -36,6 +36,13 @@ static void parsingtest(void);
 static void openDir(void);
 // static void customHandler(int signum);
 
+using std::string;
+void func(std::string_view part)
+{
+	// std::cout << part << std::endl;
+	// string newstr = "destroy " + string(part);
+
+}
 int main()
 {
 	// signal(SIGINT, customHandler);
@@ -44,6 +51,11 @@ int main()
 
 	serverTest();
 	// parsingtest();
+
+	// std::cout << newstr << std::endl;
+	// string something = "like a bird";
+	// func(string_view(something).substr(5, 6));
+	// std::cout << something << std::endl;
 
 // string test = "okenondan";
 // std::cout << test.find("non", 0) << std::endl;
