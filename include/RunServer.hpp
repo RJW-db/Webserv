@@ -30,6 +30,15 @@ typedef struct _tmp
 	const char *port;
 }	tmp_t;
 
+struct ClientRequestState
+{
+    bool headerParsed = false;
+    string header;
+    string body;
+    string method;
+    size_t contentLength = 0;
+};
+
 class RunServers;
 using ServerList = vector<unique_ptr<RunServers>>;
 
@@ -51,6 +60,8 @@ class RunServers
 
         static bool directoryCheck(string &path);
 
+        static void cleanupClient(int clientFD, FileDescriptor &fds);
+
         class ClientException : public std::exception
 		{
             private:
@@ -70,7 +81,7 @@ class RunServers
         static array<struct epoll_event, FD_LIMIT> _events;
 
         static unordered_map<int, string> _fdBuffers;
-
+        static unordered_map<int, ClientRequestState> _clientStates;
 };
 
 

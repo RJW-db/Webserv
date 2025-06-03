@@ -30,15 +30,15 @@
 #include <sstream>
 #include <sys/stat.h>
 
-typedef struct s_httpRequest
-{
-	string hostName;
-	string contentLength;
-	string contentType;
-	string bodyBoundary;
+// typedef struct s_httpRequest
+// {
+// 	string hostName;
+// 	string contentLength;
+// 	string contentType;
+// 	string bodyBoundary;
 
-	string filename;
-}	httpRequest_t;
+// 	string filename;
+// }	httpRequest_t;
 
 class HttpRequest
 {
@@ -65,13 +65,13 @@ class HttpRequest
 		string_view _bodyBoundary;
 
 		string_view _filename;
+		string_view _file;
 
 		HttpRequest(int clientFD, string &method, string &header, string &body);
 
 		void	handleRequest();
 
     	void	parseHeaders(const string& headerBlock);
-		void	getHeaderInfo(string &header);
 		void	getBodyInfo(string &body);
 
 		void	POST();
