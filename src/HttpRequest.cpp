@@ -368,25 +368,28 @@ void HttpRequest::parseHeaders(const string& headerBlock)
     }
 }
 
-void	HttpRequest::getHeaderInfo(string &header)
-{
-    const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
-    size_t position = header.find(boundaryKey);
-
-    if (position == string::npos)
-        throw RunServers::ClientException("Boundary not found in Content-Type header");
-
-	size_t boundaryStart = position + boundaryKey.length();
-	size_t boundaryEnd = header.find("\r\n", boundaryStart);
-
-    if (boundaryEnd == string::npos)
-        throw RunServers::ClientException("Malformed Content-Type header");
-
-    _bodyBoundary = string_view(header).substr(boundaryStart, boundaryEnd - boundaryStart);
-}
-
 void	HttpRequest::getBodyInfo(string &body)
 {
+    size_t cdPos = body.find("Content-Disposition:");
+    if (cdPos == string::npos)
+        throw RunServers::ClientException("Content-Disposition header not found in multipart body");
+
+    // Extract the Content-Disposition line
+    size_t cdEnd = body.find("\r\n", cdPos);
+    string_view cdLine = string_view(body).substr(cdPos, cdEnd - cdPos);
+
+    string filenameKey = "filename=\"";
+    size_t fnPos = cdLine.find(filenameKey);
+    if (fnPos != string::npos) {
+        size_t fnStart = fnPos + filenameKey.size();
+        size_t fnEnd = cdLine.find("\"", fnStart);
+        _filename = cdLine.substr(fnStart, fnEnd - fnStart);
+        if (_filename.empty())
+            throw RunServers::ClientException("Filename is empty in Content-Disposition header");
+    }
+    else
+        throw RunServers::ClientException("Filename not found in Content-Disposition header");
+
     const string contentType = "Content-Type: ";
     size_t position = body.find(contentType);
 
@@ -399,7 +402,7 @@ void	HttpRequest::getBodyInfo(string &body)
     if (position == string::npos)
         throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
-    _filename = string_view(body).substr(fileStart, fileEnd - fileStart);
+    _file = string_view(body).substr(fileStart, fileEnd - fileStart);
 }
 
 void    HttpRequest::GET()
@@ -431,18 +434,9 @@ void    HttpRequest::GET()
 
 void    HttpRequest::POST()
 {
-    getHeaderInfo(_headerBlock);
-    getBodyInfo(_body);
-    
-    auto it = _headers.find("Content-Length");
-    if (it == _headers.end())
-        throw RunServers::ClientException("Missing Content-Length header");
-    // else if (it->second == "0 of lager")
-
-    it = _headers.find("Content-Type");
+    auto it = _headers.find("Content-Type");
     if (it == _headers.end())
         throw RunServers::ClientException("Missing Content-Type");
-
 
     ContentType ct = getContentType(it->second);
     switch (ct) {
@@ -462,10 +456,11 @@ void    HttpRequest::POST()
             throw RunServers::ClientException("Unsupported Content-Type: " + string(it->second));
     }
 
+    getBodyInfo(_body);
 
     ofstream myfile;
-    myfile.open("space.jpg");
-    myfile << _filename;
+    myfile.open("upload/" + string(_filename));
+    myfile << _file;
     myfile.close();
 }
 

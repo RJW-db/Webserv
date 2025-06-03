@@ -35,7 +35,6 @@ static void serverTest(void);
 static void parsingtest(void);
 static void openDir(void);
 // static void customHandler(int signum);
-
 using std::string;
 void func(std::string_view part)
 {
@@ -88,22 +87,37 @@ static void examples(void)
 
 static void serverTest(void)
 {
+	// FileDescriptor	fds;
+    // RunServers servers;
+
+	// // servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	// // servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
+	// Parsing test("config/default.conf");
+	// for (ConfigServer config : test._configs)
+	// {
+	// 	Server server(config);		
+	// }
+	// // RunServers servers(test.getServers());
+	// // RunServers::epollInit(servers);
+    // // RunServers::runServers(servers, fds);
+
+	// // std::vector<tmp_t> servConf;
+	// // servConf.push_back((tmp_t){"Alpha", "8080"});
+
+
+
 	FileDescriptor	fds;
-    RunServers servers;
+    ServerList servers;
 
-	// servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
 	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
-	Parsing test("config/default.conf");
-	for (ConfigServer config : test._configs)
-	{
-		Server server(config);		
-	}
-	// RunServers servers(test.getServers());
-	// RunServers::epollInit(servers);
-    // RunServers::runServers(servers, fds);
 
-	// std::vector<tmp_t> servConf;
-	// servConf.push_back((tmp_t){"Alpha", "8080"});
+	RunServers::epollInit(servers);
+    RunServers::runServers(servers, fds);
+
+	std::vector<tmp_t> servConf;
+	servConf.push_back((tmp_t){"Alpha", "8080"});
+
 }
 
 static void parsingtest(void)

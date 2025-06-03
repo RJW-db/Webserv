@@ -17,8 +17,6 @@
 #include <array>
 #include <unordered_map>
 #include <string_view>
-#include <Server.hpp>
-
 
 using namespace std;
 // #include <FileDescriptor.hpp>
@@ -31,16 +29,23 @@ typedef struct _tmp
 	const char *port;
 }	tmp_t;
 
+struct ClientRequestState
+{
+    bool headerParsed = false;
+    string header;
+    string body;
+    string method;
+    size_t contentLength = 0;
+};
+
 class RunServers;
 using ServerList = vector<unique_ptr<RunServers>>;
 
 class RunServers
 {
     public:
-        RunServers() = default;
         RunServers(tmp_t *serverConf);
         ~RunServers();
-
 
         static int epollInit(ServerList &servers);
         // int run(FileDescriptor& fds);
@@ -53,6 +58,8 @@ class RunServers
         static int make_socket_non_blocking(int sfd);
 
         static bool directoryCheck(string &path);
+
+        static void cleanupClient(int clientFD, FileDescriptor &fds);
 
         class ClientException : public std::exception
 		{
@@ -68,13 +75,12 @@ class RunServers
     private:
         string _serverName;
         int _listener; // moet weg
-        vector<Server> _servers;
 
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 
         static unordered_map<int, string> _fdBuffers;
-
+        static unordered_map<int, ClientRequestState> _clientStates;
 };
 
 
