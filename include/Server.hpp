@@ -1,22 +1,22 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
-#include <ConfigServer.hpp>
 
+#include <ConfigServer.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <netinet/in.h>
-#include <vector>
-       #include <sys/types.h>
-       #include <sys/socket.h>
-       #include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 using namespace std;
 
 class Server
 {
 public:
-    Server(ConfigServer &config) : _config(config) {}
+    Server(ConfigServer &config);
+    void    createListeners();
     ~Server() {}
 
 
@@ -25,7 +25,6 @@ private:
     
     vector<int> _listeners; // ip/port
 
-    void    createListeners();
     // bool setupSocket();
     // void closeSocket();
 };

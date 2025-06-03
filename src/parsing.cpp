@@ -289,7 +289,17 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
         else
             throw runtime_error("Couldn't find closing curly bracket server block");
     }
+    // for (ConfigServer config : _configs)
+    // {
+    //     Server server(config);
+    //     _servers.push_back(server);
+    // }
 }
+
+// vector<Server> &Parsing::getServers() const
+// {
+//     return (_servers);
+// }
 
 Parsing::~Parsing()
 {

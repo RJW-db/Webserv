@@ -1,11 +1,11 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-#include <RunServer.hpp>
+// #include <RunServer.hpp>
 #include <Aconfig.hpp>
 #include <cstring>
 #include <string>
-
+#include <array>
 using namespace std;
 
 class Location : public Aconfig

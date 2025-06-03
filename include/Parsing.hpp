@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <array>
+#include <Server.hpp>
 using namespace std;
 
 // typedef struct configServer
@@ -22,8 +23,9 @@ class Parsing
 	public:
 		Parsing(const char *input);
 		~Parsing();
+		vector<Server> &getServers(void) const;
 		vector<ConfigServer> _configs;
-
+		
 	private:
 		template <typename T>
 		void readBlock(T &block, 
@@ -38,6 +40,7 @@ class Parsing
 		// uint8_t 		_countServ;
 		map<int, string> _lines;
 		bool validSyntax;
+		vector<Server> _servers;
 };
 
 

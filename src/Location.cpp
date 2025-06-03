@@ -1,5 +1,5 @@
 #include "Location.hpp"
-
+#include <help.hpp>
 Location::Location(){
 }
 
@@ -27,7 +27,7 @@ void Location::setPath(string &line)
 	if (len == string::npos)
 		len = line.length();
 	_path = line.substr(0, len);
-	if (RunServers::directoryCheck(_path) == false)
+	if (directoryCheck(_path) == false)
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + _path);
 	line = line.substr(len);
 }
@@ -44,7 +44,6 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 		++index;
 		if (index == 5)
 		{
-			std::cout << line << std::endl;
 			findColon = true;
 			index = 0;
 		}
@@ -126,7 +125,6 @@ bool Location::methods(string &line)
 	if (index > 2)
 		throw runtime_error(to_string(_lineNbr) + ": limit_except: too many methods given to limit_except");
 	_methods[index] = line.substr(0, len);
-	std::cout << _methods[index] << std::endl;
 	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
 	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
 	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)

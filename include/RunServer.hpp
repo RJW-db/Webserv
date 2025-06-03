@@ -17,6 +17,7 @@
 #include <array>
 #include <unordered_map>
 #include <string_view>
+#include <Server.hpp>
 
 
 using namespace std;
@@ -36,8 +37,10 @@ using ServerList = vector<unique_ptr<RunServers>>;
 class RunServers
 {
     public:
+        RunServers() = default;
         RunServers(tmp_t *serverConf);
         ~RunServers();
+
 
         static int epollInit(ServerList &servers);
         // int run(FileDescriptor& fds);
@@ -65,6 +68,7 @@ class RunServers
     private:
         string _serverName;
         int _listener; // moet weg
+        vector<Server> _servers;
 
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
