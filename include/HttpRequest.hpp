@@ -43,14 +43,25 @@ typedef struct s_httpRequest
 class HttpRequest
 {
 	public:
+		enum ContentType {
+			UNSUPPORTED,
+			FORM_URLENCODED,
+			JSON,
+			TEXT,
+			MULTIPART
+		};
+
 		int _clientFD;
+		string &_headerBlock;
+	    unordered_map<string, string_view> _headers;
+
 		string &_method;
-		string &_header;
 		string &_body;
 
+		// unordered_map<string, string_view> headers;
 		string _hostName;
 		string _contentLength;
-		string _contentType;
+		string_view _contentType;
 		string_view _bodyBoundary;
 
 		string_view _filename;
@@ -59,10 +70,12 @@ class HttpRequest
 
 		void	handleRequest();
 
-    	unordered_map<string, string_view> parseHeaders(const string& headerBlock);
+    	void	parseHeaders(const string& headerBlock);
 		void	getHeaderInfo(string &header);
 		void	getBodyInfo(string &body);
 
 		void	POST();
 		void	GET();
+
+		ContentType getContentType(const string_view ct);
 };

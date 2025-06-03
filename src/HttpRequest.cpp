@@ -33,7 +33,7 @@
 
 
 HttpRequest::HttpRequest(int clientFD, string &method, string &header, string &body)
-:_clientFD(clientFD), _method(method), _header(header), _body(body)
+:_clientFD(clientFD), _method(method), _headerBlock(header), _body(body)
 {
 }
 
@@ -335,9 +335,8 @@ void    validateKeyValues(string request, const string &method)
         std::cout << "connection was established" << std::endl;
 }
 
-unordered_map<string, string_view> HttpRequest::parseHeaders(const string& headerBlock)
+void HttpRequest::parseHeaders(const string& headerBlock)
 {
-    unordered_map<string, string_view> headers;
     size_t start = 0;
     while (start < headerBlock.size())
     {
@@ -362,12 +361,11 @@ unordered_map<string, string_view> HttpRequest::parseHeaders(const string& heade
             value.remove_prefix(value.find_first_not_of(" \t"));
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
-            headers[string(key)] = value;
-            // std::cout << "\tkey\t" << key << std::endl;
+            _headers[string(key)] = value;
+            std::cout << "\tkey\t" << key << "\t" << value << std::endl;
         }
         start = end + 2;
     }
-    return headers;
 }
 
 void	HttpRequest::getHeaderInfo(string &header)
@@ -396,7 +394,7 @@ void	HttpRequest::getBodyInfo(string &body)
         throw Server::ClientException("Content-Type header not found in multipart/form-data body part");
 
     size_t fileStart = body.find("\r\n\r\n", position) + 4;
-    size_t fileEnd = body.find("\r\n--" + string(_bodyBoundary), fileStart);
+    size_t fileEnd = body.find("\r\n--" + std::string(_bodyBoundary) + "--\r\n", fileStart);
 
     if (position == string::npos)
         throw Server::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
@@ -433,29 +431,93 @@ void    HttpRequest::GET()
 
 void    HttpRequest::POST()
 {
-    getHeaderInfo(_header);
+    getHeaderInfo(_headerBlock);
     getBodyInfo(_body);
+    
+    auto it = _headers.find("Content-Length");
+    if (it == _headers.end())
+        throw Server::ClientException("Missing Content-Length header");
+    // else if (it->second == "0 of lager")
+
+    it = _headers.find("Content-Type");
+    if (it == _headers.end())
+        throw Server::ClientException("Missing Content-Type");
+
+
+    ContentType ct = getContentType(it->second);
+    switch (ct) {
+        case FORM_URLENCODED:
+            cout << "handle urlencoded" << endl;
+            break;
+        case JSON:
+            cout << "handle json" << endl;
+            break;
+        case TEXT:
+            cout << "handle text" << endl;
+            break;
+        case MULTIPART:
+            cout << "handle multipart" << endl;
+            break;
+        default:
+            throw Server::ClientException("Unsupported Content-Type: " + string(it->second));
+    }
+
+
     ofstream myfile;
     myfile.open("space.jpg");
     myfile << _filename;
     myfile.close();
 }
 
+HttpRequest::ContentType HttpRequest::getContentType(const string_view ct)
+{
+    if (ct == "application/x-www-form-urlencoded")
+    {
+        _contentType = ct;
+        return FORM_URLENCODED;
+    }
+    if (ct == "application/json")
+    {
+        _contentType = ct;
+        return JSON;
+    }
+    if (ct == "text/plain")
+    {
+        _contentType = ct;
+        return TEXT;
+    }
+    if (ct.find("multipart/form-data") == 0)
+    {
+        size_t semi = ct.find(';');
+        if (semi != std::string_view::npos)
+        {
+            _contentType = ct.substr(0, semi);
+            size_t boundaryPos = ct.find("boundary=", semi);
+            if (boundaryPos != std::string_view::npos)
+                _bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
+            else
+                throw Server::ClientException("Malformed multipart Content-Type: boundary not found");
+        }
+        else
+            throw Server::ClientException("Malformed HTTP header line: " + string(ct));
+        return MULTIPART;
+    }
+    return UNSUPPORTED;
+}
+
 void    HttpRequest::handleRequest()
 {
-
     std::cout << "vor" << std::endl;
     std::cout << _method << std::endl;
-    validateHEAD(_header);
-    validateKeyValues(_header, _method);
+    validateHEAD(_headerBlock);
+    validateKeyValues(_headerBlock, _method);
 
-    unordered_map<string, string_view> headers = parseHeaders(_header);
+    parseHeaders(_headerBlock);
 
-    auto it = headers.find("Host");
-    if (it == headers.end())
+    if (_headers.find("Host") == _headers.end())
         throw Server::ClientException("Missing Host header");
-    else if (it->second != "127.0.1.1:8080")
-        throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
+    // else if (it->second != "127.0.1.1:8080")
+    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
 
     if (_method == "GET")
     {
@@ -463,16 +525,14 @@ void    HttpRequest::handleRequest()
     }
     else if (_method == "POST")
     {
-        if (headers.find("Content-Type") == headers.end())
-            throw Server::ClientException("Missing Content-Type header");
-        if (headers.find("Content-Length") == headers.end())
-            throw Server::ClientException("Missing Content-Length header");
+
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
         POST();
+        std::cout << _contentType << '\t' << _bodyBoundary << std::endl;
     }
     // else
     // {
