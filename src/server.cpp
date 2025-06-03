@@ -1,6 +1,7 @@
 #include <Webserv.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <HttpRequest.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -195,7 +196,7 @@ void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &
         
         struct epoll_event  current_event;
         current_event.data.fd = infd;
-        current_event.events = EPOLLIN /* | EPOLLET */;
+        current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
         if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
             perror("epoll_ctl");
@@ -209,6 +210,7 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
 {
     char	buff[CLIENT_BUFFER_SIZE];
     ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
+
 
     if (bytesReceived < 0)
     {
@@ -258,7 +260,8 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
     size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
     // size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\r\n");
     
-    std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+    // std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+
     if (headerEnd == string::npos)
     {
         std::cout << "newawawwa" << std::endl;
@@ -288,6 +291,7 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
     }
     else  */if (method == "POST")
     {
+        std::cout << "before" << std::endl;
         string contentLengthStr = extractHeader(header, "Content-Length:");
         size_t contentLength = 0;
         if (contentLengthStr.empty() == false)
@@ -302,6 +306,8 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
             if (body.size() < contentLength)
                 return;
         }
+        std::cout << "after" << std::endl;
+
     }
 
 
@@ -320,7 +326,9 @@ void Server::processClientRequest(const unique_ptr<Server> &server, FileDescript
     //     printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
     //     return ;
     // }
-    handleRequest(clientFD, method, header, body);
+    // handleRequest(clientFD, method, header, body);
+    HttpRequest request(clientFD, method, header, body);
+    request.handleRequest();
     _fdBuffers[clientFD].clear();
 }
 

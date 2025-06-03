@@ -1,6 +1,7 @@
 #include <Webserv.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <HttpRequest.hpp>
 
 #include <unordered_set>
 #include <arpa/inet.h>
@@ -30,6 +31,11 @@
 #include <sstream>
 #include <sys/stat.h>
 
+
+HttpRequest::HttpRequest(int clientFD, string &method, string &header, string &body)
+:_clientFD(clientFD), _method(method), _headerBlock(header), _body(body)
+{
+}
 
 string ValidateHEAD(const string &head)
 {
@@ -64,9 +70,9 @@ string ValidateHEAD(const string &head)
 void    headerNameContentType(string &type)
 {
     if (type != "application/x-www-form-urlencoded" && // Standard HTML form data
-        type != "multipart/form-data" &&               // Used for file uploads
         type != "application/json" &&
-        type != "text/plain")
+        type != "text/plain" &&
+        strncmp("multipart/form-data; boundary=", type.c_str(), 30) != 0)
     {
         throw Server::ClientException("Invalid HTTP request, we don't handle this Content-Type: " + type);
     }
@@ -328,22 +334,209 @@ void    validateKeyValues(string request, const string &method)
     else
         std::cout << "connection was established" << std::endl;
 }
-void    handleRequest(int clientFD, string &method, string &header, string &body)
+
+void HttpRequest::parseHeaders(const string& headerBlock)
+{
+    size_t start = 0;
+    while (start < headerBlock.size())
+    {
+        size_t end = headerBlock.find("\r\n", start);
+        if (end == string::npos)
+            throw Server::ClientException("Malformed HTTP request: header line not properly terminated");
+
+        string_view line(&headerBlock[start], end - start);
+        if (line.empty())
+            break; // End of headers
+
+        size_t colon = line.find(':');
+        if (colon != string_view::npos) {
+            // Extract key and value as string_views
+            string_view key = line.substr(0, colon);
+            string_view value = line.substr(colon + 1);
+
+            // Trim whitespace from key
+            key.remove_prefix(key.find_first_not_of(" \t"));
+            key.remove_suffix(key.size() - key.find_last_not_of(" \t") - 1);
+            // Trim whitespace from value
+            value.remove_prefix(value.find_first_not_of(" \t"));
+            value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
+
+            _headers[string(key)] = value;
+            std::cout << "\tkey\t" << key << "\t" << value << std::endl;
+        }
+        start = end + 2;
+    }
+}
+
+void	HttpRequest::getHeaderInfo(string &header)
+{
+    const string boundaryKey = "Content-Type: multipart/form-data; boundary=";
+    size_t position = header.find(boundaryKey);
+
+    if (position == string::npos)
+        throw Server::ClientException("Boundary not found in Content-Type header");
+
+	size_t boundaryStart = position + boundaryKey.length();
+	size_t boundaryEnd = header.find("\r\n", boundaryStart);
+
+    if (boundaryEnd == string::npos)
+        throw Server::ClientException("Malformed Content-Type header");
+
+    _bodyBoundary = string_view(header).substr(boundaryStart, boundaryEnd - boundaryStart);
+}
+
+void	HttpRequest::getBodyInfo(string &body)
+{
+    const string contentType = "Content-Type: ";
+    size_t position = body.find(contentType);
+
+    if (position == string::npos)
+        throw Server::ClientException("Content-Type header not found in multipart/form-data body part");
+
+    size_t fileStart = body.find("\r\n\r\n", position) + 4;
+    size_t fileEnd = body.find("\r\n--" + std::string(_bodyBoundary) + "--\r\n", fileStart);
+
+    if (position == string::npos)
+        throw Server::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
+
+    _filename = string_view(body).substr(fileStart, fileEnd - fileStart);
+}
+
+void    HttpRequest::GET()
+{
+    std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
+    if (!file)
+    {
+        std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+        send(_clientFD, notFound.c_str(), notFound.size(), 0);
+        return;
+    }
+
+    // Read file contents
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    std::string fileContent = ss.str();
+
+    // Build response
+    std::ostringstream response;
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Content-Length: " << fileContent.size() << "\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "\r\n";
+    response << fileContent;
+
+    std::string responseStr = response.str();
+    send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
+}
+
+void    HttpRequest::POST()
+{
+    getHeaderInfo(_headerBlock);
+    getBodyInfo(_body);
+    
+    auto it = _headers.find("Content-Length");
+    if (it == _headers.end())
+        throw Server::ClientException("Missing Content-Length header");
+    // else if (it->second == "0 of lager")
+
+    it = _headers.find("Content-Type");
+    if (it == _headers.end())
+        throw Server::ClientException("Missing Content-Type");
+
+
+    ContentType ct = getContentType(it->second);
+    switch (ct) {
+        case FORM_URLENCODED:
+            cout << "handle urlencoded" << endl;
+            break;
+        case JSON:
+            cout << "handle json" << endl;
+            break;
+        case TEXT:
+            cout << "handle text" << endl;
+            break;
+        case MULTIPART:
+            cout << "handle multipart" << endl;
+            break;
+        default:
+            throw Server::ClientException("Unsupported Content-Type: " + string(it->second));
+    }
+
+
+    ofstream myfile;
+    myfile.open("space.jpg");
+    myfile << _filename;
+    myfile.close();
+}
+
+HttpRequest::ContentType HttpRequest::getContentType(const string_view ct)
+{
+    if (ct == "application/x-www-form-urlencoded")
+    {
+        _contentType = ct;
+        return FORM_URLENCODED;
+    }
+    if (ct == "application/json")
+    {
+        _contentType = ct;
+        return JSON;
+    }
+    if (ct == "text/plain")
+    {
+        _contentType = ct;
+        return TEXT;
+    }
+    if (ct.find("multipart/form-data") == 0)
+    {
+        size_t semi = ct.find(';');
+        if (semi != std::string_view::npos)
+        {
+            _contentType = ct.substr(0, semi);
+            size_t boundaryPos = ct.find("boundary=", semi);
+            if (boundaryPos != std::string_view::npos)
+                _bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
+            else
+                throw Server::ClientException("Malformed multipart Content-Type: boundary not found");
+        }
+        else
+            throw Server::ClientException("Malformed HTTP header line: " + string(ct));
+        return MULTIPART;
+    }
+    return UNSUPPORTED;
+}
+
+void    HttpRequest::handleRequest()
 {
     std::cout << "vor" << std::endl;
-    validateHEAD(header);
-    validateKeyValues(header, method);
-    if (method == "GET")
-    {
-        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
-        send(clientFD, response.c_str(), response.size(), 0);
-    }
-    // else if (method == "POST")
-    // {
+    std::cout << _method << std::endl;
+    validateHEAD(_headerBlock);
+    validateKeyValues(_headerBlock, _method);
 
-    // }
+    parseHeaders(_headerBlock);
+
+    if (_headers.find("Host") == _headers.end())
+        throw Server::ClientException("Missing Host header");
+    // else if (it->second != "127.0.1.1:8080")
+    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
+
+    if (_method == "GET")
+    {
+        GET();
+    }
+    else if (_method == "POST")
+    {
+
+        // Submitting a form (e.g., login, registration, contact form)
+        // Uploading a file (e.g., images, documents)
+        // Sending JSON data (e.g., for APIs)
+        // Creating a new resource (e.g., adding a new item to a database)
+        // Triggering an action (e.g., starting a job, sending an email)
+        POST();
+        std::cout << _contentType << '\t' << _bodyBoundary << std::endl;
+    }
     // else
     // {
 
     // }
+    std::cout << "\t" << _method << std::endl;
 }
