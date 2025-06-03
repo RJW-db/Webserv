@@ -68,7 +68,7 @@ bool ConfigServer::listenHostname(string &line)
     sockaddr_in ipv4;
     ipv4.sin_addr.s_addr =
         static_cast<in_addr_t>(htonl(convertIpBinary(hostname)));
-		uint32_t port = stoi(line, &index);
+	uint32_t port = stoi(line, &index);
     if (port == 0 || port > 65535)
         throw runtime_error(to_string(_lineNbr) + ": listen: invalid port entered for listen should be between 1 and 65535: " + to_string(port));
     ipv4.sin_port = htons(static_cast<uint16_t>(port));

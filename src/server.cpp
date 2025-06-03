@@ -1,4 +1,4 @@
-#include <Webserv.hpp>
+#include <RunServer.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
 #include <HttpRequest.hpp>
@@ -28,25 +28,25 @@
 extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
-int Server::_epfd = -1;
-std::array<struct epoll_event, FD_LIMIT> Server::_events;
-std::unordered_map<int, std::string> Server::_fdBuffers;
+int RunServers::_epfd = -1;
+std::array<struct epoll_event, FD_LIMIT> RunServers::_events;
+std::unordered_map<int, std::string> RunServers::_fdBuffers;
 
-Server::Server(tmp_t *serverConf)
+RunServers::RunServers(tmp_t *serverConf)
 {
-    ServerListenFD listenerFD(serverConf->port);
+    ServerListenFD listenerFD(serverConf->port, "10.11.6.11");
     _serverName = serverConf->hostname;
     _listener = listenerFD.getFD();
 }
 
 
-Server::~Server()
+RunServers::~RunServers()
 {
     close(_listener);
     close(_epfd);
 }
 
-bool Server::directoryCheck(string &path)
+bool RunServers::directoryCheck(string &path)
 {
     DIR *d = opendir(path.c_str());	// path = rde-brui
     if (d == NULL) {
@@ -69,7 +69,7 @@ bool Server::directoryCheck(string &path)
     // return (false);
 }
 
-int Server::make_socket_non_blocking(int sfd)
+int RunServers::make_socket_non_blocking(int sfd)
 {
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
@@ -88,7 +88,7 @@ int Server::make_socket_non_blocking(int sfd)
     return 0;
 }
 
-int Server::epollInit(ServerList &servers)
+int RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
@@ -97,7 +97,7 @@ int Server::epollInit(ServerList &servers)
         return -1;
     }
 
-    for (const std::unique_ptr<Server> &server : servers)
+    for (const std::unique_ptr<RunServers> &server : servers)
     {
         struct epoll_event current_event;
         current_event.data.fd = server->_listener;
@@ -112,7 +112,7 @@ int Server::epollInit(ServerList &servers)
     return 0;
 }
 
-int Server::runServers(ServerList &servers, FileDescriptor &fds)
+int RunServers::runServers(ServerList &servers, FileDescriptor &fds)
 {
     try
     {
@@ -140,7 +140,7 @@ int Server::runServers(ServerList &servers, FileDescriptor &fds)
     return 0;
 }
 
-void Server::handleEvents(ServerList &servers, FileDescriptor &fds, size_t eventCount)
+void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t eventCount)
 {
     // int errHndl = 0;
     for (size_t i = 0; i < eventCount; ++i)
@@ -155,7 +155,7 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, size_t event
             continue;
         }
 
-        for (const unique_ptr<Server> &server : servers)
+        for (const unique_ptr<RunServers> &server : servers)
         {
             int clientFD = currentEvent.data.fd;
             if (server->_listener == clientFD)
@@ -170,7 +170,7 @@ void Server::handleEvents(ServerList &servers, FileDescriptor &fds, size_t event
     }
 }
 
-void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &fds)
+void RunServers::acceptConnection(const unique_ptr<RunServers> &server, FileDescriptor &fds)
 {
     while (true)
     {
@@ -206,7 +206,7 @@ void Server::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &
     }
 }
 
-void Server::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
+void RunServers::processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD)
 {
     char	buff[CLIENT_BUFFER_SIZE];
     ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);

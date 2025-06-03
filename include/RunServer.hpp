@@ -30,22 +30,22 @@ typedef struct _tmp
 	const char *port;
 }	tmp_t;
 
-class Server;
-using ServerList = vector<unique_ptr<Server>>;
+class RunServers;
+using ServerList = vector<unique_ptr<RunServers>>;
 
-class Server
+class RunServers
 {
     public:
-        Server(tmp_t *serverConf);
-        ~Server();
+        RunServers(tmp_t *serverConf);
+        ~RunServers();
 
         static int epollInit(ServerList &servers);
         // int run(FileDescriptor& fds);
         // static int runServers(vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, size_t eventCount);
-        static void acceptConnection(const unique_ptr<Server> &server, FileDescriptor& fds);
-        static void processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD);
+        static void acceptConnection(const unique_ptr<RunServers> &server, FileDescriptor& fds);
+        static void processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD);
         
         static int make_socket_non_blocking(int sfd);
 
@@ -64,7 +64,7 @@ class Server
 
     private:
         string _serverName;
-        int _listener;
+        int _listener; // moet weg
 
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
@@ -77,7 +77,7 @@ class Server
 class ServerListenFD
 {
     public:
-        ServerListenFD(const char *port);
+        ServerListenFD(const char *port, const char *hostname);
         ~ServerListenFD();
 
         int	getFD() const;
@@ -89,6 +89,7 @@ class ServerListenFD
     private:
         int         _listener;
         const char *_port;
+        const char *_hostName;
 };
 
 void	poll_usages(void);

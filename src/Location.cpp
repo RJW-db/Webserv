@@ -27,7 +27,7 @@ void Location::setPath(string &line)
 	if (len == string::npos)
 		len = line.length();
 	_path = line.substr(0, len);
-	if (Server::directoryCheck(_path) == false)
+	if (RunServers::directoryCheck(_path) == false)
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + _path);
 	line = line.substr(len);
 }

@@ -1,4 +1,4 @@
-#include <Webserv.hpp>
+#include <RunServer.hpp>
 #include <Parsing.hpp>
 #include <FileDescriptor.hpp>
 
@@ -49,8 +49,8 @@ int main()
 	// examples();
 	// openDir();
 
-	// serverTest();
-	parsingtest();
+	serverTest();
+	// parsingtest();
 
 	// std::cout << newstr << std::endl;
 	// string something = "like a bird";
@@ -91,11 +91,11 @@ static void serverTest(void)
 	FileDescriptor	fds;
     ServerList servers;
 
-	servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
 	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
 
-	Server::epollInit(servers);
-    Server::runServers(servers, fds);
+	RunServers::epollInit(servers);
+    RunServers::runServers(servers, fds);
 
 	std::vector<tmp_t> servConf;
 	servConf.push_back((tmp_t){"Alpha", "8080"});

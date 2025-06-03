@@ -1,4 +1,4 @@
-#include <Webserv.hpp>
+#include <RunServer.hpp>
 #include <iostream>
 
 #include <arpa/inet.h>
@@ -19,7 +19,8 @@
 # include <sys/epoll.h>
 #endif
 
-ServerListenFD::ServerListenFD(const char *port) : _port(port)
+ServerListenFD::ServerListenFD(const char *port, const char *hostName)
+: _port(port), _hostName(hostName)
 {
 	create_listener_socket();
 }
@@ -48,7 +49,7 @@ int ServerListenFD::create_listener_socket()
 	{
 		return -1;
 	}
-	if (Server::make_socket_non_blocking(_listener) == -1)
+	if (RunServers::make_socket_non_blocking(_listener) == -1)
 	{
 		return -1;
 	}
@@ -72,7 +73,7 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 	serverSetup.ai_socktype = SOCK_STREAM; // TCP stream sockets
 	serverSetup.ai_flags = AI_PASSIVE;     // Use my IP
 
-	errHndl = getaddrinfo(NULL, _port, &serverSetup, &server);
+	errHndl = getaddrinfo(_hostName, _port, &serverSetup, &server);
 	if (errHndl != 0)
 	{
 		cerr << "Server getaddrinfo: " << gai_strerror(errHndl)

@@ -53,7 +53,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	Webserv.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp
+INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

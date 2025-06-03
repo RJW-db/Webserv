@@ -1,4 +1,4 @@
-#include <Webserv.hpp>
+#include <RunServer.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
 #include <HttpRequest.hpp>
@@ -45,17 +45,17 @@ string ValidateHEAD(const string &head)
 
     if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
     {
-        throw Server::ClientException("Invalid HTTP method: " + method);
+        throw RunServers::ClientException("Invalid HTTP method: " + method);
     }
 
     if (path.empty() || path.c_str()[0] != '/')
     {
-        throw Server::ClientException("Invalid HTTP path: " + path);
+        throw RunServers::ClientException("Invalid HTTP path: " + path);
     }
 
     if (version != "HTTP/1.1")
     {
-        throw Server::ClientException("Invalid HTTP version: " + version);
+        throw RunServers::ClientException("Invalid HTTP version: " + version);
     }
 
     // cout << method << endl;
@@ -74,7 +74,7 @@ void    headerNameContentType(string &type)
         type != "text/plain" &&
         strncmp("multipart/form-data; boundary=", type.c_str(), 30) != 0)
     {
-        throw Server::ClientException("Invalid HTTP request, we don't handle this Content-Type: " + type);
+        throw RunServers::ClientException("Invalid HTTP request, we don't handle this Content-Type: " + type);
     }
 }
 #include <algorithm>
@@ -86,20 +86,20 @@ void    headerNameContentLength(string &length)
         long long value = stoll(length); // Attempt to convert to a number
         if (value < 0) // Ensure the value is non-negative
         {
-            throw Server::ClientException("Invalid HTTP request, Content-Length cannot be negative: " + length);
+            throw RunServers::ClientException("Invalid HTTP request, Content-Length cannot be negative: " + length);
         }
         if (true/* value > client_max_body_size */)
         {
-            throw Server::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
+            throw RunServers::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
         }
     }
     catch (const std::invalid_argument &)
     {
-        throw Server::ClientException("Invalid HTTP request, Content-Length contains non-digit characters: " + length);
+        throw RunServers::ClientException("Invalid HTTP request, Content-Length contains non-digit characters: " + length);
     }
     catch (const std::out_of_range &)
     {
-        throw Server::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
+        throw RunServers::ClientException("Invalid HTTP request, Content-Length is out of range: " + length);
     }
     // if content-type is multipart/form-data, lenght should be bigger then 0
     // check if positive and only digits
@@ -113,12 +113,12 @@ void    headerNameHost(string &host)
     size_t colonPos = host.find(':');   // e.g. en.wikipedia.org:8080, en.wikipedia.org
     if (colonPos == string::npos || colonPos == 0 || colonPos == host.size() - 1)
     {
-        throw Server::ClientException("Invalid HTTP request, malformed header field: " + host);
+        throw RunServers::ClientException("Invalid HTTP request, malformed header field: " + host);
     }
     string value = host.substr(colonPos + 1);
     if (value != "8080") // TODO 8080 is now hardcoded
     {
-        throw Server::ClientException("Invalid HTTP request, wrong port: " + value);
+        throw RunServers::ClientException("Invalid HTTP request, wrong port: " + value);
     }
 }
 
@@ -127,7 +127,7 @@ void validateLines(const std::string &line, unordered_set<string> &requiredHeade
     size_t colonPos = line.find(':');
     if (colonPos == std::string::npos || colonPos == 0 || colonPos == line.size() - 1)
     {
-        throw Server::ClientException("Invalid HTTP request, malformed line: " + line);
+        throw RunServers::ClientException("Invalid HTTP request, malformed line: " + line);
     }
 
     std::string key = line.substr(0, colonPos);
@@ -141,7 +141,7 @@ void validateLines(const std::string &line, unordered_set<string> &requiredHeade
 
     if (key.empty() || value.empty())
     {
-        throw Server::ClientException("Invalid HTTP request, malformed line: " + line);
+        throw RunServers::ClientException("Invalid HTTP request, malformed line: " + line);
         // throw std::runtime_error("Invalid HTTP request: Empty line key or value");
     }
 
@@ -199,7 +199,7 @@ void parseHttpRequest(string &request)
     // Validate the request line (first line)
     if (end == std::string::npos)
     {
-        throw Server::ClientException("Invalid HTTP request, missing: \"\\r\\n\"");
+        throw RunServers::ClientException("Invalid HTTP request, missing: \"\\r\\n\"");
     }
     std::string head = request.substr(start, end - start);
     string method = ValidateHEAD(head);
@@ -245,7 +245,7 @@ void parseHttpRequest(string &request)
     }
     if (!requiredHeaders.empty())
     {
-        throw Server::ClientException("Missing required headers in HTTP request");
+        throw RunServers::ClientException("Missing required headers in HTTP request");
     }
     else
         std::cout << "connection was established" << std::endl;
@@ -260,17 +260,17 @@ void    validateHEAD(const string &head)
     
     if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
     {
-        throw Server::ClientException("Invalid HTTP method: " + method);
+        throw RunServers::ClientException("Invalid HTTP method: " + method);
     }
    
     if (path.empty() || path.c_str()[0] != '/')
     {
-        throw Server::ClientException("Invalid HTTP path: " + path);
+        throw RunServers::ClientException("Invalid HTTP path: " + path);
     }
 
     if (version != "HTTP/1.1")
     {
-        throw Server::ClientException("Invalid HTTP version: " + version);
+        throw RunServers::ClientException("Invalid HTTP version: " + version);
     }
 }
 void    validateKeyValues(string request, const string &method)
@@ -281,7 +281,7 @@ void    validateKeyValues(string request, const string &method)
     // Validate the request line (first line)
     if (end == std::string::npos)
     {
-        throw Server::ClientException("Invalid HTTP request, missing: \"\\r\\n\"");
+        throw RunServers::ClientException("Invalid HTTP request, missing: \"\\r\\n\"");
     }
     unordered_set<string> requiredHeaders ;
     if (method == "GET")
@@ -321,7 +321,7 @@ void    validateKeyValues(string request, const string &method)
     if (end == string::npos || start == request.size())
     {
         std::cerr << "Debug Info: end=" << end << ", start=" << start << ", request.size()=" << request.size() << std::endl;
-        throw Server::ClientException("Invalid HTTP request, malformed or incomplete headers.");
+        throw RunServers::ClientException("Invalid HTTP request, malformed or incomplete headers.");
         // string errorLine = request.substr(0, request.size() - start); // Capture the problematic line
         // httpRequestLogger(request);
         // throw Server::ClientException("Invalid HTTP request, malformed line: " + line);
@@ -329,7 +329,7 @@ void    validateKeyValues(string request, const string &method)
     }
     if (!requiredHeaders.empty())
     {
-        throw Server::ClientException("Missing required headers in HTTP request");
+        throw RunServers::ClientException("Missing required headers in HTTP request");
     }
     else
         std::cout << "connection was established" << std::endl;
@@ -342,7 +342,7 @@ void HttpRequest::parseHeaders(const string& headerBlock)
     {
         size_t end = headerBlock.find("\r\n", start);
         if (end == string::npos)
-            throw Server::ClientException("Malformed HTTP request: header line not properly terminated");
+            throw RunServers::ClientException("Malformed HTTP request: header line not properly terminated");
 
         string_view line(&headerBlock[start], end - start);
         if (line.empty())
@@ -374,13 +374,13 @@ void	HttpRequest::getHeaderInfo(string &header)
     size_t position = header.find(boundaryKey);
 
     if (position == string::npos)
-        throw Server::ClientException("Boundary not found in Content-Type header");
+        throw RunServers::ClientException("Boundary not found in Content-Type header");
 
 	size_t boundaryStart = position + boundaryKey.length();
 	size_t boundaryEnd = header.find("\r\n", boundaryStart);
 
     if (boundaryEnd == string::npos)
-        throw Server::ClientException("Malformed Content-Type header");
+        throw RunServers::ClientException("Malformed Content-Type header");
 
     _bodyBoundary = string_view(header).substr(boundaryStart, boundaryEnd - boundaryStart);
 }
@@ -391,13 +391,13 @@ void	HttpRequest::getBodyInfo(string &body)
     size_t position = body.find(contentType);
 
     if (position == string::npos)
-        throw Server::ClientException("Content-Type header not found in multipart/form-data body part");
+        throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
 
     size_t fileStart = body.find("\r\n\r\n", position) + 4;
     size_t fileEnd = body.find("\r\n--" + std::string(_bodyBoundary) + "--\r\n", fileStart);
 
     if (position == string::npos)
-        throw Server::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
+        throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
     _filename = string_view(body).substr(fileStart, fileEnd - fileStart);
 }
@@ -436,12 +436,12 @@ void    HttpRequest::POST()
     
     auto it = _headers.find("Content-Length");
     if (it == _headers.end())
-        throw Server::ClientException("Missing Content-Length header");
+        throw RunServers::ClientException("Missing Content-Length header");
     // else if (it->second == "0 of lager")
 
     it = _headers.find("Content-Type");
     if (it == _headers.end())
-        throw Server::ClientException("Missing Content-Type");
+        throw RunServers::ClientException("Missing Content-Type");
 
 
     ContentType ct = getContentType(it->second);
@@ -459,7 +459,7 @@ void    HttpRequest::POST()
             cout << "handle multipart" << endl;
             break;
         default:
-            throw Server::ClientException("Unsupported Content-Type: " + string(it->second));
+            throw RunServers::ClientException("Unsupported Content-Type: " + string(it->second));
     }
 
 
@@ -496,10 +496,10 @@ HttpRequest::ContentType HttpRequest::getContentType(const string_view ct)
             if (boundaryPos != std::string_view::npos)
                 _bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
-                throw Server::ClientException("Malformed multipart Content-Type: boundary not found");
+                throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
         }
         else
-            throw Server::ClientException("Malformed HTTP header line: " + string(ct));
+            throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
         return MULTIPART;
     }
     return UNSUPPORTED;
@@ -515,7 +515,7 @@ void    HttpRequest::handleRequest()
     parseHeaders(_headerBlock);
 
     if (_headers.find("Host") == _headers.end())
-        throw Server::ClientException("Missing Host header");
+        throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
 
