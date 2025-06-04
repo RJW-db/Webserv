@@ -22,7 +22,7 @@ PRINT_NO_DIR	:=	--no-print-directory
 #		CCPFLAGS for testing
 COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
-CCPFLAGS		+=	-Wall -Wextra
+# CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Werror
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
@@ -37,9 +37,10 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						RunServer.cpp			Server.cpp				serverListenFD.cpp		\
+MAIN			:=	main.cpp						RunServer.cpp							serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp				\
 					HttpRequest.cpp					loggingErrors.cpp					Location.cpp			\
+					utils.cpp			\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -53,7 +54,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	RunServer.hpp	Server.hpp		Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp		help.hpp
+INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

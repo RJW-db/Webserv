@@ -1,16 +1,16 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-// #include <RunServer.hpp>
+#include <RunServer.hpp>
 #include <Aconfig.hpp>
 #include <cstring>
 #include <string>
-#include <array>
+#include <array> // required for std::array
 using namespace std;
 
 class Location : public Aconfig
 {
-	public :
+	public:
 		Location();
 		Location(const Location &other);
 		Location &operator=(const Location &other);
@@ -32,8 +32,8 @@ class Location : public Aconfig
 		string _cgiExtension;
 		string _cgiPath;
 		
-	private :
+	private:
 		bool checkMethodEnd(bool &findColon, string &line);
-	};
+};
 
 #endif

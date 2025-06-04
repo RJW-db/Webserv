@@ -75,23 +75,21 @@ bool Aconfig::error_page(string &line)
 		return true;
 	}
 	else if (line[0] == '/')
-		return setErrorPage(line, foundPage);
-	else
 	{
-		if (line[0] == ';')
-			throw runtime_error(to_string(_lineNbr) + ": error_page: no error page given for error codes");
-		if (foundPage == true)
-			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input after error page");
-		size_t pos;
-		size_t error_num = stoi(line, &pos);
-		if (error_num < 300 || error_num > 599)
-			throw runtime_error(to_string(_lineNbr) + ": error_page: error code invalid must be between 300 and 599");
-		ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
-		line = line.substr(pos + 1);
-		return false;
+		return setErrorPage(line, foundPage);
 	}
+	if (line[0] == ';')
+		throw runtime_error(to_string(_lineNbr) + ": error_page: no error page given for error codes");
+	if (foundPage == true)
+		throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input after error page");
+	size_t pos;
+	size_t error_num = stoi(line, &pos);
+	if (error_num < 300 || error_num > 599)
+		throw runtime_error(to_string(_lineNbr) + ": error_page: error code invalid must be between 300 and 599");
+	ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
+	line = line.substr(pos + 1);
+	return false;
 }
-
 
 bool Aconfig::ClientMaxBodysize(string &line)
 {

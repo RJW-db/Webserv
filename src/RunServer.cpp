@@ -47,35 +47,12 @@ RunServers::~RunServers()
     close(_epfd);
 }
 
-bool RunServers::directoryCheck(string &path)
-{
-    DIR *d = opendir(path.c_str());	// path = rde-brui
-    if (d == NULL) {
-        perror("opendir");
-        return false;
-    }
-
-    // struct dirent *directoryEntry;
-    // while ((directoryEntry = readdir(d)) != NULL) {
-    //     printf("%s\n", directoryEntry->d_name);
-    //     if (string(directoryEntry->d_name) == path)
-    //     {
-    //         closedir(d);
-    //         return (true);
-    //     }
-    // }
-    
-    closedir(d);
-    return (true);
-    // return (false);
-}
-
 int RunServers::make_socket_non_blocking(int sfd)
 {
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
-        std::cerr << "fcntl: " << strerror(errno);
+        cerr << "fcntl: " << strerror(errno);
         return -1;
     }
 
@@ -83,7 +60,7 @@ int RunServers::make_socket_non_blocking(int sfd)
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
     if (fcntlResult == -1)
     {
-        std::cerr << "fcntl: " << strerror(errno);
+        cerr << "fcntl: " << strerror(errno);
         return -1;
     }
     return 0;
@@ -94,18 +71,18 @@ int RunServers::epollInit(ServerList &servers)
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
     {
-        std::cerr << "Server epoll_create: " << strerror(errno);
+        cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
 
-    for (const std::unique_ptr<RunServers> &server : servers)
+    for (const unique_ptr<RunServers> &server : servers)
     {
         struct epoll_event current_event;
         current_event.data.fd = server->_listener;
         current_event.events = EPOLLIN | EPOLLET;
         if (epoll_ctl(_epfd, EPOLL_CTL_ADD, server->_listener, &current_event) == -1)
         {
-            std::cerr << "Server epoll_ctl: " << strerror(errno) << std::endl;
+            cerr << "Server epoll_ctl: " << strerror(errno) << endl;
             close(_epfd);
             return -1;
         }
@@ -133,9 +110,9 @@ int RunServers::runServers(ServerList &servers, FileDescriptor &fds)
         }
         cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
     }
-    catch(const std::exception& e)
+    catch(const exception& e) // catch-all, will determine whether CleanupClient needs to be called or not
     {
-        std::cerr << e.what() << endl;
+        cerr << e.what() << endl;
     }
 
     return 0;
@@ -147,12 +124,16 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
     for (size_t i = 0; i < eventCount; ++i)
     {
         struct epoll_event &currentEvent = _events[i];
-        if ((currentEvent.events & EPOLLERR) ||
-            (currentEvent.events & EPOLLHUP) ||
-            (currentEvent.events & EPOLLIN) == 0)
+        // if ((currentEvent.events & EPOLLERR) ||
+        //     (currentEvent.events & EPOLLHUP) ||
+        //     (currentEvent.events & EPOLLIN) == 0)
+        // {
+        if ((currentEvent.events & (EPOLLERR | EPOLLHUP))||
+           !(currentEvent.events & EPOLLIN))
         {
-            fprintf(stderr, "epoll error\n");
-            close(currentEvent.data.fd);
+            std::cerr << "epoll error on fd " << currentEvent.data.fd
+            << " (events: " << currentEvent.events << ")" << std::endl;
+            cleanupFD(currentEvent.data.fd, fds);
             continue;
         }
 
@@ -184,6 +165,8 @@ void RunServers::acceptConnection(const unique_ptr<RunServers> &server, FileDesc
                 perror("accept");
             break;
         }
+        
+
         char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
         if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
@@ -193,106 +176,149 @@ void RunServers::acceptConnection(const unique_ptr<RunServers> &server, FileDesc
         }
 
         if(make_socket_non_blocking(infd) == -1)
-            abort();
+        {
+            close(infd);
+            break;
+        }
         
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
         if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
-            perror("epoll_ctl");
-            abort();
+            cout << "epoll_ctl: " << strerror(errno) << endl;
+            close(infd);
+            break;
         }
         fds.setFD(infd);
     }
 }
 
-void RunServers::processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD)
+size_t RunServers::headerNameContentLength(const std::string &length, size_t client_max_body_size)
 {
-    char	buff[CLIENT_BUFFER_SIZE];
-    ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
-
-    if (bytesReceived < 0)
+    if (length.empty())
     {
-        cleanupClient(clientFD, fds);
-        if(errno == EINTR)
-        {
-            //	STOP SERVER CLEAN UP
-        }
-        if (errno != EAGAIN)
-            cerr << "recv: " << strerror(errno);
-        return;
+        throw LengthRequiredException("Content-Length header is empty.");
     }
-    size_t receivedBytes = static_cast<size_t>(bytesReceived);
 
-    _fdBuffers[clientFD].append(buff, receivedBytes);
-
-    ClientRequestState &state = _clientStates[clientFD];
-
-    if (state.headerParsed == false)
+    for (size_t i = 0; i < length.size(); ++i)
     {
-        size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
-        if (headerEnd == string::npos)
-        {
-            sendErrorResponse(clientFD, "400 Bad Request");
-            cleanupClient(clientFD, fds);
-            return;
-        }
-
-        state.header = _fdBuffers[clientFD].substr(0, headerEnd + 4);
-        state.body = _fdBuffers[clientFD].substr(headerEnd + 4);
-        state.headerParsed = true;
-
-        // Parse Content-Length if POST
-        state.method = extractMethod(state.header);
-        if (state.method.empty() == true)
-        {
-            sendErrorResponse(clientFD, "400 Bad Request");
-            cleanupClient(clientFD, fds);
-            return;
-        }
-        if (state.method == "POST") {
-            string contentLengthStr = extractHeader(state.header, "Content-Length:");
-            if (!contentLengthStr.empty())
-            {
-                state.contentLength = stoll(contentLengthStr);
-                if (state.contentLength <= 0)
-                {
-                    sendErrorResponse(clientFD, "411 Length Required");
-                    _fdBuffers[clientFD].clear();
-                    return;
-                }
-                if (state.body.size() < state.contentLength)
-                    return;
-            }
-        }
-    } else {
-        // Only append new data to body
-        state.body.append(buff, bytesReceived);
+        if (!isdigit(static_cast<unsigned char>(length[i])))
+            throw ClientException("Content-Length contains non-digit characters.");
     }
-    
-    if (state.method == "POST" && state.body.size() < state.contentLength)
-        return; // Wait for more data
-
+    long long value;
     try
     {
-        HttpRequest request(clientFD, state.method, state.header, state.body);
-        request.handleRequest();
-        // send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
-        string ok = "HTTP/1.1 200 OK\r\n";
-        send(clientFD, ok.c_str(), ok.size(), 0);
+        value = std::stoll(length);
+
+        if (value < 0)
+            throw ClientException("Content-Length cannot be negative.");
+
+        if (static_cast<size_t>(value) > client_max_body_size)
+            throw ClientException("Content-Length exceeds maximum allowed."); // (413, "Payload Too Large");
+
+        if (value == 0)
+            throw ClientException("Content-Length cannot be zero.");
     }
-    catch(const std::exception& e)
+    catch (const std::invalid_argument &)
     {
-        std::cerr << e.what() << '\n';
-        string msgToClient = "HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
-        // send(clientFD, msgToClient.c_str(), msgToClient.size(), 0);
+        throw ClientException("Content-Length is invalid (not a number).");
     }
-    
-    cleanupClient(clientFD, fds);
-    printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+    catch (const std::out_of_range &)
+    {
+        throw ClientException("Content-Length value is out of range.");
+    }
+    return (static_cast<size_t>(value));
 }
 
+void RunServers::processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD)
+{
+    try
+    {
+        char	buff[CLIENT_BUFFER_SIZE];
+        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
+    
+        if (bytesReceived < 0)
+        {
+            cleanupClient(clientFD, fds);
+            if(errno == EINTR)
+            {
+                //	STOP SERVER CLEAN UP
+            }
+            else if (errno != EAGAIN)
+                cerr << "recv: " << strerror(errno);
+            return;
+        }
+        ClientRequestState &state = _clientStates[clientFD];
+    
+        if (bytesReceived == 0) {
+            if (state.headerParsed && state.method == "POST" && state.body.size() < state.contentLength) {
+                sendErrorResponse(clientFD, "400 Bad Request (incomplete body)");
+            }
+            cleanupClient(clientFD, fds);
+            return;
+        }
+        size_t receivedBytes = static_cast<size_t>(bytesReceived);
+    
+        _fdBuffers[clientFD].append(buff, receivedBytes); // can fail, need to call cleanupClient
+    
+        if (state.headerParsed == false)
+        {
+            size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
+            if (headerEnd == string::npos)
+            {
+                sendErrorResponse(clientFD, "400 Bad Request");
+                cleanupClient(clientFD, fds);
+                return;
+            }
+    
+            state.header = _fdBuffers[clientFD].substr(0, headerEnd + 4); // can fail, need to call cleanupClient
+            state.body = _fdBuffers[clientFD].substr(headerEnd + 4); // can fail, need to call cleanupClient
+            state.headerParsed = true;
+    
+            // Parse Content-Length if POST
+            state.method = extractMethod(state.header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
+            if (state.method.empty() == true)
+            {
+                sendErrorResponse(clientFD, "400 Bad Request");
+                cleanupClient(clientFD, fds);
+                return;
+            }
+            if (state.method == "POST")
+            {
+                string lengthStr = extractHeader(state.header, "Content-Length:");
+                state.contentLength = headerNameContentLength(lengthStr, 1024*1024*100/* client_max_body_size */);
+            }
+        } else {
+            // Only append new data to body
+            state.body.append(buff, bytesReceived);
+        }
+        
+        if (state.method == "POST" && state.body.size() < state.contentLength)
+            return; // Wait for more data
+
+        HttpRequest request(clientFD, state.method, state.header, state.body);
+        request.handleRequest();
+        printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+    }
+    catch (const LengthRequiredException &e)
+    {
+        cerr << e.what() << endl;
+        sendErrorResponse(clientFD, "411 Length Required");
+    }
+    catch (const ClientException &e)
+    {
+        cerr << e.what() << endl;
+        sendErrorResponse(clientFD, "400 Bad Request");
+    }
+    catch(const exception& e)
+    {
+        cerr << e.what() << endl;
+        string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
+        sendErrorResponse(clientFD, msgToClient);
+    }
+    cleanupClient(clientFD, fds);
+}
 
 string extractMethod(const string &header)
 {
@@ -314,17 +340,24 @@ string extractHeader(const string &header, const string &key)
     return header.substr(start, endPos - start);
 }
 
-void sendErrorResponse(int clientFD, const std::string &message)
+void sendErrorResponse(int clientFD, const string &message)
 {
-    std::string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
+    string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
     send(clientFD, response.c_str(), response.size(), 0);
+}
+
+void RunServers::cleanupFD(int fd, FileDescriptor &fds)
+{
+    if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
+    {
+        cerr << "epoll_ctl: EPOLL_CTL_DEL: " << strerror(errno) << endl;
+    }
+    fds.closeFD(fd);
 }
 
 void RunServers::cleanupClient(int clientFD, FileDescriptor &fds)
 {
     _clientStates.erase(clientFD);
     _fdBuffers[clientFD].clear();
-    if (epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL) == -1)
-        perror("epoll_ctl: EPOLL_CTL_DEL");
-    fds.closeFD(clientFD);
+    cleanupFD(clientFD, fds);
 }

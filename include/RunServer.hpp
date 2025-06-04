@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <string_view>
 
+
 using namespace std;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
@@ -54,23 +55,33 @@ class RunServers
         static void handleEvents(ServerList& servers, FileDescriptor& fds, size_t eventCount);
         static void acceptConnection(const unique_ptr<RunServers> &server, FileDescriptor& fds);
         static void processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD);
-        
+
+        static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
+
         static int make_socket_non_blocking(int sfd);
 
-        static bool directoryCheck(string &path);
+        static void cleanupFD(int fd, FileDescriptor &fds);
 
         static void cleanupClient(int clientFD, FileDescriptor &fds);
 
-        class ClientException : public std::exception
+        class ClientException : public exception
 		{
             private:
-                std::string _message;
+                string _message;
 			public:
-                explicit ClientException(const std::string &message) : _message(message) {}
+                explicit ClientException(const string &message) : _message(message) {}
                 virtual const char* what() const throw() {
                     return _message.c_str();
                 }
 		};
+
+        class LengthRequiredException : public ClientException
+        {
+            public:
+                explicit LengthRequiredException(const std::string &message)
+                    : ClientException(message) {}
+        };
+        
 
     private:
         string _serverName;

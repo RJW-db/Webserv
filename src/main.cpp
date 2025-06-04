@@ -1,7 +1,6 @@
 #include <RunServer.hpp>
 #include <Parsing.hpp>
 #include <FileDescriptor.hpp>
-#include <help.hpp>
 #include <arpa/inet.h>
 #include <cstring>
 #include <errno.h>
@@ -166,26 +165,3 @@ static void openDir(void)
 // {
 // 	g_signal_status = signum;
 // }
-
-bool directoryCheck(string &path)
-{
-    DIR *d = opendir(path.c_str());	// path = rde-brui
-    if (d == NULL) {
-        perror("opendir");
-        return false;
-    }
-
-    // struct dirent *directoryEntry;
-    // while ((directoryEntry = readdir(d)) != NULL) {
-    //     printf("%s\n", directoryEntry->d_name);
-    //     if (string(directoryEntry->d_name) == path)
-    //     {
-    //         closedir(d);
-    //         return (true);
-    //     }
-    // }
-    
-    closedir(d);
-    return (true);
-    // return (false);
-}
