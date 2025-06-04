@@ -37,7 +37,7 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						server.cpp							serverListenFD.cpp		\
+MAIN			:=	main.cpp						RunServer.cpp							serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp				\
 					HttpRequest.cpp					loggingErrors.cpp					Location.cpp			\
 					utils.cpp			\
