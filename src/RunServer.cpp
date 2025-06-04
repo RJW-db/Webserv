@@ -35,7 +35,7 @@ unordered_map<int, ClientRequestState> RunServers::_clientStates;
 
 RunServers::RunServers(tmp_t *serverConf)
 {
-    ServerListenFD listenerFD(serverConf->port, "10.11.6.11");
+    ServerListenFD listenerFD(serverConf->port, "0.0.0.0");
     _serverName = serverConf->hostname;
     _listener = listenerFD.getFD();
 }
