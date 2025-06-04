@@ -1,9 +1,11 @@
-#include "Location.hpp"
+#include <Location.hpp>
+#include <utils.hpp>
 
-Location::Location(){
+Location::Location()
+{
 }
 
-Location::Location(const Location &other)  : Aconfig(other)
+Location::Location(const Location &other) : Aconfig(other)
 {
 	*this = other;
 }
@@ -27,7 +29,7 @@ void Location::setPath(string &line)
 	if (len == string::npos)
 		len = line.length();
 	_path = line.substr(0, len);
-	if (RunServers::directoryCheck(_path) == false)
+	if (directoryCheck(_path) == false)
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + _path);
 	line = line.substr(len);
 }

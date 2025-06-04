@@ -60,6 +60,7 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
 		line = line.substr(nameLen);
 		return false;
 	}
+	return (true);
 }
 
 #include <iostream>

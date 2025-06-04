@@ -30,16 +30,6 @@
 #include <sstream>
 #include <sys/stat.h>
 
-// typedef struct s_httpRequest
-// {
-// 	string hostName;
-// 	string contentLength;
-// 	string contentType;
-// 	string bodyBoundary;
-
-// 	string filename;
-// }	httpRequest_t;
-
 class HttpRequest
 {
 	public:

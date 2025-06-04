@@ -1,0 +1,6 @@
+EBADF	Invalid file descriptor	Throw — infd is invalid, serious logic error
+EEXIST	FD already in epoll	Throw or log & skip — logic bug or double add
+EINVAL	Invalid epoll fd or event	Throw — _epfd is likely bad, serious issue
+ENOMEM	Not enough memory	Log + close client + keep server running
+ENOSPC	Reached max number of fds in epoll	Log + close client + maybe delay accept
+EPERM	Trying to add FD you don’t own (e.g., file not socket)	Throw — likely a serious bug
