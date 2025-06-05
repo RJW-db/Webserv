@@ -103,6 +103,7 @@ int ServerListenFD::bind_to_socket(struct addrinfo *server)
 		}
 		return _listener;
 	}
+	// std::cout << _port << " " << _hostName  << std::endl;
 	cerr << "Server bind_to_socket: " << strerror(errno);
 	return -1;
 }

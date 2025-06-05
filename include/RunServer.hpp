@@ -24,13 +24,6 @@ using namespace std;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
-
-typedef struct _tmp
-{
-	string hostname;
-	const char *port;
-}	tmp_t;
-
 struct ClientRequestState
 {
     bool headerParsed = false;
@@ -45,7 +38,8 @@ using ServerList = vector<unique_ptr<Server>>;
 class RunServers
 {
     public:
-        RunServers(tmp_t *serverConf);
+		RunServers() = default;
+        // RunServers(tmp_t *serverConf);
         ~RunServers();
 
         static int epollInit(ServerList &servers);
@@ -84,8 +78,8 @@ class RunServers
         
 
     private:
-        string _serverName;
-        int _listener; // moet weg
+        // string _serverName;
+        // int _listener; // moet weg
 
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;

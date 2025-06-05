@@ -119,10 +119,6 @@ static void serverTest(void)
 
 	RunServers::epollInit(servers);
     RunServers::runServers(servers, fds);
-
-	std::vector<tmp_t> servConf;
-	servConf.push_back((tmp_t){"Alpha", "8080"});
-
 }
 
 // static void parsingtest(void)

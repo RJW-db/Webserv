@@ -19,7 +19,9 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 				listenersMade.insert({hostPort, fd});
 			}
 			else
+			{
 				fd = it->second;
+			}
 			server->addListener(fd);
 		}
 	}

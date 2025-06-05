@@ -33,17 +33,8 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 unordered_map<int, string> RunServers::_fdBuffers;
 unordered_map<int, ClientRequestState> RunServers::_clientStates;
 
-RunServers::RunServers(tmp_t *serverConf)
-{
-    ServerListenFD listenerFD(serverConf->port, "0.0.0.0");
-    _serverName = serverConf->hostname;
-    _listener = listenerFD.getFD();
-}
-
-
 RunServers::~RunServers()
 {
-    close(_listener);
     close(_epfd);
 }
 
@@ -143,12 +134,14 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
             continue;
         }
 
+		// bool found = false;
+		int clientFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : servers)
         {
-            int clientFD = currentEvent.data.fd;
 			vector<int> &listeners = server->_listeners;
             if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
             {
+				// found = true;
                 acceptConnection(server, fds);
             }
             else if (server == servers.back())
@@ -156,6 +149,8 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
                 processClientRequest(server, fds, clientFD);
             }
         }
+		// if (found == false)
+		// 	processClientRequest(server, fds, clientFD);
     }
 }
 
@@ -197,6 +192,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server, FileDescript
             break;
         }
         fds.setFD(infd);
+
     }
 }
 
