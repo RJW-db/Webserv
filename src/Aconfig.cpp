@@ -38,28 +38,25 @@ bool Aconfig::root(string &line)
 
 bool Aconfig::setErrorPage(string &line, bool &foundPage)
 {
-	if (line[0] == '/')
+	if (ErrorCodesWithoutPage.size() == 0)
+		throw runtime_error(to_string(_lineNbr) + ": error_page: no error codes in config for error_page");
+	size_t nameLen = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
+	if (nameLen == string::npos)
+		nameLen = line.length();
+	else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
+		throw runtime_error(to_string(_lineNbr) + ": error_page: invalid character found after error_page");
+	string error_page = line.substr(0, nameLen);
+	for (uint16_t error_code : ErrorCodesWithoutPage)
 	{
-		if (ErrorCodesWithoutPage.size() == 0)
-			throw runtime_error(to_string(_lineNbr) + ": error_page: no error codes in config for error_page");
-		size_t nameLen = line.find_first_of(" \t\f\v\r;#?&%=+\\:");
-		if (nameLen == string::npos)
-			nameLen = line.length();
-		else if (string(" \t\f\v\r;").find(line[nameLen]) == std::string::npos)
-			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid character found after error_page");
-		string error_page = line.substr(0, nameLen);
-		for(uint16_t error_code : ErrorCodesWithoutPage)
-		{
-			if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
-				ErrorCodesWithPage.at(error_code) = error_page;
-			else
-				ErrorCodesWithPage.insert({error_code, error_page});
-		}
-		ErrorCodesWithoutPage.clear();
-		foundPage = true;
-		line = line.substr(nameLen);
-		return false;
+		if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
+			ErrorCodesWithPage.at(error_code) = error_page;
+		else
+			ErrorCodesWithPage.insert({error_code, error_page});
 	}
+	ErrorCodesWithoutPage.clear();
+	foundPage = true;
+	line = line.substr(nameLen);
+	return false;
 }
 
 #include <iostream>
@@ -210,4 +207,52 @@ bool Aconfig::handleNearEndOfLine(string &line, size_t pos, string err)
 	}
 	line = line.substr(k + 1);
 	return true;
+}
+
+void Aconfig::setDefaultErrorPages()
+{
+    uint16_t errorCodes[11] = {400, 403, 404, 405, 413, 431, 500, 501, 502, 503, 504};
+
+    for (uint16_t errorCode : errorCodes)
+    {
+        if (ErrorCodesWithPage.find(errorCode) == ErrorCodesWithPage.end())
+        {
+            string fileName = "webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
+            ErrorCodesWithPage.insert({errorCode, fileName});
+        }
+        else
+        {
+            ErrorCodesWithPage.at(errorCode).insert(0, _root);
+            ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+            if (ErrorCodesWithPage.at(errorCode)[0] == '/')
+                ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+        }
+        if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
+            throw runtime_error("couldn't open error page:" + ErrorCodesWithPage.at(errorCode));
+    }
+}
+
+size_t Aconfig::getClientBodySize() const
+{
+	return _clientBodySize;
+}
+string Aconfig::getRoot() const
+{
+	return _root;
+}
+int8_t Aconfig::getAutoIndex() const
+{
+	return _autoIndex;
+}
+pair<uint16_t, string> Aconfig::getReturnRedirect() const
+{
+	return _returnRedirect;
+}
+map<uint16_t, string> Aconfig::getErrorCodesWithPage() const
+{
+	return ErrorCodesWithPage;
+}
+vector<string> Aconfig::getIndexPage() const
+{
+	return _indexPage;
 }

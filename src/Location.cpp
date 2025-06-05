@@ -1,4 +1,4 @@
-#include <Location.hpp>
+#include <ConfigServer.hpp>
 #include <utils.hpp>
 
 Location::Location()
@@ -15,7 +15,6 @@ Location &Location::operator=(const Location &other)
 	if (this != &other)
 	{
 		Aconfig::operator=(other);
-		_path = other._path;
 		_methods = other._methods;
 		_indexPage = other._indexPage;
 		_upload_store = other._upload_store;
@@ -23,15 +22,19 @@ Location &Location::operator=(const Location &other)
 	return (*this);
 }
 
-void Location::setPath(string &line)
+string Location::getLocationPath(string &line)
 {
 	size_t len = line.find_first_of(" \t\f\v\r{");
 	if (len == string::npos)
 		len = line.length();
-	_path = line.substr(0, len);
-	if (directoryCheck(_path) == false)
-		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + _path);
+	string path = line.substr(0, len);
+	if (path[0] != '/')
+		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path given for location block: " + path);	
+	string pathCheck = path.substr(1);
+	if (path.length() != 1 && directoryCheck(pathCheck) == false)
+		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
 	line = line.substr(len);
+	return path;
 }
 
 bool Location::checkMethodEnd(bool &findColon, string &line)
@@ -46,7 +49,6 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 		++index;
 		if (index == 5)
 		{
-			std::cout << line << std::endl;
 			findColon = true;
 			index = 0;
 		}
@@ -56,58 +58,6 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 		throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find: " + search[index] + ". after limit_except");
 	return false;
 }
-
-// bool Location::checkMethodEnd(bool *find, string &line)
-// {
-// 	enum State
-// 	{
-// 		OpeningCurly,
-// 		Deny,
-// 		All,
-// 		SemiColon
-// 	};
-// 	if (find[SemiColon] == true)
-// 	{
-// 		if (line[0] != '}')
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find closing bracket");
-// 		line = line.substr(1);
-// 		bzero(find, 4);
-// 		return true;
-// 	}
-// 	else if (find[All] == true)
-// 	{
-// 		if (line[0] != ';')
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find ; in curly brackets");
-// 		find[SemiColon] = true;
-// 		line = line.substr(1);
-// 		return false;
-// 	}
-// 	else if (find[Deny] == true)
-// 	{
-// 		if (strncmp(line.c_str(), "all", 3) != 0)
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find all in curly brackets");
-// 		find[All] = true;
-// 		line = line.substr(3);
-// 		return false;
-// 	}
-// 	else if (find[OpeningCurly] == true)
-// 	{
-// 		if (strncmp(line.c_str(), "deny", 4) != 0)
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find deny in curly brackets");
-// 		find[Deny] = true;
-// 		line = line.substr(4);
-// 		return false;
-// 	}
-// 	else if (line[0] == '{')
-// 	{
-// 		if (_methods.size() == 0)
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods given for limit_except");
-// 		find[OpeningCurly] = true;
-// 		line = line.substr(1);
-// 		return false;
-// 	}
-// 	return false;
-// }
 
 bool Location::methods(string &line)
 {
@@ -128,7 +78,6 @@ bool Location::methods(string &line)
 	if (index > 2)
 		throw runtime_error(to_string(_lineNbr) + ": limit_except: too many methods given to limit_except");
 	_methods[index] = line.substr(0, len);
-	std::cout << _methods[index] << std::endl;
 	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
 	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
 	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)
@@ -200,4 +149,51 @@ bool Location::cgiPath(string &line)
 	}
 	_cgiPath = line.substr(0, len);
 	return (handleNearEndOfLine(line, len, "cgi_path"));
+}
+
+
+void Location::SetDefaultLocation(Aconfig &curConf)
+{
+    if (_autoIndex == autoIndexNotFound)
+        _autoIndex = curConf.getAutoIndex();
+    if (_root.empty())
+        _root = curConf.getRoot();
+    if (_clientBodySize == 0)
+        _clientBodySize = curConf.getClientBodySize();
+    if (_returnRedirect.first == 0)
+        _returnRedirect = curConf.getReturnRedirect();
+    for (pair<uint16_t, string> errorCodePages : curConf.getErrorCodesWithPage())
+        ErrorCodesWithPage.insert(errorCodePages);
+    if (_indexPage.empty())
+    {
+        for (string indexPage : curConf.getIndexPage())
+            _indexPage.push_back(indexPage);
+    }
+    if (_methods[0].empty())
+    {
+		_methods[0] = "GET";
+        _methods[1] = "POST";
+        _methods[2] = "DELETE";
+    }
+	// if (_upload_store.empty())
+	//     _upload_store = _root;
+    setDefaultErrorPages();
+}
+
+
+array<string, 3> Location::getMethods() const
+{
+	return _methods;
+}
+string Location::getUploadStore() const
+{
+	return _upload_store;
+}
+string Location::getExtension() const
+{
+	return _cgiExtension;
+}
+string Location::getCgiPath() const
+{
+	return _cgiPath;
 }

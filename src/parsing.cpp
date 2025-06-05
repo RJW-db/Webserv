@@ -130,9 +130,10 @@ void Parsing::readBlock(T &block,
 				if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
                     throw runtime_error("no space found after command");
                 Location location;
+				location.setLineNbr(_lines.begin()->first);
                 skipLine(line, false, block);
                 ftSkipspace(line);
-                location.setPath(line);
+				string path = location.getLocationPath(line);
                 skipLine(line, false, block);
                 ftSkipspace(line);
                 if (line[0] != '{')
@@ -152,82 +153,11 @@ void Parsing::readBlock(T &block,
                     {"index", &Location::indexPage}};
                 readBlock(location, cmds, whileCmds);
 				line = _lines.begin()->second;
-                block._locations.push_back(location);
+                block.addLocation(location, path);
                 validSyntax = true;
             }
         }
     } while (runReadblock() == true);
-}
-
-static void setErrorPages(map<uint16_t, string> &ErrorCodesWithPage, Aconfig &curConf)
-{
-    uint16_t errorCodes[11] = {400, 403, 404, 405, 413, 431, 500, 501, 502, 503, 504};
-
-    for (uint16_t errorCode : errorCodes)
-    {
-        if (ErrorCodesWithPage.find(errorCode) == ErrorCodesWithPage.end())
-        {
-            string fileName = "webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
-            ErrorCodesWithPage.insert({errorCode, fileName});
-        }
-        else
-        {
-            ErrorCodesWithPage.at(errorCode).insert(0, curConf._root);
-            ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
-            if (ErrorCodesWithPage.at(errorCode)[0] == '/')
-                ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
-        }
-        if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
-            throw runtime_error("couldn't open error page:" + ErrorCodesWithPage.at(errorCode));
-    }
-}
-
-static void setLocation(Location &curLocation, ConfigServer &curConf)
-{
-    if (curLocation._autoIndex == autoIndexNotFound)
-        curLocation._autoIndex = curConf._autoIndex;
-    if (curLocation._root.empty())
-        curLocation._root = curConf._root;
-    if (curLocation._clientBodySize == 0)
-        curLocation._clientBodySize = curConf._clientBodySize;
-    if (curLocation._returnRedirect.first == 0)
-        curLocation._returnRedirect = curConf._returnRedirect;
-    for (pair<uint16_t, string> errorCodePages : curConf.ErrorCodesWithPage)
-        curLocation.ErrorCodesWithPage.insert(errorCodePages);
-    if (curLocation._indexPage.empty())
-    {
-        for (string indexPage : curConf._indexPage)
-            curLocation._indexPage.push_back(indexPage);
-    }
-    if (curLocation._upload_store.empty())
-        curLocation._upload_store = curLocation._root;
-    if (curLocation._methods[0].empty())
-    {
-        curLocation._methods[0] = "GET";
-        curLocation._methods[1] = "POST";
-        curLocation._methods[2] = "DELETE";
-    }
-    setErrorPages(curLocation.ErrorCodesWithPage, curLocation);
-}
-
-static void setConf(ConfigServer &curConf)
-{
-    //what to do with no error pages? do we create our own or just have one
-    if (curConf._root.empty())
-        curConf._root = "/var/www"; // what default root should we use?
-    if (curConf._clientBodySize == 0)
-        curConf._clientBodySize = 1024 * 1024;
-    if (curConf._autoIndex == autoIndexNotFound)
-        curConf._autoIndex = autoIndexFalse;
-    if (curConf._hostAddress.empty())
-    {
-        string tmp = "80;";
-        curConf.listenHostname(tmp); //sets sockaddr ip to 0.0.0.0 and port to 80
-    }
-
-    for(Location &location : curConf._locations)
-        setLocation(location, curConf);
-    setErrorPages(curConf.ErrorCodesWithPage, curConf);
 }
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
@@ -278,7 +208,7 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
                     {"error_page", &ConfigServer::error_page},
                     {"return", &ConfigServer::returnRedirect}};
                 readBlock(curConf, cmds, whileCmds);
-                setConf(curConf);
+                curConf.setDefaultConf();
                 _configs.push_back(curConf);
             }
             else
@@ -305,3 +235,67 @@ Parsing::~Parsing()
 {
     
 }
+
+void Parsing::printAll() const
+{
+	for (ConfigServer config : _configs)
+	{
+		cout << "Server Name: " << config.getServerName() << endl;
+		cout << "Port and Host:" << endl;
+		for (const auto &portHost : config.getPortHost())
+		{
+			cout << "  Port: " << portHost.first << endl << ", Host: " << portHost.second << endl;
+		}
+			cout << "  Root: " << config.getRoot() << endl;
+			cout << "  Client Max Body Size: " << config.getClientBodySize() << endl;
+			cout << "  Auto Index: " << (config.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
+			
+			// cout << "  Error Pages: ";
+			// for (const auto &errorPage : config.getErrorCodesWithPage())
+			// {
+			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
+			// }
+			// cout << endl;
+			
+			cout << "  Return Redirect: " << config.getReturnRedirect().first << " -> " << config.getReturnRedirect().second << endl;
+			cout << "  Index Pages: ";
+			for (const string &index : config.getIndexPage())
+			{
+				cout << index << " ";
+			}
+			cout << endl;
+		for (auto pair : config.getLocations())
+		{
+			Location &location = pair.second;
+			cout << "location: " << "Path: " << pair.first << endl;
+			cout << "  Root: " << location.getRoot() << endl;
+			cout << "  Client Max Body Size: " << location.getClientBodySize() << endl;
+			cout << "  Auto Index: " << (location.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
+			
+			// cout << "  Error Pages: ";
+			// for (const auto &errorPage : location.getErrorCodesWithPage())
+			// {
+			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
+			// }
+			// cout << endl;
+			
+			cout << "  Return Redirect: " << location.getReturnRedirect().first << " -> " << location.getReturnRedirect().second << endl;
+			cout << "  Index Pages: ";
+			for (const string &index : location.getIndexPage())
+			{
+				cout << index << " ";
+			}
+			cout << endl;
+			cout << "  Methods: ";
+			for (const string &method : location.getMethods())
+			{
+				cout << method << " ";
+			}
+			cout << endl;
+			cout << "  Upload Store: " << location.getUploadStore() << endl;
+			cout << "  CGI Extension: " << location.getExtension() << endl;
+			cout << "  CGI Path: " << location.getCgiPath() << endl;
+		}
+	}
+}
+

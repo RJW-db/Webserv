@@ -70,22 +70,25 @@ int RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
-    {
+{
         cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
 
-    for (const unique_ptr<RunServers> &server : servers)
+    for (const unique_ptr<Server> &server : servers)
     {
         struct epoll_event current_event;
-        current_event.data.fd = server->_listener;
-        current_event.events = EPOLLIN | EPOLLET;
-        if (epoll_ctl(_epfd, EPOLL_CTL_ADD, server->_listener, &current_event) == -1)
-        {
-            cerr << "Server epoll_ctl: " << strerror(errno) << endl;
-            close(_epfd);
-            return -1;
-        }
+		current_event.events = EPOLLIN | EPOLLET;
+		for (int listener : server->_listeners)
+		{
+			current_event.data.fd = listener;
+			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listener, &current_event) == -1)
+			{
+				cerr << "Server epoll_ctl: " << strerror(errno) << endl;
+				close(_epfd);
+				return -1;
+			}
+		}
     }
     return 0;
 }
@@ -137,10 +140,11 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
             continue;
         }
 
-        for (const unique_ptr<RunServers> &server : servers)
+        for (const unique_ptr<Server> &server : servers)
         {
             int clientFD = currentEvent.data.fd;
-            if (server->_listener == clientFD)
+			vector<int> &listeners = server->_listeners;
+            if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
             {
                 acceptConnection(server, fds);
             }
@@ -152,13 +156,13 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
     }
 }
 
-void RunServers::acceptConnection(const unique_ptr<RunServers> &server, FileDescriptor &fds)
+void RunServers::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &fds)
 {
     while (true)
     {
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
-        int infd = accept(server->_listener, &in_addr, &in_len);
+        int infd = accept(server->_listeners[0], &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
         if(infd == -1)
         {
             if(errno != EAGAIN)
@@ -172,9 +176,8 @@ void RunServers::acceptConnection(const unique_ptr<RunServers> &server, FileDesc
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
         {
             printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", server->_serverName.c_str(), infd, hbuf, sbuf);
+                "(host=%s, port=%s)\n", server->_config.getServerName().c_str(), infd, hbuf, sbuf);
         }
-
         if(make_socket_non_blocking(infd) == -1)
         {
             close(infd);
@@ -231,7 +234,7 @@ size_t RunServers::headerNameContentLength(const std::string &length, size_t cli
     return (static_cast<size_t>(value));
 }
 
-void RunServers::processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD)
+void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
 {
     try
     {
@@ -299,7 +302,7 @@ void RunServers::processClientRequest(const unique_ptr<RunServers> &server, File
 
         HttpRequest request(clientFD, state.method, state.header, state.body);
         request.handleRequest();
-        printf("%s: Closed connection on descriptor %d\n", server->_serverName.c_str(), clientFD);
+        printf("%s: Closed connection on descriptor %d\n", server->_config.getServerName().c_str(), clientFD);
     }
     catch (const LengthRequiredException &e)
     {

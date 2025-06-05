@@ -25,6 +25,7 @@ class Parsing
 		~Parsing();
 		vector<Server> &getServers(void) const;
 		vector<ConfigServer> _configs;
+		void printAll() const;
 		
 	private:
 		template <typename T>

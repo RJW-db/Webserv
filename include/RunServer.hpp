@@ -17,6 +17,7 @@
 #include <array>
 #include <unordered_map>
 #include <string_view>
+#include <Server.hpp>
 
 
 using namespace std;
@@ -39,8 +40,7 @@ struct ClientRequestState
     size_t contentLength = 0;
 };
 
-class RunServers;
-using ServerList = vector<unique_ptr<RunServers>>;
+using ServerList = vector<unique_ptr<Server>>;
 
 class RunServers
 {
@@ -53,8 +53,8 @@ class RunServers
         // static int runServers(vector<Server>& servers, FileDescriptor& fds);
         static int runServers(ServerList& servers, FileDescriptor& fds);
         static void handleEvents(ServerList& servers, FileDescriptor& fds, size_t eventCount);
-        static void acceptConnection(const unique_ptr<RunServers> &server, FileDescriptor& fds);
-        static void processClientRequest(const unique_ptr<RunServers> &server, FileDescriptor& fds, int clientFD);
+        static void acceptConnection(const unique_ptr<Server> &server, FileDescriptor& fds);
+        static void processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
 
@@ -95,23 +95,23 @@ class RunServers
 };
 
 
-class ServerListenFD
-{
-    public:
-        ServerListenFD(const char *port, const char *hostname);
-        ~ServerListenFD();
+// class ServerListenFD
+// {
+//     public:
+//         ServerListenFD(const char *port, const char *hostname);
+//         ~ServerListenFD();
 
-        int	getFD() const;
+//         int	getFD() const;
 
 
-        int create_listener_socket();
-        struct addrinfo *get_server_addrinfo(void);
-        int bind_to_socket(struct addrinfo *server);
-    private:
-        int         _listener;
-        const char *_port;
-        const char *_hostName;
-};
+//         int create_listener_socket();
+//         struct addrinfo *get_server_addrinfo(void);
+//         int bind_to_socket(struct addrinfo *server);
+//     private:
+//         int         _listener;
+//         const char *_port;
+//         const char *_hostName;
+// };
 
 void	poll_usages(void);
 void	epoll_usage(void);

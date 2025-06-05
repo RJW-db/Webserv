@@ -22,21 +22,28 @@ class ConfigServer : public Aconfig
 		ConfigServer(const ConfigServer &other);
 		virtual ~ConfigServer();
 
-
 		ConfigServer &operator=(const ConfigServer &other);
 
-		
 		bool listenHostname(string &line);
 		bool serverName(string &line);
 
-		unordered_map<string, sockaddr> _hostAddress;
+		void addLocation(const Location &location, string &path);
+
+		unordered_multimap<string, string> &getPortHost(void);
+		unordered_map <string, Location> &getLocations(void);
+		string &getServerName(void);
+
+		void setDefaultConf(void);
+
+
+
 		// map<uint16_t, string> ErrorCodesWithPage;
-		vector<Location> _locations;
-		string _serverName; // if not found acts as default
 		private:
 			uint32_t convertIpBinary(string ip);
 
-			// vector<uint16_t> ErrorCodesWithoutPage;
+			unordered_multimap<string, string> _portHost;
+			unordered_map<string, Location> _locations;
+			string _serverName; // if not found acts as default
 };
 
 

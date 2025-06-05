@@ -103,12 +103,19 @@ static void serverTest(void)
 	// // std::vector<tmp_t> servConf;
 	// // servConf.push_back((tmp_t){"Alpha", "8080"});
 
+	Parsing test("config/default.conf");
+	test.printAll();
+	ServerList servers;
 
+	for (ConfigServer &config : test._configs)
+	{
+		servers.push_back(make_unique<Server>(Server(config)));
+		servers.back()->createListeners(servers);
+	}
 
 	FileDescriptor	fds;
-    ServerList servers;
 
-	servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
+	// servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
 	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
 
 	RunServers::epollInit(servers);
@@ -119,41 +126,21 @@ static void serverTest(void)
 
 }
 
-static void parsingtest(void)
-{
-	// ConfigServer sam;
-	try
-	{
-		Parsing sam("config/default.conf");
-		for (const auto& entry : sam._configs[0]._hostAddress) {
-			const std::string& key = entry.first;
-			const sockaddr& addr = entry.second;
-	
-			if (addr.sa_family == AF_INET) { // IPv4
-				const sockaddr_in* addr_in = reinterpret_cast<const sockaddr_in*>(&addr);
-				std::string ip = inet_ntoa(addr_in->sin_addr); // Convert IP to string
-				uint16_t port = ntohs(addr_in->sin_port);      // Convert port to host byte order
-				cout << "port" << port << endl;
-	
-				std::cout << "Key: " << key << ", IP: " << ip << ", Port: " << port << std::endl;
-			} else {
-				std::cout << "Key: " << key << ", Unsupported address family" << std::endl;
-			}
-		}
+// static void parsingtest(void)
+// {
+// 	// ConfigServer sam;
+// 	try
+// 	{
+// 		Parsing sam("config/default.conf");
 		
-		std::cout << "autoindex location:" << static_cast<int>(sam._configs[0]._locations[0]._autoIndex) << std::endl;
-		std::cout << sam._configs[0]._root << std::endl;
-		std::cout << "clientBodySize: " << sam._configs[0]._clientBodySize << std::endl;
-		std::cout << sam._configs[0]._returnRedirect.first << " " << sam._configs[0]._returnRedirect.second << std::endl;
-		std::cout << "methods location: " << sam._configs[0]._locations[0]._methods[0] << std::endl;
-		// std::cout << sam._configs[0]._locations[0]._indexPage[1] << std::endl;
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
-	// cout << "methods :" << sam._configs[0].locations[0]._methods[0] << endl;
-}
+
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		std::cerr << e.what() << '\n';
+// 	}
+// 	// cout << "methods :" << sam._configs[0].locations[0]._methods[0] << endl;
+// }
 
 static void openDir(void)
 {
