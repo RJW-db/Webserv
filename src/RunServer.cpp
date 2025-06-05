@@ -74,7 +74,7 @@ int RunServers::epollInit(ServerList &servers)
         cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
-
+	vector<int> seenInts;
     for (const unique_ptr<Server> &server : servers)
     {
         struct epoll_event current_event;
@@ -82,12 +82,15 @@ int RunServers::epollInit(ServerList &servers)
 		for (int listener : server->_listeners)
 		{
 			current_event.data.fd = listener;
+			if (find(seenInts.begin(), seenInts.end(), listener) != seenInts.end())
+				continue ;
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listener, &current_event) == -1)
 			{
 				cerr << "Server epoll_ctl: " << strerror(errno) << endl;
 				close(_epfd);
 				return -1;
 			}
+			seenInts.push_back(listener);
 		}
     }
     return 0;

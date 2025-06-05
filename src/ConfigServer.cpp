@@ -47,7 +47,15 @@ bool ConfigServer::listenHostname(string &line)
 	uint32_t port = stoi(line, &index);
     if (port == 0 || port > 65535)
         throw runtime_error(to_string(_lineNbr) + ": listen: invalid port entered for listen should be between 1 and 65535: " + to_string(port));
-    _portHost.insert({line.substr(0, index), hostname});
+	string strPort = line.substr(0, index);
+	for (const auto& pair : _portHost)
+	{
+		if (pair.first == line.substr(0, index) && pair.second == hostname)
+		{
+			throw runtime_error(to_string(_lineNbr) + ": listen: Parsing: tried setting same port and hostname twice: " + strPort + " " + hostname);
+		}
+	}
+	_portHost.insert({strPort, hostname});
 	return (handleNearEndOfLine(line, index, "listen"));
 }
 

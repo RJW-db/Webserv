@@ -18,10 +18,11 @@ class Server
 {
 	public:
     Server(ConfigServer &config);
-    void    createListeners(vector<unique_ptr<Server>> &servers);
+	void addListener(int listener);
     ~Server() {}
-	vector<int> _listeners; // ip/port
+    static void    createListeners(vector<unique_ptr<Server>> &servers);
 	
+	vector<int> _listeners; // ip/port
     ConfigServer &_config;
 	private:
     

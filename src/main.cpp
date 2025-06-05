@@ -110,9 +110,8 @@ static void serverTest(void)
 	for (ConfigServer &config : test._configs)
 	{
 		servers.push_back(make_unique<Server>(Server(config)));
-		servers.back()->createListeners(servers);
 	}
-
+	Server::createListeners(servers);
 	FileDescriptor	fds;
 
 	// servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
