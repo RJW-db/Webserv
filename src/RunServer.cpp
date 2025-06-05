@@ -151,7 +151,7 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
             {
                 acceptConnection(server, fds);
             }
-            else
+            else if (server == servers.back())
             {
                 processClientRequest(server, fds, clientFD);
             }
