@@ -54,13 +54,6 @@ class Aconfig
 		int _lineNbr;
 		bool setErrorPage(string &line, bool &foundPage);
 		bool handleNearEndOfLine(string &line, size_t pos, string err);
-
-		Aconfig();
-		Aconfig(const Aconfig &other);
-		vector<uint16_t> ErrorCodesWithoutPage;
-		int _lineNbr;
-		bool setErrorPage(string &line, bool &foundPage);
-		bool handleNearEndOfLine(string &line, size_t pos, string err);
 };
 
 #endif
