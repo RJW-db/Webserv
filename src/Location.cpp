@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #include <ConfigServer.hpp>
+=======
+#include <Location.hpp>
+>>>>>>> origin/rjw
 #include <utils.hpp>
 
 Location::Location()

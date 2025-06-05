@@ -43,6 +43,9 @@ class Location : public Aconfig
 		string _upload_store;
 		string _cgiExtension;
 		string _cgiPath;
+		
+	private:
+		bool checkMethodEnd(bool &findColon, string &line);
 };
 
 #endif

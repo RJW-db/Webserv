@@ -37,10 +37,11 @@ INCD			:=	include/
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						RunServer.cpp							serverListenFD.cpp		\
+MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp				\
-					HttpRequest.cpp					loggingErrors.cpp					Location.cpp			\
-					utils.cpp						Server.cpp			\
+					request/HttpRequest.cpp		request/Post.cpp			\
+						loggingErrors.cpp					Location.cpp			\
+					utils.cpp			\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
