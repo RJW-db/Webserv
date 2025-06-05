@@ -6,6 +6,7 @@ void    HttpRequest::POST()
     if (it == _headers.end())
         throw RunServers::ClientException("Missing Content-Type");
 
+    getBodyInfo(_body);
     ContentType ct = getContentType(it->second);
     switch (ct) {
         case FORM_URLENCODED:
@@ -18,18 +19,16 @@ void    HttpRequest::POST()
             // cout << "handle text" << endl;
             break;
         case MULTIPART:
-            // cout << "handle multipart" << endl;
+        {
+            ofstream myfile;
+            myfile.open("upload/" + string(_filename));
+            myfile << _file;
+            myfile.close();
             break;
+        }
         default:
             throw RunServers::ClientException("Unsupported Content-Type: " + string(it->second));
     }
-
-    getBodyInfo(_body);
-
-    ofstream myfile;
-    myfile.open("upload/" + string(_filename));
-    myfile << _file;
-    myfile.close();
 
     string ok = "HTTP/1.1 200 OK\r\n";
     send(_clientFD, ok.c_str(), ok.size(), 0);
