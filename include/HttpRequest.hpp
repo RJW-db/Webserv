@@ -30,17 +30,18 @@
 #include <sstream>
 #include <sys/stat.h>
 
+enum ContentType
+{
+    UNSUPPORTED,
+    FORM_URLENCODED,
+    JSON,
+    TEXT,
+    MULTIPART
+};
+
 class HttpRequest
 {
 	public:
-		enum ContentType {
-			UNSUPPORTED,
-			FORM_URLENCODED,
-			JSON,
-			TEXT,
-			MULTIPART
-		};
-
 		int _clientFD;
 		string &_headerBlock;
 	    unordered_map<string, string_view> _headers;
