@@ -250,7 +250,7 @@ size_t RunServers::headerNameContentLength(const std::string &length, size_t cli
 
 static string NumIpToString(uint32_t addr)
 {
-	uint8_t num;
+	uint32_t num;
 	string result;
 	int bitshift = 24;
 	uint32_t rev_addr = htonl(addr);

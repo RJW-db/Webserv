@@ -17,15 +17,6 @@ bool    emptyLine(string &line, size_t &skipSpace)
     return false;
 }
 
-// string ftSkipspace(string &line)
-// {
-//     size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
-//     if (skipSpace != 0 && skipSpace != string::npos)
-//         return line.substr(skipSpace);
-//     return line;
-// }
-
-
 void ftSkipspace(string &line)
 {
     size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
