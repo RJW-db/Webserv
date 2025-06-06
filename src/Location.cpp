@@ -5,7 +5,7 @@ Location::Location()
 {
 }
 
-Location::Location(const Location &other) : Aconfig(other)
+Location::Location(const Location &other) : Alocation(other)
 {
 	*this = other;
 }
@@ -14,10 +14,7 @@ Location &Location::operator=(const Location &other)
 {
 	if (this != &other)
 	{
-		Aconfig::operator=(other);
-		_methods = other._methods;
-		_indexPage = other._indexPage;
-		_upload_store = other._upload_store;
+		Alocation::operator=(other);
 	}
 	return (*this);
 }
@@ -181,19 +178,37 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 }
 
 
-array<string, 3> Location::getMethods() const
+Alocation::Alocation(const Alocation &other)
+{
+	*this = other;
+}
+
+Alocation &Alocation::operator=(const Alocation &other)
+{
+	if (this != &other)
+	{
+		Aconfig::operator=(other);
+		_methods = other._methods;
+		_upload_store = other._upload_store;
+		_cgiPath = other._cgiPath;
+		_cgiExtension = other._cgiExtension;
+	}
+	return (*this);
+}
+
+array<string, 3> Alocation::getMethods() const
 {
 	return _methods;
 }
-string Location::getUploadStore() const
+string Alocation::getUploadStore() const
 {
 	return _upload_store;
 }
-string Location::getExtension() const
+string Alocation::getExtension() const
 {
 	return _cgiExtension;
 }
-string Location::getCgiPath() const
+string Alocation::getCgiPath() const
 {
 	return _cgiPath;
 }

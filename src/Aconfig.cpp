@@ -18,6 +18,7 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 		_autoIndex = other._autoIndex;
 		_root = other._root;
 		_returnRedirect = other._returnRedirect;
+		_indexPage = other._indexPage;
 	}
 	return (*this);
 }

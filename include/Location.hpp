@@ -9,8 +9,29 @@
 using namespace std;
 
 // class ConfigServer; // Forward declaration to avoid circular dependency
+// class Aconfig;
 
-class Location : public Aconfig
+class Alocation : public Aconfig
+{
+	public:
+		Alocation &operator=(const Alocation &other);
+
+		array<string, 3> getMethods() const;
+		string getUploadStore() const;
+		string getExtension() const;
+		string getCgiPath() const;
+
+	protected:
+		Alocation() = default;
+		Alocation(const Alocation &other);
+		array<string, 3> _methods;
+		string _upload_store;
+		string _cgiExtension;
+		string _cgiPath;
+};
+
+
+class Location : public Alocation
 {
 	public:
 		Location();
@@ -26,24 +47,11 @@ class Location : public Aconfig
 		bool extension(string &line);
 		bool cgiPath(string &line);
 
-		// string getPath() const;
-		array<string, 3> getMethods() const;
-		string getUploadStore() const;
-		string getExtension() const;
-		string getCgiPath() const;
-
 		void SetDefaultLocation(Aconfig &curConf);
 		
 		
 	private:
 		bool checkMethodEnd(bool &findColon, string &line);
-
-		// string _path;
-		array<string, 3> _methods;
-		string _upload_store;
-		string _cgiExtension;
-		string _cgiPath;
-		
 };
 
 #endif
