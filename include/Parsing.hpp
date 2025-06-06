@@ -24,8 +24,9 @@ class Parsing
 		Parsing(const char *input);
 		~Parsing();
 		vector<Server> &getServers(void) const;
-		vector<ConfigServer> _configs;
 		void printAll() const;
+
+		vector<ConfigServer> &getConfigs();
 		
 	private:
 		template <typename T>
@@ -39,9 +40,11 @@ class Parsing
 
 		// ConfigServer	*_confServers;
 		// uint8_t 		_countServ;
+		vector<ConfigServer> _configs;
+
 		map<int, string> _lines;
 		bool validSyntax;
-		vector<Server> _servers;
+		// vector<Server> _servers;
 };
 
 

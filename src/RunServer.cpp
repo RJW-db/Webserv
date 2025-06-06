@@ -28,6 +28,7 @@
 extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
+FileDescriptor RunServers::_fds;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 unordered_map<int, string> RunServers::_fdBuffers;
@@ -71,7 +72,7 @@ int RunServers::epollInit(/* ServerList &servers */)
     {
         struct epoll_event current_event;
 		current_event.events = EPOLLIN | EPOLLET;
-		for (int listener : server->_listeners)
+		for (int listener : server->getListeners())
 		{
 			current_event.data.fd = listener;
 			if (find(seenInts.begin(), seenInts.end(), listener) != seenInts.end())
@@ -97,11 +98,11 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 	Server::createListeners(_servers);
 	// for (unique_ptr<Server> &server : _servers)
 	// {
-	// 	server->_config.
+	// 	server->getConfig().
 	// }
 }
 
-int RunServers::runServers(/* ServerList &servers,  */FileDescriptor &fds)
+int RunServers::runServers()
 {
     try
     {
@@ -117,7 +118,7 @@ int RunServers::runServers(/* ServerList &servers,  */FileDescriptor &fds)
                 throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
             }
             // fprintf(stdout, "Received epoll event\n");
-            handleEvents(fds, static_cast<size_t>(eventCount));
+            handleEvents(static_cast<size_t>(eventCount));
         }
         cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
     }
@@ -129,7 +130,7 @@ int RunServers::runServers(/* ServerList &servers,  */FileDescriptor &fds)
     return 0;
 }
 
-void RunServers::handleEvents(/* ServerList &servers,  */FileDescriptor &fds, size_t eventCount)
+void RunServers::handleEvents(size_t eventCount)
 {
     // int errHndl = 0;
     for (size_t i = 0; i < eventCount; ++i)
@@ -144,7 +145,7 @@ void RunServers::handleEvents(/* ServerList &servers,  */FileDescriptor &fds, si
         {
             std::cerr << "epoll error on fd " << currentEvent.data.fd
             << " (events: " << currentEvent.events << ")" << std::endl;
-            cleanupFD(currentEvent.data.fd, fds);
+            cleanupFD(currentEvent.data.fd);
             continue;
         }
 
@@ -152,29 +153,29 @@ void RunServers::handleEvents(/* ServerList &servers,  */FileDescriptor &fds, si
 		int clientFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : _servers)
         {
-			vector<int> &listeners = server->_listeners;
+			vector<int> &listeners = server->getListeners();
             if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
             {
 				// found = true;
-                acceptConnection(server, fds);
+                acceptConnection(server);
             }
             else if (server == _servers.back())
             {
-                processClientRequest(server, fds, clientFD);
+                processClientRequest(server, clientFD);
             }
         }
 		// if (found == false)
-		// 	processClientRequest(server, fds, clientFD);
+		// 	processClientRequest(server, clientFD);
     }
 }
 
-void RunServers::acceptConnection(const unique_ptr<Server> &server, FileDescriptor &fds)
+void RunServers::acceptConnection(const unique_ptr<Server> &server)
 {
     while (true)
     {
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
-        int infd = accept(server->_listeners[0], &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
+        int infd = accept(server->getListeners()[0], &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
         if(infd == -1)
         {
             if(errno != EAGAIN)
@@ -188,7 +189,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server, FileDescript
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
         {
             printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", server->_config.getServerName().c_str(), infd, hbuf, sbuf);
+                "(host=%s, port=%s)\n", server->getConfig().getServerName().c_str(), infd, hbuf, sbuf);
         }
         if(make_socket_non_blocking(infd) == -1)
         {
@@ -205,7 +206,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server, FileDescript
             close(infd);
             break;
         }
-        fds.setFD(infd);
+        _fds.setFD(infd);
 
     }
 }
@@ -266,23 +267,47 @@ static string NumIpToString(uint32_t addr)
 	return result;
 }
 
-Server &RunServers::parseHost(string &header, int clientFD)
+ void RunServers::parseHost(string &header, int clientFD, unique_ptr<Server> &usedServer)
 {
-	uint find = header.find("Host:") + 4;
-	string_view hostname = string_view(header).substr(4);
+	uint find = header.find("Host:") + 5;
+	string_view hostname = string_view(header).substr(find);
 	hostname.remove_prefix(hostname.find_first_not_of(" \t"));
-	hostname.remove_suffix(hostname.size() - hostname.find_last_not_of(" \t") - 1);
-	// for (Server &server : _servers)
-}
+	size_t len = hostname.find_first_of(" \t\n\r");
+	hostname = hostname.substr(0, len);
 
-void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
-{
 	sockaddr_in res;
 	socklen_t resLen = sizeof(res);
 	int err = getsockname(clientFD, (struct sockaddr*)&res, &resLen);
+	if (err != 0)
+		throw ClientException("getsockname failed: " + string(strerror(errno)));
 	string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
 	uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
-	std::cout << "port client: " << port << ", ip: " << ip << std::endl;
+	usedServer = nullptr;
+	for (unique_ptr<Server> &server : _servers)
+	{
+		for (pair<const string, string> &porthost : server->getConfig().getPortHost())
+		{
+			if (porthost.second.find("0.0.0.0") != string::npos || 
+				porthost.second.find(ip) != string::npos)
+			{
+				if (to_string(port) == porthost.first)
+				{
+					if (hostname == server->getConfig().getServerName())
+					{
+						usedServer = make_unique<Server>(*server);
+						return;
+					}
+					if (usedServer == nullptr)
+						usedServer = make_unique<Server>(*server);
+					break ;
+				}
+			}
+		}
+	}
+}
+
+void RunServers::processClientRequest(const unique_ptr<Server> &server, int clientFD)
+{
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
@@ -290,7 +315,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
 		
         if (bytesReceived < 0)
         {
-            cleanupClient(clientFD, fds);
+            cleanupClient(clientFD);
             if(errno == EINTR)
             {
                 //	STOP SERVER CLEAN UP
@@ -305,7 +330,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
             if (state.headerParsed && state.method == "POST" && state.body.size() < state.contentLength) {
                 sendErrorResponse(clientFD, "400 Bad Request (incomplete body)");
             }
-            cleanupClient(clientFD, fds);
+            cleanupClient(clientFD);
             return;
         }
         size_t receivedBytes = static_cast<size_t>(bytesReceived);
@@ -318,7 +343,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
             if (headerEnd == string::npos)
             {
                 sendErrorResponse(clientFD, "400 Bad Request");
-                cleanupClient(clientFD, fds);
+                cleanupClient(clientFD);
                 return;
             }
     
@@ -331,7 +356,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
             if (state.method.empty() == true)
             {
                 sendErrorResponse(clientFD, "400 Bad Request");
-                cleanupClient(clientFD, fds);
+                cleanupClient(clientFD);
                 return;
             }
             if (state.method == "POST")
@@ -348,10 +373,14 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
         if (state.method == "POST" && state.body.size() < state.contentLength)
             return; // Wait for more data
 
-		
-        HttpRequest request(clientFD, state.method, state.header, state.body);
-        request.handleRequest();
-        printf("%s: Closed connection on descriptor %d\n", server->_config.getServerName().c_str(), clientFD);
+		std::cout << escape_special_chars(state.header) << std::endl;
+
+		unique_ptr<Server> usedServer;
+		parseHost(state.header, clientFD, usedServer);
+		std::cout << "server name:" << usedServer->getConfig().getServerName() << std::endl;
+        HttpRequest request(usedServer, clientFD, state.method, state.header, state.body);
+        request.handleRequest(state.contentLength);
+        printf("%s: Closed connection on descriptor %d\n", server->getConfig().getServerName().c_str(), clientFD);
     }
     catch (const LengthRequiredException &e)
     {
@@ -369,7 +398,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(clientFD, msgToClient);
     }
-    cleanupClient(clientFD, fds);
+    cleanupClient(clientFD);
 }
 
 string extractMethod(const string &header)
@@ -398,18 +427,18 @@ void sendErrorResponse(int clientFD, const string &message)
     send(clientFD, response.c_str(), response.size(), 0);
 }
 
-void RunServers::cleanupFD(int fd, FileDescriptor &fds)
+void RunServers::cleanupFD(int fd)
 {
     if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
     {
         cerr << "epoll_ctl: EPOLL_CTL_DEL: " << strerror(errno) << endl;
     }
-    fds.closeFD(fd);
+    _fds.closeFD(fd);
 }
 
-void RunServers::cleanupClient(int clientFD, FileDescriptor &fds)
+void RunServers::cleanupClient(int clientFD)
 {
     _clientStates.erase(clientFD);
     _fdBuffers[clientFD].clear();
-    cleanupFD(clientFD, fds);
+    cleanupFD(clientFD);
 }

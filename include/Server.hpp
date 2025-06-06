@@ -17,18 +17,21 @@ using namespace std;
 class Server
 {
 	public:
-    Server(ConfigServer &config);
-	void addListener(int listener);
-    ~Server() {}
-    static void    createListeners(vector<unique_ptr<Server>> &servers);
-	
-	vector<int> _listeners; // ip/port
-    ConfigServer &_config;
+    	Server(ConfigServer &config);
+    	// Server(const Server &other);
+
+		void addListener(int listener);
+    	~Server() {}
+		Server &operator=(const Server &other);
+
+    	static void    createListeners(vector<unique_ptr<Server>> &servers);
+
+		ConfigServer &getConfig();
+		vector<int> &getListeners();
+
 	private:
-    
-	
-    // bool setupSocket();
-    // void closeSocket();
+		vector<int> _listeners; // ip/port
+    	ConfigServer &_config;
 };
 using ServerList = vector<unique_ptr<Server>>;
 

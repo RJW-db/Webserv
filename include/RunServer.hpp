@@ -45,20 +45,20 @@ class RunServers
         static int epollInit(/* ServerList &servers */);
 		static void createServers(vector<ConfigServer> &configs);
         // int run(FileDescriptor& fds);
-        // static int runServers(vector<Server>& servers, FileDescriptor& fds);
-        static int runServers(/* ServerList& servers, */ FileDescriptor& fds);
-        static void handleEvents(/* ServerList& servers, */ FileDescriptor& fds, size_t eventCount);
-        static void acceptConnection(const unique_ptr<Server> &server, FileDescriptor& fds);
-        static void processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD);
+        // static int runServers(vector<Server>& servers);
+        static int runServers();
+        static void handleEvents(size_t eventCount);
+        static void acceptConnection(const unique_ptr<Server> &server);
+        static void processClientRequest(const unique_ptr<Server> &server, int clientFD);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
-		static Server &parseHost(string &header, int clientFD);
+		static void parseHost(string &header, int clientFD, unique_ptr<Server> &usedServer);
 
         static int make_socket_non_blocking(int sfd);
 
-        static void cleanupFD(int fd, FileDescriptor &fds);
+        static void cleanupFD(int fd);
 
-        static void cleanupClient(int clientFD, FileDescriptor &fds);
+        static void cleanupClient(int clientFD);
 
         class ClientException : public exception
 		{
@@ -83,6 +83,7 @@ class RunServers
         // string _serverName;
         // int _listener; // moet weg
 
+		static FileDescriptor _fds;
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 		

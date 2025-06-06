@@ -1,7 +1,7 @@
-#include <RunServer.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
 #include <HttpRequest.hpp>
+#include <RunServer.hpp>
 
 #include <unordered_set>
 #include <arpa/inet.h>
@@ -32,8 +32,8 @@
 #include <sys/stat.h>
 
 
-HttpRequest::HttpRequest(int clientFD, string &method, string &header, string &body)
-:_clientFD(clientFD), _method(method), _headerBlock(header), _body(body)
+HttpRequest::HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body)
+: _server(server), _clientFD(clientFD), _method(method), _headerBlock(header), _body(body)
 {
 }
 
@@ -125,8 +125,10 @@ void    HttpRequest::GET()
 
 
 
-void    HttpRequest::handleRequest()
+void    HttpRequest::handleRequest(size_t contentLength)
 {
+	static_cast<void>(contentLength);
+
     // std::cout << escape_special_chars(_headerBlock) << std::endl;
     validateHEAD(_headerBlock);
 

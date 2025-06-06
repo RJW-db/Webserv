@@ -1,6 +1,6 @@
-#include <RunServer.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <Server.hpp>
 
 #include <unordered_set>
 #include <arpa/inet.h>
@@ -30,6 +30,8 @@
 #include <sstream>
 #include <sys/stat.h>
 
+using namespace std;
+
 enum ContentType
 {
     UNSUPPORTED,
@@ -41,32 +43,35 @@ enum ContentType
 
 class HttpRequest
 {
-	public:
-		int _clientFD;
-		string &_headerBlock;
-	    unordered_map<string, string_view> _headers;
+    public:
+        HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
 
-		string &_method;
-		string &_body;
+        void	handleRequest(size_t contentLength);
 
-		// unordered_map<string, string_view> headers;
-		string _hostName;
-		string _contentLength;
-		string_view _contentType;
-		string_view _bodyBoundary;
+        void	parseHeaders(const string& headerBlock);
+        void	getBodyInfo(string &body);
 
-		string_view _filename;
-		string_view _file;
+        void	POST();
+        void	GET();
 
-		HttpRequest(int clientFD, string &method, string &header, string &body);
+        ContentType getContentType(const string_view ct);
+        
+    private:
+        unique_ptr<Server> &_server;
 
-		void	handleRequest();
+        int _clientFD;
+        string &_method;
+        string &_headerBlock;
+        unordered_map<string, string_view> _headers;
 
-    	void	parseHeaders(const string& headerBlock);
-		void	getBodyInfo(string &body);
-
-		void	POST();
-		void	GET();
-
-		ContentType getContentType(const string_view ct);
+        string &_body;
+        
+        // unordered_map<string, string_view> headers;
+        string _hostName;
+        string _contentLength;
+        string_view _contentType;
+        string_view _bodyBoundary;
+        
+        string_view _filename;
+        string_view _file;
 };

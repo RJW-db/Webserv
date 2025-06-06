@@ -164,9 +164,8 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 {
     fstream fs;
     fs.open(input, fstream::in);
-
     if (fs.is_open() == false)
-        throw runtime_error("inputfile couldn't be");
+		throw runtime_error("inputfile couldn't be");
     string line;
     size_t skipSpace;
     size_t lineNbr = 0;
@@ -184,6 +183,8 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
     fs.close();
     while (1)
     {
+        if (_lines.empty())
+            break ; 
         if (strncmp(_lines.begin()->second.c_str(), "server", 6) == 0)
         {
             _lines.begin()->second = _lines.begin()->second.substr(6);
@@ -214,8 +215,6 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
             else
                 throw runtime_error("Invalid line found expecting server" + _lines[0]);
         }
-        else if (_lines.size() == 0)
-            break ; 
         else
             throw runtime_error("Couldn't find closing curly bracket server block");
     }
@@ -299,3 +298,7 @@ void Parsing::printAll() const
 	}
 }
 
+vector<ConfigServer> &Parsing::getConfigs()
+{
+	return _configs;
+}

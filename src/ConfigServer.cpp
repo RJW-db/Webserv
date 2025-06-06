@@ -22,6 +22,7 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 		Aconfig::operator=(other);
 		_portHost = other._portHost;
 		_locations = other._locations;
+		_serverName = other._serverName;
 	}
 	return (*this);
 }
@@ -47,7 +48,7 @@ bool ConfigServer::listenHostname(string &line)
 	uint32_t port = stoi(line, &index);
     if (port == 0 || port > 65535)
         throw runtime_error(to_string(_lineNbr) + ": listen: invalid port entered for listen should be between 1 and 65535: " + to_string(port));
-	string strPort = line.substr(0, index);
+    string strPort = line.substr(0, index);
 	for (const auto& pair : _portHost)
 	{
 		if (pair.first == line.substr(0, index) && pair.second == hostname)

@@ -2,6 +2,20 @@
 
 Server::Server(ConfigServer &config) : _config(config) {}
 
+// Server::Server(const Server &other)
+// {
+// 	*this = other;
+// }
+
+Server &Server::operator=(const Server &other)
+{
+	if (this != &other)
+	{
+		_config = other._config;
+		_listeners = other._listeners;
+	}
+	return *this;
+}
 
 void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 {
@@ -30,4 +44,14 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 void Server::addListener(int fd)
 {
 	_listeners.push_back(fd);
+}
+
+ConfigServer &Server::getConfig()
+{
+	return _config;
+}
+
+vector<int> &Server::getListeners()
+{
+	return _listeners;
 }
