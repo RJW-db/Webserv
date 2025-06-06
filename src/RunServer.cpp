@@ -104,6 +104,7 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 
 int RunServers::runServers()
 {
+	epollInit();
     try
     {
         while (g_signal_status == 0)

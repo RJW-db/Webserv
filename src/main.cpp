@@ -35,12 +35,13 @@ int main()
 {
 	Parsing test("config/default.conf");
 	test.printAll();
-	RunServers::createServers(test.getConfigs());
 
-	RunServers::epollInit();
+	RunServers::createServers(test.getConfigs());
     RunServers::runServers();
+	
+	
+	examples();
     return 0;
-	// examples();
 }
 
 

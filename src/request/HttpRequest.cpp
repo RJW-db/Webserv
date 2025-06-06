@@ -123,12 +123,29 @@ void    HttpRequest::GET()
     send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
 }
 
-
+void HttpRequest::setLocation()
+{
+	size_t pos = string_view(_headerBlock).find_first_not_of(" \t", _method.length());
+	if (pos == string::npos || _headerBlock[pos] != '/')
+		throw RunServers::ClientException("missing path in HEAD");
+	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
+	string_view path = string_view(_headerBlock).substr(pos, len);
+	for (pair<const string, Location> &locationPair : _server->getConfig().getLocations())
+	{
+		if (path == locationPair.first)
+		{
+			_location = locationPair.second;
+			std::cout << "path:" << path << std::endl;
+			return ;
+		}
+	}
+}
 
 void    HttpRequest::handleRequest(size_t contentLength)
 {
 	static_cast<void>(contentLength);
-
+	std::cout << escape_special_chars(_headerBlock) << std::endl;
+	setLocation();
     // std::cout << escape_special_chars(_headerBlock) << std::endl;
     validateHEAD(_headerBlock);
 

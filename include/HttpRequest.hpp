@@ -55,6 +55,8 @@ class HttpRequest
         void	GET();
 
         ContentType getContentType(const string_view ct);
+		void setLocation();
+
         
     private:
         unique_ptr<Server> &_server;
@@ -74,4 +76,6 @@ class HttpRequest
         
         string_view _filename;
         string_view _file;
+
+		Location _location;
 };
