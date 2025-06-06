@@ -98,7 +98,7 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 	Server::createListeners(_servers);
 	// for (unique_ptr<Server> &server : _servers)
 	// {
-	// 	server->getConfig().
+	// 	server.
 	// }
 }
 
@@ -190,14 +190,13 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
         {
             printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", server->getConfig().getServerName().c_str(), infd, hbuf, sbuf);
+                "(host=%s, port=%s)\n", server->getServerName().c_str(), infd, hbuf, sbuf);
         }
         if(make_socket_non_blocking(infd) == -1)
         {
             close(infd);
             break;
         }
-        
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
@@ -286,14 +285,14 @@ static string NumIpToString(uint32_t addr)
 	usedServer = nullptr;
 	for (unique_ptr<Server> &server : _servers)
 	{
-		for (pair<const string, string> &porthost : server->getConfig().getPortHost())
+		for (pair<const string, string> &porthost : server->getPortHost())
 		{
 			if (porthost.second.find("0.0.0.0") != string::npos || 
 				porthost.second.find(ip) != string::npos)
 			{
 				if (to_string(port) == porthost.first)
 				{
-					if (hostname == server->getConfig().getServerName())
+					if (hostname == server->getServerName())
 					{
 						usedServer = make_unique<Server>(*server);
 						return;
@@ -373,15 +372,11 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, int clie
         
         if (state.method == "POST" && state.body.size() < state.contentLength)
             return; // Wait for more data
-
-		std::cout << escape_special_chars(state.header) << std::endl;
-
 		unique_ptr<Server> usedServer;
 		parseHost(state.header, clientFD, usedServer);
-		std::cout << "server name:" << usedServer->getConfig().getServerName() << std::endl;
         HttpRequest request(usedServer, clientFD, state.method, state.header, state.body);
         request.handleRequest(state.contentLength);
-        printf("%s: Closed connection on descriptor %d\n", server->getConfig().getServerName().c_str(), clientFD);
+        printf("%s: Closed connection on descriptor %d\n", server->getServerName().c_str(), clientFD);
     }
     catch (const LengthRequiredException &e)
     {

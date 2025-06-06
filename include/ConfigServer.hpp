@@ -14,36 +14,44 @@
 
 using namespace std;
 
-class ConfigServer : public Aconfig
+class AconfigServ : public Aconfig
 {
-	public:
-		ConfigServer();
-		// ConfigServer(std::fstream &fs);
-		ConfigServer(const ConfigServer &other);
-		virtual ~ConfigServer();
+    public:
+        AconfigServ &operator=(const AconfigServ &other);
+        unordered_multimap<string, string> &getPortHost(void);
+        unordered_map<string, Location> &getLocations(void);
+        string &getServerName(void);
 
-		ConfigServer &operator=(const ConfigServer &other);
+    protected:
+        unordered_multimap<string, string> _portHost;
+        unordered_map<string, Location> _locations;
+        string _serverName; // if not found acts as default
+        AconfigServ() = default;
+        AconfigServ(const AconfigServ &other);
+};
 
-		bool listenHostname(string &line);
-		bool serverName(string &line);
+class ConfigServer : public AconfigServ
+{
+    public:
+        ConfigServer();
+        // ConfigServer(std::fstream &fs);
+        ConfigServer(const ConfigServer &other);
+        virtual ~ConfigServer();
 
-		void addLocation(const Location &location, string &path);
+        ConfigServer &operator=(const ConfigServer &other);
 
-		unordered_multimap<string, string> &getPortHost(void);
-		unordered_map <string, Location> &getLocations(void);
-		string &getServerName(void);
+        bool listenHostname(string &line);
+        bool serverName(string &line);
 
-		void setDefaultConf(void);
+        void addLocation(const Location &location, string &path);
 
+        void setDefaultConf(void);
 
+        // map<uint16_t, string> ErrorCodesWithPage;
+        private:
+            uint32_t convertIpBinary(string ip);
 
-		// map<uint16_t, string> ErrorCodesWithPage;
-		private:
-			uint32_t convertIpBinary(string ip);
-
-			unordered_multimap<string, string> _portHost;
-			unordered_map<string, Location> _locations;
-			string _serverName; // if not found acts as default
+            // vector<int> _listeners;
 };
 
 

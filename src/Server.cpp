@@ -1,17 +1,20 @@
 #include "Server.hpp"
 
-Server::Server(ConfigServer &config) : _config(config) {}
+Server::Server(const AconfigServ &config)
+{
+	AconfigServ::operator=(config);
+}
 
-// Server::Server(const Server &other)
-// {
-// 	*this = other;
-// }
+Server::Server(const Server &other)
+{
+	*this = other;
+}
 
 Server &Server::operator=(const Server &other)
 {
 	if (this != &other)
 	{
-		_config = other._config;
+		AconfigServ::operator=(other);
 		_listeners = other._listeners;
 	}
 	return *this;
@@ -23,7 +26,7 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 	int fd;
 	for (auto &server : servers)
 	{
-		for (pair<const string, string> &hostPort : server->_config.getPortHost())
+		for (pair<const string, string> &hostPort : server->getPortHost())
 		{
 			auto it = listenersMade.find(hostPort);
 			if (it == listenersMade.end())
@@ -44,11 +47,6 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 void Server::addListener(int fd)
 {
 	_listeners.push_back(fd);
-}
-
-ConfigServer &Server::getConfig()
-{
-	return _config;
 }
 
 vector<int> &Server::getListeners()

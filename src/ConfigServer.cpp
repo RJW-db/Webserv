@@ -8,7 +8,7 @@ ConfigServer::ConfigServer()
 	
 }
 
-ConfigServer::ConfigServer(const ConfigServer &other) : Aconfig(other)
+ConfigServer::ConfigServer(const ConfigServer &other) : AconfigServ(other)
 {
 	*this = other;
 }
@@ -19,10 +19,7 @@ ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 {
 	if (this != &other)
 	{
-		Aconfig::operator=(other);
-		_portHost = other._portHost;
-		_locations = other._locations;
-		_serverName = other._serverName;
+		AconfigServ::operator=(other);
 	}
 	return (*this);
 }
@@ -106,16 +103,34 @@ void ConfigServer::addLocation(const Location &location, string &path)
 	}
 }
 
-unordered_multimap<string, string> &ConfigServer::getPortHost(void)
+
+
+unordered_multimap<string, string> &AconfigServ::getPortHost(void)
 {
 	return _portHost;
 }
-unordered_map <string, Location> &ConfigServer::getLocations(void)
+unordered_map <string, Location> &AconfigServ::getLocations(void)
 {
 	return _locations;
 }
-string &ConfigServer::getServerName(void)
+string &AconfigServ::getServerName(void)
 {
 	return _serverName;
 }
 
+AconfigServ::AconfigServ(const AconfigServ &other)
+{
+	*this = other;
+}
+
+AconfigServ &AconfigServ::operator=(const AconfigServ &other)
+{
+	if (this != &other)
+	{
+		Aconfig::operator=(other);
+		_portHost = other._portHost;
+		_locations = other._locations;
+		_serverName = other._serverName;
+	}
+	return (*this);
+}

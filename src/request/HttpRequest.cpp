@@ -130,12 +130,11 @@ void HttpRequest::setLocation()
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
 	string_view path = string_view(_headerBlock).substr(pos, len);
-	for (pair<const string, Location> &locationPair : _server->getConfig().getLocations())
+	for (pair<const string, Location> &locationPair : _server->getLocations())
 	{
 		if (path == locationPair.first)
 		{
 			_location = locationPair.second;
-			std::cout << "path:" << path << std::endl;
 			return ;
 		}
 	}
@@ -144,9 +143,7 @@ void HttpRequest::setLocation()
 void    HttpRequest::handleRequest(size_t contentLength)
 {
 	static_cast<void>(contentLength);
-	std::cout << escape_special_chars(_headerBlock) << std::endl;
 	setLocation();
-    // std::cout << escape_special_chars(_headerBlock) << std::endl;
     validateHEAD(_headerBlock);
 
     parseHeaders(_headerBlock);

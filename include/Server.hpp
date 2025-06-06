@@ -14,24 +14,24 @@
 
 using namespace std;
 
-class Server
+class Server : public AconfigServ
 {
 	public:
-    	Server(ConfigServer &config);
+    	Server(const AconfigServ &config);
+		Server(const Server &other);
+
+		Server &operator=(const Server &other);
     	// Server(const Server &other);
 
 		void addListener(int listener);
     	~Server() {}
-		Server &operator=(const Server &other);
 
     	static void    createListeners(vector<unique_ptr<Server>> &servers);
 
-		ConfigServer &getConfig();
 		vector<int> &getListeners();
 
 	private:
 		vector<int> _listeners; // ip/port
-    	ConfigServer &_config;
 };
 using ServerList = vector<unique_ptr<Server>>;
 
