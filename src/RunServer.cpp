@@ -32,6 +32,7 @@ int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 unordered_map<int, string> RunServers::_fdBuffers;
 unordered_map<int, ClientRequestState> RunServers::_clientStates;
+ServerList RunServers::_servers;
 
 RunServers::~RunServers()
 {
@@ -57,7 +58,7 @@ int RunServers::make_socket_non_blocking(int sfd)
     return 0;
 }
 
-int RunServers::epollInit(ServerList &servers)
+int RunServers::epollInit(/* ServerList &servers */)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
@@ -66,7 +67,7 @@ int RunServers::epollInit(ServerList &servers)
         return -1;
     }
 	vector<int> seenInts;
-    for (const unique_ptr<Server> &server : servers)
+    for (const unique_ptr<Server> &server : _servers)
     {
         struct epoll_event current_event;
 		current_event.events = EPOLLIN | EPOLLET;
@@ -87,7 +88,20 @@ int RunServers::epollInit(ServerList &servers)
     return 0;
 }
 
-int RunServers::runServers(ServerList &servers, FileDescriptor &fds)
+void RunServers::createServers(vector<ConfigServer> &configs)
+{
+	for (ConfigServer &config : configs)
+	{
+		_servers.push_back(make_unique<Server>(Server(config)));
+	}
+	Server::createListeners(_servers);
+	// for (unique_ptr<Server> &server : _servers)
+	// {
+	// 	server->_config.
+	// }
+}
+
+int RunServers::runServers(/* ServerList &servers,  */FileDescriptor &fds)
 {
     try
     {
@@ -103,7 +117,7 @@ int RunServers::runServers(ServerList &servers, FileDescriptor &fds)
                 throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
             }
             // fprintf(stdout, "Received epoll event\n");
-            handleEvents(servers, fds, static_cast<size_t>(eventCount));
+            handleEvents(fds, static_cast<size_t>(eventCount));
         }
         cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
     }
@@ -115,7 +129,7 @@ int RunServers::runServers(ServerList &servers, FileDescriptor &fds)
     return 0;
 }
 
-void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t eventCount)
+void RunServers::handleEvents(/* ServerList &servers,  */FileDescriptor &fds, size_t eventCount)
 {
     // int errHndl = 0;
     for (size_t i = 0; i < eventCount; ++i)
@@ -136,7 +150,7 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
 
 		// bool found = false;
 		int clientFD = currentEvent.data.fd;
-        for (const unique_ptr<Server> &server : servers)
+        for (const unique_ptr<Server> &server : _servers)
         {
 			vector<int> &listeners = server->_listeners;
             if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
@@ -144,7 +158,7 @@ void RunServers::handleEvents(ServerList &servers, FileDescriptor &fds, size_t e
 				// found = true;
                 acceptConnection(server, fds);
             }
-            else if (server == servers.back())
+            else if (server == _servers.back())
             {
                 processClientRequest(server, fds, clientFD);
             }
@@ -233,13 +247,47 @@ size_t RunServers::headerNameContentLength(const std::string &length, size_t cli
     return (static_cast<size_t>(value));
 }
 
+static string NumIpToString(uint32_t addr)
+{
+	uint8_t num;
+	string result;
+	int bitshift = 24;
+	uint32_t rev_addr = htonl(addr);
+
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		num = rev_addr >> bitshift;
+		result = result + to_string(num);
+		rev_addr &= ~(255 >> bitshift);
+		if (i != 3)
+			result += ".";
+		bitshift -= 8;
+	}
+	return result;
+}
+
+Server &RunServers::parseHost(string &header, int clientFD)
+{
+	uint find = header.find("Host:") + 4;
+	string_view hostname = string_view(header).substr(4);
+	hostname.remove_prefix(hostname.find_first_not_of(" \t"));
+	hostname.remove_suffix(hostname.size() - hostname.find_last_not_of(" \t") - 1);
+	// for (Server &server : _servers)
+}
+
 void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDescriptor& fds, int clientFD)
 {
+	sockaddr_in res;
+	socklen_t resLen = sizeof(res);
+	int err = getsockname(clientFD, (struct sockaddr*)&res, &resLen);
+	string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
+	uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
+	std::cout << "port client: " << port << ", ip: " << ip << std::endl;
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
-    
+		
         if (bytesReceived < 0)
         {
             cleanupClient(clientFD, fds);
@@ -291,6 +339,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
                 string lengthStr = extractHeader(state.header, "Content-Length:");
                 state.contentLength = headerNameContentLength(lengthStr, 1024*1024*100/* client_max_body_size */);
             }
+
         } else {
             // Only append new data to body
             state.body.append(buff, bytesReceived);
@@ -299,6 +348,7 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, FileDesc
         if (state.method == "POST" && state.body.size() < state.contentLength)
             return; // Wait for more data
 
+		
         HttpRequest request(clientFD, state.method, state.header, state.body);
         request.handleRequest();
         printf("%s: Closed connection on descriptor %d\n", server->_config.getServerName().c_str(), clientFD);

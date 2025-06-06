@@ -86,39 +86,21 @@ static void examples(void)
 
 static void serverTest(void)
 {
-	// FileDescriptor	fds;
-    // RunServers servers;
-
-	// // servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
-	// // servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
-	// Parsing test("config/default.conf");
-	// for (ConfigServer config : test._configs)
-	// {
-	// 	Server server(config);		
-	// }
-	// // RunServers servers(test.getServers());
-	// // RunServers::epollInit(servers);
-    // // RunServers::runServers(servers, fds);
-
-	// // std::vector<tmp_t> servConf;
-	// // servConf.push_back((tmp_t){"Alpha", "8080"});
 
 	Parsing test("config/default.conf");
 	test.printAll();
 	ServerList servers;
 
-	for (ConfigServer &config : test._configs)
-	{
-		servers.push_back(make_unique<Server>(Server(config)));
-	}
-	Server::createListeners(servers);
+	// for (ConfigServer &config : test._configs)
+	// {
+	// 	servers.push_back(make_unique<Server>(Server(config)));
+	// }
+	// Server::createListeners(servers);
+	RunServers::createServers(test._configs);
 	FileDescriptor	fds;
 
-	// servers.push_back(make_unique<RunServers>(make_unique<tmp_t>(tmp_t{"Alpha", "8080"}).get()));
-	// servers.push_back(make_unique<Server>(make_unique<tmp_t>(tmp_t{"Beta", "6789"}).get()));
-
-	RunServers::epollInit(servers);
-    RunServers::runServers(servers, fds);
+	RunServers::epollInit();
+    RunServers::runServers(fds);
 }
 
 // static void parsingtest(void)
