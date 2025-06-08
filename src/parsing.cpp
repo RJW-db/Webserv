@@ -47,11 +47,70 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf)
     if (string::npos == skipSpace || forceSkip)
     {
 		if (_lines.size() <= 1)
-			throw runtime_error("No bracket found after block: " + to_string(_lines.begin()->first));
+			throw runtime_error("No closing bracket found after block: " + to_string(_lines.begin()->first));
 		_lines.erase(_lines.begin());
         line = _lines.begin()->second;
 		curConf.setLineNbr(_lines.begin()->first);
     }
+}
+
+template <typename T>
+void Parsing::LocationCheck(string &line, T &block)
+{
+    if constexpr (std::is_same<T, ConfigServer>::value) // checks i block == Configserver
+    {
+        line = line.substr(8);
+        if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
+            throw runtime_error("no space found after command");
+        Location location;
+        location.setLineNbr(_lines.begin()->first);
+        skipLine(line, false, block);
+        ftSkipspace(line);
+        string path = location.getLocationPath(line);
+        skipLine(line, false, block);
+        ftSkipspace(line);
+        if (line[0] != '{')
+            throw runtime_error("couldn't find opening curly bracket for location");
+        line = line.substr(1);
+        skipLine(line, false, block);
+        ftSkipspace(line);
+        const map<string, bool (Location::*)(string &)> cmds = {
+            {"root", &Location::root},
+            {"client_max_body_size", &Location::ClientMaxBodysize},
+            {"autoindex", &Location::autoIndex},
+            {"upload_store", &Location::uploadStore}};
+        const map<string, bool (Location::*)(string &)> whileCmds = {
+            {"error_page", &Location::error_page},
+            {"limit_except", &Location::methods},
+            {"return", &Location::returnRedirect},
+            {"index", &Location::indexPage}};
+        readBlock(location, cmds, whileCmds);
+        line = _lines.begin()->second;
+        block.addLocation(location, path);
+        validSyntax = true;
+    }
+    else
+        throw runtime_error(to_string(_lines.begin()->first) + ": location block can only be used in server block");
+}
+
+template <typename T>
+void Parsing::cmdCheck(string &line, T &block, const string &cmd)
+{
+    line = line.substr(cmd.first.size());
+    skipLine(line, false, block);
+    if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
+        throw runtime_error("no space found after command");
+    ftSkipspace(line);
+    findColon = (block.*(cmd.second))(line);
+    if (!findColon)
+    {
+        skipLine(line, true, block);
+        if (line[0] != ';')
+            throw runtime_error(to_string(_lines.begin()->first) + ": no semi colon found after input");
+        line = line.substr(1);
+    }
+    skipLine(line, false, block);
+    validSyntax = true;
 }
 
 //still need to add check for no lines left
@@ -61,7 +120,6 @@ void Parsing::readBlock(T &block,
     const map<string, bool (T::*)(string &)> &whileCmds)
 {
     bool findColon;
-	block.setLineNbr(_lines.begin()->first);
     string line = _lines.begin()->second;
     do
     {
@@ -70,24 +128,9 @@ void Parsing::readBlock(T &block,
         for (const auto &cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
-            {
-                line = line.substr(cmd.first.size());
-                skipLine(line, false, block);
-                if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-                    throw runtime_error("no space found after command");
-                ftSkipspace(line);
-                findColon = (block.*(cmd.second))(line);
-                if (!findColon)
-                {
-                	skipLine(line, true, block);
-                    if (line[0] != ';')
-                        throw runtime_error(to_string(_lines.begin()->first) + ": no semi colon found after input");
-                    line = line.substr(1);
-                }
-                skipLine(line, false, block);
-                validSyntax = true;
-            }
+                cmdCheck()
         }
+
         for (const auto &whileCmd : whileCmds)
         {
             if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
@@ -113,42 +156,37 @@ void Parsing::readBlock(T &block,
                 validSyntax = true;
             }
         }
-        if constexpr (std::is_same<T, ConfigServer>::value)
-        {
-            if (strncmp(_lines.begin()->second.c_str(), "location", 8) == 0)
-            {
-                line = line.substr(8);
-				if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-                    throw runtime_error("no space found after command");
-                Location location;
-				location.setLineNbr(_lines.begin()->first);
-                skipLine(line, false, block);
-                ftSkipspace(line);
-				string path = location.getLocationPath(line);
-                skipLine(line, false, block);
-                ftSkipspace(line);
-                if (line[0] != '{')
-                    throw runtime_error("couldn't find opening curly bracket for location");
-                line =line.substr(1);
-                skipLine(line, false, block);
-                ftSkipspace(line);
-                const map<string, bool (Location::*)(string &)> cmds = {
-                    {"root", &Location::root},
-                    {"client_max_body_size", &Location::ClientMaxBodysize},
-                    {"autoindex", &Location::autoIndex},
-                    {"upload_store", &Location::uploadStore}};
-                const map<string, bool (Location::*)(string &)> whileCmds = {
-                    {"error_page", &Location::error_page}, 
-                    {"limit_except", &Location::methods}, 
-                    {"return", &Location::returnRedirect}, 
-                    {"index", &Location::indexPage}};
-                readBlock(location, cmds, whileCmds);
-				line = _lines.begin()->second;
-                block.addLocation(location, path);
-                validSyntax = true;
-            }
-        }
+        if (strncmp(_lines.begin()->second.c_str(), "location", 8) == 0)
+            LocationCheck(line, block);
+
     } while (runReadblock() == true);
+}
+
+void Parsing::ServerCheck()
+{
+    ConfigServer curConf;
+    curConf.setLineNbr(_lines.begin()->first);
+    _lines.begin()->second = _lines.begin()->second.substr(6);
+    skipLine(_lines.begin()->second, false, curConf);
+    if (_lines.begin()->second[0] == '{')
+    {
+        _lines.begin()->second = _lines.begin()->second.substr(1);
+        skipLine(_lines.begin()->second, false, curConf);
+        const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
+            {"listen", &ConfigServer::listenHostname},
+            {"root", &ConfigServer::root},
+            {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
+            {"server_name", &ConfigServer::serverName},
+            {"autoindex", &Location::autoIndex}};
+        const map<string, bool (ConfigServer::*)(string &)> whileCmds = {
+            {"error_page", &ConfigServer::error_page},
+            {"return", &ConfigServer::returnRedirect}};
+        readBlock(curConf, cmds, whileCmds);
+        curConf.setDefaultConf();
+        _configs.push_back(curConf);
+    }
+    else
+        throw runtime_error("Couldn't find closing curly bracket server block");
 }
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
@@ -177,49 +215,11 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
         if (_lines.empty())
             break ; 
         if (strncmp(_lines.begin()->second.c_str(), "server", 6) == 0)
-        {
-            _lines.begin()->second = _lines.begin()->second.substr(6);
-            if (emptyLine(_lines.begin()->second, skipSpace) == true)
-                _lines.erase(_lines.begin());
-            if (_lines.begin()->second[0] == '{')
-            {
-                _lines.begin()->second = _lines.begin()->second.substr(1);
-                if (emptyLine(line, skipSpace))
-                {
-					line = _lines.begin()->second;
-                    _lines.erase(_lines.begin());
-                }
-                ConfigServer curConf;
-                const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
-                    {"listen", &ConfigServer::listenHostname},
-                    {"root", &ConfigServer::root},
-                    {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
-                    {"server_name", &ConfigServer::serverName},
-                    {"autoindex", &Location::autoIndex}};
-                const map<string, bool (ConfigServer::*)(string &)> whileCmds = {
-                    {"error_page", &ConfigServer::error_page},
-                    {"return", &ConfigServer::returnRedirect}};
-                readBlock(curConf, cmds, whileCmds);
-                curConf.setDefaultConf();
-                _configs.push_back(curConf);
-            }
-            else
-                throw runtime_error("Invalid line found expecting server" + _lines[0]);
-        }
+            ServerCheck();
         else
-            throw runtime_error("Couldn't find closing curly bracket server block");
+            throw runtime_error("Invalid line found expecting server" + _lines[0]);
     }
-    // for (ConfigServer config : _configs)
-    // {
-    //     Server server(config);
-    //     _servers.push_back(server);
-    // }
 }
-
-// vector<Server> &Parsing::getServers() const
-// {
-//     return (_servers);
-// }
 
 Parsing::~Parsing()
 {

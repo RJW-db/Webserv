@@ -33,6 +33,16 @@ class Parsing
 		void readBlock(T &block, 
 			const map<string, bool (T::*)(string&)> &cmds, 
 			const map<string, bool (T::*)(string &)> &whileCmds);
+		
+		template <typename T>
+		void LocationCheck(string &line, T &block);
+		void ServerCheck();
+
+		template <typename T>
+		void cmdCheck(string &line, T &block, const string &cmd));
+		template <typename T>
+		void whileCmdCheck(string &line, T &block);
+
 		bool    runReadblock(void);
 		template <typename T>
 		void skipLine(string &line, bool forceSkip, T &curConf);

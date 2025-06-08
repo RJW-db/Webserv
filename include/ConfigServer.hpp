@@ -55,8 +55,6 @@ class ConfigServer : public AconfigServ
 };
 
 
-
-
 // string ftSkipspace(string &line);
 void ftSkipspace(string &line);
 
