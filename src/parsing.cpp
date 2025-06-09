@@ -55,7 +55,7 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf)
 }
 
 template <typename T>
-void Parsing::LocationCheck(string &line, T &block)
+void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 {
     if constexpr (std::is_same<T, ConfigServer>::value) // checks i block == Configserver
     {
@@ -94,8 +94,32 @@ void Parsing::LocationCheck(string &line, T &block)
 }
 
 template <typename T>
-void Parsing::cmdCheck(string &line, T &block, const string &cmd)
+void Parsing::whileCmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd)
 {
+	bool findColon;
+	line = line.substr(cmd.first.size());
+	if (string(" \t\f\v\r\n").find(line[0]) == std::string::npos)
+		throw runtime_error("no space found after command");
+	size_t run = 0;
+	while (++run)
+	{
+		skipLine(line, false, block);
+		ftSkipspace(line);
+		findColon = (block.*(cmd.second))(line);
+		skipLine(line, false, block);
+		if (findColon == true)
+		{
+			if (run == 1)
+				throw runtime_error(string("no arguments after") + cmd.first);
+			break;
+		}
+	}
+}
+
+template <typename T>
+void Parsing::cmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd)
+{
+	bool findColon;
     line = line.substr(cmd.first.size());
     skipLine(line, false, block);
     if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
@@ -110,56 +134,38 @@ void Parsing::cmdCheck(string &line, T &block, const string &cmd)
         line = line.substr(1);
     }
     skipLine(line, false, block);
-    validSyntax = true;
 }
 
-//still need to add check for no lines left
 template <typename T>
 void Parsing::readBlock(T &block, 
     const map<string, bool (T::*)(string &)> &cmds, 
     const map<string, bool (T::*)(string &)> &whileCmds)
 {
-    bool findColon;
     string line = _lines.begin()->second;
     do
     {
         validSyntax = false;
         ftSkipspace(line);
-        for (const auto &cmd : cmds)
+        for (const pair<string, bool (T::*)(string &)> &cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
-                cmdCheck()
+			{
+    			validSyntax = true;
+                cmdCheck(line, block, cmd);
+			}
         }
-
-        for (const auto &whileCmd : whileCmds)
+        for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
         {
             if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
             {
-                line = line.substr(whileCmd.first.size());
-                if (string(" \t\f\v\r\n").find(line[0]) == std::string::npos)
-                    throw runtime_error("no space found after command");
-                size_t run = 0;
-                while (++run)
-                {
-                    findColon = false;
-                    skipLine(line, false, block);
-                    ftSkipspace(line);
-                    findColon = (block.*(whileCmd.second))(line);
-                    skipLine(line, false, block);
-                    if (findColon == true)
-                    {
-                        if (run == 1)
-                            throw runtime_error(string("no arguments after") + whileCmd.first);
-                        break ;
-                    }
-                }
+                whileCmdCheck(line, block, whileCmd);
                 validSyntax = true;
             }
         }
         if (strncmp(_lines.begin()->second.c_str(), "location", 8) == 0)
-            LocationCheck(line, block);
-
-    } while (runReadblock() == true);
+            LocationCheck(line, block, validSyntax);
+    } 
+	while (runReadblock() == true);
 }
 
 void Parsing::ServerCheck()

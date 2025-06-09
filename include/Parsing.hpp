@@ -35,13 +35,13 @@ class Parsing
 			const map<string, bool (T::*)(string &)> &whileCmds);
 		
 		template <typename T>
-		void LocationCheck(string &line, T &block);
+		void LocationCheck(string &line, T &block, bool &validSyntax);
 		void ServerCheck();
 
 		template <typename T>
-		void cmdCheck(string &line, T &block, const string &cmd));
+		void cmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd);
 		template <typename T>
-		void whileCmdCheck(string &line, T &block);
+		void whileCmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd);
 
 		bool    runReadblock(void);
 		template <typename T>
