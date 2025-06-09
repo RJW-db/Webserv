@@ -6,7 +6,6 @@
 std::vector<int> FileDescriptor::_fds = {};
 FileDescriptor::FileDescriptor()
 {
-	std::cout << "sam is apart" << std::endl;
 	_fds.reserve(FD_LIMIT);
 }
 

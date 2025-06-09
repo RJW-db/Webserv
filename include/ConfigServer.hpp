@@ -14,17 +14,23 @@
 
 using namespace std;
 
+// struct longestStrCmp {
+//     bool operator()(const string &a, const string &b) const {
+// 		return a.length() > b.length();
+//     }
+// };
+
 class AconfigServ : public Aconfig
 {
     public:
         AconfigServ &operator=(const AconfigServ &other);
         unordered_multimap<string, string> &getPortHost(void);
-        unordered_map<string, Location> &getLocations(void);
+        vector<pair<string, Location>> &getLocations(void);
         string &getServerName(void);
 
     protected:
         unordered_multimap<string, string> _portHost;
-        unordered_map<string, Location> _locations;
+		vector<pair<string, Location>> _locations;
         string _serverName; // if not found acts as default
         AconfigServ() = default;
         AconfigServ(const AconfigServ &other);

@@ -97,19 +97,25 @@ void ConfigServer::setDefaultConf()
 
 void ConfigServer::addLocation(const Location &location, string &path)
 {
-	if (!_locations.insert({path, location}).second)
+	for (auto it = _locations.begin(); it != _locations.end(); ++it)
 	{
-		throw runtime_error(to_string(_lineNbr) + ": addLocation: Parsing: tried adding location with same path twice: " + path);
+		pair<string, Location> &val = *it;
+		if (val.first == path)
+			throw runtime_error(to_string(_lineNbr) + ": addLocation: Parsing: tried adding location with same path twice: " + path);
+		if (val.first.length() < path.length())
+		{
+			_locations.insert(it, {path, location});
+			return;
+		}
 	}
+	_locations.insert(_locations.end(), {path, location});
 }
-
-
 
 unordered_multimap<string, string> &AconfigServ::getPortHost(void)
 {
 	return _portHost;
 }
-unordered_map <string, Location> &AconfigServ::getLocations(void)
+vector<pair<string, Location>> &AconfigServ::getLocations(void)
 {
 	return _locations;
 }

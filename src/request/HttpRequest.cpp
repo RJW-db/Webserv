@@ -130,14 +130,15 @@ void HttpRequest::setLocation()
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
 	string_view path = string_view(_headerBlock).substr(pos, len);
-	for (pair<const string, Location> &locationPair : _server->getLocations())
+	for (pair<string, Location> &locationPair : _server->getLocations())
 	{
-		if (path == locationPair.first)
+		if (strncmp(path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
 			_location = locationPair.second;
 			return ;
 		}
 	}
+	throw RunServers::ClientException("No matching location found for path: " + string(path));
 }
 
 void    HttpRequest::handleRequest(size_t contentLength)
