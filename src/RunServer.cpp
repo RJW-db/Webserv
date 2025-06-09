@@ -34,6 +34,8 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 unordered_map<int, string> RunServers::_fdBuffers;
 unordered_map<int, ClientRequestState> RunServers::_clientStates;
 ServerList RunServers::_servers;
+vector<unique_ptr<HandleTransfer>> RunServers::_handle;
+vector<int> RunServers::_connectedClients;
 
 RunServers::~RunServers()
 {
@@ -120,6 +122,7 @@ int RunServers::runServers()
             }
             // fprintf(stdout, "Received epoll event\n");
             handleEvents(static_cast<size_t>(eventCount));
+    
         }
         cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
     }
@@ -150,21 +153,28 @@ void RunServers::handleEvents(size_t eventCount)
             continue;
         }
 
-		// bool found = false;
+		bool handltransfers = true;
 		int clientFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : _servers)
         {
 			vector<int> &listeners = server->getListeners();
             if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
             {
-				// found = true;
+				handltransfers = false;
                 acceptConnection(server);
             }
-            else if (server == _servers.back())
-            {
-                processClientRequest(server, clientFD);
-            }
         }
+        if (find(_connectedClients.begin(), _connectedClients.end(), clientFD) != _connectedClients.end())
+        {
+            processClientRequest(clientFD);
+            handltransfers = false;
+        }
+
+        if (handltransfers == true)
+        {
+            
+        }
+        // if (finishes_send_read() == false)
 		// if (found == false)
 		// 	processClientRequest(server, clientFD);
     }
@@ -207,7 +217,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             break;
         }
         _fds.setFD(infd);
-
+        RunServers::insertClientFD(infd);
     }
 }
 
@@ -306,7 +316,7 @@ static string NumIpToString(uint32_t addr)
 	}
 }
 
-void RunServers::processClientRequest(const unique_ptr<Server> &server, int clientFD)
+void RunServers::processClientRequest(int clientFD)
 {
     try
     {
@@ -376,7 +386,6 @@ void RunServers::processClientRequest(const unique_ptr<Server> &server, int clie
 		parseHost(state.header, clientFD, usedServer);
         HttpRequest request(usedServer, clientFD, state.method, state.header, state.body);
         request.handleRequest(state.contentLength);
-        printf("%s: Closed connection on descriptor %d\n", server->getServerName().c_str(), clientFD);
     }
     catch (const LengthRequiredException &e)
     {
@@ -437,4 +446,15 @@ void RunServers::cleanupClient(int clientFD)
     _clientStates.erase(clientFD);
     _fdBuffers[clientFD].clear();
     cleanupFD(clientFD);
+}
+
+void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
+{
+    _handle.push_back(move(handle));
+    // TODO removal functions
+}
+
+void RunServers::insertClientFD(int fd)
+{
+    _connectedClients.push_back(fd);
 }

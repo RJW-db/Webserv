@@ -23,7 +23,7 @@ void    HttpRequest::POST()
         {
             ofstream myfile;
             myfile.open("upload/" + string(_filename));
-            myfile << _file;
+            myfile << _fileContent;
             myfile.close();
             break;
         }
@@ -105,5 +105,5 @@ void	HttpRequest::getBodyInfo(string &body)
     if (position == string::npos)
         throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
-    _file = string_view(body).substr(fileStart, fileEnd - fileStart);
+    _fileContent = string_view(body).substr(fileStart, fileEnd - fileStart);
 }

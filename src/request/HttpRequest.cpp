@@ -3,6 +3,8 @@
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
 
+#include <HandleTransfer.hpp>
+
 #include <unordered_set>
 #include <arpa/inet.h>
 #include <cstring>
@@ -39,8 +41,8 @@ HttpRequest::HttpRequest(unique_ptr<Server> &server, int clientFD, string &metho
 
 void    validateHEAD(const string &head)
 {
-    std::istringstream headStream(head);
-    std::string method, path, version;
+    istringstream headStream(head);
+    string method, path, version;
     headStream >> method >> path >> version;
     
     if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
@@ -88,38 +90,67 @@ void HttpRequest::parseHeaders(const string& headerBlock)
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
             _headers[string(key)] = value;
-            // std::cout << "\tkey\t" << key << "\t" << value << std::endl;
+            // cout << "\tkey\t" << key << "\t" << value << endl;
         }
         start = end + 2;
     }
 }
 
-
+off_t HttpRequest::getFileLength(const string_view filename)
+{
+    struct stat status;
+    if (stat(filename.data(), &status) == -1)
+    {
+        throw RunServers::ClientException("text");
+    }
+    return status.st_size;
+}
 
 void    HttpRequest::GET()
 {
-    std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
+    // parseren van GET
+    // belangrijke info in een struct
+    // in RunServer afhandelen.
+    // TODO using FileDescriptor class
+
+    // int fd = open(_path.data(), R_OK);
+    // if (fd == -1)
+    //     throw RunServers::ClientException("open failed");
+
+    // FileDescriptor::setFD(fd);
+    // ostringstream response;
+    // response << "HTTP/1.1 200 OK\r\n";
+    // response << "Content-Length: " << getFileLength("filename") << "\r\n";
+    // response << "Content-Type: text/html\r\n";
+    // response << "\r\n";
+
+    // string responseStr = response.str();
+    // auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd);
+    // RunServers::insertHandleTransfer(move(handle));
+
+
+    ifstream file("webPages/POST_upload.html", ios::in | ios::binary);
     if (!file)
     {
-        std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+        string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
         send(_clientFD, notFound.c_str(), notFound.size(), 0);
         return;
     }
 
     // Read file contents
-    std::ostringstream ss;
+    ostringstream ss;
     ss << file.rdbuf();
-    std::string fileContent = ss.str();
+    string fileContent = ss.str();
 
     // Build response
-    std::ostringstream response;
+    ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Length: " << fileContent.size() << "\r\n";
     response << "Content-Type: text/html\r\n";
     response << "\r\n";
     response << fileContent;
 
-    std::string responseStr = response.str();
+    string responseStr = response.str();
     send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
 }
 
@@ -129,16 +160,16 @@ void HttpRequest::setLocation()
 	if (pos == string::npos || _headerBlock[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
-	string_view path = string_view(_headerBlock).substr(pos, len);
+	_path = string_view(_headerBlock).substr(pos, len);
 	for (pair<string, Location> &locationPair : _server->getLocations())
 	{
-		if (strncmp(path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+		if (strncmp(_path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
 			_location = locationPair.second;
 			return ;
 		}
 	}
-	throw RunServers::ClientException("No matching location found for path: " + string(path));
+	// throw RunServers::ClientException("No matching location found for path: " + string(_path));
 }
 
 void    HttpRequest::handleRequest(size_t contentLength)
@@ -152,7 +183,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
     if (_headers.find("Host") == _headers.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
-    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
+    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
 
     if (_method == "GET")
     {
@@ -167,7 +198,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
         POST();
-        // std::cout << _contentType << '\t' << _bodyBoundary << std::endl;
+        // cout << _contentType << '\t' << _bodyBoundary << endl;
     }
     // else
     // {

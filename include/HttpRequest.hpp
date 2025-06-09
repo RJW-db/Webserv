@@ -54,6 +54,8 @@ class HttpRequest
         void	POST();
         void	GET();
 
+    off_t getFileLength(const string_view filename);
+
         ContentType getContentType(const string_view ct);
 		void setLocation();
 
@@ -74,8 +76,9 @@ class HttpRequest
         string_view _contentType;
         string_view _bodyBoundary;
         
+        string_view _path;
         string_view _filename;
-        string_view _file;
+        string_view _fileContent;
 
 		Location _location;
 };
