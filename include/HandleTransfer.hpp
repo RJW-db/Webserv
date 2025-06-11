@@ -26,10 +26,12 @@ class HandleTransfer
 
         int     _clientFD;
         string  _header;
-        ssize_t _offset; // Offset for the data transfer
+        size_t _offset; // Offset for the data transfer
         
         int     _fd;
         string  _fileBuffer;
+
+        bool    _epollout_enabled;
     protected:
         // Helper function to send data over a socket
 

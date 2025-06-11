@@ -113,45 +113,45 @@ void    HttpRequest::GET()
     // in RunServer afhandelen.
     // TODO using FileDescriptor class
 
-    // int fd = open(_path.data(), R_OK);
-    // if (fd == -1)
-    //     throw RunServers::ClientException("open failed");
+    int fd = open(_path.data(), R_OK);
+    if (fd == -1)
+        throw RunServers::ClientException("open failed");
 
-    // FileDescriptor::setFD(fd);
-    // ostringstream response;
-    // response << "HTTP/1.1 200 OK\r\n";
-    // response << "Content-Length: " << getFileLength("filename") << "\r\n";
-    // response << "Content-Type: text/html\r\n";
-    // response << "\r\n";
-
-    // string responseStr = response.str();
-    // auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd);
-    // RunServers::insertHandleTransfer(move(handle));
-
-
-    ifstream file("webPages/POST_upload.html", ios::in | ios::binary);
-    if (!file)
-    {
-        string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-        send(_clientFD, notFound.c_str(), notFound.size(), 0);
-        return;
-    }
-
-    // Read file contents
-    ostringstream ss;
-    ss << file.rdbuf();
-    string fileContent = ss.str();
-
-    // Build response
+    FileDescriptor::setFD(fd);
     ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Length: " << fileContent.size() << "\r\n";
+    response << "Content-Length: " << getFileLength("webPages/POST_upload.html") << "\r\n";
     response << "Content-Type: text/html\r\n";
     response << "\r\n";
-    response << fileContent;
 
     string responseStr = response.str();
-    send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
+    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd);
+    RunServers::insertHandleTransfer(move(handle));
+
+
+    // ifstream file("webPages/POST_upload.html", ios::in | ios::binary);
+    // if (!file)
+    // {
+    //     string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+    //     send(_clientFD, notFound.c_str(), notFound.size(), 0);
+    //     return;
+    // }
+
+    // // Read file contents
+    // ostringstream ss;
+    // ss << file.rdbuf();
+    // string fileContent = ss.str();
+
+    // // Build response
+    // ostringstream response;
+    // response << "HTTP/1.1 200 OK\r\n";
+    // response << "Content-Length: " << fileContent.size() << "\r\n";
+    // response << "Content-Type: text/html\r\n";
+    // response << "\r\n";
+    // response << fileContent;
+
+    // string responseStr = response.str();
+    // send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
 }
 
 void HttpRequest::setLocation()

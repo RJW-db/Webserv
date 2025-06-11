@@ -41,7 +41,7 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp				\
 					request/HttpRequest.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					utils.cpp		HandleTransfer.cpp	\
+					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp	\
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
