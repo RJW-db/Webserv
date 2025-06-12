@@ -102,7 +102,6 @@ class RunServers
         static unordered_map<int, string> _fdBuffers;
         static unordered_map<int, ClientRequestState> _clientStates;
         static vector<int> _connectedClients;
-
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleTransfer>> _handle;
 };

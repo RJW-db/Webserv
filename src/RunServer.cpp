@@ -21,6 +21,8 @@
 #endif
 #include <sys/socket.h>
 
+#include <ctime>
+	
 #include <dirent.h>
 
 #include <signal.h>
@@ -50,12 +52,13 @@ void RunServers::createServers(vector<ConfigServer> &configs)
         _servers.push_back(make_unique<Server>(Server(config)));
     }
     Server::createListeners(_servers);
+    
 }
 
 int RunServers::runServers()
 {
     epollInit();
-
+    std::srand(std::time(NULL));
     while (g_signal_status == 0)
     {
         int eventCount;
@@ -183,6 +186,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
             ht._fd = -1;
         }
     }
+    std::cout << "buff:" << ht._fileBuffer << std::endl;
     ssize_t sent = send(ht._clientFD, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
     if (sent == -1)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));
@@ -198,8 +202,10 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
     //     //     ht._epollout_enabled = false;
     //     // }
     // }
-    if (ht._offset >= ht._fileSize)
+    if (ht._offset >= ht._fileSize) // TODO only between boundary is the filesize
     {
+        // string boundary = "--" + ht._boundary + "--\r\n\r\n";
+        // send(ht._clientFD, boundary.c_str(), boundary.size(), 0);
         setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
         ht._epollout_enabled = false;
         return true;

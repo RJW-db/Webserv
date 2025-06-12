@@ -110,6 +110,22 @@ size_t HttpRequest::getFileLength(const string_view filename)
     return static_cast<size_t>(status.st_size);;
 }
 
+std::string generateBoundary()
+{
+    const char charset[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    const size_t maxIndex = sizeof(charset) - 2;
+    const int boundaryLength = 40;
+
+    std::string boundary = "----WebservBoundary";
+    for (int i = 0; i < boundaryLength; ++i) {
+        boundary += charset[rand() % maxIndex];
+    }
+    return boundary;
+}
+
 void    HttpRequest::GET()
 {
     // parseren van GET
@@ -126,17 +142,22 @@ void    HttpRequest::GET()
     FileDescriptor::setFD(fd);
     RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     size_t fileSize = getFileLength(_path);
+
+    string boundary = generateBoundary();
     ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
-    response << "Content-Type: text/html\r\n";
+    // response << "Content-Type: multipart/form-data; boundary=" << boundary << "\r\n";
     response << "\r\n";
-    // response << --bodyboundarySRTERYRDUZYHxutery5eyeayearyeay;
+    // response << // body header"
+    // response << "--" << boundary;
+    // response 
 
     std::cout << _bodyBoundary << std::endl;
     string responseStr = response.str();
-    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
+    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize, boundary);
     RunServers::insertHandleTransfer(move(handle));
+
 
 
     // ifstream file("webPages/POST_upload.html", ios::in | ios::binary);
@@ -201,7 +222,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
     }
     else if (_method == "POST")
     {
-
+        std::cout << _headerBlock << _body << std::endl;
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)

@@ -1,0 +1,36 @@
+POST /upload HTTP/1.1
+Host: localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br, zstd
+Content-Type: multipart/form-data; boundary=----geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9
+Content-Length: 241
+Origin: http://localhost:8080
+Connection: keep-alive
+Referer: http://localhost:8080/upload
+Upgrade-Insecure-Requests: 1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: same-origin
+Sec-Fetch-User: ?1
+Priority: u=0, i
+
+------geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9
+Content-Disposition: form-data; name="myfile"; filename="example.txt"
+Content-Type: text/plain
+
+we smashing blocks here
+
+------geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9--
+
+
+
+different body:
+------geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9
+Content-Disposition: form-data; name="myfile"; filename="Screenshot from 2025-06-03 13-42-17.png"
+Content-Type: image/png
+
+we smashing blocks here
+
+------geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9--
