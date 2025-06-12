@@ -92,6 +92,22 @@ void ConfigServer::setDefaultConf()
 		Location &location = val.second;
         location.SetDefaultLocation(*this);
 	}
+	//check if / path exists in locations if not create it
+	bool found = false;
+	for (auto it = _locations.begin(); it != _locations.end(); ++it)
+	{
+		if (it->first == "/")
+		{
+			found = true;
+			break;
+		}
+	}
+	if (!found)
+	{
+		Location location;
+		location.SetDefaultLocation(*this);
+		_locations.insert(_locations.begin(), {"/", location});
+	}
     setDefaultErrorPages();
 }
 
