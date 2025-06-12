@@ -58,9 +58,10 @@ class RunServers
 
         static int make_socket_non_blocking(int sfd);
 
-        static void setEpollEvents(int fd, uint32_t events);
+        static void setEpollEvents(int fd, int option, uint32_t events);
 
-        static void handlingTransfer(HandleTransfer &client);
+        static bool handlingTransfer(HandleTransfer &client);
+        // static bool handlingSend(HandleTransfer &ht);
 
 
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);

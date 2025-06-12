@@ -3,7 +3,7 @@ NAME			:=	Webserv
 #	Get the number of logical processors (threads)
 OS				:=	$(shell uname -s)
 ifeq ($(OS), Linux)
-	N_JOBS		:=	$(shell nproc)
+	N_JOBS		:=	$(shell find ./src -name '*.cpp' | wc -l)
 else ifeq ($(OS), Darwin)
 	N_JOBS		:=	$(shell sysctl -n hw.logicalcpu)
 else

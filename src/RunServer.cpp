@@ -55,30 +55,32 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 int RunServers::runServers()
 {
     epollInit();
-    try
-    {
-        while (g_signal_status == 0)
-        {
-            int eventCount;
-    
-            fprintf(stdout, "Blocking and waiting for epoll event...\n");
-            eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
-            if (eventCount == -1) // for use only goes wrong with EINTR(signals)
-            {
-                break ;
-                throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
-            }
-            // fprintf(stdout, "Received epoll event\n");
-            handleEvents(static_cast<size_t>(eventCount));
-    
-        }
-        cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
-    }
-    catch(const exception& e) // catch-all, will determine whether CleanupClient needs to be called or not
-    {
-        cerr << e.what() << endl;
-    }
 
+    while (g_signal_status == 0)
+    {
+        int eventCount;
+
+        fprintf(stdout, "Blocking and waiting for epoll event...\n");
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+        if (eventCount == -1) // for use only goes wrong with EINTR(signals)
+        {
+            break ;
+            throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
+        }
+        try
+        {
+            handleEvents(static_cast<size_t>(eventCount));
+        }
+        catch(const ClientException &e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
     return 0;
 }
 
@@ -92,8 +94,9 @@ void RunServers::handleEvents(size_t eventCount)
         //     (currentEvent.events & EPOLLHUP) ||
         //     (currentEvent.events & EPOLLIN) == 0)
         // {
-        if ((currentEvent.events & (EPOLLERR | EPOLLHUP))||
-        !(currentEvent.events & EPOLLIN))
+        if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
+           !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
+
         {
             std::cerr << "epoll error on fd " << currentEvent.data.fd
             << " (events: " << currentEvent.events << ")" << std::endl;
@@ -101,30 +104,49 @@ void RunServers::handleEvents(size_t eventCount)
             continue;
         }
 
-        bool handltransfers = true;
-        int clientFD = currentEvent.data.fd;
+        // bool handltransfers = true;
+        int eventFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : _servers)
         {
             vector<int> &listeners = server->getListeners();
-            if (find(listeners.begin(), listeners.end(), clientFD) != listeners.end())
+            if (find(listeners.begin(), listeners.end(), eventFD) != listeners.end())
             {
-                handltransfers = false;
+                // handltransfers = false;
                 acceptConnection(server);
+                return ;
             }
         }
-        if (find(_connectedClients.begin(), _connectedClients.end(), clientFD) != _connectedClients.end())
+        if ((find(_connectedClients.begin(), _connectedClients.end(), eventFD) != _connectedClients.end()) &&
+            currentEvent.events & EPOLLIN)
         {
-            processClientRequest(clientFD);
-            handltransfers = false;
+            processClientRequest(eventFD);
+            return ;
+            // handltransfers = false;
         }
-
-        if (handltransfers == true)
+        if (currentEvent.events & EPOLLOUT)
         {
-            
+            for (auto it = _handle.begin(); it != _handle.end(); ++it)
+            {
+                if ((*it)->_clientFD == eventFD)
+                {
+                    if (handlingTransfer(**it) == true)
+                        _handle.erase(it);
+                    return;
+                }
+            }
         }
-        // if (finishes_send_read() == false)
-        // if (found == false)
-        // 	processClientRequest(server, clientFD);
+        // else if (currentEvent.events & EPOLLOUT)
+        // {
+        //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
+        //     {
+        //         if ((*it)->_clientFD == eventFD)
+        //         {
+        //             if (handlingSend(**it) == true)
+        //                 _handle.erase(it);
+        //             return;
+        //         }
+        //     }
+        // }
     }
 }
 
@@ -134,47 +156,58 @@ void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
     // TODO removal functions
 }
 
-void RunServers::handlingTransfer(HandleTransfer &ht)
+#define CHUNK_SIZE 8192 // 8KB
+bool RunServers::handlingTransfer(HandleTransfer &ht)
 {
-    ssize_t sent = send(ht._clientFD, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.length() - ht._offset, 0);
-    if (sent == -1) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-        {
-            // Can't send now, wait for EPOLLOUT
-            setEpollEvents(ht._clientFD, EPOLLIN | EPOLLOUT);
-            ht._epollout_enabled = true;
-        }
-        else
-        {
-            // Handle error
-        }
-        return;
-    }
-
-    size_t _sent = static_cast<size_t>(sent);
-    if (_sent < ht._fileBuffer.length() - ht._offset)
+    char buff[CHUNK_SIZE];
+    if (ht._fd != -1)
     {
-        // Partial send, update offset and wait for EPOLLOUT
-        ht._offset += _sent;
-        if (ht._offset < ht._fileBuffer.length())
+        ssize_t bytesRead = read(ht._fd, buff, CHUNK_SIZE);
+        if (bytesRead == -1)
+            throw ClientException(string("handlingTransfer read: ") + strerror(errno));
+        size_t _bytesRead = static_cast<size_t>(bytesRead);
+        ht._bytesReadTotal += _bytesRead;
+        if (_bytesRead > 0)
         {
-            // Still data left to send
+            ht._fileBuffer.append(buff);
+            
             if (ht._epollout_enabled == false)
             {
-                setEpollEvents(ht._clientFD, EPOLLIN | EPOLLOUT);
-                ht._epollout_enabled = true;
+                setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
             }
         }
-        else
+        if (_bytesRead == 0 || ht._bytesReadTotal >= ht._fileSize)
         {
-            // All data sent, disable EPOLLOUT
-            setEpollEvents(ht._clientFD, EPOLLIN);
-            ht._epollout_enabled = false;
+            // EOF reached, close file descriptor if needed
+            close(ht._fd);
+            ht._fd = -1;
         }
     }
-    else
+    ssize_t sent = send(ht._clientFD, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
+    if (sent == -1)
+        throw ClientException(string("handlingTransfer send: ") + strerror(errno));
+    size_t _sent = static_cast<size_t>(sent);
+    ht._offset += _sent;
+    // if (_sent < ht._fileBuffer.size() - ht._offset)
+    // {
+    //     // Partial send, update offset and wait for EPOLLOUT
+    //     // if (ht._offset >= ht._fileBuffer.size())
+    //     // {
+    //     //     // All data sent, disable EPOLLOUT
+    //     //     setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
+    //     //     ht._epollout_enabled = false;
+    //     // }
+    // }
+    if (ht._offset >= ht._fileSize)
     {
-        // All data sent, no need for EPOLLOUT
-        setEpollEvents(ht._clientFD, EPOLLIN);
+        setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
+        ht._epollout_enabled = false;
+        return true;
     }
+    return false;
 }
+
+// bool RunServers::handlingSend(HandleTransfer &ht)
+// {
+
+// }

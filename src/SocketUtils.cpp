@@ -54,7 +54,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
         {
             printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", server->getServerName().c_str(), infd, hbuf, sbuf);
+                "(host=%s, port=%s)\n", "server->getServerName().c_str()", infd, hbuf, sbuf);
         }
         if(make_socket_non_blocking(infd) == -1)
         {
@@ -94,14 +94,12 @@ int RunServers::make_socket_non_blocking(int sfd)
     return 0;
 }
 
-void RunServers::setEpollEvents(int fd, uint32_t events)
+void RunServers::setEpollEvents(int fd, int option, uint32_t events)
 {
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
-    if (epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &ev) == -1)
+    if (epoll_ctl(_epfd, option, fd, &ev) == -1)
         std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
-    
-    
-    // setEpollEvents(clientFD, EPOLLIN | EPOLLOUT);
+    // setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 }

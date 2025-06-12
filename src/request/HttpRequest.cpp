@@ -96,14 +96,18 @@ void HttpRequest::parseHeaders(const string& headerBlock)
     }
 }
 
-off_t HttpRequest::getFileLength(const string_view filename)
+size_t HttpRequest::getFileLength(const string_view filename)
 {
     struct stat status;
     if (stat(filename.data(), &status) == -1)
     {
         throw RunServers::ClientException("text");
     }
-    return status.st_size;
+
+    if (status.st_size < 0)
+        throw RunServers::ClientException("Invalid file size");
+
+    return static_cast<size_t>(status.st_size);;
 }
 
 void    HttpRequest::GET()
@@ -113,19 +117,25 @@ void    HttpRequest::GET()
     // in RunServer afhandelen.
     // TODO using FileDescriptor class
 
+    _path = "webPages/POST_upload.html";
+    // std::cout << _path << std::endl;
     int fd = open(_path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
+    RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+    size_t fileSize = getFileLength(_path);
     ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Length: " << getFileLength("webPages/POST_upload.html") << "\r\n";
+    response << "Content-Length: " << fileSize << "\r\n";
     response << "Content-Type: text/html\r\n";
     response << "\r\n";
+    // response << --bodyboundarySRTERYRDUZYHxutery5eyeayearyeay;
 
+    std::cout << _bodyBoundary << std::endl;
     string responseStr = response.str();
-    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd);
+    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
 

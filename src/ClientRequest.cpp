@@ -89,7 +89,7 @@ void RunServers::processClientRequest(int clientFD)
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(clientFD, msgToClient);
     }
-    cleanupClient(clientFD);
+    // cleanupClient(clientFD);
 }
 
 static string NumIpToString(uint32_t addr)
@@ -224,7 +224,7 @@ void RunServers::cleanupFD(int fd)
 {
     if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
     {
-        cerr << "epoll_ctl: EPOLL_CTL_DEL: " << strerror(errno) << endl;
+        cerr << "epoll_ctl: " << strerror(errno) << endl;
     }
     _fds.closeFD(fd);
 }

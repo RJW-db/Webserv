@@ -16,20 +16,18 @@ using namespace std;
 class HandleTransfer
 {
     public:
-        HandleTransfer(int clientFD, string &responseHeader, int fd);
+        HandleTransfer(int clientFD, string &responseHeader, int fd, size_t fileSize);
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other) = default;
         virtual ~HandleTransfer() = default;
 
-        // Function to handle the transfer of data
-
-
         int     _clientFD;
-        string  _header;
-        size_t _offset; // Offset for the data transfer
-        
         int     _fd;
+        size_t  _fileSize;
         string  _fileBuffer;
+    
+        size_t _offset; // Offset for the data transfer
+        size_t  _bytesReadTotal;
 
         bool    _epollout_enabled;
     protected:
