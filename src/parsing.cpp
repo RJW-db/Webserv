@@ -74,6 +74,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         line = line.substr(1);
         skipLine(line, false, block);
         ftSkipspace(line);
+		cout << "line:" << _lines.begin()->second << endl;
         const map<string, bool (Location::*)(string &)> cmds = {
             {"root", &Location::root},
             {"client_max_body_size", &Location::ClientMaxBodysize},
@@ -84,8 +85,8 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
             {"limit_except", &Location::methods},
             {"return", &Location::returnRedirect},
             {"index", &Location::indexPage}};
-        readBlock(location, cmds, whileCmds);
-        line = _lines.begin()->second;
+		_lines.begin()->second = line;
+		readBlock(location, cmds, whileCmds);
         block.addLocation(location, path);
         validSyntax = true;
     }
