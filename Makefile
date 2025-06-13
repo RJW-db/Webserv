@@ -41,7 +41,7 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp				\
 					request/HttpRequest.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp	\
+					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp	ErrorCodeClientException.cpp \
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -55,7 +55,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp ServerListenFD.hpp
+INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp ServerListenFD.hpp 	ErrorCodeClientException.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

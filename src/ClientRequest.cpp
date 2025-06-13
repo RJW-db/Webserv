@@ -73,22 +73,22 @@ void RunServers::processClientRequest(int clientFD)
         HttpRequest request(usedServer, clientFD, state.method, state.header, state.body);
         request.handleRequest(state.contentLength);
     }
-    catch (const LengthRequiredException &e)
-    {
-        cerr << e.what() << endl;
-        sendErrorResponse(clientFD, "411 Length Required");
-    }
-    catch (const ClientException &e)
-    {
-        cerr << e.what() << endl;
-        sendErrorResponse(clientFD, "400 Bad Request");
-    }
     catch(const exception& e)
     {
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(clientFD, msgToClient);
     }
+    // catch (const LengthRequiredException &e)
+    // {
+    //     cerr << e.what() << endl;
+    //     sendErrorResponse(clientFD, "411 Length Required");
+    // }
+    // catch (const ClientException &e)
+    // {
+    //     cerr << e.what() << endl;
+    //     sendErrorResponse(clientFD, "400 Bad Request");
+    // }
     // cleanupClient(clientFD);
 }
 

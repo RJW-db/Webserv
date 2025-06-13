@@ -262,7 +262,7 @@ void Parsing::printAll() const
 			cout << endl;
 		for (auto pair : config.getLocations())
 		{
-			Location &location = pair.second;
+			Alocation &location = pair.second;
 			cout << "location: " << "Path: " << pair.first << endl;
 			cout << "  Root: " << location.getRoot() << endl;
 			cout << "  Client Max Body Size: " << location.getClientBodySize() << endl;

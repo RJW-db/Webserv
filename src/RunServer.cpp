@@ -1,4 +1,5 @@
 #include <RunServer.hpp>
+#include <ErrorCodeClientException.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
 
@@ -74,9 +75,9 @@ int RunServers::runServers()
         {
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch(const ClientException &e)
+        catch(const ErrorCodeClient& e)
         {
-            std::cerr << e.what() << '\n';
+            e.handleErrorClient();
         }
         catch(const std::exception& e)
         {
@@ -192,17 +193,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
     ht._offset += _sent;
-    // if (_sent < ht._fileBuffer.size() - ht._offset)
-    // {
-    //     // Partial send, update offset and wait for EPOLLOUT
-    //     // if (ht._offset >= ht._fileBuffer.size())
-    //     // {
-    //     //     // All data sent, disable EPOLLOUT
-    //     //     setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
-    //     //     ht._epollout_enabled = false;
-    //     // }
-    // }
-    if (ht._offset >= ht._fileSize) // TODO only between boundary is the filesize
+    if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
     {
         // string boundary = "--" + ht._boundary + "--\r\n\r\n";
         // send(ht._clientFD, boundary.c_str(), boundary.size(), 0);

@@ -96,45 +96,66 @@ void HttpRequest::parseHeaders(const string& headerBlock)
     }
 }
 
-size_t HttpRequest::getFileLength(const string_view filename)
+void    HttpRequest::pathHandling()
 {
     struct stat status;
-    if (stat(filename.data(), &status) == -1)
+
+    _path = _location.getRoot() + string(_path);
+    std::cout << _path << std::endl;
+    if (stat(_path.data(), &status) == -1)
     {
-        throw RunServers::ClientException("text");
+        throw RunServers::ClientException("non existent file");
     }
 
-    if (status.st_size < 0)
-        throw RunServers::ClientException("Invalid file size");
+    if (S_ISDIR(status.st_mode))
+    {
+        // searching for indexpage in directory
+        for (string &indexPage : _location.getIndexPage())
+        {
+            if (stat(indexPage.c_str(), &status) == 0)
+            {
+                if (S_ISDIR(status.st_mode) == true ||
+                    S_ISREG(status.st_mode) == false)
+                {
+                    continue;
+                }
+                if (access(indexPage.data(), R_OK) == -1)
+                {
+                    cerr << "pathHandling: " << strerror(errno) << endl;
+                    continue;
+                }
+                _path = indexPage; // found index
+                std::cout << "\t" << _path << std::endl;
+                return;
+            }
+        }
+        // autoindex
 
-    return static_cast<size_t>(status.st_size);;
-}
-
-std::string generateBoundary()
-{
-    const char charset[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-    const size_t maxIndex = sizeof(charset) - 2;
-    const int boundaryLength = 40;
-
-    std::string boundary = "----WebservBoundary";
-    for (int i = 0; i < boundaryLength; ++i) {
-        boundary += charset[rand() % maxIndex];
+        if (_location.getAutoIndex() == true)
+        {
+            // use cgi using opendir,readdir to create a dynamic html page
+        }
+        else
+        {
+            throw RunServers::ClientException("Autoindex is off");
+        }
+    } else if (S_ISREG(status.st_mode))
+    {
+        if (access(_path.data(), R_OK) == -1)
+        {
+            cerr << "pathHandling: " << strerror(errno) << endl;
+        }
     }
-    return boundary;
+    else
+    {
+        throw RunServers::ClientException("problem with request file: " + string(_path));
+    }
 }
 
 void    HttpRequest::GET()
 {
-    // parseren van GET
-    // belangrijke info in een struct
-    // in RunServer afhandelen.
-    // TODO using FileDescriptor class
+    pathHandling();
 
-    _path = "webPages/POST_upload.html";
-    // std::cout << _path << std::endl;
     int fd = open(_path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
@@ -143,46 +164,16 @@ void    HttpRequest::GET()
     RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     size_t fileSize = getFileLength(_path);
 
-    string boundary = generateBoundary();
     ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
-    // response << "Content-Type: multipart/form-data; boundary=" << boundary << "\r\n";
+    response << "Content-Type: text/html\r\n";
     response << "\r\n";
-    // response << // body header"
-    // response << "--" << boundary;
-    // response 
 
-    std::cout << _bodyBoundary << std::endl;
     string responseStr = response.str();
-    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize, boundary);
+    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
-
-
-    // ifstream file("webPages/POST_upload.html", ios::in | ios::binary);
-    // if (!file)
-    // {
-    //     string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-    //     send(_clientFD, notFound.c_str(), notFound.size(), 0);
-    //     return;
-    // }
-
-    // // Read file contents
-    // ostringstream ss;
-    // ss << file.rdbuf();
-    // string fileContent = ss.str();
-
-    // // Build response
-    // ostringstream response;
-    // response << "HTTP/1.1 200 OK\r\n";
-    // response << "Content-Length: " << fileContent.size() << "\r\n";
-    // response << "Content-Type: text/html\r\n";
-    // response << "\r\n";
-    // response << fileContent;
-
-    // string responseStr = response.str();
-    // send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
 }
 
 void HttpRequest::setLocation()

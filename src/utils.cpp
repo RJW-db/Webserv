@@ -1,4 +1,5 @@
 #include <utils.hpp>
+#include <RunServer.hpp>
 
 #include <dirent.h>
 
@@ -23,4 +24,18 @@ bool directoryCheck(string &path)
     closedir(d);
     return (true);
     // return (false);
+}
+
+size_t getFileLength(const string_view filename)
+{
+    struct stat status;
+    if (stat(filename.data(), &status) == -1)
+    {
+        throw RunServers::ClientException("text");
+    }
+
+    if (status.st_size < 0)
+        throw RunServers::ClientException("Invalid file size");
+
+    return static_cast<size_t>(status.st_size);;
 }
