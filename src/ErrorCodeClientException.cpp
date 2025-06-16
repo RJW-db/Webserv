@@ -20,7 +20,6 @@ void ErrorCodeClientException::handleErrorClient() const
     auto it = _errorPages.find(_errorCode);
     if (it == _errorPages.end())
         throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
-    std::cout << "error code:" << it->first << ", error page: " << it->second << std::endl;
     int fd = open(it->second.c_str(), O_RDONLY);
     size_t fileSize = getFileLength(it->second.c_str());
     FileDescriptor::setFD(fd);
@@ -28,6 +27,5 @@ void ErrorCodeClientException::handleErrorClient() const
     RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     auto transfer = make_unique<HandleTransfer>(_clientFD, empty, fd, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
-    std::cout << _message << std::endl;
+    std::cerr << _message << std::endl;
 }
-
