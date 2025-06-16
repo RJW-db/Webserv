@@ -7,7 +7,7 @@
 #include <utils.hpp>
 using namespace std;
 
-class ErrorCodeClient
+class ErrorCodeClientException
 {
 private:
     int _clientFD;
@@ -17,7 +17,7 @@ private:
 
 public:
     void handleErrorClient() const;
-    explicit ErrorCodeClient(int clientFD, int errorCode, const std::string &message, map<uint16_t, string> _errorPages);
+    explicit ErrorCodeClientException(int clientFD, int errorCode, const std::string &message, map<uint16_t, string> _errorPages);
     const char *what() const throw();
 };
 

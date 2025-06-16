@@ -28,6 +28,8 @@ void ftSkipspace(string &line)
 bool    Parsing::runReadblock()
 {
     size_t  skipSpace;
+	if (validSyntax == false)
+		throw runtime_error(to_string(_lines.begin()->first) + ": invalid syntax: " + _lines.begin()->second);
     if (_lines.begin()->second[0] == '}')
     {
         _lines.begin()->second =  _lines.begin()->second.substr(1);
@@ -35,8 +37,6 @@ bool    Parsing::runReadblock()
             _lines.erase(_lines.begin());
         return false;
     }
-    if (validSyntax == false)
-        throw runtime_error("invalid syntax: " + _lines.begin()->second);
     return true;
 }
 
@@ -61,7 +61,9 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
     {
         line = line.substr(8);
         if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-            throw runtime_error("no space found after command");
+		{
+            throw runtime_error (to_string(_lines.begin()->first) + ": no space found after command");
+		}
         Location location;
         location.setLineNbr(_lines.begin()->first);
         skipLine(line, false, block);
@@ -70,11 +72,10 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         skipLine(line, false, block);
         ftSkipspace(line);
         if (line[0] != '{')
-            throw runtime_error("couldn't find opening curly bracket for location");
+            throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
         line = line.substr(1);
         skipLine(line, false, block);
         ftSkipspace(line);
-		cout << "line:" << _lines.begin()->second << endl;
         const map<string, bool (Location::*)(string &)> cmds = {
             {"root", &Location::root},
             {"client_max_body_size", &Location::ClientMaxBodysize},
@@ -87,6 +88,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
             {"index", &Location::indexPage}};
 		_lines.begin()->second = line;
 		readBlock(location, cmds, whileCmds);
+		line = _lines.begin()->second;
         block.addLocation(location, path);
         validSyntax = true;
     }
@@ -100,7 +102,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<string, bool (T::
 	bool findColon;
 	line = line.substr(cmd.first.size());
 	if (string(" \t\f\v\r\n").find(line[0]) == std::string::npos)
-		throw runtime_error("no space found after command");
+		throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
 	size_t run = 0;
 	while (++run)
 	{
@@ -124,7 +126,7 @@ void Parsing::cmdCheck(string &line, T &block, const pair<string, bool (T::*)(st
     line = line.substr(cmd.first.size());
     skipLine(line, false, block);
     if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-        throw runtime_error("no space found after command");
+        throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
     ftSkipspace(line);
     findColon = (block.*(cmd.second))(line);
     if (!findColon)
@@ -145,7 +147,8 @@ void Parsing::readBlock(T &block,
     string line = _lines.begin()->second;
     do
     {
-        validSyntax = false;
+		bool in = false;
+		validSyntax = false;
         ftSkipspace(line);
         for (const pair<string, bool (T::*)(string &)> &cmd : cmds)
         {
@@ -153,18 +156,25 @@ void Parsing::readBlock(T &block,
 			{
     			validSyntax = true;
                 cmdCheck(line, block, cmd);
+				in = true;
 			}
         }
-        for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
-        {
-            if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
-            {
-                whileCmdCheck(line, block, whileCmd);
-                validSyntax = true;
-            }
-        }
-        if (strncmp(_lines.begin()->second.c_str(), "location", 8) == 0)
+		// if (in == false)
+		// {
+			for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
+			{
+				if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
+				{
+					whileCmdCheck(line, block, whileCmd);
+					validSyntax = true;
+					in = true;
+				}
+			}
+		// }
+        if (strncmp(line.c_str(), "location", 8) == 0/*  && in == false */)
             LocationCheck(line, block, validSyntax);
+		if (validSyntax == false)
+			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
     } 
 	while (runReadblock() == true);
 }
@@ -217,6 +227,10 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
         _lines.insert({lineNbr, line});
     }
     fs.close();
+	// for (const auto &pair : _lines)
+	// {
+	// 	std::cout << pair.second << std::endl;
+	// }
     while (1)
     {
         if (_lines.empty())

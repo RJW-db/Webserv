@@ -4,7 +4,7 @@
 #include <RunServer.hpp>
 
 #include <HandleTransfer.hpp>
-
+#include <ErrorCodeClientException.hpp>
 #include <unordered_set>
 #include <arpa/inet.h>
 #include <cstring>
@@ -137,7 +137,7 @@ void    HttpRequest::pathHandling()
         }
         else
         {
-            throw RunServers::ClientException("Autoindex is off");
+            throw ErrorCodeClientException(_clientFD, 403, "couldn't find index page", _location.getErrorCodesWithPage());
         }
     } else if (S_ISREG(status.st_mode))
     {
@@ -148,7 +148,7 @@ void    HttpRequest::pathHandling()
     }
     else
     {
-        throw RunServers::ClientException("problem with request file: " + string(_path));
+        throw ErrorCodeClientException(_clientFD, 403, "Forbidden: Not a regular file or directory", _location.getErrorCodesWithPage());
     }
 }
 

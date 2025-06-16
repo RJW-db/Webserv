@@ -75,7 +75,7 @@ int RunServers::runServers()
         {
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch(const ErrorCodeClient& e)
+        catch(const ErrorCodeClientException& e)
         {
             e.handleErrorClient();
         }
