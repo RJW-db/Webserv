@@ -56,6 +56,8 @@ class HttpRequest
         void	POST();
         void	GET();
 
+        string  getMimeType(void);
+
         void    pathHandling();
 
         ContentType getContentType(const string_view ct);

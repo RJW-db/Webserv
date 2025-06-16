@@ -33,7 +33,6 @@ static void examples(void);
 
 int main()
 {
-
 	Parsing test("config/default.conf");
 	test.printAll();
 
