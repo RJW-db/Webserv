@@ -56,16 +56,34 @@ void RunServers::createServers(vector<ConfigServer> &configs)
     
 }
 
+#include <chrono>
+#include <ctime> 
+void clocking()
+{
+    auto start = chrono::system_clock::now();
+    // Some computation here
+    auto end = chrono::system_clock::now();
+ 
+    chrono::duration<double> elapsed_seconds = end-start;
+    time_t end_time = chrono::system_clock::to_time_t(end);
+ 
+    cout << "finished computation at " << ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s"
+              << endl;
+}
+
 int RunServers::runServers()
 {
     epollInit();
+    clocking();
     while (g_signal_status == 0)
     {
         int eventCount;
-
+        
         std::cout << "Blocking and waiting for epoll event..." << std::endl;
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
-        if (eventCount == -1) // for use only goes wrong with EINTR(signals)
+        FileDescriptor::keepAliveCheck();
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 1000);
+        if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
             break ;
             throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
@@ -176,13 +194,14 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
             
             if (ht._epollout_enabled == false)
             {
-                setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+                setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLOUT);
+                ht._epollout_enabled = true;
             }
         }
         if (_bytesRead == 0 || ht._bytesReadTotal >= ht._fileSize)
         {
             // EOF reached, close file descriptor if needed
-            close(ht._fd);
+            FileDescriptor::closeFD(ht._fd);
             ht._fd = -1;
         }
     }
@@ -194,6 +213,11 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
     if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
     {
         // string boundary = "--" + ht._boundary + "--\r\n\r\n";
+        if (FileDescriptor::containsClient(ht._clientFD) == false)
+        {
+            RunServers::cleanupFD(ht._clientFD);
+            return true;
+        }
         // send(ht._clientFD, boundary.c_str(), boundary.size(), 0);
         setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
         ht._epollout_enabled = false;

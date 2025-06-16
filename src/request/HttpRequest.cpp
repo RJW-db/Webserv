@@ -138,7 +138,7 @@ void    HttpRequest::pathHandling()
         }
         else
         {
-            throw ErrorCodeClientException(_clientFD, 403, "couldn't find index page", _location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(_clientFD, 404, "couldn't find index page", _location.getErrorCodesWithPage());
         }
     } else if (S_ISREG(status.st_mode))
     {
@@ -149,11 +149,11 @@ void    HttpRequest::pathHandling()
     }
     else
     {
-        throw ErrorCodeClientException(_clientFD, 403, "Forbidden: Not a regular file or directory", _location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(_clientFD, 404, "Forbidden: Not a regular file or directory", _location.getErrorCodesWithPage());
     }
 }
 
-string HttpRequest::getMimeType(void)
+string HttpRequest::getMimeType(string &path)
 {
     static const map<string, string> mimeTypes = {
         { "html", "text/html" },
@@ -173,10 +173,10 @@ string HttpRequest::getMimeType(void)
         { "webm", "video/webm" }
     };
 
-    size_t dotIndex = _path.find_last_of('.');
+    size_t dotIndex = path.find_last_of('.');
     if (dotIndex != string::npos)
     {
-        string_view extention = string_view(_path).substr(dotIndex + 1);
+        string_view extention = string_view(path).substr(dotIndex + 1);
         
         map<string, string>::const_iterator it = mimeTypes.find(extention.data());
         if (it != mimeTypes.end())
@@ -194,19 +194,9 @@ void    HttpRequest::GET()
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
-    RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     size_t fileSize = getFileLength(_path);
 
-    std::cout << getMimeType() << std::endl;
-    
-    ostringstream response;
-    response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Length: " << fileSize << "\r\n";
-    // response << "Content-Type: text/html\r\n";
-    response << "Content-Type: " << getMimeType() << "\r\n";
-    response << "\r\n";
-
-    string responseStr = response.str();
+    string responseStr = HttpResponse(200, _path, fileSize);
     auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
@@ -238,11 +228,17 @@ void    HttpRequest::handleRequest(size_t contentLength)
 
     parseHeaders(_headerBlock);
 
+    auto it = _headers.find("Connection");
+    if (it != _headers.end() && it->second == "keep-alive")
+    {
+        FileDescriptor::addClientFD(_clientFD);
+    }
+    
+    std::cout << it->second << "\n\n\n" << std::endl;
     if (_headers.find("Host") == _headers.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
-
     if (_method == "GET")
     {
         GET();
@@ -262,4 +258,37 @@ void    HttpRequest::handleRequest(size_t contentLength)
     // {
 
     // }
+}
+
+
+string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
+{
+    static const map<uint16_t, string> responseCodes = {
+        { 200, "OK" },
+        { 400, "Bad Request" },
+        { 403, "Forbidden" },
+        { 404, "Not Found" },
+        { 405, "Method Not Allowed" },
+        { 413, "Payload Too Large" },
+        { 414, "URI Too Long" },
+        { 431, "Request Header Fields Too Large" },
+        { 500, "Internal Server Error" },
+        { 501, "Not Implemented" },
+        { 502, "Bad Gateway" },
+        { 503, "Service Unavailable" },
+        { 504, "Gateway Timeout" }
+    };
+        
+    map<uint16_t, string>::const_iterator it = responseCodes.find(code);
+    if (it == responseCodes.end())
+        throw runtime_error("Couldn't find code");
+
+    ostringstream response;
+    response << "HTTP/1.1 " << to_string(it->first) << ' ' << it->second << "\r\n";
+    response << "Content-Length: " << fileSize << "\r\n";
+    response << "Content-Type: " << getMimeType(path) << "\r\n";
+    response << "\r\n";
+
+    return response.str();
+
 }

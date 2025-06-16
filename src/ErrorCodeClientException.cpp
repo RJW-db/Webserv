@@ -1,5 +1,6 @@
 #include <ErrorCodeClientException.hpp>
 #include <HandleTransfer.hpp>
+#include <HttpRequest.hpp>
 #include <FileDescriptor.hpp>
 #include <RunServer.hpp>
 #include <sys/epoll.h>
@@ -23,9 +24,9 @@ void ErrorCodeClientException::handleErrorClient() const
     int fd = open(it->second.c_str(), O_RDONLY);
     size_t fileSize = getFileLength(it->second.c_str());
     FileDescriptor::setFD(fd);
-    string empty;
     RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
-    auto transfer = make_unique<HandleTransfer>(_clientFD, empty, fd, fileSize);
+    string response = HttpRequest::HttpResponse(it->first, it->second, fileSize);
+    auto transfer = make_unique<HandleTransfer>(_clientFD, response, fd, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
     std::cerr << _message << std::endl;
 }

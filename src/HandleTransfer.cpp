@@ -1,6 +1,6 @@
 #include <HandleTransfer.hpp>
-
-
+#include <RunServer.hpp>
+#include <sys/epoll.h>
 // HandleTransfer::HandleTransfer(int clientFD, string &responseHeader, int fd)
 // : _clientFD(clientFD), _header(responseHeader), _fd(fd)
 HandleTransfer::HandleTransfer(int clientFD, string &responseHeader, int fd, size_t fileSize)
@@ -10,4 +10,5 @@ HandleTransfer::HandleTransfer(int clientFD, string &responseHeader, int fd, siz
     _bytesReadTotal = 0;
     _epollout_enabled = false;
     _headerSize = responseHeader.size();
+    RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLOUT);
 }

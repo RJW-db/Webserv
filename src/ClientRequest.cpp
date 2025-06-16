@@ -232,6 +232,8 @@ void RunServers::cleanupFD(int fd)
 void RunServers::cleanupClient(int clientFD)
 {
     _clientStates.erase(clientFD);
+    _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), clientFD), _connectedClients.end());
     _fdBuffers[clientFD].clear();
     cleanupFD(clientFD);
+    
 }

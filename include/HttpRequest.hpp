@@ -56,7 +56,8 @@ class HttpRequest
         void	POST();
         void	GET();
 
-        string  getMimeType(void);
+        static string  getMimeType(string &path);
+        static string HttpResponse(uint16_t code, string path, size_t fileSize);
 
         void    pathHandling();
 
