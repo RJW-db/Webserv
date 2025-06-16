@@ -3,6 +3,8 @@
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
 
+#include <HandleTransfer.hpp>
+
 #include <unordered_set>
 #include <arpa/inet.h>
 #include <cstring>
@@ -39,8 +41,8 @@ HttpRequest::HttpRequest(unique_ptr<Server> &server, int clientFD, string &metho
 
 void    validateHEAD(const string &head)
 {
-    std::istringstream headStream(head);
-    std::string method, path, version;
+    istringstream headStream(head);
+    string method, path, version;
     headStream >> method >> path >> version;
     
     if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
@@ -88,39 +90,90 @@ void HttpRequest::parseHeaders(const string& headerBlock)
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
             _headers[string(key)] = value;
-            // std::cout << "\tkey\t" << key << "\t" << value << std::endl;
+            // cout << "\tkey\t" << key << "\t" << value << endl;
         }
         start = end + 2;
     }
 }
 
+void    HttpRequest::pathHandling()
+{
+    struct stat status;
 
+    _path = _location.getRoot() + string(_path);
+    std::cout << _path << std::endl;
+    if (stat(_path.data(), &status) == -1)
+    {
+        throw RunServers::ClientException("non existent file");
+    }
+
+    if (S_ISDIR(status.st_mode))
+    {
+        // searching for indexpage in directory
+        for (string &indexPage : _location.getIndexPage())
+        {
+            if (stat(indexPage.c_str(), &status) == 0)
+            {
+                if (S_ISDIR(status.st_mode) == true ||
+                    S_ISREG(status.st_mode) == false)
+                {
+                    continue;
+                }
+                if (access(indexPage.data(), R_OK) == -1)
+                {
+                    cerr << "pathHandling: " << strerror(errno) << endl;
+                    continue;
+                }
+                _path = indexPage; // found index
+                std::cout << "\t" << _path << std::endl;
+                return;
+            }
+        }
+        // autoindex
+
+        if (_location.getAutoIndex() == true)
+        {
+            // use cgi using opendir,readdir to create a dynamic html page
+        }
+        else
+        {
+            throw RunServers::ClientException("Autoindex is off");
+        }
+    } else if (S_ISREG(status.st_mode))
+    {
+        if (access(_path.data(), R_OK) == -1)
+        {
+            cerr << "pathHandling: " << strerror(errno) << endl;
+        }
+    }
+    else
+    {
+        throw RunServers::ClientException("problem with request file: " + string(_path));
+    }
+}
 
 void    HttpRequest::GET()
 {
-    std::ifstream file("webPages/POST_upload.html", std::ios::in | std::ios::binary);
-    if (!file)
-    {
-        std::string notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
-        send(_clientFD, notFound.c_str(), notFound.size(), 0);
-        return;
-    }
+    pathHandling();
 
-    // Read file contents
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    std::string fileContent = ss.str();
+    int fd = open(_path.data(), R_OK);
+    if (fd == -1)
+        throw RunServers::ClientException("open failed");
 
-    // Build response
-    std::ostringstream response;
+    FileDescriptor::setFD(fd);
+    RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+    size_t fileSize = getFileLength(_path);
+
+    ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Length: " << fileContent.size() << "\r\n";
+    response << "Content-Length: " << fileSize << "\r\n";
     response << "Content-Type: text/html\r\n";
     response << "\r\n";
-    response << fileContent;
 
-    std::string responseStr = response.str();
-    send(_clientFD, responseStr.c_str(), responseStr.size(), 0);
+    string responseStr = response.str();
+    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
+    RunServers::insertHandleTransfer(move(handle));
+
 }
 
 void HttpRequest::setLocation()
@@ -129,16 +182,16 @@ void HttpRequest::setLocation()
 	if (pos == string::npos || _headerBlock[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
-	string_view path = string_view(_headerBlock).substr(pos, len);
+	_path = string_view(_headerBlock).substr(pos, len);
 	for (pair<string, Location> &locationPair : _server->getLocations())
 	{
-		if (strncmp(path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+		if (strncmp(_path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
 			_location = locationPair.second;
 			return ;
 		}
 	}
-	throw RunServers::ClientException("No matching location found for path: " + string(path));
+	// throw RunServers::ClientException("No matching location found for path: " + string(_path));
 }
 
 void    HttpRequest::handleRequest(size_t contentLength)
@@ -152,7 +205,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
     if (_headers.find("Host") == _headers.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
-    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + std::string(it->second));
+    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
 
     if (_method == "GET")
     {
@@ -160,14 +213,14 @@ void    HttpRequest::handleRequest(size_t contentLength)
     }
     else if (_method == "POST")
     {
-
+        std::cout << _headerBlock << _body << std::endl;
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
         POST();
-        // std::cout << _contentType << '\t' << _bodyBoundary << std::endl;
+        // cout << _contentType << '\t' << _bodyBoundary << endl;
     }
     // else
     // {

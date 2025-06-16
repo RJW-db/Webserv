@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <utils.hpp>
 #include <sys/stat.h>
 
 using namespace std;
@@ -41,6 +42,7 @@ enum ContentType
     MULTIPART
 };
 
+
 class HttpRequest
 {
     public:
@@ -53,6 +55,8 @@ class HttpRequest
 
         void	POST();
         void	GET();
+
+        void    pathHandling();
 
         ContentType getContentType(const string_view ct);
 		void setLocation();
@@ -74,8 +78,9 @@ class HttpRequest
         string_view _contentType;
         string_view _bodyBoundary;
         
+        string _path;
         string_view _filename;
-        string_view _file;
+        string_view _fileContent;
 
-		Location _location;
+		Alocation _location;
 };

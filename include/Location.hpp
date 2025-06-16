@@ -15,6 +15,7 @@ class Alocation : public Aconfig
 {
 	public:
 		Alocation &operator=(const Alocation &other);
+		Alocation() = default;
 
 		array<string, 3> getMethods() const;
 		string getUploadStore() const;
@@ -22,7 +23,6 @@ class Alocation : public Aconfig
 		string getCgiPath() const;
 
 	protected:
-		Alocation() = default;
 		Alocation(const Alocation &other);
 		array<string, 3> _methods;
 		string _upload_store;

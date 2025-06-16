@@ -17,7 +17,9 @@
 #include <array>
 #include <unordered_map>
 #include <string_view>
+
 #include <Server.hpp>
+#include <HandleTransfer.hpp>
 
 
 using namespace std;
@@ -49,12 +51,21 @@ class RunServers
         static int runServers();
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const unique_ptr<Server> &server);
-        static void processClientRequest(const unique_ptr<Server> &server, int clientFD);
+        static void processClientRequest(int clientFD);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
 		static void parseHost(string &header, int clientFD, unique_ptr<Server> &usedServer);
 
         static int make_socket_non_blocking(int sfd);
+
+        static void setEpollEvents(int fd, int option, uint32_t events);
+
+        static bool handlingTransfer(HandleTransfer &client);
+        // static bool handlingSend(HandleTransfer &ht);
+
+
+        static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
+        static void insertClientFD(int fd);
 
         static void cleanupFD(int fd);
 
@@ -77,6 +88,7 @@ class RunServers
                 explicit LengthRequiredException(const std::string &message)
                     : ClientException(message) {}
         };
+
         
 
     private:
@@ -90,6 +102,9 @@ class RunServers
 		static ServerList _servers;
         static unordered_map<int, string> _fdBuffers;
         static unordered_map<int, ClientRequestState> _clientStates;
+        static vector<int> _connectedClients;
+        // static vector<HandleTransfer> _handle;
+        static vector<unique_ptr<HandleTransfer>> _handle;
 };
 
 

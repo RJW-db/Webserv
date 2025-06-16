@@ -16,8 +16,8 @@ class FileDescriptor
 		FileDescriptor();
 		~FileDescriptor();
 
-		void	setFD(int fd);
-		void	closeFD(int fd);
+		static void	setFD(int fd);
+		static void	closeFD(int fd);
 	private:
 		static std::vector<int> _fds;
 };

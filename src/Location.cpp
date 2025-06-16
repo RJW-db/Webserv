@@ -155,6 +155,10 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _autoIndex = curConf.getAutoIndex();
     if (_root.empty())
         _root = curConf.getRoot();
+	else 
+		_root.insert(0, ".");
+	if (_root[_root.size() - 1] == '/')
+		_root = _root.substr(0, _root.size() - 1);
     if (_clientBodySize == 0)
         _clientBodySize = curConf.getClientBodySize();
     if (_returnRedirect.first == 0)
@@ -172,6 +176,14 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _methods[1] = "POST";
         _methods[2] = "DELETE";
     }
+	for (string &indexPage : _indexPage)
+	{
+		if (_root[_root.size() - 1] == '/')
+			indexPage = _root + indexPage;
+		else
+			indexPage = _root + "/" + indexPage;
+		std::cout << indexPage << std::endl;
+	}
 	// if (_upload_store.empty())
 	//     _upload_store = _root;
     setDefaultErrorPages();

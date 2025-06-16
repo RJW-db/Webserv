@@ -218,7 +218,7 @@ void Aconfig::setDefaultErrorPages()
     {
         if (ErrorCodesWithPage.find(errorCode) == ErrorCodesWithPage.end())
         {
-            string fileName = "webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
+            string fileName = "./webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
             ErrorCodesWithPage.insert({errorCode, fileName});
         }
         else

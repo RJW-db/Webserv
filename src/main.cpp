@@ -27,12 +27,13 @@
 #include <signal.h>
 volatile sig_atomic_t g_signal_status = 0;
 
-
+#include <sys/stat.h>
 // Static Functions
 static void examples(void);
 
 int main()
 {
+
 	Parsing test("config/default.conf");
 	test.printAll();
 
@@ -40,7 +41,7 @@ int main()
     RunServers::runServers();
 	
 	
-	examples();
+	// examples();
     return 0;
 }
 
