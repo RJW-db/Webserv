@@ -59,12 +59,11 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 int RunServers::runServers()
 {
     epollInit();
-    std::srand(std::time(NULL));
     while (g_signal_status == 0)
     {
         int eventCount;
 
-        fprintf(stdout, "Blocking and waiting for epoll event...\n");
+        std::cout << "Blocking and waiting for epoll event..." << std::endl;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // for use only goes wrong with EINTR(signals)
         {
@@ -187,7 +186,6 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
             ht._fd = -1;
         }
     }
-    std::cout << "buff:" << ht._fileBuffer << std::endl;
     ssize_t sent = send(ht._clientFD, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
     if (sent == -1)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));

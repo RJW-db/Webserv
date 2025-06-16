@@ -2,6 +2,7 @@
 #include <FileDescriptor.hpp>
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
+#include <ErrorCodeClientException.hpp>
 
 #include <HandleTransfer.hpp>
 #include <ErrorCodeClientException.hpp>
@@ -152,6 +153,38 @@ void    HttpRequest::pathHandling()
     }
 }
 
+string HttpRequest::getMimeType(void)
+{
+    static const map<string, string> mimeTypes = {
+        { "html", "text/html" },
+        { "htm",  "text/html" },
+        { "css",  "text/css" },
+        { "js",   "application/javascript" },
+        { "json", "application/json" },
+        { "png",  "image/png" },
+        { "jpg",  "image/jpeg" },
+        { "jpeg", "image/jpeg" },
+        { "gif",  "image/gif" },
+        { "svg",  "image/svg+xml" },
+        { "ico",  "image/x-icon" },
+        { "pdf",  "application/pdf" },
+        { "txt",  "text/plain" },
+        { "mp4",  "video/mp4" },
+        { "webm", "video/webm" }
+    };
+
+    size_t dotIndex = _path.find_last_of('.');
+    if (dotIndex != string::npos)
+    {
+        string_view extention = string_view(_path).substr(dotIndex + 1);
+        
+        map<string, string>::const_iterator it = mimeTypes.find(extention.data());
+        if (it != mimeTypes.end())
+            return it->second;
+    }
+    return "application/octet-stream";
+}
+
 void    HttpRequest::GET()
 {
     pathHandling();
@@ -164,10 +197,13 @@ void    HttpRequest::GET()
     RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     size_t fileSize = getFileLength(_path);
 
+    std::cout << getMimeType() << std::endl;
+    
     ostringstream response;
     response << "HTTP/1.1 200 OK\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
-    response << "Content-Type: text/html\r\n";
+    // response << "Content-Type: text/html\r\n";
+    response << "Content-Type: " << getMimeType() << "\r\n";
     response << "\r\n";
 
     string responseStr = response.str();
