@@ -46,11 +46,11 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf)
 	size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
     if (string::npos == skipSpace || forceSkip)
     {
-		if (_lines.size() <= 1)
-			throw runtime_error("No closing bracket found after block: " + to_string(_lines.begin()->first));
-		_lines.erase(_lines.begin());
+        if (_lines.size() <= 1)
+            throw runtime_error("No closing bracket found after block: " + to_string(_lines.begin()->first));
+        _lines.erase(_lines.begin());
         line = _lines.begin()->second;
-		curConf.setLineNbr(_lines.begin()->first);
+        curConf.setLineNbr(_lines.begin()->first);
     }
 }
 
@@ -183,12 +183,13 @@ void Parsing::ServerCheck()
 {
     ConfigServer curConf;
     curConf.setLineNbr(_lines.begin()->first);
-    _lines.begin()->second = _lines.begin()->second.substr(6);
-    skipLine(_lines.begin()->second, false, curConf);
-    if (_lines.begin()->second[0] == '{')
+	string line = _lines.begin()->second;
+    line = line.substr(6);
+    skipLine(line, false, curConf);
+    if (line[0] == '{')
     {
-        _lines.begin()->second = _lines.begin()->second.substr(1);
-        skipLine(_lines.begin()->second, false, curConf);
+        line = line.substr(1);
+        skipLine(line, false, curConf);
         const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
             {"listen", &ConfigServer::listenHostname},
             {"root", &ConfigServer::root},
@@ -198,6 +199,7 @@ void Parsing::ServerCheck()
         const map<string, bool (ConfigServer::*)(string &)> whileCmds = {
             {"error_page", &ConfigServer::error_page},
             {"return", &ConfigServer::returnRedirect}};
+		_lines.begin()->second = line;
         readBlock(curConf, cmds, whileCmds);
         curConf.setDefaultConf();
         _configs.push_back(curConf);
