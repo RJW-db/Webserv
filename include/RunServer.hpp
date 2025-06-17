@@ -20,10 +20,22 @@
 
 #include <Server.hpp>
 #include <HandleTransfer.hpp>
-#include <utils.hpp>
+// #include <utils.hpp>
 
 
 using namespace std;
+
+struct ClientRequestState
+{
+    bool headerParsed = false;
+    string header;
+    string body;
+    string path;
+    string method;
+    size_t contentLength = 0;
+    // unique_ptr<Server> usedServer;
+    // Location UsedLocation;
+};
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 

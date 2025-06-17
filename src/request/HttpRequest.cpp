@@ -126,7 +126,7 @@ void    HttpRequest::pathHandling()
                     continue;
                 }
                 _path = indexPage; // found index
-                std::cout << "\t" << _path << std::endl;
+                // std::cout << "\t" << _path << std::endl;
                 return;
             }
         }
@@ -195,7 +195,7 @@ void    HttpRequest::GET()
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(_path);
-    std::cout << _headerBlock << std::endl;
+    // std::cout << _headerBlock << std::endl;
     string responseStr = HttpResponse(200, _path, fileSize);
     auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
@@ -267,8 +267,8 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 
     ostringstream response;
     response << "HTTP/1.1 " << to_string(it->first) << ' ' << it->second << "\r\n";
-    response << "Content-Length: " << fileSize << "\r\n";
     response << "Content-Type: " << getMimeType(path) << "\r\n";
+    response << "Content-Length: " << fileSize << "\r\n";
     response << "\r\n";
 
     return response.str();

@@ -13,7 +13,6 @@ Location &RunServers::setLocation(ClientRequestState &state, unique_ptr<Server> 
 	{
 		if (strncmp(state.path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
-			// _location = locationPair.second;
             return locationPair.second;
 		}
 	}
@@ -25,8 +24,8 @@ void RunServers::processClientRequest(int clientFD)
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
-        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
-
+        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff)- 1, 0);
+buff[bytesReceived] = '\0';
         if (bytesReceived < 0)
         {
             cleanupClient(clientFD);
@@ -50,7 +49,9 @@ void RunServers::processClientRequest(int clientFD)
         size_t receivedBytes = static_cast<size_t>(bytesReceived);
     
         _fdBuffers[clientFD].append(buff, receivedBytes); // can fail, need to call cleanupClient
-    
+        // std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+
+        // std::cout << "\t" << state.headerParsed << std::endl;
         if (state.headerParsed == false)
         {
             size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
@@ -97,12 +98,25 @@ void RunServers::processClientRequest(int clientFD)
         if (state.method == "POST" && state.body.size() < state.contentLength)
             return; // Wait for more data
 
+
+// std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+// std::cout << escape_special_chars(state.header) << std::endl;
+
+
         unique_ptr<Server> usedServer;
         setServer(state.header, clientFD, usedServer);
         Location &loc = setLocation(state, usedServer);
         HttpRequest request(usedServer, loc, clientFD, state);
 
         request.handleRequest(state.contentLength);
+         _fdBuffers[clientFD].clear();
+        // state.clear();
+        state.headerParsed = false;
+        state.header = "";
+        state.body = "";
+        state.path = "";
+        state.method = "";
+        state.contentLength = 0;
     }
     catch(const exception& e)   // if catch we don't handle well
     {
@@ -122,6 +136,8 @@ void RunServers::processClientRequest(int clientFD)
     //     sendErrorResponse(clientFD, "400 Bad Request");
     // }
     // cleanupClient(clientFD);
+
+    // _fdBuffers[clientFD].clear();
 }
 
 static string NumIpToString(uint32_t addr)
