@@ -190,7 +190,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
         ht._bytesReadTotal += _bytesRead;
         if (_bytesRead > 0)
         {
-            ht._fileBuffer.append(buff);
+            ht._fileBuffer.append(buff, _bytesRead);
             
             if (ht._epollout_enabled == false)
             {
