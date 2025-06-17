@@ -49,7 +49,7 @@ void	FileDescriptor::closeFD(int fd)
 
 void FileDescriptor::addClientFD(int clientFD)
 {
-	chrono::steady_clock::time_point timePoint = chrono::steady_clock::now() + chrono::seconds(5);
+	chrono::steady_clock::time_point timePoint = chrono::steady_clock::now() + chrono::seconds(20);
 	for (pair<chrono::steady_clock::time_point, int> it : _clientFDS)
 	{
 		if (it.second == clientFD)

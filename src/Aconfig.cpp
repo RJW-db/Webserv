@@ -102,7 +102,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	if (string("kKmMgG").find(line[0]) != string::npos)
 	{
 		if (isupper(line[0]) != 0)
-			line[0] -= 32;
+			line[0] += 32;
 		if (line[0] == 'g')
 			_clientBodySize *= 1024;
 		if (line[0] == 'g' || line[0] == 'm')

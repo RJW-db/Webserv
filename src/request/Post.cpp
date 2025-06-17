@@ -23,7 +23,9 @@ void    HttpRequest::POST()
         {
             ofstream myfile;
             myfile.open("upload/" + string(_filename));
+            std::cout << "writing " << std::endl;
             myfile << _fileContent;
+            std::cout << "written to file" << std::endl;
             myfile.close();
             break;
         }

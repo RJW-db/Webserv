@@ -35,8 +35,8 @@
 #include <sys/stat.h>
 
 
-HttpRequest::HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body)
-: _server(server), _clientFD(clientFD), _method(method), _headerBlock(header), _body(body)
+HttpRequest::HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, ClientRequestState &state)
+: _server(usedServer), _location(loc), _clientFD(clientFD), _method(state.method), _headerBlock(state.header), _body(state.body)
 {
 }
 
@@ -102,7 +102,7 @@ void    HttpRequest::pathHandling()
     struct stat status;
 
     _path = _location.getRoot() + string(_path);
-    std::cout << _path << std::endl;
+    // std::cout << _path << std::endl;
     if (stat(_path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file");
@@ -195,46 +195,23 @@ void    HttpRequest::GET()
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(_path);
-
+    std::cout << _headerBlock << std::endl;
     string responseStr = HttpResponse(200, _path, fileSize);
     auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
 }
 
-void HttpRequest::setLocation()
-{
-	size_t pos = string_view(_headerBlock).find_first_not_of(" \t", _method.length());
-	if (pos == string::npos || _headerBlock[pos] != '/')
-		throw RunServers::ClientException("missing path in HEAD");
-	size_t len = string_view(_headerBlock).substr(pos).find_first_of(" \t\n\r");
-	_path = string_view(_headerBlock).substr(pos, len);
-	for (pair<string, Location> &locationPair : _server->getLocations())
-	{
-		if (strncmp(_path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
-		{
-			_location = locationPair.second;
-			return ;
-		}
-	}
-	// throw RunServers::ClientException("No matching location found for path: " + string(_path));
-}
 
 void    HttpRequest::handleRequest(size_t contentLength)
 {
 	static_cast<void>(contentLength);
-	setLocation();
     validateHEAD(_headerBlock);
 
     parseHeaders(_headerBlock);
 
-    auto it = _headers.find("Connection");
-    if (it != _headers.end() && it->second == "keep-alive")
-    {
-        FileDescriptor::addClientFD(_clientFD);
-    }
+
     
-    std::cout << it->second << "\n\n\n" << std::endl;
     if (_headers.find("Host") == _headers.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
@@ -245,7 +222,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
     }
     else if (_method == "POST")
     {
-        std::cout << _headerBlock << _body << std::endl;
+        // std::cout << _headerBlock << _body << std::endl;
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)
@@ -258,6 +235,11 @@ void    HttpRequest::handleRequest(size_t contentLength)
     // {
 
     // }
+    auto it = _headers.find("Connection");
+    if (it != _headers.end() && it->second == "keep-alive")
+    {
+        FileDescriptor::addClientFD(_clientFD);
+    }
 }
 
 

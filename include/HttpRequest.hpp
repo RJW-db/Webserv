@@ -30,6 +30,7 @@
 #include <sstream>
 #include <utils.hpp>
 #include <sys/stat.h>
+#include <utils.hpp>
 
 using namespace std;
 
@@ -46,7 +47,8 @@ enum ContentType
 class HttpRequest
 {
     public:
-        HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
+        // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
+        HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, ClientRequestState &state);
 
         void	handleRequest(size_t contentLength);
 
@@ -62,11 +64,12 @@ class HttpRequest
         void    pathHandling();
 
         ContentType getContentType(const string_view ct);
-		void setLocation();
+		// static Location &setLocation();
 
         
     private:
         unique_ptr<Server> &_server;
+		Location _location;
 
         int _clientFD;
         string &_method;
@@ -85,5 +88,4 @@ class HttpRequest
         string_view _filename;
         string_view _fileContent;
 
-		Alocation _location;
 };

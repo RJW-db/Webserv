@@ -20,20 +20,12 @@
 
 #include <Server.hpp>
 #include <HandleTransfer.hpp>
+#include <utils.hpp>
 
 
 using namespace std;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
-
-struct ClientRequestState
-{
-    bool headerParsed = false;
-    string header;
-    string body;
-    string method;
-    size_t contentLength = 0;
-};
 
 using ServerList = vector<unique_ptr<Server>>;
 
@@ -54,7 +46,8 @@ class RunServers
         static void processClientRequest(int clientFD);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
-		static void parseHost(string &header, int clientFD, unique_ptr<Server> &usedServer);
+		static void setServer(string &header, int clientFD, unique_ptr<Server> &usedServer);
+        static Location &setLocation(ClientRequestState &state, unique_ptr<Server> &usedServer);
 
         static int make_socket_non_blocking(int sfd);
 

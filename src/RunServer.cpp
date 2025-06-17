@@ -130,7 +130,7 @@ void RunServers::handleEvents(size_t eventCount)
         for (const unique_ptr<Server> &server : _servers)
         {
             vector<int> &listeners = server->getListeners();
-            if (find(listeners.begin(), listeners.end(), eventFD) != listeners.end())
+            if (find(listeners.begin(), listeners.end(), eventFD) != listeners.end() && currentEvent.events == EPOLLIN)
             {
                 // handltransfers = false;
                 acceptConnection(server);
@@ -144,6 +144,18 @@ void RunServers::handleEvents(size_t eventCount)
             return ;
             // handltransfers = false;
         }
+        // if (currentEvent.events & EPOLLOUT)
+        // {
+        //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
+        //     {
+        //         if ((*it)->_clientFD == eventFD)
+        //         {
+        //             if (handlingSend(**it) == true)
+        //                 _handle.erase(it);
+        //             return;
+        //         }
+        //     }
+        // }
         if (currentEvent.events & EPOLLOUT)
         {
             for (auto it = _handle.begin(); it != _handle.end(); ++it)
@@ -156,18 +168,6 @@ void RunServers::handleEvents(size_t eventCount)
                 }
             }
         }
-        // else if (currentEvent.events & EPOLLOUT)
-        // {
-        //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
-        //     {
-        //         if ((*it)->_clientFD == eventFD)
-        //         {
-        //             if (handlingSend(**it) == true)
-        //                 _handle.erase(it);
-        //             return;
-        //         }
-        //     }
-        // }
     }
 }
 

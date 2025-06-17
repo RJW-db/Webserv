@@ -31,4 +31,10 @@ inside the project
 
 
 
-cat clientHttpRequest.txt | telnet 10.10.2.9 8080
+cat handleiding/clientHttpRequest.txt | nc 10.11.4.3 8080
+
+
+als request geparseerd en volledig ontvangen dan clear fdBuffer van fd
+post handletransfer equal aanmaken (epollin en epollout fixen(handletransfer boven handlerequest))
+
+GET and POST at the same time.

@@ -2,13 +2,31 @@
 #include <HttpRequest.hpp>
 
 
+Location &RunServers::setLocation(ClientRequestState &state, unique_ptr<Server> &usedServer)
+{
+	size_t pos = string_view(state.header).find_first_not_of(" \t", state.method.length());
+	if (pos == string::npos || state.header[pos] != '/')
+		throw RunServers::ClientException("missing path in HEAD");
+	size_t len = string_view(state.header).substr(pos).find_first_of(" \t\n\r");
+	state.path = state.header.substr(pos, len);
+	for (pair<string, Location> &locationPair : usedServer->getLocations())
+	{
+		if (strncmp(state.path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+		{
+			// _location = locationPair.second;
+            return locationPair.second;
+		}
+	}
+	throw RunServers::ClientException("No matching location found for path: " + state.path);
+}
+
 void RunServers::processClientRequest(int clientFD)
 {
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
-        
+
         if (bytesReceived < 0)
         {
             cleanupClient(clientFD);
@@ -46,37 +64,51 @@ void RunServers::processClientRequest(int clientFD)
             state.header = _fdBuffers[clientFD].substr(0, headerEnd + 4); // can fail, need to call cleanupClient
             state.body = _fdBuffers[clientFD].substr(headerEnd + 4); // can fail, need to call cleanupClient
             state.headerParsed = true;
-    
+            
             // Parse Content-Length if POST
             state.method = extractMethod(state.header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
+            // std::cout << state.contentLength << std::endl;
+            unique_ptr<Server> usedServer;
+            setServer(state.header, clientFD, usedServer);
+            Location &loc = setLocation(state, usedServer);
+
             if (state.method.empty() == true)
             {
                 sendErrorResponse(clientFD, "400 Bad Request");
                 cleanupClient(clientFD);
                 return;
             }
-            if (state.method == "POST")
+            // std::cout << "." << state.method << "." << std::endl;
+            // exit(0);
+
+            // if (state.method == "POST")
+            if (strncmp(state.method.data(), "POST", 4) == 0)
             {
+                // std::cout << state.method << std::endl;
                 string lengthStr = extractHeader(state.header, "Content-Length:");
-                state.contentLength = headerNameContentLength(lengthStr, 1024*1024*100/* client_max_body_size */);
+                state.contentLength = headerNameContentLength(lengthStr, loc.getClientBodySize());
             }
+
 
         } else {
             // Only append new data to body
             state.body.append(buff, bytesReceived);
         }
-        
         if (state.method == "POST" && state.body.size() < state.contentLength)
             return; // Wait for more data
+
         unique_ptr<Server> usedServer;
-        parseHost(state.header, clientFD, usedServer);
-        HttpRequest request(usedServer, clientFD, state.method, state.header, state.body);
+        setServer(state.header, clientFD, usedServer);
+        Location &loc = setLocation(state, usedServer);
+        HttpRequest request(usedServer, loc, clientFD, state);
+
         request.handleRequest(state.contentLength);
     }
-    catch(const exception& e)
+    catch(const exception& e)   // if catch we don't handle well
     {
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
+        // exit(0);
         sendErrorResponse(clientFD, msgToClient);
     }
     // catch (const LengthRequiredException &e)
@@ -111,7 +143,7 @@ static string NumIpToString(uint32_t addr)
     return result;
 }
 
-void RunServers::parseHost(string &header, int clientFD, unique_ptr<Server> &usedServer)
+void RunServers::setServer(string &header, int clientFD, unique_ptr<Server> &usedServer)
 {
     uint find = header.find("Host:") + 5;
     string_view hostname = string_view(header).substr(find);
