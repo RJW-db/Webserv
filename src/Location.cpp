@@ -191,6 +191,7 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 
 
 Alocation::Alocation(const Alocation &other)
+: Aconfig(other)
 {
 	*this = other;
 }

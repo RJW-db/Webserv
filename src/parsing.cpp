@@ -97,7 +97,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 }
 
 template <typename T>
-void Parsing::whileCmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd)
+void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
 	bool findColon;
 	line = line.substr(cmd.first.size());
@@ -120,7 +120,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<string, bool (T::
 }
 
 template <typename T>
-void Parsing::cmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd)
+void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
 	bool findColon;
     line = line.substr(cmd.first.size());
@@ -150,7 +150,8 @@ void Parsing::readBlock(T &block,
 		bool in = false;
 		validSyntax = false;
         ftSkipspace(line);
-        for (const pair<string, bool (T::*)(string &)> &cmd : cmds)
+        // for (const pair<string, bool (T::*)(string &)> &cmd : cmds)
+        for (const auto& cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
 			{
@@ -161,7 +162,8 @@ void Parsing::readBlock(T &block,
         }
 		// if (in == false)
 		// {
-			for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
+			// for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
+			for (const auto& whileCmd : whileCmds)
 			{
 				if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
 				{

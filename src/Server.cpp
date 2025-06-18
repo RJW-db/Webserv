@@ -6,6 +6,7 @@ Server::Server(const AconfigServ &config)
 }
 
 Server::Server(const Server &other)
+: AconfigServ(other)
 {
 	*this = other;
 }

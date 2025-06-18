@@ -39,9 +39,9 @@ class Parsing
 		void ServerCheck();
 
 		template <typename T>
-		void cmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd);
+		void cmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd);
 		template <typename T>
-		void whileCmdCheck(string &line, T &block, const pair<string, bool (T::*)(string &)> &cmd);
+		void whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd);
 
 		bool    runReadblock(void);
 		template <typename T>

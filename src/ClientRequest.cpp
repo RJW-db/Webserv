@@ -99,7 +99,7 @@ buff[bytesReceived] = '\0';
             return; // Wait for more data
 
 
-// std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
 // std::cout << escape_special_chars(state.header) << std::endl;
 
 

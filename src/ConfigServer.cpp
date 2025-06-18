@@ -144,6 +144,7 @@ string &AconfigServ::getServerName(void)
 }
 
 AconfigServ::AconfigServ(const AconfigServ &other)
+: Aconfig(other)
 {
     *this = other;
 }

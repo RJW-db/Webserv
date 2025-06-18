@@ -94,8 +94,6 @@ class RunServers
                     : ClientException(message) {}
         };
 
-        
-
     private:
         // string _serverName;
         // int _listener; // moet weg
@@ -111,25 +109,6 @@ class RunServers
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleTransfer>> _handle;
 };
-
-
-// class ServerListenFD
-// {
-//     public:
-//         ServerListenFD(const char *port, const char *hostname);
-//         ~ServerListenFD();
-
-//         int	getFD() const;
-
-
-//         int create_listener_socket();
-//         struct addrinfo *get_server_addrinfo(void);
-//         int bind_to_socket(struct addrinfo *server);
-//     private:
-//         int         _listener;
-//         const char *_port;
-//         const char *_hostName;
-// };
 
 void	poll_usages(void);
 void	epoll_usage(void);

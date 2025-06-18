@@ -22,7 +22,7 @@ PRINT_NO_DIR	:=	--no-print-directory
 #		CCPFLAGS for testing
 COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
-CCPFLAGS		+=	-Wall -Wextra
+# CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Werror
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
