@@ -9,16 +9,18 @@ void    RunServers::setLocation(Client &client)
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
 	client._path = client._header.substr(pos, len);
-    if (client._path == "favicon.ico")
+    if (client._path == "/favicon.ico")
     {
-        client._path = "favicon.svg";
+        client._path = "/favicon.svg";
     }
-    // std::cout << "\t" << client._path << std::endl;
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
 		if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
+            std::cout << client._path << std::endl;
+            std::cout << locationPair.first << std::endl;
             client._location = locationPair.second;
+            return;
 		}
 	}
 	throw RunServers::ClientException("No matching location found for path: " + client._path);
@@ -114,13 +116,13 @@ void RunServers::processClientRequest(Client &client)
 
         request.handleRequest(client._contentLength);
         client._fdBuffers.clear();
-        // client.clear();
         client._headerParsed = false;
         client._header = "";
         client._body = "";
         client._path = "";
         client._method = "";
         client._contentLength = 0;
+        client._headerFields.clear();
     }
     catch(const exception& e)   // if catch we don't handle well
     {

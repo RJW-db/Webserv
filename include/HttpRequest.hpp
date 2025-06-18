@@ -89,7 +89,7 @@ class HttpRequest
         string_view _contentType;
         string_view _bodyBoundary;
         
-        string _path;
+        // string _path;
         string_view _filename;
         string_view _fileContent;
 

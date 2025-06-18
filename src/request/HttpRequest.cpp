@@ -100,9 +100,9 @@ void HttpRequest::parseHeaders(const string& headerBlock)
 void    HttpRequest::pathHandling()
 {
     struct stat status;
-    _path = _client._location.getRoot() + string(_path);
-    // cout << _path << endl;
-    if (stat(_path.data(), &status) == -1)
+    _client._path = _client._location.getRoot() + string(_client._path);
+    // cout << _client._path << endl;
+    if (stat(_client._path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file");
     }
@@ -112,7 +112,7 @@ void    HttpRequest::pathHandling()
         // searching for indexpage in directory
         for (string &indexPage : _client._location.getIndexPage())
         {
-            cout << "indexPage " << indexPage << endl;
+            // cout << "indexPage " << indexPage << endl;
             if (stat(indexPage.data(), &status) == 0)
             {
                 if (S_ISDIR(status.st_mode) == true ||
@@ -125,8 +125,8 @@ void    HttpRequest::pathHandling()
                     cerr << "pathHandling: " << strerror(errno) << endl;
                     continue;
                 }
-                _path = indexPage; // found index
-                // cout << "\t" << _path << endl;
+                _client._path = indexPage; // found index
+                // cout << "\t" << _client._path << endl;
                 return;
             }
         }
@@ -142,11 +142,11 @@ void    HttpRequest::pathHandling()
         }
     } else if (S_ISREG(status.st_mode))
     {
-        if (access(_path.data(), R_OK) == -1)
+        if (access(_client._path.data(), R_OK) == -1)
         {
             cerr << "pathHandling: " << strerror(errno) << endl;
         }
-        cout << "\t" << _path << endl;
+        cout << "\t" << _client._path << endl;
     }
     else
     {
@@ -190,14 +190,14 @@ void    HttpRequest::GET()
 {
     pathHandling();
 
-    int fd = open(_path.data(), R_OK);
+    int fd = open(_client._path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(_path);
+    size_t fileSize = getFileLength(_client._path);
     // cout << _headerBlock << endl;
-    string responseStr = HttpResponse(200, _path, fileSize);
+    string responseStr = HttpResponse(200, _client._path, fileSize);
     auto handle = make_unique<HandleTransfer>(_client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
@@ -210,10 +210,13 @@ void    HttpRequest::handleRequest(size_t contentLength)
     validateHEAD(_client._header);
 
     parseHeaders(_client._header);
-    if (_path == "/favicon.ico")
+    if (_client._path == "/favicon.ico")
 	{
-        _path = "/favicon.svg";
+        std::cout << "okedan" << std::endl;
+        _client._path = "/favicon.svg";
 	}
+    else
+        std::cout << _client._path << std::endl;
     if (_client._headerFields.find("Host") == _client._headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")

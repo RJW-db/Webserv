@@ -38,3 +38,10 @@ als request geparseerd en volledig ontvangen dan clear fdBuffer van fd
 post handletransfer equal aanmaken (epollin en epollout fixen(handletransfer boven handlerequest))
 
 GET and POST at the same time.
+
+
+
+probleematisch
+if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+
+if locationPair.lenght = 1, and client._path is more than one, it still gets into the if.. 
