@@ -191,6 +191,7 @@ void    HttpRequest::GET()
 {
     pathHandling();
 
+std::cout << "path.  " << _path << std::endl;
     int fd = open(_path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
@@ -212,7 +213,9 @@ void    HttpRequest::handleRequest(size_t contentLength)
 
     parseHeaders(_headerBlock);
     if (_path == "/favicon.ico")
+	{
         _path = "/favicon.svg";
+	}
     if (_headerFields.find("Host") == _headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
