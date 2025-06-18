@@ -48,7 +48,6 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             break;
         }
         
-
         char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
         if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
@@ -71,7 +70,8 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             break;
         }
         _fds.setFD(infd);
-        RunServers::insertClientFD(infd);
+        insertClientFD(infd);
+        _clients[infd] = std::make_unique<Client>(infd);
     }
 }
 

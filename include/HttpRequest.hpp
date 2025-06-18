@@ -33,6 +33,7 @@
 #include <utils.hpp>
 #include <sys/stat.h>
 // #include <utils.hpp>
+#include <Client.hpp>
 
 using namespace std;
 
@@ -50,7 +51,7 @@ class HttpRequest
 {
     public:
         // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
-        HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, ClientRequestState &state);
+        HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
 
         void	handleRequest(size_t contentLength);
 

@@ -35,10 +35,10 @@
 #include <sys/stat.h>
 
 
-HttpRequest::HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, ClientRequestState &state)
-: _server(usedServer), _location(loc), _clientFD(clientFD), _method(state.method), _headerBlock(state.header), _body(state.body)
+HttpRequest::HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state)
+: _server(usedServer), _location(loc), _clientFD(clientFD), _method(state._method), _headerBlock(state._header), _body(state._body)
 {
-    _path = state.path;
+    _path = state._path;
 }
 
 void    validateHEAD(const string &head)
@@ -191,7 +191,6 @@ void    HttpRequest::GET()
 {
     pathHandling();
 
-std::cout << "path.  " << _path << std::endl;
     int fd = open(_path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");

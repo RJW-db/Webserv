@@ -1,34 +1,33 @@
 #include <RunServer.hpp>
 #include <HttpRequest.hpp>
+#include <Client.hpp>
 
-
-Location &RunServers::setLocation(ClientRequestState &state, unique_ptr<Server> &usedServer)
+Location &RunServers::setLocation(Client &client, unique_ptr<Server> &usedServer)
 {
-	size_t pos = string_view(state.header).find_first_not_of(" \t", state.method.length());
-	if (pos == string::npos || state.header[pos] != '/')
+	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.length());
+	if (pos == string::npos || client._header[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
-	size_t len = string_view(state.header).substr(pos).find_first_of(" \t\n\r");
-	state.path = state.header.substr(pos, len);
+	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
+	client._path = client._header.substr(pos, len);
 	for (pair<string, Location> &locationPair : usedServer->getLocations())
 	{
-		if (strncmp(state.path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+		if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
             return locationPair.second;
 		}
 	}
-	throw RunServers::ClientException("No matching location found for path: " + state.path);
+	throw RunServers::ClientException("No matching location found for path: " + client._path);
 }
 
-void RunServers::processClientRequest(int clientFD)
+void RunServers::processClientRequest(Client &client)
 {
-
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
-        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
+        ssize_t bytesReceived = recv(client._fd, buff, sizeof(buff), 0);
         if (bytesReceived < 0)
         {
-            cleanupClient(clientFD);
+            cleanupClient(client);
             if(errno == EINTR)
             {
                 //	STOP SERVER CLEAN UP
@@ -37,93 +36,95 @@ void RunServers::processClientRequest(int clientFD)
                 cerr << "recv: " << strerror(errno);
             return;
         }
-        ClientRequestState &state = _clientStates[clientFD];
-    
+        // ClientRequestState &state = _clientStates[clientFD];
+        
+
         if (bytesReceived == 0) {
-            if (state.headerParsed && state.method == "POST" && state.body.size() < state.contentLength) {
-                sendErrorResponse(clientFD, "400 Bad Request (incomplete body)");
+            if (client._headerParsed && client._method == "POST" && client._body.size() < client._contentLength) {
+                sendErrorResponse(client._fd, "400 Bad Request (incomplete body)");
             }
-            cleanupClient(clientFD);
+            cleanupClient(client);
             return;
         }
         size_t receivedBytes = static_cast<size_t>(bytesReceived);
     
-        _fdBuffers[clientFD].append(buff, receivedBytes); // can fail, need to call cleanupClient
-        // std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+        client._fdBuffers.append(buff, receivedBytes); // can fail, need to call cleanupClient
+        // std::cout << escape_special_chars(client._fdBuffers) << std::endl;
 
-        // std::cout << "\t" << state.headerParsed << std::endl;
-        if (state.headerParsed == false)
+        // std::cout << "\t" << client.headerParsed << std::endl;
+        if (client._headerParsed == false)
         {
-            size_t headerEnd = _fdBuffers[clientFD].find("\r\n\r\n");
+            size_t headerEnd = client._fdBuffers.find("\r\n\r\n");
             if (headerEnd == string::npos)
             {
-                sendErrorResponse(clientFD, "400 Bad Request");
-                cleanupClient(clientFD);
+                sendErrorResponse(client._fd, "400 Bad Request");
+                cleanupClient(client);
                 return;
             }
     
-            state.header = _fdBuffers[clientFD].substr(0, headerEnd + 4); // can fail, need to call cleanupClient
-            state.body = _fdBuffers[clientFD].substr(headerEnd + 4); // can fail, need to call cleanupClient
-            state.headerParsed = true;
+            client._header = client._fdBuffers.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
+            client._body = client._fdBuffers.substr(headerEnd + 4); // can fail, need to call cleanupClient
+            client._headerParsed = true;
             
             // Parse Content-Length if POST
-            state.method = extractMethod(state.header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
-            // std::cout << state.contentLength << std::endl;
+            client._method = extractMethod(client._header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
+            // std::cout << client.contentLength << std::endl;
             unique_ptr<Server> usedServer;
-            setServer(state.header, clientFD, usedServer);
-            Location &loc = setLocation(state, usedServer);
+            setServer(client, usedServer);
+            Location &loc = setLocation(client, usedServer);
 
-            if (state.method.empty() == true)
+            if (client._method.empty() == true)
             {
-                sendErrorResponse(clientFD, "400 Bad Request");
-                cleanupClient(clientFD);
+                sendErrorResponse(client._fd, "400 Bad Request");
+                cleanupClient(client);
                 return;
             }
-            // std::cout << "." << state.method << "." << std::endl;
+            // std::cout << "." << client.method << "." << std::endl;
             // exit(0);
 
-            // if (state.method == "POST")
-            if (strncmp(state.method.data(), "POST", 4) == 0)
+            // if (client.method == "POST")
+            if (strncmp(client._method.data(), "POST", 4) == 0)
             {
-                // std::cout << state.method << std::endl;
-                string lengthStr = extractHeader(state.header, "Content-Length:");
-                state.contentLength = headerNameContentLength(lengthStr, loc.getClientBodySize());
+                // std::cout << client.method << std::endl;
+                string lengthStr = extractHeader(client._header, "Content-Length:");
+                client._contentLength = headerNameContentLength(lengthStr, loc.getClientBodySize());
             }
 
 
         } else {
+            parseHeaders(client);
+            // size_t boundaryPos = client.body.find_first_of()
             // Only append new data to body
-            state.body.append(buff, bytesReceived);
+            client._body.append(buff, bytesReceived);
         }
-        if (state.method == "POST" && state.body.size() < state.contentLength)
+        if (client._method == "POST" && client._body.size() < client._contentLength)
             return; // Wait for more data
 
 
-// std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
-// std::cout << escape_special_chars(state.header) << std::endl;
-
+// std::cout << escape_special_chars(client._fdBuffers) << std::endl;
+// std::cout << escape_special_chars(client.header) << std::endl;
 
         unique_ptr<Server> usedServer;
-        setServer(state.header, clientFD, usedServer);
-        Location &loc = setLocation(state, usedServer);
-        HttpRequest request(usedServer, loc, clientFD, state);
+        setServer(client, usedServer);
+        Location &loc = setLocation(client, usedServer);
+        HttpRequest request(usedServer, loc, client._fd, client);
 
-        request.handleRequest(state.contentLength);
-         _fdBuffers[clientFD].clear();
-        // state.clear();
-        state.headerParsed = false;
-        state.header = "";
-        state.body = "";
-        state.path = "";
-        state.method = "";
-        state.contentLength = 0;
+        request.handleRequest(client._contentLength);
+        client._fdBuffers.clear();
+        // client.clear();
+        client._headerParsed = false;
+        client._header = "";
+        client._body = "";
+        client._path = "";
+        client._method = "";
+        client._contentLength = 0;
     }
     catch(const exception& e)   // if catch we don't handle well
     {
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         // exit(0);
-        sendErrorResponse(clientFD, msgToClient);
+        sendErrorResponse(client._fd, msgToClient);
     }
     // catch (const LengthRequiredException &e)
     // {
@@ -137,7 +138,7 @@ void RunServers::processClientRequest(int clientFD)
     // }
     // cleanupClient(clientFD);
 
-    // _fdBuffers[clientFD].clear();
+    // client._fdBuffers.clear();
 }
 
 static string NumIpToString(uint32_t addr)
@@ -159,17 +160,17 @@ static string NumIpToString(uint32_t addr)
     return result;
 }
 
-void RunServers::setServer(string &header, int clientFD, unique_ptr<Server> &usedServer)
+void RunServers::setServer(Client &client, unique_ptr<Server> &usedServer)
 {
-    uint find = header.find("Host:") + 5;
-    string_view hostname = string_view(header).substr(find);
+    uint find = client._header.find("Host:") + 5;
+    string_view hostname = string_view(client._header).substr(find);
     hostname.remove_prefix(hostname.find_first_not_of(" \t"));
     size_t len = hostname.find_first_of(" \t\n\r");
     hostname = hostname.substr(0, len);
 
     sockaddr_in res;
     socklen_t resLen = sizeof(res);
-    int err = getsockname(clientFD, (struct sockaddr*)&res, &resLen);
+    int err = getsockname(client._fd, (struct sockaddr*)&res, &resLen);
     if (err != 0)
         throw ClientException("getsockname failed: " + string(strerror(errno)));
     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
@@ -277,11 +278,44 @@ void RunServers::cleanupFD(int fd)
     _fds.closeFD(fd);
 }
 
-void RunServers::cleanupClient(int clientFD)
+void RunServers::cleanupClient(Client &client)
 {
-    _clientStates.erase(clientFD);
-    _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), clientFD), _connectedClients.end());
-    _fdBuffers[clientFD].clear();
-    cleanupFD(clientFD);
-    
+    _clients.erase(client._fd);
+    _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
+    client._fdBuffers.clear();
+    cleanupFD(client._fd);
+}
+
+void RunServers::parseHeaders(Client &client)
+{
+    size_t start = 0;
+    while (start < client._header.size())
+    {
+        size_t end = client._header.find("\r\n", start);
+        if (end == string::npos)
+            throw RunServers::ClientException("Malformed HTTP request: header line not properly terminated");
+
+        string_view line(&client._header[start], end - start);
+        if (line.empty())
+            break; // End of headers
+
+        size_t colon = line.find(':');
+        if (colon != string_view::npos) {
+            // Extract key and value as string_views
+            string_view key = line.substr(0, colon);
+            string_view value = line.substr(colon + 1);
+
+            // Trim whitespace from key
+            key.remove_prefix(key.find_first_not_of(" \t"));
+            key.remove_suffix(key.size() - key.find_last_not_of(" \t") - 1);
+            // Trim whitespace from value
+            value.remove_prefix(value.find_first_not_of(" \t"));
+            value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
+            
+            // _headerFields[string(key)] = value;
+            client._headerFields[string(key)] = value;
+            // cout << "\tkey\t" << key << "\t" << value << endl;
+        }
+        start = end + 2;
+    }
 }

@@ -21,21 +21,10 @@
 #include <Server.hpp>
 #include <HandleTransfer.hpp>
 // #include <utils.hpp>
-
+#include <Client.hpp>
 
 using namespace std;
 
-struct ClientRequestState
-{
-    bool headerParsed = false;
-    string header;
-    string body;
-    string path;
-    string method;
-    size_t contentLength = 0;
-    // unique_ptr<Server> usedServer;
-    // Location UsedLocation;
-};
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
@@ -55,11 +44,11 @@ class RunServers
         static int runServers();
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const unique_ptr<Server> &server);
-        static void processClientRequest(int clientFD);
+        static void processClientRequest(Client &client);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
-		static void setServer(string &header, int clientFD, unique_ptr<Server> &usedServer);
-        static Location &setLocation(ClientRequestState &state, unique_ptr<Server> &usedServer);
+		static void setServer(Client &client, unique_ptr<Server> &usedServer);
+        static Location &setLocation(Client &state, unique_ptr<Server> &usedServer);
 
         static int make_socket_non_blocking(int sfd);
 
@@ -69,12 +58,15 @@ class RunServers
         // static bool handlingSend(HandleTransfer &ht);
 
 
+        static void parseHeaders(Client &client);
+        unordered_map<string, string_view> _headerFields;
+
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
         static void insertClientFD(int fd);
 
         static void cleanupFD(int fd);
 
-        static void cleanupClient(int clientFD);
+        static void cleanupClient(Client &client);
 
         class ClientException : public exception
 		{
@@ -103,11 +95,13 @@ class RunServers
         static array<struct epoll_event, FD_LIMIT> _events;
 		
 		static ServerList _servers;
-        static unordered_map<int, string> _fdBuffers;
-        static unordered_map<int, ClientRequestState> _clientStates;
+        // static unordered_map<int, string> _fdBuffers;
+        // static unordered_map<int, ClientRequestState> _clientStates;
         static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleTransfer>> _handle;
+
+        static unordered_map<int, unique_ptr<Client>> _clients;
 };
 
 void	poll_usages(void);

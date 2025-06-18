@@ -33,11 +33,11 @@ extern volatile sig_atomic_t g_signal_status;
 FileDescriptor RunServers::_fds;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
-unordered_map<int, string> RunServers::_fdBuffers;
-unordered_map<int, ClientRequestState> RunServers::_clientStates;
+// unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 vector<int> RunServers::_connectedClients;
+unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 
 RunServers::~RunServers()
 {
@@ -82,7 +82,7 @@ int RunServers::runServers()
         
         std::cout << "Blocking and waiting for epoll event..." << std::endl;
         FileDescriptor::keepAliveCheck();
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 1000);
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
             break ;
@@ -108,6 +108,7 @@ int RunServers::runServers()
 void RunServers::handleEvents(size_t eventCount)
 {
     // int errHndl = 0;
+    std::cout << "\t" << eventCount << std::endl;
     for (size_t i = 0; i < eventCount; ++i)
     {
         struct epoll_event &currentEvent = _events[i];
@@ -140,7 +141,7 @@ void RunServers::handleEvents(size_t eventCount)
         if ((find(_connectedClients.begin(), _connectedClients.end(), eventFD) != _connectedClients.end()) &&
             currentEvent.events & EPOLLIN)
         {
-            processClientRequest(eventFD);
+            processClientRequest(*_clients[eventFD].get());
             return ;
             // handltransfers = false;
         }

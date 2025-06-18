@@ -95,7 +95,7 @@ void FileDescriptor::keepAliveCheck()
 		if (it->first <= now)
 		{
 			std::cout << "removed: " << it->second << std::endl;
-			RunServers::cleanupClient(it->second);
+			// RunServers::cleanupClient(it->second);
 			it = _clientFDS.erase(it); // This iterates
 		}
 		else
