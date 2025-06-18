@@ -76,9 +76,9 @@ class HttpRequest
         int _clientFD;
         string &_method;
         string &_headerBlock;
-        unordered_map<string, string_view> _headers;
-
         string &_body;
+
+        unordered_map<string, string_view> _headerFields;
         
         // unordered_map<string, string_view> headers;
         string _hostName;

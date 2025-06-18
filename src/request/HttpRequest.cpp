@@ -22,7 +22,7 @@
 #include <unistd.h> // close
 #include <stdlib.h>	// callod
 #ifdef __linux__
-#include <sys/epoll.h>
+# include <sys/epoll.h>
 #endif
 #include <sys/socket.h>
 
@@ -38,6 +38,7 @@
 HttpRequest::HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, ClientRequestState &state)
 : _server(usedServer), _location(loc), _clientFD(clientFD), _method(state.method), _headerBlock(state.header), _body(state.body)
 {
+    _path = state.path;
 }
 
 void    validateHEAD(const string &head)
@@ -51,7 +52,7 @@ void    validateHEAD(const string &head)
         throw RunServers::ClientException("Invalid HTTP method: " + method);
     }
    
-    if (path.empty() || path.c_str()[0] != '/')
+    if (path.empty() || path.data()[0] != '/')
     {
         throw RunServers::ClientException("Invalid HTTP path: " + path);
     }
@@ -90,7 +91,7 @@ void HttpRequest::parseHeaders(const string& headerBlock)
             value.remove_prefix(value.find_first_not_of(" \t"));
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
-            _headers[string(key)] = value;
+            _headerFields[string(key)] = value;
             // cout << "\tkey\t" << key << "\t" << value << endl;
         }
         start = end + 2;
@@ -100,9 +101,8 @@ void HttpRequest::parseHeaders(const string& headerBlock)
 void    HttpRequest::pathHandling()
 {
     struct stat status;
-
     _path = _location.getRoot() + string(_path);
-    // std::cout << _path << std::endl;
+    // cout << _path << endl;
     if (stat(_path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file");
@@ -113,7 +113,8 @@ void    HttpRequest::pathHandling()
         // searching for indexpage in directory
         for (string &indexPage : _location.getIndexPage())
         {
-            if (stat(indexPage.c_str(), &status) == 0)
+            cout << "indexPage " << indexPage << endl;
+            if (stat(indexPage.data(), &status) == 0)
             {
                 if (S_ISDIR(status.st_mode) == true ||
                     S_ISREG(status.st_mode) == false)
@@ -126,7 +127,7 @@ void    HttpRequest::pathHandling()
                     continue;
                 }
                 _path = indexPage; // found index
-                // std::cout << "\t" << _path << std::endl;
+                // cout << "\t" << _path << endl;
                 return;
             }
         }
@@ -146,6 +147,7 @@ void    HttpRequest::pathHandling()
         {
             cerr << "pathHandling: " << strerror(errno) << endl;
         }
+        cout << "\t" << _path << endl;
     }
     else
     {
@@ -195,7 +197,7 @@ void    HttpRequest::GET()
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(_path);
-    // std::cout << _headerBlock << std::endl;
+    // cout << _headerBlock << endl;
     string responseStr = HttpResponse(200, _path, fileSize);
     auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
     RunServers::insertHandleTransfer(move(handle));
@@ -209,10 +211,9 @@ void    HttpRequest::handleRequest(size_t contentLength)
     validateHEAD(_headerBlock);
 
     parseHeaders(_headerBlock);
-
-
-    
-    if (_headers.find("Host") == _headers.end())
+    if (_path == "/favicon.ico")
+        _path = "/favicon.svg";
+    if (_headerFields.find("Host") == _headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
@@ -222,7 +223,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
     }
     else if (_method == "POST")
     {
-        // std::cout << _headerBlock << _body << std::endl;
+        // cout << _headerBlock << _body << endl;
         // Submitting a form (e.g., login, registration, contact form)
         // Uploading a file (e.g., images, documents)
         // Sending JSON data (e.g., for APIs)
@@ -235,13 +236,12 @@ void    HttpRequest::handleRequest(size_t contentLength)
     // {
 
     // }
-    auto it = _headers.find("Connection");
-    if (it != _headers.end() && it->second == "keep-alive")
+    auto it = _headerFields.find("Connection");
+    if (it != _headerFields.end() && it->second == "keep-alive")
     {
         FileDescriptor::addClientFD(_clientFD);
     }
 }
-
 
 string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 {

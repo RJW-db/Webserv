@@ -3,8 +3,8 @@
 
 void    HttpRequest::POST()
 {
-    auto it = _headers.find("Content-Type");
-    if (it == _headers.end())
+    auto it = _headerFields.find("Content-Type");
+    if (it == _headerFields.end())
         throw RunServers::ClientException("Missing Content-Type");
 
     getBodyInfo(_body);

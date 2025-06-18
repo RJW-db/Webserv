@@ -21,11 +21,11 @@ Location &RunServers::setLocation(ClientRequestState &state, unique_ptr<Server> 
 
 void RunServers::processClientRequest(int clientFD)
 {
+
     try
     {
         char	buff[CLIENT_BUFFER_SIZE];
-        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff)- 1, 0);
-buff[bytesReceived] = '\0';
+        ssize_t bytesReceived = recv(clientFD, buff, sizeof(buff), 0);
         if (bytesReceived < 0)
         {
             cleanupClient(clientFD);
@@ -99,7 +99,7 @@ buff[bytesReceived] = '\0';
             return; // Wait for more data
 
 
-std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
+// std::cout << escape_special_chars(_fdBuffers[clientFD]) << std::endl;
 // std::cout << escape_special_chars(state.header) << std::endl;
 
 
