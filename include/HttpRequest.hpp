@@ -84,13 +84,11 @@ class HttpRequest
         // unordered_map<string, string_view> _headerFields;
         
         // unordered_map<string, string_view> headers;
-        string _hostName;
-        string _contentLength;
+        // string _hostName;
+        // string _contentLength;
         string_view _contentType;
         string_view _bodyBoundary;
         
-        // string _path;
         string_view _filename;
         string_view _fileContent;
-
 };
