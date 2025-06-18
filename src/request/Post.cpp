@@ -3,11 +3,11 @@
 
 void    HttpRequest::POST()
 {
-    auto it = _headerFields.find("Content-Type");
-    if (it == _headerFields.end())
+    auto it = _client._headerFields.find("Content-Type");
+    if (it == _client._headerFields.end())
         throw RunServers::ClientException("Missing Content-Type");
 
-    getBodyInfo(_body);
+    getBodyInfo(_client._body);
     ContentType ct = getContentType(it->second);
     switch (ct) {
         case FORM_URLENCODED:
@@ -34,7 +34,7 @@ void    HttpRequest::POST()
     }
 
     string ok = "HTTP/1.1 200 OK\r\n";
-    send(_clientFD, ok.c_str(), ok.size(), 0);
+    send(_client._fd, ok.c_str(), ok.size(), 0);
 }
 
 ContentType HttpRequest::getContentType(const string_view ct)

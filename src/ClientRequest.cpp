@@ -2,18 +2,23 @@
 #include <HttpRequest.hpp>
 #include <Client.hpp>
 
-Location &RunServers::setLocation(Client &client, unique_ptr<Server> &usedServer)
+void    RunServers::setLocation(Client &client)
 {
 	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.length());
 	if (pos == string::npos || client._header[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
 	client._path = client._header.substr(pos, len);
-	for (pair<string, Location> &locationPair : usedServer->getLocations())
+    if (client._path == "favicon.ico")
+    {
+        client._path = "favicon.svg";
+    }
+    // std::cout << "\t" << client._path << std::endl;
+	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
 		if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 		{
-            return locationPair.second;
+            client._location = locationPair.second;
 		}
 	}
 	throw RunServers::ClientException("No matching location found for path: " + client._path);
@@ -69,9 +74,9 @@ void RunServers::processClientRequest(Client &client)
             // Parse Content-Length if POST
             client._method = extractMethod(client._header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
             // std::cout << client.contentLength << std::endl;
-            unique_ptr<Server> usedServer;
-            setServer(client, usedServer);
-            Location &loc = setLocation(client, usedServer);
+
+            setServer(client);
+            setLocation(client);
 
             if (client._method.empty() == true)
             {
@@ -87,7 +92,7 @@ void RunServers::processClientRequest(Client &client)
             {
                 // std::cout << client.method << std::endl;
                 string lengthStr = extractHeader(client._header, "Content-Length:");
-                client._contentLength = headerNameContentLength(lengthStr, loc.getClientBodySize());
+                client._contentLength = headerNameContentLength(lengthStr, client._location.getClientBodySize());
             }
 
 
@@ -104,10 +109,8 @@ void RunServers::processClientRequest(Client &client)
 // std::cout << escape_special_chars(client._fdBuffers) << std::endl;
 // std::cout << escape_special_chars(client.header) << std::endl;
 
-        unique_ptr<Server> usedServer;
-        setServer(client, usedServer);
-        Location &loc = setLocation(client, usedServer);
-        HttpRequest request(usedServer, loc, client._fd, client);
+        // HttpRequest request(client._usedServer, client._location, client._fd, client);
+        HttpRequest request(client);
 
         request.handleRequest(client._contentLength);
         client._fdBuffers.clear();
@@ -160,7 +163,7 @@ static string NumIpToString(uint32_t addr)
     return result;
 }
 
-void RunServers::setServer(Client &client, unique_ptr<Server> &usedServer)
+void RunServers::setServer(Client &client)
 {
     uint find = client._header.find("Host:") + 5;
     string_view hostname = string_view(client._header).substr(find);
@@ -175,7 +178,7 @@ void RunServers::setServer(Client &client, unique_ptr<Server> &usedServer)
         throw ClientException("getsockname failed: " + string(strerror(errno)));
     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
     uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
-    usedServer = nullptr;
+    client._usedServer = nullptr;
     for (unique_ptr<Server> &server : _servers)
     {
         for (pair<const string, string> &porthost : server->getPortHost())
@@ -187,11 +190,11 @@ void RunServers::setServer(Client &client, unique_ptr<Server> &usedServer)
                 {
                     if (hostname == server->getServerName())
                     {
-                        usedServer = make_unique<Server>(*server);
+                        client._usedServer = make_unique<Server>(*server);
                         return;
                     }
-                    if (usedServer == nullptr)
-                        usedServer = make_unique<Server>(*server);
+                    if (client._usedServer == nullptr)
+                        client._usedServer = make_unique<Server>(*server);
                     break ;
                 }
             }

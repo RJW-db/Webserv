@@ -47,8 +47,8 @@ class RunServers
         static void processClientRequest(Client &client);
 
         static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
-		static void setServer(Client &client, unique_ptr<Server> &usedServer);
-        static Location &setLocation(Client &state, unique_ptr<Server> &usedServer);
+		static void setServer(Client &client);
+        static void setLocation(Client &state);
 
         static int make_socket_non_blocking(int sfd);
 

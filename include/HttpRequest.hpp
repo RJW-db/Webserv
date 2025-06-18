@@ -51,7 +51,8 @@ class HttpRequest
 {
     public:
         // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
-        HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
+        // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
+        HttpRequest(Client &client);
 
         void	handleRequest(size_t contentLength);
 
@@ -71,15 +72,16 @@ class HttpRequest
 
         
     private:
-        unique_ptr<Server> &_server;
-		Location _location;
+        Client &_client;
+        // unique_ptr<Server> &_server;
+		// Location _location;
 
-        int _clientFD;
-        string &_method;
-        string &_headerBlock;
-        string &_body;
+        // int _clientFD;
+        // string &_method;
+        // string &_headerBlock;
+        // string &_body;
 
-        unordered_map<string, string_view> _headerFields;
+        // unordered_map<string, string_view> _headerFields;
         
         // unordered_map<string, string_view> headers;
         string _hostName;

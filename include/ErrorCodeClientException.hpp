@@ -1,6 +1,8 @@
 #ifndef ERRORCODECLIENTEXCEPTION_HPP
 # define ERRORCODECLIENTEXCEPTION_HPP
 
+#include <Client.hpp>
+
 #include <string>
 #include <map>
 #include <fcntl.h>
@@ -10,14 +12,14 @@ using namespace std;
 class ErrorCodeClientException
 {
 private:
-    int _clientFD;
+    Client &_client;
     uint16_t _errorCode;
     string _message;
     map<uint16_t, string> _errorPages;
 
 public:
     void handleErrorClient() const;
-    explicit ErrorCodeClientException(int clientFD, int errorCode, const std::string &message, map<uint16_t, string> _errorPages);
+    explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message, map<uint16_t, string> _errorPages);
     const char *what() const throw();
 };
 

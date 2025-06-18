@@ -108,7 +108,7 @@ int RunServers::runServers()
 void RunServers::handleEvents(size_t eventCount)
 {
     // int errHndl = 0;
-    std::cout << "\t" << eventCount << std::endl;
+    // std::cout << "\t" << eventCount << std::endl;
     for (size_t i = 0; i < eventCount; ++i)
     {
         struct epoll_event &currentEvent = _events[i];
@@ -161,7 +161,7 @@ void RunServers::handleEvents(size_t eventCount)
         {
             for (auto it = _handle.begin(); it != _handle.end(); ++it)
             {
-                if ((*it)->_clientFD == eventFD)
+                if ((*it)->_client._fd == eventFD)
                 {
                     if (handlingTransfer(**it) == true)
                         _handle.erase(it);
@@ -195,7 +195,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
             
             if (ht._epollout_enabled == false)
             {
-                setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLOUT);
+                setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLOUT);
                 ht._epollout_enabled = true;
             }
         }
@@ -206,7 +206,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
             ht._fd = -1;
         }
     }
-    ssize_t sent = send(ht._clientFD, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
+    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
     if (sent == -1)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
@@ -214,13 +214,13 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
     if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
     {
         // string boundary = "--" + ht._boundary + "--\r\n\r\n";
-        if (FileDescriptor::containsClient(ht._clientFD) == false)
+        if (FileDescriptor::containsClient(ht._client._fd) == false)
         {
-            RunServers::cleanupFD(ht._clientFD);
+            RunServers::cleanupFD(ht._client._fd);
             return true;
         }
-        // send(ht._clientFD, boundary.c_str(), boundary.size(), 0);
-        setEpollEvents(ht._clientFD, EPOLL_CTL_MOD, EPOLLIN);
+        // send(ht._client._fd, boundary.c_str(), boundary.size(), 0);
+        setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLIN);
         ht._epollout_enabled = false;
         return true;
     }

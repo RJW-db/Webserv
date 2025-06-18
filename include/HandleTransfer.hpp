@@ -1,6 +1,7 @@
 #ifndef HANDLETRANSFER_HPP
 #define HANDLETRANSFER_HPP
 
+#include <Client.hpp>
 #include <string>
 
 using namespace std;
@@ -16,15 +17,15 @@ using namespace std;
 class HandleTransfer
 {
     public:
-        HandleTransfer(int clientFD, string &responseHeader, int fd, size_t fileSize);
+        HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize);
         HandleTransfer(const HandleTransfer &other) = default;
-        HandleTransfer &operator=(const HandleTransfer &other) = default;
+        HandleTransfer &operator=(const HandleTransfer &other);
         virtual ~HandleTransfer() = default;
 
-        int     _clientFD;
+        Client  &_client;
         int     _fd;
-        size_t  _fileSize;
         string  _fileBuffer;
+        size_t  _fileSize;
 
         size_t _offset; // Offset for the data transfer
         size_t  _bytesReadTotal;

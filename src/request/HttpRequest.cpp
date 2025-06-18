@@ -35,10 +35,9 @@
 #include <sys/stat.h>
 
 
-HttpRequest::HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state)
-: _server(usedServer), _location(loc), _clientFD(clientFD), _method(state._method), _headerBlock(state._header), _body(state._body)
+HttpRequest::HttpRequest(Client &client)
+: _client(client)
 {
-    _path = state._path;
 }
 
 void    validateHEAD(const string &head)
@@ -91,7 +90,7 @@ void HttpRequest::parseHeaders(const string& headerBlock)
             value.remove_prefix(value.find_first_not_of(" \t"));
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
-            _headerFields[string(key)] = value;
+            _client._headerFields[string(key)] = value;
             // cout << "\tkey\t" << key << "\t" << value << endl;
         }
         start = end + 2;
@@ -101,7 +100,7 @@ void HttpRequest::parseHeaders(const string& headerBlock)
 void    HttpRequest::pathHandling()
 {
     struct stat status;
-    _path = _location.getRoot() + string(_path);
+    _path = _client._location.getRoot() + string(_path);
     // cout << _path << endl;
     if (stat(_path.data(), &status) == -1)
     {
@@ -111,7 +110,7 @@ void    HttpRequest::pathHandling()
     if (S_ISDIR(status.st_mode))
     {
         // searching for indexpage in directory
-        for (string &indexPage : _location.getIndexPage())
+        for (string &indexPage : _client._location.getIndexPage())
         {
             cout << "indexPage " << indexPage << endl;
             if (stat(indexPage.data(), &status) == 0)
@@ -133,13 +132,13 @@ void    HttpRequest::pathHandling()
         }
         // autoindex
 
-        if (_location.getAutoIndex() == true)
+        if (_client._location.getAutoIndex() == true)
         {
             // use cgi using opendir,readdir to create a dynamic html page
         }
         else
         {
-            throw ErrorCodeClientException(_clientFD, 404, "couldn't find index page", _location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(_client, 404, "couldn't find index page", _client._location.getErrorCodesWithPage());
         }
     } else if (S_ISREG(status.st_mode))
     {
@@ -151,7 +150,7 @@ void    HttpRequest::pathHandling()
     }
     else
     {
-        throw ErrorCodeClientException(_clientFD, 404, "Forbidden: Not a regular file or directory", _location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(_client, 404, "Forbidden: Not a regular file or directory", _client._location.getErrorCodesWithPage());
     }
 }
 
@@ -199,7 +198,7 @@ void    HttpRequest::GET()
     size_t fileSize = getFileLength(_path);
     // cout << _headerBlock << endl;
     string responseStr = HttpResponse(200, _path, fileSize);
-    auto handle = make_unique<HandleTransfer>(_clientFD, responseStr, fd, fileSize);
+    auto handle = make_unique<HandleTransfer>(_client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
 }
@@ -208,22 +207,22 @@ void    HttpRequest::GET()
 void    HttpRequest::handleRequest(size_t contentLength)
 {
 	static_cast<void>(contentLength);
-    validateHEAD(_headerBlock);
+    validateHEAD(_client._header);
 
-    parseHeaders(_headerBlock);
+    parseHeaders(_client._header);
     if (_path == "/favicon.ico")
 	{
         _path = "/favicon.svg";
 	}
-    if (_headerFields.find("Host") == _headerFields.end())
+    if (_client._headerFields.find("Host") == _client._headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
-    if (_method == "GET")
+    if (_client._method == "GET")
     {
         GET();
     }
-    else if (_method == "POST")
+    else if (_client._method == "POST")
     {
         // cout << _headerBlock << _body << endl;
         // Submitting a form (e.g., login, registration, contact form)
@@ -238,10 +237,10 @@ void    HttpRequest::handleRequest(size_t contentLength)
     // {
 
     // }
-    auto it = _headerFields.find("Connection");
-    if (it != _headerFields.end() && it->second == "keep-alive")
+    auto it = _client._headerFields.find("Connection");
+    if (it != _client._headerFields.end() && it->second == "keep-alive")
     {
-        FileDescriptor::addClientFD(_clientFD);
+        FileDescriptor::addClientFD(_client._fd);
     }
 }
 

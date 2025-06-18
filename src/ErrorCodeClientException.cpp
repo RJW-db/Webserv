@@ -5,8 +5,8 @@
 #include <RunServer.hpp>
 #include <sys/epoll.h>
 
-ErrorCodeClientException::ErrorCodeClientException(int clientFD, int errorCode, const std::string &message, map<uint16_t, string> _errorPages)
-: _clientFD(clientFD), _errorCode(errorCode), _message(message), _errorPages(_errorPages) 
+ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message, map<uint16_t, string> _errorPages)
+: _client(client), _errorCode(errorCode), _message(message), _errorPages(_errorPages) 
 {
 
 }
@@ -24,9 +24,9 @@ void ErrorCodeClientException::handleErrorClient() const
     int fd = open(it->second.c_str(), O_RDONLY);
     size_t fileSize = getFileLength(it->second.c_str());
     FileDescriptor::setFD(fd);
-    RunServers::setEpollEvents(_clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     string response = HttpRequest::HttpResponse(it->first, it->second, fileSize);
-    auto transfer = make_unique<HandleTransfer>(_clientFD, response, fd, fileSize);
+    auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
     std::cerr << _message << std::endl;
 }
