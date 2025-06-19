@@ -90,6 +90,7 @@ int RunServers::runServers()
         }
         try
         {
+			std::cout << "\tcount" << std::endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
         catch(const ErrorCodeClientException& e)
@@ -216,7 +217,7 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
         // string boundary = "--" + ht._boundary + "--\r\n\r\n";
         if (FileDescriptor::containsClient(ht._client._fd) == false)
         {
-            RunServers::cleanupFD(ht._client._fd);
+            // RunServers::cleanupFD(ht._client._fd);
             return true;
         }
         // send(ht._client._fd, boundary.c_str(), boundary.size(), 0);
