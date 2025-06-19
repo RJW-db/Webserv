@@ -63,36 +63,27 @@ void RunServers::processClientRequest(Client &client)
                 cleanupClient(client);
                 return;
             }
-    
+
             client._header = client._fdBuffers.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
             client._body = client._fdBuffers.substr(headerEnd + 4); // can fail, need to call cleanupClient
             client._headerParsed = true;
-            
-            // Parse Content-Length if POST
-            client._method = extractMethod(client._header); // can fail WITHIN FUNCTION, need to call cleanupClient, and be able to call it there
-            // std::cout << client.contentLength << std::endl;
+
+            HttpRequest::validateHEAD(client);  // TODO cleanupClient
+            HttpRequest::parseHeaders(client);  // TODO cleanupClient
+
 
             setServer(client);
             setLocation(client);
 
-            if (client._method.empty() == true)
-            {
-                sendErrorResponse(client._fd, "400 Bad Request");
-                cleanupClient(client);
-                return;
-            }
-            // std::cout << "." << client.method << "." << std::endl;
-            // exit(0);
-
             if (client._method == "POST")
             {
                 // std::cout << client.method << std::endl;
-                string lengthStr = extractHeader(client._header, "Content-Length:");
-                client._contentLength = headerNameContentLength(lengthStr, client._location.getClientBodySize());
+                auto contentLength = client._headerFields.find("Content-Length");
+                if (contentLength != client._headerFields.end())
+                    throw ClientException("Broken POST request");
+                // string lengthStr = extractHeader(client._header, "Content-Length:");
+                HttpRequest::getContentLength(client, contentLength->second);
             }
-
-
-            HttpRequest::parseHeaders(client);
         } else {
             // size_t boundaryPos = client.body.find_first_of()
             // Only append new data to body
@@ -106,9 +97,8 @@ void RunServers::processClientRequest(Client &client)
 // std::cout << escape_special_chars(client.header) << std::endl;
 
         // HttpRequest request(client._usedServer, client._location, client._fd, client);
-        HttpRequest request(client);
 
-        request.handleRequest(client._contentLength);
+        HttpRequest::handleRequest(client);
         client._fdBuffers.clear();
         client._headerParsed = false;
         client._header = "";
@@ -196,51 +186,6 @@ void RunServers::setServer(Client &client)
             }
         }
     }
-}
-
-size_t RunServers::headerNameContentLength(const std::string &length, size_t client_max_body_size)
-{
-    if (length.empty())
-    {
-        throw LengthRequiredException("Content-Length header is empty.");
-    }
-
-    for (size_t i = 0; i < length.size(); ++i)
-    {
-        if (!isdigit(static_cast<unsigned char>(length[i])))
-            throw ClientException("Content-Length contains non-digit characters.");
-    }
-    long long value;
-    try
-    {
-        value = std::stoll(length);
-
-        if (value < 0)
-            throw ClientException("Content-Length cannot be negative.");
-
-        if (static_cast<size_t>(value) > client_max_body_size)
-            throw ClientException("Content-Length exceeds maximum allowed."); // (413, "Payload Too Large");
-
-        if (value == 0)
-            throw ClientException("Content-Length cannot be zero.");
-    }
-    catch (const std::invalid_argument &)
-    {
-        throw ClientException("Content-Length is invalid (not a number).");
-    }
-    catch (const std::out_of_range &)
-    {
-        throw ClientException("Content-Length value is out of range.");
-    }
-    return (static_cast<size_t>(value));
-}
-
-string extractMethod(const string &header)
-{
-    size_t methodEnd = header.find(" ");
-
-    if (methodEnd == string::npos) return "";
-    return header.substr(0, methodEnd);
 }
 
 string extractHeader(const string &header, const string &key)

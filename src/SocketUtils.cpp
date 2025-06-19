@@ -71,7 +71,7 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
         }
         _fds.setFD(infd);
         insertClientFD(infd);
-        _clients[infd] = std::make_unique<Client>(infd);
+        _clients[infd] = make_unique<Client>(infd);
     }
 }
 

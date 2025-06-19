@@ -22,8 +22,9 @@ class Client
         bool _headerParsed = false;
         string _header;
         string _body;
-        string _path;
         string _method;
+        string _path;
+        string _version;
         size_t _contentLength = 0;
 
         chrono::steady_clock::time_point dissconectTime;
