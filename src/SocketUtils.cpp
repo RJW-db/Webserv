@@ -70,8 +70,9 @@ void RunServers::acceptConnection(const unique_ptr<Server> &server)
             break;
         }
         _fds.setFD(infd);
-        insertClientFD(infd);
-        _clients[infd] = make_unique<Client>(infd);
+        // insertClientFD(infd);
+        _clients[infd] = std::make_unique<Client>(infd);
+		_clients[infd]->setDisconnectTime(disconnectDelaySeconds);
     }
 }
 

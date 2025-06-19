@@ -56,6 +56,7 @@ class RunServers
         static bool handlingTransfer(HandleTransfer &client);
         // static bool handlingSend(HandleTransfer &ht);
 
+		static unique_ptr<Client> &getClient(int fd);
 
         static void parseHeaders(Client &client);
         unordered_map<string, string_view> _headerFields;
@@ -96,7 +97,7 @@ class RunServers
 		static ServerList _servers;
         // static unordered_map<int, string> _fdBuffers;
         // static unordered_map<int, ClientRequestState> _clientStates;
-        static vector<int> _connectedClients;
+        // static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleTransfer>> _handle;
 

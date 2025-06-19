@@ -215,7 +215,11 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
     fstream fs;
     fs.open(input, fstream::in);
     if (fs.is_open() == false)
+	{
+		std::cout << input << std::endl;
+		std::cout << "Current directory: " << getcwd(NULL, 0) << std::endl;
 		throw runtime_error("inputfile couldn't be");
+	}
     string line;
     size_t skipSpace;
     size_t lineNbr = 0;
