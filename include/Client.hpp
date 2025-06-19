@@ -35,6 +35,12 @@ class Client
         string _version;
         size_t _contentLength = 0;
 
+        string_view _contentType;
+        string_view _bodyBoundary;
+
+        string_view _filename;
+        string_view _fileContent;
+
         chrono::steady_clock::time_point _disconnectTime;
 		bool _keepAlive;
 

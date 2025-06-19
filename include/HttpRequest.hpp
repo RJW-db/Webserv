@@ -57,7 +57,7 @@ class HttpRequest
         static void	handleRequest(Client &client);
 
         static void	parseHeaders(Client &client);
-        static void	getBodyInfo(string &body);
+        static void	getBodyInfo(Client &client);
 
         static void	POST(Client &client);
 
@@ -70,7 +70,7 @@ class HttpRequest
         static void getContentLength(Client &client, const string_view content);
 
 
-        static ContentType getContentType(const string_view ct);
+        static ContentType getContentType(Client &client, const string_view ct);
 		// static Location &setLocation();
 
         

@@ -7,8 +7,8 @@ void    HttpRequest::POST(Client &client)
     if (it == client._headerFields.end())
         throw RunServers::ClientException("Missing Content-Type");
 
-    getBodyInfo(client._body);
-    ContentType ct = getContentType(it->second);
+    getBodyInfo(client);
+    ContentType ct = getContentType(client, it->second);
     switch (ct) {
         case FORM_URLENCODED:
             // cout << "handle urlencoded" << endl;
@@ -21,12 +21,12 @@ void    HttpRequest::POST(Client &client)
             break;
         case MULTIPART:
         {
-            // ofstream myfile;
-            // myfile.open("upload/" + string(client._filename));
-            // std::cout << "writing " << std::endl;
-            // myfile << client._fileContent;
-            // std::cout << "written to file" << std::endl;
-            // myfile.close();
+            ofstream myfile;
+            myfile.open("upload/" + string(client._filename));
+            std::cout << "writing " << std::endl;
+            myfile << client._fileContent;
+            std::cout << "written to file" << std::endl;
+            myfile.close();
             break;
         }
         default:
@@ -37,75 +37,75 @@ void    HttpRequest::POST(Client &client)
     send(client._fd, ok.c_str(), ok.size(), 0);
 }
 
-ContentType HttpRequest::getContentType(const string_view ct)
+ContentType HttpRequest::getContentType(Client &client, const string_view ct)
 {
-    // if (ct == "application/x-www-form-urlencoded")
-    // {
-    //     _contentType = ct;
-    //     return FORM_URLENCODED;
-    // }
-    // if (ct == "application/json")
-    // {
-    //     _contentType = ct;
-    //     return JSON;
-    // }
-    // if (ct == "text/plain")
-    // {
-    //     _contentType = ct;
-    //     return TEXT;
-    // }
-    // if (ct.find("multipart/form-data") == 0)
-    // {
-    //     size_t semi = ct.find(';');
-    //     if (semi != std::string_view::npos)
-    //     {
-    //         _contentType = ct.substr(0, semi);
-    //         size_t boundaryPos = ct.find("boundary=", semi);
-    //         if (boundaryPos != std::string_view::npos)
-    //             _bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
-    //         else
-    //             throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
-    //     }
-    //     else
-    //         throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
-    //     return MULTIPART;
-    // }
-    // return UNSUPPORTED;
+    if (ct == "application/x-www-form-urlencoded")
+    {
+        client._contentType = ct;
+        return FORM_URLENCODED;
+    }
+    if (ct == "application/json")
+    {
+        client._contentType = ct;
+        return JSON;
+    }
+    if (ct == "text/plain")
+    {
+        client._contentType = ct;
+        return TEXT;
+    }
+    if (ct.find("multipart/form-data") == 0)
+    {
+        size_t semi = ct.find(';');
+        if (semi != std::string_view::npos)
+        {
+            client._contentType = ct.substr(0, semi);
+            size_t boundaryPos = ct.find("boundary=", semi);
+            if (boundaryPos != std::string_view::npos)
+                client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
+            else
+                throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
+        }
+        else
+            throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
+        return MULTIPART;
+    }
+    return UNSUPPORTED;
 }
 
-void	HttpRequest::getBodyInfo(string &body)
+void	HttpRequest::getBodyInfo(Client &client)
 {
-    // size_t cdPos = body.find("Content-Disposition:");
-    // if (cdPos == string::npos)
-    //     throw RunServers::ClientException("Content-Disposition header not found in multipart body");
+    size_t cdPos = client._body.find("Content-Disposition:");
+    if (cdPos == string::npos)
+        throw RunServers::ClientException("Content-Disposition header not found in multipart body");
 
-    // // Extract the Content-Disposition line
-    // size_t cdEnd = body.find("\r\n", cdPos);
-    // string_view cdLine = string_view(body).substr(cdPos, cdEnd - cdPos);
+    // Extract the Content-Disposition line
+    size_t cdEnd = client._body.find("\r\n", cdPos);
+    string_view cdLine = string_view(client._body).substr(cdPos, cdEnd - cdPos);
 
-    // string filenameKey = "filename=\"";
-    // size_t fnPos = cdLine.find(filenameKey);
-    // if (fnPos != string::npos) {
-    //     size_t fnStart = fnPos + filenameKey.size();
-    //     size_t fnEnd = cdLine.find("\"", fnStart);
-    //     _filename = cdLine.substr(fnStart, fnEnd - fnStart);
-    //     if (_filename.empty())
-    //         throw RunServers::ClientException("Filename is empty in Content-Disposition header");
-    // }
-    // else
-    //     throw RunServers::ClientException("Filename not found in Content-Disposition header");
+    string filenameKey = "filename=\"";
+    size_t fnPos = cdLine.find(filenameKey);
+    if (fnPos != string::npos) {
+        size_t fnStart = fnPos + filenameKey.size();
+        size_t fnEnd = cdLine.find("\"", fnStart);
+        client._filename = cdLine.substr(fnStart, fnEnd - fnStart);
+        if (client._filename.empty())
+            throw RunServers::ClientException("Filename is empty in Content-Disposition header");
+    }
+    else
+        throw RunServers::ClientException("Filename not found in Content-Disposition header");
 
-    // const string contentType = "Content-Type: ";
-    // size_t position = body.find(contentType);
+    const string contentType = "Content-Type: ";
+    size_t position = client._body.find(contentType);
 
-    // if (position == string::npos)
-    //     throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
+    if (position == string::npos)
+        throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
 
-    // size_t fileStart = body.find("\r\n\r\n", position) + 4;
-    // size_t fileEnd = body.find("\r\n--" + std::string(_bodyBoundary) /* + "--\r\n" */, fileStart);
+    size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
+    // size_t fileEnd = client._body.find("\r\n--" + std::string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
 
     // if (position == string::npos)
     //     throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
-    // _fileContent = string_view(body).substr(fileStart, fileEnd - fileStart);
+    // client._fileContent = string_view(client._body).substr(fileStart, fileEnd - fileStart);
 }

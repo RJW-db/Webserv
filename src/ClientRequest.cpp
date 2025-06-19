@@ -59,36 +59,54 @@ void RunServers::processClientRequest(Client &client)
             size_t headerEnd = client._fdBuffers.find("\r\n\r\n");
             if (headerEnd == string::npos)
             {
-                sendErrorResponse(client._fd, "400 Bad Request");
-                cleanupClient(client);
                 return;
             }
-
+            client._headerParsed = true;
             client._header = client._fdBuffers.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
             client._body = client._fdBuffers.substr(headerEnd + 4); // can fail, need to call cleanupClient
-            client._headerParsed = true;
-
+            client._fdBuffers.clear();
+    
+    
             HttpRequest::validateHEAD(client);  // TODO cleanupClient
             HttpRequest::parseHeaders(client);  // TODO cleanupClient
-
-
+    
+    
             setServer(client);
             setLocation(client);
-
-            if (client._method == "POST")
-            {
-                // std::cout << client.method << std::endl;
-                auto contentLength = client._headerFields.find("Content-Length");
-                if (contentLength != client._headerFields.end())
-                    throw ClientException("Broken POST request");
-                // string lengthStr = extractHeader(client._header, "Content-Length:");
-                HttpRequest::getContentLength(client, contentLength->second);
-            }
-        } else {
-            // size_t boundaryPos = client.body.find_first_of()
-            // Only append new data to body
-            client._body.append(buff, bytesReceived);
         }
+
+        if (client._method == "POST")
+        {
+            size_t bodyEnd = client._body.find_first_of("\r\n\r\n");
+            auto contentLength = client._headerFields.find("Content-Length");
+            if (contentLength == client._headerFields.end())
+                throw ClientException("Broken POST request");
+            // string lengthStr = extractHeader(client._header, "Content-Length:");
+            HttpRequest::getContentLength(client, contentLength->second);
+            if (bodyEnd == string::npos)
+                return ;
+            HttpRequest::getBodyInfo(client);
+            string content = client._body.substr(bodyEnd + 4);
+            int fd = open("./upload/example.txt", O_WRONLY | O_TRUNC | O_CREAT);
+            if (fd == -1)
+                exit(0);
+            FileDescriptor::setFD(fd);
+            std::cout << content.data() << std::endl;
+            ssize_t bytesWritten = write(fd, content.data(), client._contentLength);
+            std::cout << "bytes written:" << bytesWritten << ", content length:" << client._contentLength << std::endl;
+            if (bytesWritten == client._contentLength)
+            {
+                if (content.find("--" + string(client._bodyBoundary) + "--") == client._contentLength + 4)
+                {
+                    std::cout << "sent whole file" << std::endl;
+                    FileDescriptor::closeFD(fd);
+                    return ;
+                }
+                return ;
+            }
+        }
+
+
         if (client._method == "POST" && client._body.size() < client._contentLength)
             return; // Wait for more data
 
@@ -99,7 +117,6 @@ void RunServers::processClientRequest(Client &client)
         // HttpRequest request(client._usedServer, client._location, client._fd, client);
 
         HttpRequest::handleRequest(client);
-        client._fdBuffers.clear();
         client._headerParsed = false;
         client._header = "";
         client._body = "";
