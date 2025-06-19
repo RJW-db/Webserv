@@ -56,7 +56,7 @@ class HttpRequest
 
         void	handleRequest(size_t contentLength);
 
-        void	parseHeaders(const string& headerBlock);
+        static void	parseHeaders(Client &client);
         void	getBodyInfo(string &body);
 
         void	POST();

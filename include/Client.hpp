@@ -25,7 +25,8 @@ class Client
         string _path;
         string _method;
         size_t _contentLength = 0;
-        
+
+        chrono::steady_clock::time_point dissconectTime;
         string _fdBuffers;
         unordered_map<string, string_view> _headerFields;
 

@@ -4,21 +4,16 @@
 
 void    RunServers::setLocation(Client &client)
 {
-	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.length());
+	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
 	if (pos == string::npos || client._header[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
 	client._path = client._header.substr(pos, len);
-    if (client._path == "/favicon.ico")
-    {
-        client._path = "/favicon.svg";
-    }
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
-		if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
+		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
+        (client._path[client._path.size() - 1] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
 		{
-            std::cout << client._path << std::endl;
-            std::cout << locationPair.first << std::endl;
             client._location = locationPair.second;
             return;
 		}
@@ -89,8 +84,7 @@ void RunServers::processClientRequest(Client &client)
             // std::cout << "." << client.method << "." << std::endl;
             // exit(0);
 
-            // if (client.method == "POST")
-            if (strncmp(client._method.data(), "POST", 4) == 0)
+            if (client._method == "POST")
             {
                 // std::cout << client.method << std::endl;
                 string lengthStr = extractHeader(client._header, "Content-Length:");
@@ -98,8 +92,8 @@ void RunServers::processClientRequest(Client &client)
             }
 
 
+            HttpRequest::parseHeaders(client);
         } else {
-            parseHeaders(client);
             // size_t boundaryPos = client.body.find_first_of()
             // Only append new data to body
             client._body.append(buff, bytesReceived);
@@ -289,38 +283,4 @@ void RunServers::cleanupClient(Client &client)
     _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
     client._fdBuffers.clear();
     cleanupFD(client._fd);
-}
-
-void RunServers::parseHeaders(Client &client)
-{
-    size_t start = 0;
-    while (start < client._header.size())
-    {
-        size_t end = client._header.find("\r\n", start);
-        if (end == string::npos)
-            throw RunServers::ClientException("Malformed HTTP request: header line not properly terminated");
-
-        string_view line(&client._header[start], end - start);
-        if (line.empty())
-            break; // End of headers
-
-        size_t colon = line.find(':');
-        if (colon != string_view::npos) {
-            // Extract key and value as string_views
-            string_view key = line.substr(0, colon);
-            string_view value = line.substr(colon + 1);
-
-            // Trim whitespace from key
-            key.remove_prefix(key.find_first_not_of(" \t"));
-            key.remove_suffix(key.size() - key.find_last_not_of(" \t") - 1);
-            // Trim whitespace from value
-            value.remove_prefix(value.find_first_not_of(" \t"));
-            value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
-            
-            // _headerFields[string(key)] = value;
-            client._headerFields[string(key)] = value;
-            // cout << "\tkey\t" << key << "\t" << value << endl;
-        }
-        start = end + 2;
-    }
 }

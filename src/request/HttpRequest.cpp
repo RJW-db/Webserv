@@ -64,16 +64,16 @@ void    validateHEAD(const string &head)
 }
 
 
-void HttpRequest::parseHeaders(const string& headerBlock)
+void HttpRequest::parseHeaders(Client &client)
 {
     size_t start = 0;
-    while (start < headerBlock.size())
+    while (start < client._header.size())
     {
-        size_t end = headerBlock.find("\r\n", start);
+        size_t end = client._header.find("\r\n", start);
         if (end == string::npos)
             throw RunServers::ClientException("Malformed HTTP request: header line not properly terminated");
 
-        string_view line(&headerBlock[start], end - start);
+        string_view line(&client._header[start], end - start);
         if (line.empty())
             break; // End of headers
 
@@ -90,7 +90,7 @@ void HttpRequest::parseHeaders(const string& headerBlock)
             value.remove_prefix(value.find_first_not_of(" \t"));
             value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
 
-            _client._headerFields[string(key)] = value;
+            client._headerFields[string(key)] = value;
             // cout << "\tkey\t" << key << "\t" << value << endl;
         }
         start = end + 2;
@@ -209,7 +209,7 @@ void    HttpRequest::handleRequest(size_t contentLength)
 	static_cast<void>(contentLength);
     validateHEAD(_client._header);
 
-    parseHeaders(_client._header);
+    // std::cout << escape_special_chars(_client._header) << std::endl;
     if (_client._path == "/favicon.ico")
 	{
         std::cout << "okedan" << std::endl;
