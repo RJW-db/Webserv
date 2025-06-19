@@ -117,6 +117,7 @@ void RunServers::processClientRequest(Client &client)
         client._method = "";
         client._contentLength = 0;
         client._headerFields.clear();
+		client.setDisconnectTime(disconnectDelaySeconds);
     }
     catch(const exception& e)   // if catch we don't handle well
     {
@@ -263,10 +264,10 @@ void sendErrorResponse(int clientFD, const string &message)
     send(clientFD, response.c_str(), response.size(), 0);
 }
 
-void RunServers::insertClientFD(int fd)
-{
-    _connectedClients.push_back(fd);
-}
+// void RunServers::insertClientFD(int fd)
+// {
+//     _connectedClients.push_back(fd);
+// }
 
 void RunServers::cleanupFD(int fd)
 {
@@ -279,8 +280,10 @@ void RunServers::cleanupFD(int fd)
 
 void RunServers::cleanupClient(Client &client)
 {
-    _clients.erase(client._fd);
-    _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
+	// _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
     client._fdBuffers.clear();
     cleanupFD(client._fd);
+    _clients.erase(client._fd);
 }
+
+// unique_ptr<Client> &RunServers::getClient(int clientFd) 

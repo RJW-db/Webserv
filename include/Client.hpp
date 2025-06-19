@@ -6,15 +6,23 @@
 
 #include <Server.hpp>
 #include <Location.hpp>
+#include <chrono>
+
+#define disconnectDelaySeconds 5
 
 class Client
 {
     public:
             // Add more fields as needed
-        Client(int fd) : _fd(fd) {}
+        Client(int fd) : _fd(fd), _keepAlive(true) {}
         // Client &operator=(const Client &other);
-
-        int _fd;
+		
+		void setDisconnectTime(uint16_t disconectTimeSeconds)
+		{
+			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
+		};
+        
+		int _fd;
 
         unique_ptr<Server> _usedServer;
         Location _location;
@@ -26,11 +34,14 @@ class Client
         string _method;
         size_t _contentLength = 0;
 
-        chrono::steady_clock::time_point dissconectTime;
+        chrono::steady_clock::time_point _disconnectTime;
+		bool _keepAlive;
+
         string _fdBuffers;
         unordered_map<string, string_view> _headerFields;
-
 };
+
+
 
 // Client &Client::operator=(const Client &other)
 // {

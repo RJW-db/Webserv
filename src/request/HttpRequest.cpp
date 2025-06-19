@@ -241,10 +241,13 @@ void    HttpRequest::handleRequest(size_t contentLength)
 
     // }
     auto it = _client._headerFields.find("Connection");
-    if (it != _client._headerFields.end() && it->second == "keep-alive")
+    if (it == _client._headerFields.end() || it->second == "keep-alive")
     {
-        FileDescriptor::addClientFD(_client._fd);
+		_client._keepAlive = true;
+        // FileDescriptor::addClientFD(_client._fd);
     }
+	else
+		_client._keepAlive = false;
 }
 
 string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)

@@ -36,15 +36,13 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
-vector<int> RunServers::_connectedClients;
+// vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 
 RunServers::~RunServers()
 {
     close(_epfd);
 }
-
-
 
 void RunServers::createServers(vector<ConfigServer> &configs)
 {
@@ -53,7 +51,6 @@ void RunServers::createServers(vector<ConfigServer> &configs)
         _servers.push_back(make_unique<Server>(Server(config)));
     }
     Server::createListeners(_servers);
-    
 }
 
 #include <chrono>
@@ -81,8 +78,15 @@ int RunServers::runServers()
         int eventCount;
         
         std::cout << "Blocking and waiting for epoll event..." << std::endl;
-        FileDescriptor::keepAliveCheck();
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+        for (auto it = _clients.begin(); it != _clients.end();)
+		{
+			unique_ptr<Client> &client = it->second;
+			++it;
+			if (client->_keepAlive == false || client->_disconnectTime <= chrono::steady_clock::now())
+				cleanupClient(*client);
+		}
+		
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
             break ;
@@ -90,7 +94,6 @@ int RunServers::runServers()
         }
         try
         {
-			std::cout << "\tcount" << std::endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
         catch(const ErrorCodeClientException& e)
@@ -112,7 +115,7 @@ void RunServers::handleEvents(size_t eventCount)
     // std::cout << "\t" << eventCount << std::endl;
     for (size_t i = 0; i < eventCount; ++i)
     {
-        struct epoll_event &currentEvent = _events[i];
+		struct epoll_event &currentEvent = _events[i];
         // if ((currentEvent.events & EPOLLERR) ||
         //     (currentEvent.events & EPOLLHUP) ||
         //     (currentEvent.events & EPOLLIN) == 0)
@@ -139,13 +142,12 @@ void RunServers::handleEvents(size_t eventCount)
                 return ;
             }
         }
-        if ((find(_connectedClients.begin(), _connectedClients.end(), eventFD) != _connectedClients.end()) &&
-            currentEvent.events & EPOLLIN)
-        {
-            processClientRequest(*_clients[eventFD].get());
-            return ;
-            // handltransfers = false;
-        }
+		if ((_clients.find(eventFD) != _clients.end()) &&
+			(currentEvent.events & EPOLLIN))
+		{
+			processClientRequest(*_clients[eventFD].get());
+			return;
+		}
         // if (currentEvent.events & EPOLLOUT)
         // {
         //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
@@ -164,8 +166,13 @@ void RunServers::handleEvents(size_t eventCount)
             {
                 if ((*it)->_client._fd == eventFD)
                 {
+					_clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
                     if (handlingTransfer(**it) == true)
+					{
                         _handle.erase(it);
+						if (_clients[(*it)->_client._fd]->_keepAlive == false)
+							cleanupClient(*_clients[(*it)->_client._fd]);
+					}
                     return;
                 }
             }
@@ -215,11 +222,11 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
     if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
     {
         // string boundary = "--" + ht._boundary + "--\r\n\r\n";
-        if (FileDescriptor::containsClient(ht._client._fd) == false)
-        {
-            // RunServers::cleanupFD(ht._client._fd);
-            return true;
-        }
+        // if (FileDescriptor::containsClient(ht._client._fd) == false)
+        // {
+        //     // RunServers::cleanupFD(ht._client._fd);
+        //     return true;
+        // }
         // send(ht._client._fd, boundary.c_str(), boundary.size(), 0);
         setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLIN);
         ht._epollout_enabled = false;
