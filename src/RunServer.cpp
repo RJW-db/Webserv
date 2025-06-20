@@ -239,20 +239,28 @@ bool RunServers::handlePostTransfer(HandleTransfer &handle)
 	char buff[CLIENT_BUFFER_SIZE];
 	ssize_t bytesReceived = recv(handle._client._fd, buff, sizeof(buff), 0);
 	size_t byteswrite = static_cast<size_t>(bytesReceived);
-	if (bytesReceived < 0)
+	ssize_t bytesWritten = 0;
+	if (bytesReceived == -1)
 	{
 		cleanupClient(handle._client);
 		return true;
 	}
-	// if (bytesReceived == 0)
-	// {
-
-	// }
-	if (bytesReceived > handle._fileSize - handle._bytesWrittenTotal)
-		byteswrite = handle._fileSize - handle._bytesWrittenTotal;
-    ssize_t bytesWritten = write(handle._fd, buff, byteswrite);
-	// std::cout << "writing:" << bytesWritten << std::endl;
-	handle._bytesWrittenTotal += bytesWritten;
+	else if (bytesReceived != 0)
+	{
+		if (bytesReceived > handle._fileSize - handle._bytesWrittenTotal)
+			byteswrite = handle._fileSize - handle._bytesWrittenTotal;
+		bytesWritten = write(handle._fd, buff, byteswrite);
+		if (bytesWritten == -1)
+		{
+			// remove and filedesciptor
+			if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
+				remove(handle._filename.data());
+			FileDescriptor::closeFD(handle._fd);
+			throw ErrorCodeClientException(handle._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), handle._client._location.getErrorCodesWithPage());
+			
+		}
+		handle._bytesWrittenTotal += bytesWritten;
+	}
 	if (handle._bytesWrittenTotal == handle._fileSize)
 	{
 		handle._fileBuffer.append(buff + bytesWritten, bytesReceived - bytesWritten);

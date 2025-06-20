@@ -28,6 +28,8 @@ class HandleTransfer
         string  _fileBuffer;
         size_t  _fileSize;
 
+		
+
         size_t _offset; // Offset for the data transfer
         size_t  _bytesReadTotal;
         size_t  _headerSize;
