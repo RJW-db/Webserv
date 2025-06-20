@@ -7,7 +7,7 @@
 // 4th is listener FD, 5th FD is client.
 #define FD_LIMIT 1024 - RESERVED_FDS
 
-#define CLIENT_BUFFER_SIZE 4096
+#define CLIENT_BUFFER_SIZE 8000
 #define PORT "8080"
 
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
@@ -53,7 +53,8 @@ class RunServers
 
         static void setEpollEvents(int fd, int option, uint32_t events);
 
-        static bool handlingTransfer(HandleTransfer &client);
+        static bool handleGetTransfer(HandleTransfer &client);
+		static bool handlePostTransfer(HandleTransfer &handle);
         // static bool handlingSend(HandleTransfer &ht);
 
 		static unique_ptr<Client> &getClient(int fd);

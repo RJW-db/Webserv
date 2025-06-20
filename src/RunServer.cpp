@@ -1,5 +1,6 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <HttpRequest.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
 
@@ -77,7 +78,7 @@ int RunServers::runServers()
     {
         int eventCount;
         
-        std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         // for (auto it = _clients.begin(); it != _clients.end();)
 		// {
 		// 	unique_ptr<Client> &client = it->second;
@@ -142,6 +143,25 @@ void RunServers::handleEvents(size_t eventCount)
                 return ;
             }
         }
+		for (auto it = _handle.begin(); it != _handle.end(); ++it)
+		{
+			if ((*it)->_client._fd == eventFD)
+			{
+				_clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
+				bool finished = false;
+				if (currentEvent.events & EPOLLOUT)
+					finished = handleGetTransfer(**it);
+				else if (currentEvent.events & EPOLLIN)
+					finished = handlePostTransfer(**it);
+				if (finished == true)
+				{
+					if (_clients[(*it)->_client._fd]->_keepAlive == false)
+						cleanupClient(*_clients[(*it)->_client._fd]);
+					_handle.erase(it);
+				}
+				return;
+			}
+		}
 		if ((_clients.find(eventFD) != _clients.end()) &&
 			(currentEvent.events & EPOLLIN))
 		{
@@ -162,20 +182,7 @@ void RunServers::handleEvents(size_t eventCount)
         // }
         if (currentEvent.events & EPOLLOUT)
         {
-            for (auto it = _handle.begin(); it != _handle.end(); ++it)
-            {
-                if ((*it)->_client._fd == eventFD)
-                {
-					_clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
-                    if (handlingTransfer(**it) == true)
-					{
-                        if (_clients[(*it)->_client._fd]->_keepAlive == false)
-                            cleanupClient(*_clients[(*it)->_client._fd]);
-                        _handle.erase(it);
-					}
-                    return;
-                }
-            }
+
         }
     }
 }
@@ -186,13 +193,12 @@ void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
     // TODO removal functions
 }
 
-#define CHUNK_SIZE 8192 // 8KB
-bool RunServers::handlingTransfer(HandleTransfer &ht)
+bool RunServers::handleGetTransfer(HandleTransfer &ht)
 {
-    char buff[CHUNK_SIZE];
+    char buff[CLIENT_BUFFER_SIZE];
     if (ht._fd != -1)
     {
-        ssize_t bytesRead = read(ht._fd, buff, CHUNK_SIZE);
+        ssize_t bytesRead = read(ht._fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
             throw ClientException(string("handlingTransfer read: ") + strerror(errno));
         size_t _bytesRead = static_cast<size_t>(bytesRead);
@@ -221,19 +227,46 @@ bool RunServers::handlingTransfer(HandleTransfer &ht)
     ht._offset += _sent;
     if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
     {
-        // string boundary = "--" + ht._boundary + "--\r\n\r\n";
-        // if (FileDescriptor::containsClient(ht._client._fd) == false)
-        // {
-        //     // RunServers::cleanupFD(ht._client._fd);
-        //     return true;
-        // }
-        // send(ht._client._fd, boundary.c_str(), boundary.size(), 0);
         setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLIN);
         ht._epollout_enabled = false;
         return true;
     }
     return false;
 }
+
+bool RunServers::handlePostTransfer(HandleTransfer &handle)
+{
+	char buff[CLIENT_BUFFER_SIZE];
+	ssize_t bytesReceived = recv(handle._client._fd, buff, sizeof(buff), 0);
+	size_t byteswrite = static_cast<size_t>(bytesReceived);
+	if (bytesReceived < 0)
+	{
+		cleanupClient(handle._client);
+		return true;
+	}
+	// if (bytesReceived == 0)
+	// {
+
+	// }
+	if (bytesReceived > handle._fileSize - handle._bytesWrittenTotal)
+		byteswrite = handle._fileSize - handle._bytesWrittenTotal;
+    ssize_t bytesWritten = write(handle._fd, buff, byteswrite);
+	// std::cout << "writing:" << bytesWritten << std::endl;
+	handle._bytesWrittenTotal += bytesWritten;
+	if (handle._bytesWrittenTotal == handle._fileSize)
+	{
+		handle._fileBuffer.append(buff + bytesWritten, bytesReceived - bytesWritten);
+		if (handle._fileBuffer.find("--" + string(handle._client._bodyBoundary) + "--\r\n") == 2)
+		{
+			FileDescriptor::closeFD(handle._fd);
+			string ok = HttpRequest::HttpResponse(200, "", 0);
+			send(handle._client._fd, ok.data(), ok.size(), 0);
+			return true;
+		}
+	}
+	return false;
+}
+
 
 // bool RunServers::handlingSend(HandleTransfer &ht)
 // {

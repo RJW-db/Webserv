@@ -257,7 +257,7 @@ void    HttpRequest::handleRequest(Client &client)
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
-        POST(client);
+        // POST(client);
         // cout << _contentType << '\t' << _bodyBoundary << endl;
     }
     // else
@@ -298,7 +298,8 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 
     ostringstream response;
     response << "HTTP/1.1 " << to_string(it->first) << ' ' << it->second << "\r\n";
-    response << "Content-Type: " << getMimeType(path) << "\r\n";
+	if (!path.empty())
+    	response << "Content-Type: " << getMimeType(path) << "\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
     response << "\r\n";
 

@@ -18,6 +18,7 @@ class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize);
+		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary);
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         virtual ~HandleTransfer() = default;
@@ -30,8 +31,10 @@ class HandleTransfer
         size_t _offset; // Offset for the data transfer
         size_t  _bytesReadTotal;
         size_t  _headerSize;
-
+		
         bool    _epollout_enabled;
+
+		size_t	_bytesWrittenTotal;
     protected:
         // Helper function to send data over a socket
 

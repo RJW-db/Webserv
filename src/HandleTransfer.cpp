@@ -14,6 +14,12 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
+HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary)
+: _client(client), _fd(fd), _bytesWrittenTotal(bytesWritten), _fileSize(finalFileSize), _fileBuffer(boundary)
+{
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+}
+
 HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
 {
     if (this != &other) {
@@ -25,6 +31,7 @@ HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
         _bytesReadTotal = other._bytesReadTotal;
         _headerSize = other._headerSize;
         _epollout_enabled = other._epollout_enabled;
+		_bytesWrittenTotal = other._bytesWrittenTotal;
     }
     return *this;
 }
