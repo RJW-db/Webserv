@@ -46,7 +46,6 @@ class RunServers
         static void acceptConnection(const unique_ptr<Server> &server);
         static void processClientRequest(Client &client);
 
-        static size_t headerNameContentLength(const string &length, size_t client_max_body_size);
 		static void setServer(Client &client);
         static void setLocation(Client &state);
 

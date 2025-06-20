@@ -52,43 +52,34 @@ class HttpRequest
     public:
         // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
         // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
-        HttpRequest(Client &client);
 
-        void	handleRequest(size_t contentLength);
+        static void validateHEAD(Client &client);
+        static void	handleRequest(Client &client);
 
         static void	parseHeaders(Client &client);
-        void	getBodyInfo(string &body);
+        static void	getBodyInfo(Client &client);
 
-        void	POST();
-        void	GET();
+        static void	POST(Client &client);
 
-        static string  getMimeType(string &path);
+        static void	GET(Client &client);
+        static void    locateRequestedFile(Client &client);
+
+        static string getMimeType(string &path);
         static string HttpResponse(uint16_t code, string path, size_t fileSize);
 
-        void    pathHandling();
+        static void getContentLength(Client &client, const string_view content);
 
-        ContentType getContentType(const string_view ct);
+
+        static ContentType getContentType(Client &client, const string_view ct);
 		// static Location &setLocation();
 
         
     private:
-        Client &_client;
-        // unique_ptr<Server> &_server;
-		// Location _location;
+        // Client &_client;
 
-        // int _clientFD;
-        // string &_method;
-        // string &_headerBlock;
-        // string &_body;
-
-        // unordered_map<string, string_view> _headerFields;
+        // string_view _contentType;
+        // string_view _bodyBoundary;
         
-        // unordered_map<string, string_view> headers;
-        // string _hostName;
-        // string _contentLength;
-        string_view _contentType;
-        string_view _bodyBoundary;
-        
-        string_view _filename;
-        string_view _fileContent;
+        // string_view _filename;
+        // string_view _fileContent;
 };

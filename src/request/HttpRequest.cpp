@@ -34,32 +34,25 @@
 #include <sstream>
 #include <sys/stat.h>
 
-
-HttpRequest::HttpRequest(Client &client)
-: _client(client)
+void    HttpRequest::validateHEAD(Client &client)
 {
-}
-
-void    validateHEAD(const string &head)
-{
-    istringstream headStream(head);
-    string method, path, version;
-    headStream >> method >> path >> version;
+    istringstream headStream(client._header);
+    headStream >> client._method >> client._path >> client._version;
     
-    if (/* method != "HEAD" &&  */method != "GET" && method != "POST" && method != "DELETE")
+    if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
-        throw RunServers::ClientException("Invalid HTTP method: " + method);
+        throw RunServers::ClientException("Invalid HTTP method: " + client._method);
+        // sendErrorResponse(client._fd, "400 Bad Request");
     }
-   
-    if (path.empty() || path.data()[0] != '/')
-    {
-        throw RunServers::ClientException("Invalid HTTP path: " + path);
-    }
-    // if (path == uploadStore)
 
-    if (version != "HTTP/1.1")
+    if (client._path.empty() || client._path.data()[0] != '/')
     {
-        throw RunServers::ClientException("Invalid HTTP version: " + version);
+        throw RunServers::ClientException("Invalid HTTP path: " + client._path);
+    }
+
+    if (client._version != "HTTP/1.1")
+    {
+        throw RunServers::ClientException("Invalid HTTP version: " + client._version);
     }
 }
 
@@ -97,12 +90,12 @@ void HttpRequest::parseHeaders(Client &client)
     }
 }
 
-void    HttpRequest::pathHandling()
+void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
-    _client._path = _client._location.getRoot() + string(_client._path);
-    // cout << _client._path << endl;
-    if (stat(_client._path.data(), &status) == -1)
+    client._path = client._location.getRoot() + string(client._path);
+    // cout << client._path << endl;
+    if (stat(client._path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file");
     }
@@ -110,7 +103,7 @@ void    HttpRequest::pathHandling()
     if (S_ISDIR(status.st_mode))
     {
         // searching for indexpage in directory
-        for (string &indexPage : _client._location.getIndexPage())
+        for (string &indexPage : client._location.getIndexPage())
         {
             // cout << "indexPage " << indexPage << endl;
             if (stat(indexPage.data(), &status) == 0)
@@ -122,35 +115,35 @@ void    HttpRequest::pathHandling()
                 }
                 if (access(indexPage.data(), R_OK) == -1)
                 {
-                    cerr << "pathHandling: " << strerror(errno) << endl;
+                    cerr << "locateRequestedFile: " << strerror(errno) << endl;
                     continue;
                 }
-                _client._path = indexPage; // found index
-                // cout << "\t" << _client._path << endl;
+                client._path = indexPage; // found index
+                // cout << "\t" << client._path << endl;
                 return;
             }
         }
         // autoindex
 
-        if (_client._location.getAutoIndex() == true)
+        if (client._location.getAutoIndex() == true)
         {
             // use cgi using opendir,readdir to create a dynamic html page
         }
         else
         {
-            throw ErrorCodeClientException(_client, 404, "couldn't find index page", _client._location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(client, 404, "couldn't find index page", client._location.getErrorCodesWithPage());
         }
     } else if (S_ISREG(status.st_mode))
     {
-        if (access(_client._path.data(), R_OK) == -1)
+        if (access(client._path.data(), R_OK) == -1)
         {
-            cerr << "pathHandling: " << strerror(errno) << endl;
+            cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
-        cout << "\t" << _client._path << endl;
+        cout << "\t" << client._path << endl;
     }
     else
     {
-        throw ErrorCodeClientException(_client, 404, "Forbidden: Not a regular file or directory", _client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory", client._location.getErrorCodesWithPage());
     }
 }
 
@@ -186,46 +179,77 @@ string HttpRequest::getMimeType(string &path)
     return "application/octet-stream";
 }
 
-void    HttpRequest::GET()
+void    HttpRequest::GET(Client &client)
 {
-    pathHandling();
+    locateRequestedFile(client);
 
-    int fd = open(_client._path.data(), R_OK);
+    int fd = open(client._path.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(_client._path);
+    size_t fileSize = getFileLength(client._path);
     // cout << _headerBlock << endl;
-    string responseStr = HttpResponse(200, _client._path, fileSize);
-    auto handle = make_unique<HandleTransfer>(_client, fd, responseStr, fileSize);
+    string responseStr = HttpResponse(200, client._path, fileSize);
+    auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 
 }
 
-
-void    HttpRequest::handleRequest(size_t contentLength)
+void HttpRequest::getContentLength(Client &client, const string_view content)
 {
-	static_cast<void>(contentLength);
-    validateHEAD(_client._header);
+    if (content.empty())
+    {
+        throw RunServers::LengthRequiredException("Content-Length header is empty.");
+    }
+    for (size_t i = 0; i < content.size(); ++i)
+    {
+        if (!isdigit(static_cast<unsigned char>(content[i])))
+            throw RunServers::ClientException("Content-Length contains non-digit characters.");
+    }
+    long long value;
+    try
+    {
+        value = stoll(content.data());
 
-    // std::cout << escape_special_chars(_client._header) << std::endl;
-    if (_client._path == "/favicon.ico")
+        if (value < 0)
+            throw RunServers::ClientException("Content-Length cannot be negative.");
+
+        if (static_cast<size_t>(value) > client._location.getClientBodySize())
+            throw RunServers::ClientException("Content-Length exceeds maximum allowed."); // (413, "Payload Too Large");
+
+        if (value == 0)
+            throw RunServers::ClientException("Content-Length cannot be zero.");
+    }
+    catch (const invalid_argument &)
+    {
+        throw RunServers::ClientException("Content-Length is invalid (not a number).");
+    }
+    catch (const out_of_range &)
+    {
+        throw RunServers::ClientException("Content-Length value is out of range.");
+    }
+    client._contentLength = static_cast<size_t>(value);
+}
+
+void    HttpRequest::handleRequest(Client &client)
+{
+    // validateHEAD(_client);
+
+    // std::cout << escape_special_chars(client._header) << std::endl;
+    if (client._path == "/favicon.ico")
 	{
-        std::cout << "okedan" << std::endl;
-        _client._path = "/favicon.svg";
+        client._path = "/favicon.svg";
 	}
-    else
-        std::cout << _client._path << std::endl;
-    if (_client._headerFields.find("Host") == _client._headerFields.end())
+    if (client._headerFields.find("Host") == client._headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
-    if (_client._method == "GET")
+    if (client._method == "GET")
     {
-        GET();
+        GET(client);
     }
-    else if (_client._method == "POST")
+    else if (client._method == "POST")
     {
         // cout << _headerBlock << _body << endl;
         // Submitting a form (e.g., login, registration, contact form)
@@ -233,21 +257,21 @@ void    HttpRequest::handleRequest(size_t contentLength)
         // Sending JSON data (e.g., for APIs)
         // Creating a new resource (e.g., adding a new item to a database)
         // Triggering an action (e.g., starting a job, sending an email)
-        POST();
+        POST(client);
         // cout << _contentType << '\t' << _bodyBoundary << endl;
     }
     // else
     // {
 
     // }
-    auto it = _client._headerFields.find("Connection");
-    if (it == _client._headerFields.end() || it->second == "keep-alive")
+    auto it = client._headerFields.find("Connection");
+    if (it == client._headerFields.end() || it->second == "keep-alive")
     {
-		_client._keepAlive = true;
-        // FileDescriptor::addClientFD(_client._fd);
+		client._keepAlive = true;
+        // FileDescriptor::addClientFD(client._fd);
     }
 	else
-		_client._keepAlive = false;
+		client._keepAlive = false;
 }
 
 string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
