@@ -5,3 +5,15 @@ methods POST GET; doesn't work for nginx:  limit_except GET POST {deny all;}
 {} location
 
 check nginx default location
+
+post handling
+
+
+keep last part of string with length of boundary to check if boundary appears within contentLength
+
+if boundary appears within content check if content length was reached
+
+if content-length reached stop writing
+
+step 1 parse body and check if done writing
+
