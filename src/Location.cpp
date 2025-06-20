@@ -1,8 +1,11 @@
 #include <ConfigServer.hpp>
 #include <utils.hpp>
 
-Location::Location()
+
+
+Location::Location(string &path)
 {
+	_path = path;
 }
 
 Location::Location(const Location &other) : Alocation(other)
@@ -31,6 +34,7 @@ string Location::getLocationPath(string &line)
 	if (path.length() != 1 && directoryCheck(pathCheck) == false)
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
 	line = line.substr(len);
+	_path = path;
 	return path;
 }
 
@@ -224,4 +228,9 @@ string Alocation::getExtension() const
 string Alocation::getCgiPath() const
 {
 	return _cgiPath;
+}
+
+string Alocation::getPath() const
+{
+	return _path;
 }

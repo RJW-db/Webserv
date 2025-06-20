@@ -12,7 +12,7 @@ void    RunServers::setLocation(Client &client)
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
 		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
-        (client._path[client._path.size() - 1] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
+        (client._path[client._path.size()] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
             return;

@@ -253,8 +253,8 @@ bool RunServers::handlePostTransfer(HandleTransfer &handle)
 		if (bytesWritten == -1)
 		{
 			// remove and filedesciptor
-			if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
-				remove(handle._filename.data());
+			// if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
+			// 	remove(handle._filename.data());
 			FileDescriptor::closeFD(handle._fd);
 			throw ErrorCodeClientException(handle._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), handle._client._location.getErrorCodesWithPage());
 			
