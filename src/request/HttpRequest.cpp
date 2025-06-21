@@ -33,6 +33,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
+#include <string_view>
 
 void    HttpRequest::validateHEAD(Client &client)
 {
@@ -131,7 +132,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
         }
         else
         {
-            throw ErrorCodeClientException(client, 404, "couldn't find index page", client._location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(client, 404, "couldn't find index page");
         }
     } else if (S_ISREG(status.st_mode))
     {
@@ -143,7 +144,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
     }
     else
     {
-        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory", client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
     }
 }
 
@@ -196,8 +197,12 @@ void    HttpRequest::GET(Client &client)
 
 }
 
-void HttpRequest::getContentLength(Client &client, const string_view content)
+void HttpRequest::getContentLength(Client &client)
 {
+    auto contentLength = client._headerFields.find("Content-Length");
+    if (contentLength == client._headerFields.end())
+        throw RunServers::ClientException("Broken POST request");
+    const string_view content = contentLength->second;
     if (content.empty())
     {
         throw RunServers::LengthRequiredException("Content-Length header is empty.");
@@ -251,14 +256,40 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "POST")
     {
-        // cout << _headerBlock << _body << endl;
-        // Submitting a form (e.g., login, registration, contact form)
-        // Uploading a file (e.g., images, documents)
-        // Sending JSON data (e.g., for APIs)
-        // Creating a new resource (e.g., adding a new item to a database)
-        // Triggering an action (e.g., starting a job, sending an email)
-        // POST(client);
-        // cout << _contentType << '\t' << _bodyBoundary << endl;
+        size_t bodyEnd = client._body.find("\r\n\r\n");
+        if (bodyEnd == string::npos)
+            return;
+        string content = client._body.substr(bodyEnd + 4);
+        HttpRequest::getContentLength(client);
+        HttpRequest::getBodyInfo(client);
+        HttpRequest::getContentType(client);
+        size_t writableContentLength = client._contentLength - bodyEnd - 4 - client._bodyBoundary.size() - 4 - 2 - 2; // bodyend - 4(\r\n\r\n) bodyboundary (-4 for - signs) - 2 (\r\n) - 2 (\r\n)
+        // string filename = "./upload/image.png";
+        string filename = "test.txt";
+        int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+        if (fd == -1)
+            throw ErrorCodeClientException(client, 500, "could not write to: " + filename + ", because:" + strerror(errno));
+        FileDescriptor::setFD(fd);
+        size_t writeSize = writableContentLength;
+        if (content.size() < writableContentLength)
+            writeSize = content.size();
+        ssize_t bytesWritten = write(fd, content.data(), writeSize);
+        unique_ptr<HandleTransfer> handle;
+        if (bytesWritten == writableContentLength)
+        {
+            if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
+            {
+                FileDescriptor::closeFD(fd);
+                // Fix: Complete HTTP response with proper headers
+                string ok = HttpRequest::HttpResponse(200, "", 0);
+                send(client._fd, ok.data(), ok.size(), 0);
+                return ;
+            }
+            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
+        }
+        else
+            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
+        RunServers::insertHandleTransfer(move(handle));
     }
     // else
     // {

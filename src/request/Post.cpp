@@ -8,7 +8,7 @@ void    HttpRequest::POST(Client &client)
         throw RunServers::ClientException("Missing Content-Type");
 
     getBodyInfo(client);
-    ContentType ct = getContentType(client, it->second);
+    ContentType ct = getContentType(client);
     switch (ct) {
         case FORM_URLENCODED:
             // cout << "handle urlencoded" << endl;
@@ -37,8 +37,12 @@ void    HttpRequest::POST(Client &client)
     send(client._fd, ok.c_str(), ok.size(), 0);
 }
 
-ContentType HttpRequest::getContentType(Client &client, const string_view ct)
+ContentType HttpRequest::getContentType(Client &client)
 {
+    auto it = client._headerFields.find("Content-Type");
+    if (it == client._headerFields.end())
+        throw RunServers::ClientException("Missing Content-Type");
+    const string_view ct = it->second;
     if (ct == "application/x-www-form-urlencoded")
     {
         client._contentType = ct;

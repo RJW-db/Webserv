@@ -76,55 +76,8 @@ void RunServers::processClientRequest(Client &client)
         }
 		else
 			client._body.append(buff, receivedBytes);
-        if (client._method == "POST")
-        {
-            size_t bodyEnd = client._body.find("\r\n\r\n");
-			if (bodyEnd == string::npos)
-				return;
-			auto contentLength = client._headerFields.find("Content-Length");
-            if (contentLength == client._headerFields.end())
-                throw ClientException("Broken POST request");
-			HttpRequest::getContentLength(client, contentLength->second);
-			
-			HttpRequest::getBodyInfo(client);
-			auto it = client._headerFields.find("Content-Type");
-			if (it == client._headerFields.end())
-				throw RunServers::ClientException("Missing Content-Type");
-   			ContentType ct = HttpRequest::getContentType(client, it->second);
-			size_t writableContentLength = client._contentLength - bodyEnd - 4 - client._bodyBoundary.size() - 4 - 2 - 2; // bodyend - 4(\r\n\r\n) bodyboundary (-4 for - signs) - 2 (\r\n) - 2 (\r\n)
-
-			
-            string content = client._body.substr(bodyEnd + 4);
-            int fd = open("./upload/image.png", O_WRONLY | O_TRUNC | O_CREAT, 0700);
-            // int fd = open("./upload/test.txt", O_WRONLY | O_TRUNC | O_CREAT, 0700);
-            if (fd == -1)
-                exit(0);
-            FileDescriptor::setFD(fd);
-			size_t writeSize = writableContentLength;
-			if (content.size() < writableContentLength)
-				writeSize = content.size();
-            ssize_t bytesWritten = write(fd, content.data(), writeSize);
-			unique_ptr<HandleTransfer> handle;
-            if (bytesWritten == writableContentLength)
-            {
-                if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
-                {
-                    FileDescriptor::closeFD(fd);
-					// Fix: Complete HTTP response with proper headers
-					string ok = HttpRequest::HttpResponse(200, "", 0);
-					send(client._fd, ok.data(), ok.size(), 0);
-					return ;
-				}
-				handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
-			}
-			else
-				handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
-			insertHandleTransfer(move(handle));
-		}
 
 
-        // if (client._method == "POST" && client._body.size() < client._contentLength)
-        //     return; // Wait for more data
 
 
 // std::cout << escape_special_chars(client._fdBuffers) << std::endl;

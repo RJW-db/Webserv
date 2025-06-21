@@ -19,7 +19,7 @@ private:
 
 public:
     void handleErrorClient() const;
-    explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message, map<uint16_t, string> _errorPages);
+    explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
     const char *what() const throw();
 };
 

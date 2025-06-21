@@ -250,24 +250,27 @@ bool RunServers::handlePostTransfer(HandleTransfer &handle)
 		if (bytesReceived > handle._fileSize - handle._bytesWrittenTotal)
 			byteswrite = handle._fileSize - handle._bytesWrittenTotal;
 		bytesWritten = write(handle._fd, buff, byteswrite);
+        std::cout << "writing to file:" << bytesWritten << std::endl;
+
 		if (bytesWritten == -1)
 		{
 			// remove and filedesciptor
 			// if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
 			// 	remove(handle._filename.data());
 			FileDescriptor::closeFD(handle._fd);
-			throw ErrorCodeClientException(handle._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), handle._client._location.getErrorCodesWithPage());
-			
+			throw ErrorCodeClientException(handle._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno));
 		}
 		handle._bytesWrittenTotal += bytesWritten;
 	}
 	if (handle._bytesWrittenTotal == handle._fileSize)
 	{
 		handle._fileBuffer.append(buff + bytesWritten, bytesReceived - bytesWritten);
+        std::cout << "buffer:" << escape_special_chars(handle._fileBuffer) << std::endl;
 		if (handle._fileBuffer.find("--" + string(handle._client._bodyBoundary) + "--\r\n") == 2)
 		{
 			FileDescriptor::closeFD(handle._fd);
 			string ok = HttpRequest::HttpResponse(200, "", 0);
+            std::cout << "sending response" << std::endl;
 			send(handle._client._fd, ok.data(), ok.size(), 0);
 			return true;
 		}
