@@ -168,22 +168,7 @@ void RunServers::handleEvents(size_t eventCount)
 			processClientRequest(*_clients[eventFD].get());
 			return;
 		}
-        // if (currentEvent.events & EPOLLOUT)
-        // {
-        //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
-        //     {
-        //         if ((*it)->_clientFD == eventFD)
-        //         {
-        //             if (handlingSend(**it) == true)
-        //                 _handle.erase(it);
-        //             return;
-        //         }
-        //     }
-        // }
-        if (currentEvent.events & EPOLLOUT)
-        {
-
-        }
+        
     }
 }
 

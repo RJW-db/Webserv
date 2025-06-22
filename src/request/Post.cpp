@@ -1,40 +1,51 @@
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
+#include <ErrorCodeClientException.hpp>
 
 void    HttpRequest::POST(Client &client)
 {
-    auto it = client._headerFields.find("Content-Type");
-    if (it == client._headerFields.end())
-        throw RunServers::ClientException("Missing Content-Type");
-
-    getBodyInfo(client);
-    ContentType ct = getContentType(client);
-    switch (ct) {
-        case FORM_URLENCODED:
-            // cout << "handle urlencoded" << endl;
-            break;
-        case JSON:
-            // cout << "handle json" << endl;
-            break;
-        case TEXT:
-            // cout << "handle text" << endl;
-            break;
-        case MULTIPART:
+        size_t bodyEnd = client._body.find("\r\n\r\n");
+        if (bodyEnd == string::npos)
+            return;
+        string content = client._body.substr(bodyEnd + 4);
+        HttpRequest::getContentLength(client);
+        HttpRequest::getBodyInfo(client);
+        HttpRequest::getContentType(client);
+        size_t headerOverhead = bodyEnd + 4;                       // \r\n\r\n
+        size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
+        size_t writableContentLength = client._contentLength - headerOverhead - boundaryOverhead;
+        // string filename = "./upload/image.png";
+        string filename = "test.txt";
+        int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+        if (fd == -1)
+            throw ErrorCodeClientException(client, 500, "could not write to: " + filename + ", because:" + strerror(errno));
+        FileDescriptor::setFD(fd);
+        size_t writeSize = writableContentLength;
+        if (content.size() < writableContentLength)
+            writeSize = content.size();
+        ssize_t bytesWritten = write(fd, content.data(), writeSize);
+        if (bytesWritten == -1)
         {
-            ofstream myfile;
-            myfile.open("upload/" + string(client._filename));
-            std::cout << "writing " << std::endl;
-            myfile << client._fileContent;
-            std::cout << "written to file" << std::endl;
-            myfile.close();
-            break;
+            FileDescriptor::closeFD(fd);
+            //TODO remove(filename.data());
+            throw ErrorCodeClientException(client, 500, "write failed post request: " + string(strerror(errno)));
         }
-        default:
-            throw RunServers::ClientException("Unsupported Content-Type: " + string(it->second));
-    }
-
-    string ok = "HTTP/1.1 200 OK\r\n";
-    send(client._fd, ok.c_str(), ok.size(), 0);
+        unique_ptr<HandleTransfer> handle;
+        if (bytesWritten == writableContentLength)
+        {
+            if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
+            {
+                FileDescriptor::closeFD(fd);
+                // Fix: Complete HTTP response with proper headers
+                string ok = HttpRequest::HttpResponse(200, "", 0);
+                send(client._fd, ok.data(), ok.size(), 0);
+                return ;
+            }
+            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
+        }
+        else
+            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
+        RunServers::insertHandleTransfer(move(handle));
 }
 
 ContentType HttpRequest::getContentType(Client &client)

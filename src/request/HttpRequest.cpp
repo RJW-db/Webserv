@@ -257,40 +257,7 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "POST")
     {
-        size_t bodyEnd = client._body.find("\r\n\r\n");
-        if (bodyEnd == string::npos)
-            return;
-        string content = client._body.substr(bodyEnd + 4);
-        HttpRequest::getContentLength(client);
-        HttpRequest::getBodyInfo(client);
-        HttpRequest::getContentType(client);
-        size_t writableContentLength = client._contentLength - bodyEnd - 4 - client._bodyBoundary.size() - 4 - 2 - 2; // bodyend - 4(\r\n\r\n) bodyboundary (-4 for - signs) - 2 (\r\n) - 2 (\r\n)
-        // string filename = "./upload/image.png";
-        string filename = "test.txt";
-        int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-        if (fd == -1)
-            throw ErrorCodeClientException(client, 500, "could not write to: " + filename + ", because:" + strerror(errno));
-        FileDescriptor::setFD(fd);
-        size_t writeSize = writableContentLength;
-        if (content.size() < writableContentLength)
-            writeSize = content.size();
-        ssize_t bytesWritten = write(fd, content.data(), writeSize);
-        unique_ptr<HandleTransfer> handle;
-        if (bytesWritten == writableContentLength)
-        {
-            if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
-            {
-                FileDescriptor::closeFD(fd);
-                // Fix: Complete HTTP response with proper headers
-                string ok = HttpRequest::HttpResponse(200, "", 0);
-                send(client._fd, ok.data(), ok.size(), 0);
-                return ;
-            }
-            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
-        }
-        else
-            handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
-        RunServers::insertHandleTransfer(move(handle));
+
     }
     // else
     // {
