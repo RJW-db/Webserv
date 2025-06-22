@@ -194,6 +194,7 @@ void    HttpRequest::GET(Client &client)
     string responseStr = HttpResponse(200, client._path, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
+    std::cout << "added to client" << std::endl;
 
 }
 

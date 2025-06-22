@@ -220,7 +220,7 @@ bool RunServers::handleGetTransfer(HandleTransfer &ht)
             ht._fd = -1;
         }
     }
-    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
+    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str(), ht._fileBuffer.size(), 0);
     if (sent == -1)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
@@ -231,6 +231,7 @@ bool RunServers::handleGetTransfer(HandleTransfer &ht)
         ht._epollout_enabled = false;
         return true;
     }
+    ht._fileBuffer = ht._fileBuffer.substr(_sent);
     return false;
 }
 
