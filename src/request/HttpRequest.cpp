@@ -34,6 +34,89 @@
 #include <sstream>
 #include <sys/stat.h>
 
+bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t receivedBytes)
+{
+    client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
+    size_t headerEnd = client._header.find("\r\n\r\n");
+
+    if (headerEnd == string::npos)
+    {
+        if (receivedBytes > 0)
+        {
+            return false;
+        }
+        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator", client._location.getErrorCodesWithPage());
+    }
+    client._headerParseState = true;
+    client._body = client._header.substr(headerEnd + 4); // can fail, need to call cleanupClient
+    client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
+
+    HttpRequest::validateHEAD(client);  // TODO cleanupClient
+    HttpRequest::parseHeaders(client);  // TODO cleanupClient
+    RunServers::setServer(client);
+    RunServers::setLocation(client);
+    if (client._method == "POST")
+    {
+        client._headerParseState = HEADER_PARSED_POST;
+        return false; // prevent appending the same buff twice.
+    }
+    client._headerParseState = HEADER_PARSED_NON_POST;
+    return true;
+}
+
+bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receivedBytes)
+{
+    client._body.append(buff, receivedBytes);
+    size_t bodyEnd = client._body.find("\r\n\r\n");
+    if (bodyEnd == string::npos) // TODO forever loops if it cannot find \r\n\r\n
+    {
+        if (receivedBytes > 0)
+        {
+            return false;
+        }
+        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator", client._location.getErrorCodesWithPage());
+    }
+    auto contentLength = client._headerFields.find("Content-Length");
+    if (contentLength == client._headerFields.end())
+        throw ErrorCodeClientException(client, 400, "Missing Content-Length header", client._location.getErrorCodesWithPage());
+    HttpRequest::getContentLength(client, contentLength->second);
+    
+    HttpRequest::getBodyInfo(client);
+    auto it = client._headerFields.find("Content-Type");
+    if (it == client._headerFields.end())
+        throw ErrorCodeClientException(client, 400, "Missing Content-Type header", client._location.getErrorCodesWithPage());
+    ContentType ct = HttpRequest::getContentType(client, it->second);
+    size_t writableContentLength = client._contentLength - bodyEnd - 4 - client._bodyBoundary.size() - 4 - 2 - 2; // bodyend - 4(\r\n\r\n) bodyboundary (-4 for - signs) - 2 (\r\n) - 2 (\r\n)
+
+    string content = client._body.substr(bodyEnd + 4);
+    int fd = open("./upload/image.png", O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    // int fd = open("./upload/test.txt", O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (fd == -1)
+        throw ErrorCodeClientException(client, 500, string("ProcessClientRequest: ") + strerror(errno), client._location.getErrorCodesWithPage());
+    FileDescriptor::setFD(fd); // TODO what to do if fails.
+    size_t writeSize = writableContentLength;
+    if (content.size() < writableContentLength)
+        writeSize = content.size();
+    ssize_t bytesWritten = write(fd, content.data(), writeSize);
+    unique_ptr<HandleTransfer> handle;
+    if (bytesWritten == writableContentLength)
+    {
+        if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
+        {
+            FileDescriptor::closeFD(fd);
+            // Fix: Complete HTTP response with proper headers
+            string ok = HttpRequest::HttpResponse(200, "", 0);
+            send(client._fd, ok.data(), ok.size(), 0);
+            return true;
+        }
+        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
+    }
+    else
+        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
+    RunServers::insertHandleTransfer(move(handle));
+    return true;
+}
+
 void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
@@ -41,21 +124,30 @@ void    HttpRequest::validateHEAD(Client &client)
     
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
-        throw RunServers::ClientException("Invalid HTTP method: " + client._method);
-        // sendErrorResponse(client._fd, "400 Bad Request");
+        throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method, client._location.getErrorCodesWithPage());
+            // sendErrorResponse(client._fd, "400 Bad Request");
     }
 
     if (client._path.empty() || client._path.data()[0] != '/')
     {
-        throw RunServers::ClientException("Invalid HTTP path: " + client._path);
+        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._path, client._location.getErrorCodesWithPage());
     }
 
     if (client._version != "HTTP/1.1")
     {
-        throw RunServers::ClientException("Invalid HTTP version: " + client._version);
+        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version, client._location.getErrorCodesWithPage());
     }
 }
 
+static string_view trimWhiteSpace(string_view sv)
+{
+    const char* ws = " \t";
+    size_t first = sv.find_first_not_of(ws);
+    if (first == string_view::npos)
+        return {}; // all whitespace
+    size_t last = sv.find_last_not_of(ws);
+    return sv.substr(first, last - first + 1);
+}
 
 void HttpRequest::parseHeaders(Client &client)
 {
@@ -64,7 +156,7 @@ void HttpRequest::parseHeaders(Client &client)
     {
         size_t end = client._header.find("\r\n", start);
         if (end == string::npos)
-            throw RunServers::ClientException("Malformed HTTP request: header line not properly terminated");
+            throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated", client._location.getErrorCodesWithPage());
 
         string_view line(&client._header[start], end - start);
         if (line.empty())
@@ -73,16 +165,8 @@ void HttpRequest::parseHeaders(Client &client)
         size_t colon = line.find(':');
         if (colon != string_view::npos) {
             // Extract key and value as string_views
-            string_view key = line.substr(0, colon);
-            string_view value = line.substr(colon + 1);
-
-            // Trim whitespace from key
-            key.remove_prefix(key.find_first_not_of(" \t"));
-            key.remove_suffix(key.size() - key.find_last_not_of(" \t") - 1);
-            // Trim whitespace from value
-            value.remove_prefix(value.find_first_not_of(" \t"));
-            value.remove_suffix(value.size() - value.find_last_not_of(" \t") - 1);
-
+            string_view key = trimWhiteSpace(line.substr(0, colon));
+            string_view value = trimWhiteSpace(line.substr(colon + 1));
             client._headerFields[string(key)] = value;
             // cout << "\tkey\t" << key << "\t" << value << endl;
         }

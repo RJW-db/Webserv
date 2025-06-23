@@ -1,0 +1,19 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+	  {
+		"name": "Run Webserv",
+		"type": "cppdbg",
+		"request": "launch",
+		"program": "${workspaceFolder}/Webserv",  // adjust if needed
+		"args": [],
+		"stopAtEntry": false,
+		"cwd": "${workspaceFolder}",
+		"environment": [],
+		"externalConsole": false,
+		"MIMode": "gdb",                          // use "gdb" on Linux
+		"preLaunchTask": "build"                   // optional, if you set up tasks.json
+	  }
+	]
+  }
+  

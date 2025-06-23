@@ -234,41 +234,41 @@ bool RunServers::handleGetTransfer(HandleTransfer &ht)
     return false;
 }
 
-bool RunServers::handlePostTransfer(HandleTransfer &handle)
+bool RunServers::handlePostTransfer(HandleTransfer &ht)
 {
 	char buff[CLIENT_BUFFER_SIZE];
-	ssize_t bytesReceived = recv(handle._client._fd, buff, sizeof(buff), 0);
+	ssize_t bytesReceived = recv(ht._client._fd, buff, sizeof(buff), 0);
 	size_t byteswrite = static_cast<size_t>(bytesReceived);
 	ssize_t bytesWritten = 0;
 	if (bytesReceived == -1)
 	{
-		cleanupClient(handle._client);
+		cleanupClient(ht._client);
 		return true;
 	}
 	else if (bytesReceived != 0)
 	{
-		if (bytesReceived > handle._fileSize - handle._bytesWrittenTotal)
-			byteswrite = handle._fileSize - handle._bytesWrittenTotal;
-		bytesWritten = write(handle._fd, buff, byteswrite);
+		if (bytesReceived > ht._fileSize - ht._bytesWrittenTotal)
+			byteswrite = ht._fileSize - ht._bytesWrittenTotal;
+		bytesWritten = write(ht._fd, buff, byteswrite);
 		if (bytesWritten == -1)
 		{
 			// remove and filedesciptor
-			if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
-				remove(handle._filename.data());
-			FileDescriptor::closeFD(handle._fd);
-			throw ErrorCodeClientException(handle._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), handle._client._location.getErrorCodesWithPage());
+			// if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
+			// 	remove(handle._filename.data());
+			FileDescriptor::closeFD(ht._fd);
+			throw ErrorCodeClientException(ht._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), ht._client._location.getErrorCodesWithPage());
 			
 		}
-		handle._bytesWrittenTotal += bytesWritten;
+		ht._bytesWrittenTotal += bytesWritten;
 	}
-	if (handle._bytesWrittenTotal == handle._fileSize)
+	if (ht._bytesWrittenTotal == ht._fileSize)
 	{
-		handle._fileBuffer.append(buff + bytesWritten, bytesReceived - bytesWritten);
-		if (handle._fileBuffer.find("--" + string(handle._client._bodyBoundary) + "--\r\n") == 2)
+		ht._fileBuffer.append(buff + bytesWritten, bytesReceived - bytesWritten);
+		if (ht._fileBuffer.find("--" + string(ht._client._bodyBoundary) + "--\r\n") == 2)
 		{
-			FileDescriptor::closeFD(handle._fd);
+			FileDescriptor::closeFD(ht._fd);
 			string ok = HttpRequest::HttpResponse(200, "", 0);
-			send(handle._client._fd, ok.data(), ok.size(), 0);
+			send(ht._client._fd, ok.data(), ok.size(), 0);
 			return true;
 		}
 	}

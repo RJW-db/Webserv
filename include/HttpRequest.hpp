@@ -52,6 +52,9 @@ class HttpRequest
     public:
         // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
         // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
+        static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
+        static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
+
 
         static void validateHEAD(Client &client);
         static void	handleRequest(Client &client);

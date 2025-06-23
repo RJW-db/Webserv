@@ -45,6 +45,8 @@ class RunServers
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const unique_ptr<Server> &server);
         static void processClientRequest(Client &client);
+        static size_t receiveClientData(Client &client, char *buff);
+
 
 		static void setServer(Client &client);
         static void setLocation(Client &state);
@@ -65,8 +67,9 @@ class RunServers
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
         static void insertClientFD(int fd);
 
-        static void cleanupFD(int fd);
+        static void clientHttpCleanup(Client &client);
 
+        static void cleanupFD(int fd);
         static void cleanupClient(Client &client);
 
         class ClientException : public exception

@@ -1,153 +1,49 @@
 #include <RunServer.hpp>
 #include <HttpRequest.hpp>
 #include <Client.hpp>
+#include <ErrorCodeClientException.hpp>
 
 void    RunServers::setLocation(Client &client)
 {
-	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
-	if (pos == string::npos || client._header[pos] != '/')
-		throw RunServers::ClientException("missing path in HEAD");
-	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
-	client._path = client._header.substr(pos, len);
-	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
-	{
-		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
+    size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
+    if (pos == string::npos || client._header[pos] != '/')
+        throw RunServers::ClientException("missing path in HEAD");
+    size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
+    client._path = client._header.substr(pos, len);
+    for (pair<string, Location> &locationPair : client._usedServer->getLocations())
+    {
+        if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
         (client._path[client._path.size() - 1] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
-		{
+        {
             client._location = locationPair.second;
             return;
-		}
-	}
-	throw RunServers::ClientException("No matching location found for path: " + client._path);
+        }
+    }
+    throw RunServers::ClientException("No matching location found for path: " + client._path);
 }
 
 void RunServers::processClientRequest(Client &client)
 {
     try
     {
-        char	buff[CLIENT_BUFFER_SIZE];
-        ssize_t bytesReceived = recv(client._fd, buff, sizeof(buff), 0);
-        if (bytesReceived < 0)
-        {
-            cleanupClient(client);
-            if(errno == EINTR)
-            {
-                //	STOP SERVER CLEAN UP
-            }
-            else if (errno != EAGAIN)
-                cerr << "recv: " << strerror(errno);
+        char   buff[CLIENT_BUFFER_SIZE];
+        size_t bytesReceived = receiveClientData(client, buff);
+
+        static bool (*const handlers[])(Client&, const char*, size_t) = {
+            &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
+            &HttpRequest::parseHttpBody,                       // HEADER_PARSED_POST (1)
+            [](Client&, const char*, size_t) { return true; } // HEADER_PARSED_NON_POST (2)
+        };
+        if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return;
-        }
-        // ClientRequestState &state = _clientStates[clientFD];
-        
-
-        if (bytesReceived == 0) {
-            if (client._headerParsed && client._method == "POST" && client._body.size() < client._contentLength) {
-                sendErrorResponse(client._fd, "400 Bad Request (incomplete body)");
-            }
-            cleanupClient(client);
-            return;
-        }
-        size_t receivedBytes = static_cast<size_t>(bytesReceived);
-    
-        client._fdBuffers.append(buff, receivedBytes); // can fail, need to call cleanupClient
-        // std::cout << escape_special_chars(client._fdBuffers) << std::endl;
-
-        // std::cout << "\t" << client.headerParsed << std::endl;
-        if (client._headerParsed == false)
-        {
-            size_t headerEnd = client._fdBuffers.find("\r\n\r\n");
-            if (headerEnd == string::npos)
-            {
-                return;
-            }
-            client._headerParsed = true;
-            client._header = client._fdBuffers.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
-            client._body = client._fdBuffers.substr(headerEnd + 4); // can fail, need to call cleanupClient
-            client._fdBuffers.clear();
-    
-    
-            HttpRequest::validateHEAD(client);  // TODO cleanupClient
-            HttpRequest::parseHeaders(client);  // TODO cleanupClient
-    
-    
-            setServer(client);
-            setLocation(client);
-        }
-		else
-			client._body.append(buff, receivedBytes);
-        if (client._method == "POST")
-        {
-            size_t bodyEnd = client._body.find("\r\n\r\n");
-			if (bodyEnd == string::npos)
-				return;
-			auto contentLength = client._headerFields.find("Content-Length");
-            if (contentLength == client._headerFields.end())
-                throw ClientException("Broken POST request");
-			HttpRequest::getContentLength(client, contentLength->second);
-			
-			HttpRequest::getBodyInfo(client);
-			auto it = client._headerFields.find("Content-Type");
-			if (it == client._headerFields.end())
-				throw RunServers::ClientException("Missing Content-Type");
-   			ContentType ct = HttpRequest::getContentType(client, it->second);
-			size_t writableContentLength = client._contentLength - bodyEnd - 4 - client._bodyBoundary.size() - 4 - 2 - 2; // bodyend - 4(\r\n\r\n) bodyboundary (-4 for - signs) - 2 (\r\n) - 2 (\r\n)
-
-			
-            string content = client._body.substr(bodyEnd + 4);
-            int fd = open("./upload/image.png", O_WRONLY | O_TRUNC | O_CREAT, 0700);
-            // int fd = open("./upload/test.txt", O_WRONLY | O_TRUNC | O_CREAT, 0700);
-            if (fd == -1)
-                exit(0);
-            FileDescriptor::setFD(fd);
-			size_t writeSize = writableContentLength;
-			if (content.size() < writableContentLength)
-				writeSize = content.size();
-            ssize_t bytesWritten = write(fd, content.data(), writeSize);
-			unique_ptr<HandleTransfer> handle;
-            if (bytesWritten == writableContentLength)
-            {
-                if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == writableContentLength + 2)
-                {
-                    FileDescriptor::closeFD(fd);
-					// Fix: Complete HTTP response with proper headers
-					string ok = HttpRequest::HttpResponse(200, "", 0);
-					send(client._fd, ok.data(), ok.size(), 0);
-					return ;
-				}
-				handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, content.substr(bytesWritten));
-			}
-			else
-				handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), writableContentLength, "");
-			insertHandleTransfer(move(handle));
-		}
-
-
-        // if (client._method == "POST" && client._body.size() < client._contentLength)
-        //     return; // Wait for more data
-
-
-// std::cout << escape_special_chars(client._fdBuffers) << std::endl;
-// std::cout << escape_special_chars(client.header) << std::endl;
-
-        // HttpRequest request(client._usedServer, client._location, client._fd, client);
 
         HttpRequest::handleRequest(client);
-        client._headerParsed = false;
-        client._header.clear();
-        client._body.clear();
-        client._path.clear();
-        client._method.clear();
-        client._contentLength = 0;
-        client._headerFields.clear();
-		client._fdBuffers.clear();
-		client.setDisconnectTime(disconnectDelaySeconds);
+        clientHttpCleanup(client);
     }
     catch(const exception& e)   // if catch we don't handle well
     {
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
-        // exit(0);
         sendErrorResponse(client._fd, msgToClient);
     }
     // catch (const LengthRequiredException &e)
@@ -161,8 +57,17 @@ void RunServers::processClientRequest(Client &client)
     //     sendErrorResponse(clientFD, "400 Bad Request");
     // }
     // cleanupClient(clientFD);
+}
 
-    // client._fdBuffers.clear();
+size_t RunServers::receiveClientData(Client &client, char *buff)
+{
+    ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
+    if (bytesReceived < 0) {
+        cerr << "recv: " << strerror(errno);
+        RunServers::cleanupClient(client);
+                            throw runtime_error("something");
+    }
+    return static_cast<size_t>(bytesReceived);
 }
 
 static string NumIpToString(uint32_t addr)
@@ -186,7 +91,7 @@ static string NumIpToString(uint32_t addr)
 
 void RunServers::setServer(Client &client)
 {
-    uint find = client._header.find("Host:") + 5;
+    uint find = client._header.find("Host:") + 5;       // TODO uint sam?
     string_view hostname = string_view(client._header).substr(find);
     hostname.remove_prefix(hostname.find_first_not_of(" \t"));
     size_t len = hostname.find_first_of(" \t\n\r");
@@ -248,6 +153,18 @@ void sendErrorResponse(int clientFD, const string &message)
 //     _connectedClients.push_back(fd);
 // }
 
+void RunServers::clientHttpCleanup(Client &client)
+{
+    client._headerParseState = HEADER_NOT_PARSED;
+    client._header.clear();
+    client._body.clear();
+    client._path.clear();
+    client._method.clear();
+    client._contentLength = 0;
+    client._headerFields.clear();
+    client.setDisconnectTime(disconnectDelaySeconds);
+}
+
 void RunServers::cleanupFD(int fd)
 {
     if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
@@ -259,8 +176,7 @@ void RunServers::cleanupFD(int fd)
 
 void RunServers::cleanupClient(Client &client)
 {
-	// _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
-    client._fdBuffers.clear();
+    // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
     cleanupFD(client._fd);
     _clients.erase(client._fd);
 }
