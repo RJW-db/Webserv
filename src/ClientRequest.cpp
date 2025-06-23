@@ -27,6 +27,8 @@ void RunServers::processClientRequest(Client &client)
     {
         char	buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesReceived = recv(client._fd, buff, sizeof(buff), 0);
+        if (bytesReceived == 0)
+            std::cout << "nothing received:()" << endl << std::endl;
         if (bytesReceived < 0)
         {
             cleanupClient(client);
@@ -75,7 +77,12 @@ void RunServers::processClientRequest(Client &client)
             setLocation(client);
         }
 		else
-			client._body.append(buff, receivedBytes);
+        {
+            client._body.append(buff, receivedBytes);
+            size_t bodyEnd = client._body.find("\r\n\r\n");
+            if (bodyEnd == string::npos)
+                return;
+        }
 
 
 

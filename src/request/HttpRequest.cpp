@@ -257,7 +257,7 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "POST")
     {
-
+        POST(client);
     }
     // else
     // {

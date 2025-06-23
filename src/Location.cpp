@@ -3,10 +3,11 @@
 
 
 
-Location::Location(string &path)
-{
-	_path = path;
-}
+// Location::Location(string &path)
+// {
+// 	_path = path;
+//     std::cout << "Path:" << path << std::endl;
+// }
 
 Location::Location(const Location &other) : Alocation(other)
 {
@@ -113,7 +114,7 @@ bool Location::indexPage(string &line)
 bool Location::uploadStore(string &line)
 {
 	if (!_upload_store.empty())
-		throw runtime_error(to_string(_lineNbr) + ": upload_store: tried setting second upload_store in block");
+		throw runtime_error(to_string(_lineNbr) + ": upload_store: setting second upload_store in block");
 	size_t len = line.find_first_of(" \t\f\v\r;");
 	if (len == string::npos)
 	{
@@ -161,8 +162,14 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _root = curConf.getRoot();
 	else 
 		_root.insert(0, ".");
-	if (_root[_root.size() - 1] == '/')
+	if (_root[_root.size() - 1] == '/' && _root.size() > 2)
 		_root = _root.substr(0, _root.size() - 1);
+    if (_path[_path.size() - 1] == '/' && _path.size() > 1)
+        _path = _path.substr(0, _path.size() - 1);
+    if (_root.size() > 2)
+        _path = _root + _path;
+    else
+        _path = "." + _path;
     if (_clientBodySize == 0)
         _clientBodySize = curConf.getClientBodySize();
     if (_returnRedirect.first == 0)
@@ -186,7 +193,6 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 			indexPage = _root + indexPage;
 		else
 			indexPage = _root + "/" + indexPage;
-		std::cout << indexPage << std::endl;
 	}
 	// if (_upload_store.empty())
 	//     _upload_store = _root;
@@ -209,6 +215,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 		_upload_store = other._upload_store;
 		_cgiPath = other._cgiPath;
 		_cgiExtension = other._cgiExtension;
+        _path = other._path;
 	}
 	return (*this);
 }
