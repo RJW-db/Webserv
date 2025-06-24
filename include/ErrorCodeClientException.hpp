@@ -17,10 +17,10 @@ class ErrorCodeClientException
         string _message;
         map<uint16_t, string> _errorPages;
 
-    public:
-        void handleErrorClient() const;
-        explicit ErrorCodeClientException(Client &client, int errorCode, const string &message, map<uint16_t, string> _errorPages);
-        const char *what() const throw();
+public:
+    void handleErrorClient() const;
+    explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
+    const char *what() const throw();
 };
 
 #endif

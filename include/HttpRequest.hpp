@@ -70,10 +70,10 @@ class HttpRequest
         static string getMimeType(string &path);
         static string HttpResponse(uint16_t code, string path, size_t fileSize);
 
-        static void getContentLength(Client &client, const string_view content);
+        static void getContentLength(Client &client);
 
 
-        static ContentType getContentType(Client &client, const string_view ct);
+        static ContentType getContentType(Client &client);
 		// static Location &setLocation();
 
         

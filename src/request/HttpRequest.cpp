@@ -33,6 +33,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
+#include <string_view>
 
 bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t receivedBytes)
 {
@@ -225,7 +226,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
         }
         else
         {
-            throw ErrorCodeClientException(client, 404, "couldn't find index page", client._location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(client, 404, "couldn't find index page");
         }
     } else if (S_ISREG(status.st_mode))
     {
@@ -237,7 +238,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
     }
     else
     {
-        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory", client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
     }
 }
 
@@ -287,11 +288,16 @@ void    HttpRequest::GET(Client &client)
     string responseStr = HttpResponse(200, client._path, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
+    std::cout << "added to client" << std::endl;
 
 }
 
-void HttpRequest::getContentLength(Client &client, const string_view content)
+void HttpRequest::getContentLength(Client &client)
 {
+    auto contentLength = client._headerFields.find("Content-Length");
+    if (contentLength == client._headerFields.end())
+        throw RunServers::ClientException("Broken POST request");
+    const string_view content = contentLength->second;
     if (content.empty())
     {
         throw RunServers::LengthRequiredException("Content-Length header is empty.");
@@ -345,14 +351,7 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "POST")
     {
-        // cout << _headerBlock << _body << endl;
-        // Submitting a form (e.g., login, registration, contact form)
-        // Uploading a file (e.g., images, documents)
-        // Sending JSON data (e.g., for APIs)
-        // Creating a new resource (e.g., adding a new item to a database)
-        // Triggering an action (e.g., starting a job, sending an email)
-        // POST(client);
-        // cout << _contentType << '\t' << _bodyBoundary << endl;
+        POST(client);
     }
     // else
     // {

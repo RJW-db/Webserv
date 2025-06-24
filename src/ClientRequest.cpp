@@ -5,16 +5,16 @@
 
 void    RunServers::setLocation(Client &client)
 {
-    size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
-    if (pos == string::npos || client._header[pos] != '/')
-        throw RunServers::ClientException("missing path in HEAD");
-    size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
-    client._path = client._header.substr(pos, len);
-    for (pair<string, Location> &locationPair : client._usedServer->getLocations())
-    {
-        if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
-        (client._path[client._path.size() - 1] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
-        {
+	size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
+	if (pos == string::npos || client._header[pos] != '/')
+		throw RunServers::ClientException("missing path in HEAD");
+	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
+	client._path = client._header.substr(pos, len);
+	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
+	{
+		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
+        (client._path[client._path.size()] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
+		{
             client._location = locationPair.second;
             return;
         }
@@ -36,6 +36,16 @@ void RunServers::processClientRequest(Client &client)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return;
+
+
+        // if (client._method == "POST" && client._body.size() < client._contentLength)
+        //     return; // Wait for more data
+
+
+// std::cout << escape_special_chars(client._fdBuffers) << std::endl;
+// std::cout << escape_special_chars(client.header) << std::endl;
+
+        // HttpRequest request(client._usedServer, client._location, client._fd, client);
 
         HttpRequest::handleRequest(client);
         clientHttpCleanup(client);

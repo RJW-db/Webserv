@@ -21,6 +21,7 @@ class Alocation : public Aconfig
 		string getUploadStore() const;
 		string getExtension() const;
 		string getCgiPath() const;
+		string getPath() const;
 
 	protected:
 		Alocation(const Alocation &other);
@@ -28,13 +29,15 @@ class Alocation : public Aconfig
 		string _upload_store;
 		string _cgiExtension;
 		string _cgiPath;
+		string _path; // includes root + path;
 };
 
 
 class Location : public Alocation
 {
 	public:
-		Location();
+		Location() = default;
+		Location(string &path);
 		Location(const Location &other);
 		Location &operator=(const Location &other);
 		~Location() = default;

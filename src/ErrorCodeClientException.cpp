@@ -5,10 +5,10 @@
 #include <RunServer.hpp>
 #include <sys/epoll.h>
 
-ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message, map<uint16_t, string> _errorPages)
-: _client(client), _errorCode(errorCode), _message(message), _errorPages(_errorPages) 
+ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message)
+: _client(client), _errorCode(errorCode), _message(message)
 {
-
+    _errorPages = client._location.getErrorCodesWithPage();
 }
 
 const char *ErrorCodeClientException::what() const throw()

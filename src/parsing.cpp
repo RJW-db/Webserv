@@ -59,13 +59,13 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 {
     if constexpr (std::is_same<T, ConfigServer>::value) // checks i block == Configserver
     {
+        Location location;
+        location.setLineNbr(_lines.begin()->first);
         line = line.substr(8);
         if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
 		{
             throw runtime_error (to_string(_lines.begin()->first) + ": no space found after command");
 		}
-        Location location;
-        location.setLineNbr(_lines.begin()->first);
         skipLine(line, false, block);
         ftSkipspace(line);
         string path = location.getLocationPath(line);

@@ -123,10 +123,10 @@ void RunServers::handleEvents(size_t eventCount)
         // {
         if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
            !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-
         {
             std::cerr << "epoll error on fd " << currentEvent.data.fd
             << " (events: " << currentEvent.events << ")" << std::endl;
+            std::cout << errno << std::endl;
             cleanupFD(currentEvent.data.fd);
             continue;
         }
@@ -168,22 +168,7 @@ void RunServers::handleEvents(size_t eventCount)
 			processClientRequest(*_clients[eventFD].get());
 			return;
 		}
-        // if (currentEvent.events & EPOLLOUT)
-        // {
-        //     for (auto it = _handle.begin(); it != _handle.end(); ++it)
-        //     {
-        //         if ((*it)->_clientFD == eventFD)
-        //         {
-        //             if (handlingSend(**it) == true)
-        //                 _handle.erase(it);
-        //             return;
-        //         }
-        //     }
-        // }
-        if (currentEvent.events & EPOLLOUT)
-        {
-
-        }
+        
     }
 }
 
@@ -220,7 +205,7 @@ bool RunServers::handleGetTransfer(HandleTransfer &ht)
             ht._fd = -1;
         }
     }
-    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str() + ht._offset, ht._fileBuffer.size() - ht._offset, 0);
+    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str(), ht._fileBuffer.size(), 0);
     if (sent == -1)
         throw ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
@@ -231,6 +216,7 @@ bool RunServers::handleGetTransfer(HandleTransfer &ht)
         ht._epollout_enabled = false;
         return true;
     }
+    ht._fileBuffer = ht._fileBuffer.substr(_sent);
     return false;
 }
 
@@ -256,8 +242,7 @@ bool RunServers::handlePostTransfer(HandleTransfer &ht)
 			// if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
 			// 	remove(handle._filename.data());
 			FileDescriptor::closeFD(ht._fd);
-			throw ErrorCodeClientException(ht._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno), ht._client._location.getErrorCodesWithPage());
-			
+			throw ErrorCodeClientException(ht._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno));
 		}
 		ht._bytesWrittenTotal += bytesWritten;
 	}
