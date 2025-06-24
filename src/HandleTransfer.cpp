@@ -118,4 +118,5 @@ bool RunServers::handlePostTransfer(HandleTransfer &ht)
     {
         std::cerr << e.what() << '\n';
     }
+    return true;
 }

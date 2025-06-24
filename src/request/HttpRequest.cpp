@@ -30,6 +30,8 @@
 
 #include <signal.h>
 
+#include <cstdio>   // std::remove
+
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
@@ -83,14 +85,15 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
-    string filename = client._location.getPath() + '/' + string(client._filename);
-    int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    // client._pathFilename = client._location.getPath() + '/' + string(client._filename);
+    client._pathFilename = client._location.getPath() + '/' + string("photo.png");
+    int fd = open(client._pathFilename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
         if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + filename);
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._pathFilename);
         else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + filename);
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._pathFilename);
     }
     FileDescriptor::setFD(fd);
     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
@@ -180,11 +183,18 @@ void HttpRequest::parseHeaders(Client &client)
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
-    client._path = client._location.getRoot() + string(client._path);
+
+    size_t isPhoto = client._path.find(".png");
+
+    if (isPhoto == string::npos)
+        client._path = client._location.getRoot() + string(client._path);
+    else
+        client._path = string("upload/photo.png");
+    
     // cout << client._path << endl;
     if (stat(client._path.data(), &status) == -1)
     {
-        throw RunServers::ClientException("non existent file");
+        throw RunServers::ClientException("non existent file GET");
     }
 
     if (S_ISDIR(status.st_mode))
@@ -226,7 +236,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
-        cout << "\t" << client._path << endl;
+        // cout << "\t" << client._path << endl;
     }
     else
     {
@@ -276,12 +286,9 @@ void    HttpRequest::GET(Client &client)
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._path);
-    // cout << _headerBlock << endl;
     string responseStr = HttpResponse(200, client._path, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
-    std::cout << "added to client" << std::endl;
-
 }
 
 void HttpRequest::getContentLength(Client &client)
@@ -345,15 +352,33 @@ void    HttpRequest::handleRequest(Client &client)
     {
         // POST(client);
     }
-    // else
-    // {
-
-    // }
-    auto it = client._headerFields.find("Connection");
-    if (it == client._headerFields.end() || it->second == "keep-alive")
+    else if (client._method == "DELETE")
     {
-		client._keepAlive = true;
-        // FileDescriptor::addClientFD(client._fd);
+        struct stat status;
+        size_t isPhoto = client._path.find(".png");
+
+        client._path = "./upload" + string(client._path);
+        
+        cout << client._path << endl;
+        if (stat(client._path.data(), &status) == -1)
+        {
+            throw RunServers::ClientException("non existent file in DELETE");
+        }
+
+        if (S_ISREG(status.st_mode))
+        {
+            if (access(client._path.data(), R_OK) == -1)
+            {
+                cerr << "locateRequestedFile: " << strerror(errno) << endl;
+            }
+        }
+
+        // if (remove("sam") != 0)
+        if (remove(client._path.data()) != 0)
+        {
+            cerr << "locateRequestedFile: " << strerror(errno) << endl;
+        }
+        
     }
 	else
 		client._keepAlive = false;

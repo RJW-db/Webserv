@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Photo Viewer</title>
+  <style>
+    img {
+      max-width: 400px;
+      display: block;
+      margin-bottom: 10px;
+    }
+  </style>
+  <script>
+    function deletePhoto() {
+      fetch('/photo.png', { method: 'DELETE' })
+        .then(response => {
+          if (response.ok) {
+            document.getElementById('photo').style.display = 'none';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('status').textContent = 'Photo deleted.';
+          } else {
+            document.getElementById('status').textContent = 'Failed to delete photo.';
+          }
+        })
+        .catch(error => {
+          document.getElementById('status').textContent = 'Error: ' + error;
+        });
+    }
+    function goToUpload() {
+      window.location.href = 'POST_upload.html';
+    }
+  </script>
+</head>
+<body>
+  <h2>Photo Viewer</h2>
+  <img id="photo" src="photo.png" alt="Photo" />
+  <button id="deleteBtn" onclick="deletePhoto()">Delete Photo</button>
+  <p id="status"></p>
+  <br />
+  <button onclick="goToUpload()">Go to Upload Page</button>
+</body>
+</html>

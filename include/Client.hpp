@@ -45,6 +45,7 @@ class Client
         string_view _bodyBoundary;
 
         string_view _filename;
+        string _pathFilename;
         string_view _fileContent;
 
         chrono::steady_clock::time_point _disconnectTime;
