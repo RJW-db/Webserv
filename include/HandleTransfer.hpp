@@ -22,6 +22,8 @@ class HandleTransfer
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         virtual ~HandleTransfer() = default;
+        bool handleGetTransfer();
+        bool handlePostTransfer();
 
         Client  &_client;
         int     _fd;

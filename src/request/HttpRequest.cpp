@@ -411,6 +411,7 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 	if (!path.empty())
     	response << "Content-Type: " << getMimeType(path) << "\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
+    // response << "Connection: keep-alive\r\n";
     response << "\r\n";
 
     return response.str();

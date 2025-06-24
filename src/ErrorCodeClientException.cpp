@@ -24,7 +24,6 @@ void ErrorCodeClientException::handleErrorClient() const
     int fd = open(it->second.c_str(), O_RDONLY);
     size_t fileSize = getFileLength(it->second.c_str());
     FileDescriptor::setFD(fd);
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
     string response = HttpRequest::HttpResponse(it->first, it->second, fileSize);
     auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));

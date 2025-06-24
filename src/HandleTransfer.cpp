@@ -11,7 +11,7 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
 {
     _offset = 0;
     _bytesReadTotal = 0;
-    _epollout_enabled = false;
+    _epollout_enabled = true;
     _headerSize = responseHeader.size();
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
@@ -38,77 +38,81 @@ HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
     return *this;
 }
 
-bool RunServers::handleGetTransfer(HandleTransfer &ht)
+bool HandleTransfer::handleGetTransfer()
 {
     char buff[CLIENT_BUFFER_SIZE];
-    if (ht._fd != -1)
+    if (_fd != -1)
     {
-        ssize_t bytesRead = read(ht._fd, buff, CLIENT_BUFFER_SIZE);
+        ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
-            throw ClientException(string("handlingTransfer read: ") + strerror(errno));
+            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd));
         size_t _bytesRead = static_cast<size_t>(bytesRead);
-        ht._bytesReadTotal += _bytesRead;
+        _bytesReadTotal += _bytesRead;
         if (_bytesRead > 0)
         {
-            ht._fileBuffer.append(buff, _bytesRead);
+            _fileBuffer.append(buff, _bytesRead);
             
-            if (ht._epollout_enabled == false)
+            if (_epollout_enabled == false)
             {
-                setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLOUT);
-                ht._epollout_enabled = true;
+                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
+                _epollout_enabled = true;
             }
         }
-        if (_bytesRead == 0 || ht._bytesReadTotal >= ht._fileSize)
+        if (_bytesRead == 0 || _bytesReadTotal >= _fileSize)
         {
             // EOF reached, close file descriptor if needed
-            FileDescriptor::closeFD(ht._fd);
-            ht._fd = -1;
+            FileDescriptor::closeFD(_fd);
+            _fd = -1;
         }
     }
-    ssize_t sent = send(ht._client._fd, ht._fileBuffer.c_str(), ht._fileBuffer.size(), 0);
+    ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), 0);
+    // std::cout << "headersize:" << _headerSize << std::endl;
+    // std::cout << "sent bytes: " << sent << ",send data:" << _fileBuffer.substr(0, sent) << std::endl;
+    // std::cout << "sent:" << escape_special_chars( _fileBuffer) << std::endl;
+    // std::cout << "total file size:" << _fileSize  << std::endl;
     if (sent == -1)
-        throw ClientException(string("handlingTransfer send: ") + strerror(errno));
+        throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
-    ht._offset += _sent;
-    if (ht._offset >= ht._fileSize + ht._headerSize) // TODO only between boundary is the filesize
+    _offset += _sent;
+    if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        setEpollEvents(ht._client._fd, EPOLL_CTL_MOD, EPOLLIN);
-        ht._epollout_enabled = false;
+        // std::cout << "setting fd" << _client._fd << ", to epollin" << std::endl;
+        RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        _epollout_enabled = false;
         return true;
     }
-    ht._fileBuffer = ht._fileBuffer.substr(_sent);
+    _fileBuffer = _fileBuffer.substr(_sent);
     return false;
 }
 
-bool RunServers::handlePostTransfer(HandleTransfer &ht)
+bool HandleTransfer::handlePostTransfer()
 {
     try
     {
         char buff[CLIENT_BUFFER_SIZE];
-        size_t bytesReceived = receiveClientData(ht._client, buff);
+        size_t bytesReceived = RunServers::receiveClientData(_client, buff);
         size_t byteswrite = bytesReceived;
 
-        if (bytesReceived > ht._fileSize - ht._bytesWrittenTotal)
-            byteswrite = ht._fileSize - ht._bytesWrittenTotal;
-        ssize_t bytesWritten = write(ht._fd, buff, byteswrite);
+        if (bytesReceived > _fileSize - _bytesWrittenTotal)
+            byteswrite = _fileSize - _bytesWrittenTotal;
+        ssize_t bytesWritten = write(_fd, buff, byteswrite);
         if (bytesWritten == -1)
         {
             // remove and filedesciptor
             // if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
             // 	remove(handle._filename.data());
-            FileDescriptor::closeFD(ht._fd);
-            throw ErrorCodeClientException(ht._client, 500, string("write failed HandlePostTransfer: ") + strerror(errno));
+            FileDescriptor::closeFD(_fd);
+            throw ErrorCodeClientException(_client, 500, string("write failed HandlePostTransfer: ") + strerror(errno));
         }
-        ht._bytesWrittenTotal += static_cast<size_t>(bytesWritten);
-
-        if (ht._bytesWrittenTotal == ht._fileSize)
+        _bytesWrittenTotal += static_cast<size_t>(bytesWritten);
+        if (_bytesWrittenTotal == _fileSize)
         {
-            ht._fileBuffer.append(buff + bytesWritten, bytesReceived - byteswrite);
-            if (ht._fileBuffer.find("--" + string(ht._client._bodyBoundary) + "--\r\n") == 2)
+            _fileBuffer.append(buff + bytesWritten, bytesReceived - byteswrite);
+            if (_fileBuffer.find("--" + string(_client._bodyBoundary) + "--\r\n") == 2)
             {
-                FileDescriptor::closeFD(ht._fd);
+                FileDescriptor::closeFD(_fd);
                 string ok = HttpRequest::HttpResponse(200, "", 0);
-                send(ht._client._fd, ok.data(), ok.size(), 0);
+                send(_client._fd, ok.data(), ok.size(), 0);
                 return true;
             }
         }
@@ -117,6 +121,7 @@ bool RunServers::handlePostTransfer(HandleTransfer &ht)
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        return true;
     }
     return true;
 }
