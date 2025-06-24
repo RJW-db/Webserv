@@ -110,6 +110,33 @@ int RunServers::runServers()
     return 0;
 }
 
+bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
+{
+    int eventFD = currentEvent.data.fd;
+    for (auto it = _handle.begin(); it != _handle.end(); ++it)
+    {
+        if ((*it)->_client._fd == eventFD)
+        {
+            HandleTransfer &handle = **it;
+            _clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
+            bool finished = false;
+            if (currentEvent.events & EPOLLOUT)
+                finished = handle.handleGetTransfer();
+            else if (currentEvent.events & EPOLLIN)
+                finished = handle.handleGetTransfer();
+            if (finished == true)
+            {
+                if (_clients[(*it)->_client._fd]->_keepAlive == false)
+                    cleanupClient(*_clients[(*it)->_client._fd]);
+                it = _handle.erase(it);
+                // std::cout << "current epoll event:" << currentEvent.events << std::endl;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 void RunServers::handleEvents(size_t eventCount)
 {
     // int errHndl = 0;
@@ -121,16 +148,29 @@ void RunServers::handleEvents(size_t eventCount)
         //     (currentEvent.events & EPOLLHUP) ||
         //     (currentEvent.events & EPOLLIN) == 0)
         // {
+            if (currentEvent.events & EPOLLERR)
+            {
+                int socket_error = 0;
+                socklen_t len = sizeof(socket_error);
+                if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
+                {
+                    std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
+                }
+                std::cerr << "epoll error on fd " << currentEvent.data.fd
+                          << " (events: " << currentEvent.events << ")" << std::endl;
+                cleanupFD(currentEvent.data.fd);
+                exit(1);
+                continue;
+            }
         if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
            !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
         {
-            std::cerr << "epoll error on fd " << currentEvent.data.fd
+            std::cerr << "epoll fault on fd " << currentEvent.data.fd
             << " (events: " << currentEvent.events << ")" << std::endl;
             std::cout << errno << std::endl;
-            cleanupFD(currentEvent.data.fd);
+                cleanupFD(currentEvent.data.fd);
             continue;
         }
-
         // bool handltransfers = true;
         int eventFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : _servers)
@@ -140,34 +180,16 @@ void RunServers::handleEvents(size_t eventCount)
             {
                 // handltransfers = false;
                 acceptConnection(server);
-                return ;
+                continue ;
             }
         }
-		for (auto it = _handle.begin(); it != _handle.end(); ++it)
-		{
-			if ((*it)->_client._fd == eventFD)
-			{
-				_clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
-				bool finished = false;
-				if (currentEvent.events & EPOLLOUT)
-					finished = handleGetTransfer(**it);
-				else if (currentEvent.events & EPOLLIN)
-					finished = handlePostTransfer(**it);
-				if (finished == true)
-				{
-					if (_clients[(*it)->_client._fd]->_keepAlive == false)
-						cleanupClient(*_clients[(*it)->_client._fd]);
-					_handle.erase(it);
-                    // std::cout << "current epoll event:" << currentEvent.events << std::endl;
-				}
-				return;
-			}
-		}
+        if (runHandleTransfer(currentEvent) == true)
+            continue ;
 		if ((_clients.find(eventFD) != _clients.end()) &&
 			(currentEvent.events & EPOLLIN))
 		{
 			processClientRequest(*_clients[eventFD].get());
-			return;
+			continue ;
 		}
         
     }

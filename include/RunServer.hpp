@@ -72,6 +72,8 @@ class RunServers
         static void cleanupFD(int fd);
         static void cleanupClient(Client &client);
 
+        static bool runHandleTransfer(struct epoll_event &currentEvent);
+
         class ClientException : public exception
 		{
             private:
