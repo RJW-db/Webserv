@@ -2,60 +2,49 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 
-void getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd)
-{
-    HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
-    HttpRequest::getContentType(client);
-    content = client._body.substr(bodyEnd + 4);
-    size_t headerOverhead = bodyEnd + 4;                       // \r\n\r\n
-    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
-    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
-}
-
-void HttpRequest::POST(Client &client)
-{
-    string content;
-    size_t totalWriteSize;
-    size_t bodyEnd = client._body.find("\r\n\r\n");
-    if (bodyEnd == string::npos)
-        return;
-    getInfoPost(client, content, totalWriteSize, bodyEnd);
-    string filename = client._location.getPath() + '/' + string(client._filename);
-    int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + filename);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + filename);
-    }
-    FileDescriptor::setFD(fd);
-    size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
-    ssize_t bytesWritten = write(fd, content.data(), writeSize);
-    if (bytesWritten == -1)
-    {
-        FileDescriptor::closeFD(fd);
-        // TODO remove(filename.data());
-        throw ErrorCodeClientException(client, 500, "write failed post request: " + string(strerror(errno)));
-    }
-    unique_ptr<HandleTransfer> handle;
-    if (bytesWritten == totalWriteSize)
-    {
-        if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == totalWriteSize + 2)
-        {
-            FileDescriptor::closeFD(fd);
-            // Fix: Complete HTTP response with proper headers
-            string ok = HttpRequest::HttpResponse(200, "", 0);
-            send(client._fd, ok.data(), ok.size(), 0);
-            return;
-        }
-        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-    }
-    else
-        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
-    RunServers::insertHandleTransfer(move(handle));
-}
+// void HttpRequest::POST(Client &client)
+// {
+//     string content;
+//     size_t totalWriteSize;
+//     size_t bodyEnd = client._body.find("\r\n\r\n");
+//     if (bodyEnd == string::npos)
+//         return;
+//     getInfoPost(client, content, totalWriteSize, bodyEnd);
+//     string filename = client._location.getPath() + '/' + string(client._filename);
+//     int fd = open(filename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+//     if (fd == -1)
+//     {
+//         if (errno == EACCES)
+//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + filename);
+//         else
+//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + filename);
+//     }
+//     FileDescriptor::setFD(fd);
+//     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
+//     ssize_t bytesWritten = write(fd, content.data(), writeSize);
+//     if (bytesWritten == -1)
+//     {
+//         FileDescriptor::closeFD(fd);
+//         // TODO remove(filename.data());
+//         throw ErrorCodeClientException(client, 500, "write failed post request: " + string(strerror(errno)));
+//     }
+//     unique_ptr<HandleTransfer> handle;
+//     if (bytesWritten == totalWriteSize)
+//     {
+//         if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == totalWriteSize + 2)
+//         {
+//             FileDescriptor::closeFD(fd);
+//             // Fix: Complete HTTP response with proper headers
+//             string ok = HttpRequest::HttpResponse(200, "", 0);
+//             send(client._fd, ok.data(), ok.size(), 0);
+//             return;
+//         }
+//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
+//     }
+//     else
+//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
+//     RunServers::insertHandleTransfer(move(handle));
+// }
 
 ContentType HttpRequest::getContentType(Client &client)
 {

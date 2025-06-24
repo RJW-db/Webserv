@@ -37,16 +37,6 @@ void RunServers::processClientRequest(Client &client)
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return;
 
-
-        // if (client._method == "POST" && client._body.size() < client._contentLength)
-        //     return; // Wait for more data
-
-
-// std::cout << escape_special_chars(client._fdBuffers) << std::endl;
-// std::cout << escape_special_chars(client.header) << std::endl;
-
-        // HttpRequest request(client._usedServer, client._location, client._fd, client);
-
         HttpRequest::handleRequest(client);
         clientHttpCleanup(client);
     }

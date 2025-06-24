@@ -46,7 +46,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         {
             return false;
         }
-        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator", client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator");
     }
     client._headerParseState = true;
     client._body = client._header.substr(headerEnd + 4); // can fail, need to call cleanupClient
@@ -86,7 +86,7 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
         {
             return false;
         }
-        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator", client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator");
     }
     string content;
     size_t totalWriteSize;
@@ -118,7 +118,7 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
             // Fix: Complete HTTP response with proper headers
             string ok = HttpRequest::HttpResponse(200, "", 0);
             send(client._fd, ok.data(), ok.size(), 0);
-            return;
+            return true;
         }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
     }
@@ -135,18 +135,18 @@ void    HttpRequest::validateHEAD(Client &client)
     
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
-        throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method, client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
             // sendErrorResponse(client._fd, "400 Bad Request");
     }
 
     if (client._path.empty() || client._path.data()[0] != '/')
     {
-        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._path, client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._path);
     }
 
     if (client._version != "HTTP/1.1")
     {
-        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version, client._location.getErrorCodesWithPage());
+        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     }
 }
 
@@ -167,7 +167,7 @@ void HttpRequest::parseHeaders(Client &client)
     {
         size_t end = client._header.find("\r\n", start);
         if (end == string::npos)
-            throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated", client._location.getErrorCodesWithPage());
+            throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
 
         string_view line(&client._header[start], end - start);
         if (line.empty())
@@ -351,7 +351,7 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "POST")
     {
-        POST(client);
+        // POST(client);
     }
     // else
     // {
