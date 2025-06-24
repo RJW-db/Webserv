@@ -62,11 +62,13 @@ void RunServers::processClientRequest(Client &client)
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    if (bytesReceived < 0) {
+    if (bytesReceived < 0)
+    {
         cerr << "recv: " << strerror(errno);
         RunServers::cleanupClient(client);
-                            throw runtime_error("something");
+                            throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
     }
+
     return static_cast<size_t>(bytesReceived);
 }
 
