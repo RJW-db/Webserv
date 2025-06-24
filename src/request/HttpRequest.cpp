@@ -42,11 +42,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     if (headerEnd == string::npos)
     {
-        if (receivedBytes > 0)
-        {
-            return false;
-        }
-        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator");
+        return false;
     }
     client._headerParseState = true;
     client._body = client._header.substr(headerEnd + 4); // can fail, need to call cleanupClient
@@ -82,11 +78,7 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
     size_t bodyEnd = client._body.find("\r\n\r\n");
     if (bodyEnd == string::npos) // TODO forever loops if it cannot find \r\n\r\n
     {
-        if (receivedBytes > 0)
-        {
-            return false;
-        }
-        throw ErrorCodeClientException(client, 400, "Malformed HTTP request: missing header terminator");
+        return false;
     }
     string content;
     size_t totalWriteSize;
@@ -399,3 +391,4 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
     return response.str();
 
 }
+

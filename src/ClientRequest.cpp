@@ -61,6 +61,7 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
+    client.setDisconnectTime(disconnectDelaySeconds);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     if (bytesReceived < 0)
     {
@@ -179,6 +180,7 @@ void RunServers::cleanupFD(int fd)
 void RunServers::cleanupClient(Client &client)
 {
     // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
+    std::cout << "disconnecting client with fd:" << client._fd << std::endl;
     cleanupFD(client._fd);
     _clients.erase(client._fd);
 }
