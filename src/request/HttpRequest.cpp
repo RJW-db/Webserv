@@ -186,12 +186,10 @@ void    HttpRequest::locateRequestedFile(Client &client)
 
     size_t isPhoto = client._path.find(".png");
 
-    if (isPhoto == string::npos)
+    if (client._path[0] == '/' && client._path.size() == 1)
         client._path = client._location.getRoot() + string(client._path);
-    else
-        client._path = string("upload/photo.png");
     
-    // cout << client._path << endl;
+    cout << "\thiero " <<  client._path << endl;
     if (stat(client._path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");
