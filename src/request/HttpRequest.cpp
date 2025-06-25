@@ -52,8 +52,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     HttpRequest::validateHEAD(client);  // TODO cleanupClient
     HttpRequest::parseHeaders(client);  // TODO cleanupClient
-    RunServers::setServer(client);
-    RunServers::setLocation(client);
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
@@ -82,12 +80,14 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
     {
         return false;
     }
+    std::cout << "Body end found at: " << bodyEnd << std::endl;
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
-    // client._pathFilename = client._location.getPath() + '/' + string(client._filename);
-    client._pathFilename = client._location.getPath() + '/' + string("photo.png");
+    client._pathFilename = client._location.getPath() + '/' + string(client._filename);
+    // client._pathFilename = client._location.getPath() + '/' + string("photo.png");
     int fd = open(client._pathFilename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    std::cout << "File descriptor set to: " << fd << "for post" << std::endl;
     if (fd == -1)
     {
         if (errno == EACCES)
@@ -127,7 +127,9 @@ void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
     headStream >> client._method >> client._path >> client._version;
-    
+
+    RunServers::setServer(client);
+    RunServers::setLocation(client);
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
         throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
@@ -411,10 +413,9 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 	if (!path.empty())
     	response << "Content-Type: " << getMimeType(path) << "\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
-    // response << "Connection: keep-alive\r\n";
+    // response << "Connection: close\r\n";
     response << "\r\n";
 
     return response.str();
 
 }
-

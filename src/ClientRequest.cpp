@@ -36,7 +36,6 @@ void RunServers::processClientRequest(Client &client)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return;
-
         HttpRequest::handleRequest(client);
         clientHttpCleanup(client);
     }
@@ -69,7 +68,12 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
         RunServers::cleanupClient(client);
                             throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
     }
-
+    if (bytesReceived == 0)
+    {
+        cerr << "Client disconnected after read of 0" << endl;
+        RunServers::cleanupClient(client);
+        throw runtime_error("Client disconnected after read of 0");
+    }
     return static_cast<size_t>(bytesReceived);
 }
 

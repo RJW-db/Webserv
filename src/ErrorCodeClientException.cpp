@@ -18,6 +18,7 @@ const char *ErrorCodeClientException::what() const throw()
 
 void ErrorCodeClientException::handleErrorClient() const
 {
+    std::cerr << _message << std::endl;
     auto it = _errorPages.find(_errorCode);
     if (it == _errorPages.end())
         throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
@@ -27,5 +28,4 @@ void ErrorCodeClientException::handleErrorClient() const
     string response = HttpRequest::HttpResponse(it->first, it->second, fileSize);
     auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
-    std::cerr << _message << std::endl;
 }

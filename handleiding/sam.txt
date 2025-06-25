@@ -5,3 +5,13 @@ methods POST GET; doesn't work for nginx:  limit_except GET POST {deny all;}
 {} location
 
 check nginx default location
+
+
+testen of recv als firefox sluit alleen gebeurd als firefox epoll error heeft
+
+epoll error:
+client requests to close connection after finding something in cache before it receives the data from the server.
+for us this causes: EPOLLER because we are trying to send data to a socket that was closed by the client. 
+this also causes event EPOLLRDHUP that means the client closed the connection
+
+need to check if post still works after disconnetion after favicon loaded from cache.

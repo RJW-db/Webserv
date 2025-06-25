@@ -76,7 +76,6 @@ bool HandleTransfer::handleGetTransfer()
     _offset += _sent;
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        // std::cout << "setting fd" << _client._fd << ", to epollin" << std::endl;
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
         return true;
@@ -102,7 +101,7 @@ bool HandleTransfer::handlePostTransfer()
             // if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
             // 	remove(handle._filename.data());
             FileDescriptor::closeFD(_fd);
-            throw ErrorCodeClientException(_client, 500, string("write failed HandlePostTransfer: ") + strerror(errno));
+            throw ErrorCodeClientException(_client, 500, string("write failed HandlePostTransfer: ") + strerror(errno) + ", on fileDescriptor: " + to_string(_fd));
         }
         _bytesWrittenTotal += static_cast<size_t>(bytesWritten);
         if (_bytesWrittenTotal == _fileSize)
