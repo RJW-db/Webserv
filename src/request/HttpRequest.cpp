@@ -2,7 +2,6 @@
 #include <FileDescriptor.hpp>
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
 
 #include <HandleTransfer.hpp>
 #include <ErrorCodeClientException.hpp>
@@ -41,11 +40,9 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 {
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
-
-    if (headerEnd == string::npos)
-    {
+    if (findDelimiter(client, headerEnd, receivedBytes) == false)
         return false;
-    }
+
     client._headerParseState = true;
     client._body = client._header.substr(headerEnd + 4); // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
@@ -57,31 +54,26 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
-        return false; // prevent appending the same buff twice.
+        size_t bodyEnd = client._body.find("\r\n\r\n");
+        if (findDelimiter(client, bodyEnd, receivedBytes) == false)
+            return false;
+        return processHttpBody(client, bodyEnd);
     }
     client._headerParseState = HEADER_PARSED_NON_POST;
     return true;
-}
-
-void getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd)
-{
-    HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
-    HttpRequest::getContentType(client);
-    content = client._body.substr(bodyEnd + 4);
-    size_t headerOverhead = bodyEnd + 4;                       // \r\n\r\n
-    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
-    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
 }
 
 bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receivedBytes)
 {
     client._body.append(buff, receivedBytes);
     size_t bodyEnd = client._body.find("\r\n\r\n");
-    if (bodyEnd == string::npos) // TODO forever loops if it cannot find \r\n\r\n
-    {
+    if (findDelimiter(client, bodyEnd, receivedBytes) == false)
         return false;
-    }
+    return processHttpBody(client, bodyEnd);
+}
+
+bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
+{
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
@@ -121,6 +113,17 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
     RunServers::insertHandleTransfer(move(handle));
     return true;
+}
+
+void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd)
+{
+    HttpRequest::getContentLength(client);
+    HttpRequest::getBodyInfo(client);
+    HttpRequest::getContentType(client);
+    content = client._body.substr(bodyEnd + 4);
+    size_t headerOverhead = bodyEnd + 4;                       // \r\n\r\n
+    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
+    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
 }
 
 void    HttpRequest::validateHEAD(Client &client)
