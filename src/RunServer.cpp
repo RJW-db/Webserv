@@ -95,6 +95,7 @@ int RunServers::runServers()
         }
         try
         {
+            // std::cout << "event count "<<  eventCount << std::endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
         catch(const ErrorCodeClientException& e)
@@ -127,8 +128,12 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             if (finished == true)
             {
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
+                {
                     cleanupClient(*_clients[(*it)->_client._fd]);
+                }
                 it = _handle.erase(it);
+                // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+
                 // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
@@ -148,6 +153,7 @@ void RunServers::handleEvents(size_t eventCount)
         //     (currentEvent.events & EPOLLHUP) ||
         //     (currentEvent.events & EPOLLIN) == 0)
         // {
+        // std::cout << '1' << std::endl;
             if (currentEvent.events & EPOLLERR)
             {
                 int socket_error = 0;
@@ -162,15 +168,19 @@ void RunServers::handleEvents(size_t eventCount)
                 exit(1);
                 continue;
             }
+        // std::cout << '2' << std::endl;
+
         if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
            !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
         {
             std::cerr << "epoll fault on fd " << currentEvent.data.fd
             << " (events: " << currentEvent.events << ")" << std::endl;
-            std::cout << errno << std::endl;
+            // std::cout << errno << std::endl;
                 cleanupFD(currentEvent.data.fd);
             continue;
         }
+        // std::cout << '3' << std::endl;
+
         // bool handltransfers = true;
         int eventFD = currentEvent.data.fd;
         for (const unique_ptr<Server> &server : _servers)
@@ -180,17 +190,23 @@ void RunServers::handleEvents(size_t eventCount)
             {
                 // handltransfers = false;
                 acceptConnection(server);
-                continue ;
+                break;
             }
         }
+        // std::cout << '4' << std::endl;
+
         if (runHandleTransfer(currentEvent) == true)
-            continue ;
+            continue;
+        // std::cout << '5' << std::endl;
+        
 		if ((_clients.find(eventFD) != _clients.end()) &&
 			(currentEvent.events & EPOLLIN))
 		{
+            // std::cout << "5in" << std::endl;
 			processClientRequest(*_clients[eventFD].get());
-			continue ;
+			continue;
 		}
+        // std::cout << '6' << std::endl;
         
     }
 }

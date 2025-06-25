@@ -74,12 +74,16 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
 
 bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
 {
+    // std::cout << escape_special_chars(client._header) << std::endl;
+    // std::cout << client._filename << std::endl;
+    // std::cout << client._location.getPath() << std::endl;
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
-    // client._pathFilename = client._location.getPath() + '/' + string(client._filename);
-    client._pathFilename = client._location.getPath() + '/' + string("photo.png");
-    int fd = open(client._pathFilename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    client._pathFilename = client._location.getPath() + '/' + string(client._filename);
+
+    // client._pathFilename = client._location.getPath() + '/' + string("photo.png");
+    int fd = open(client._pathFilename.data(), O_RDONLY | O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
         if (errno == EACCES)
@@ -187,12 +191,25 @@ void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
 
-    size_t isPhoto = client._path.find(".png");
-
-    if (client._path[0] == '/' && client._path.size() == 1)
+    size_t isPhoto = client._path.find(".jpg");
+    std::cout << "_path = " << client._path << std::endl;
+    if (isPhoto == string::npos)
+    {
+        std::cout << 1 << std::endl;
         client._path = client._location.getRoot() + string(client._path);
+    }
+    else
+    {
+        std::cout << 2 << std::endl;
+        client._path = /* "./webPages/"+  */client._pathFilename;
+    }
+
+    // if (client._path[0] == '/' && client._path.size() == 1)
     
+    std::cout << "getroot " << client._location.getRoot() << std::endl;
+    std::cout << "getroot " << client._pathFilename << std::endl;
     cout << "\thiero " <<  client._path << endl;
+    std::cout << "what  " << client._pathFilename << std::endl;
     if (stat(client._path.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");
@@ -335,7 +352,6 @@ void HttpRequest::getContentLength(Client &client)
 void    HttpRequest::handleRequest(Client &client)
 {
     // validateHEAD(_client);
-
     // std::cout << escape_special_chars(client._header) << std::endl;
     if (client._path == "/favicon.ico")
 	{

@@ -12,14 +12,24 @@ void    RunServers::setLocation(Client &client)
 	client._path = client._header.substr(pos, len);
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
+        // std::cout << locationPair.first << std::endl;
 		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
         (client._path[client._path.size()] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
-            
             return;
+            continue;
         }
+		// if (locationPair.first )
+		// {
+        //     client._location = locationPair.second;
+        //     // return;
+        //     continue;
+        // }
+        // _uploadPath
     }
+    exit(0);
+
     throw RunServers::ClientException("No matching location found for path: " + client._path);
 }
 

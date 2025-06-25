@@ -16,7 +16,7 @@ int RunServers::epollInit(/* ServerList &servers */)
     for (const unique_ptr<Server> &server : _servers)
     {
         struct epoll_event current_event;
-        current_event.events = EPOLLIN | EPOLLET;
+        current_event.events = EPOLLIN /* | EPOLLET */;
         for (int listener : server->getListeners())
         {
             current_event.data.fd = listener;

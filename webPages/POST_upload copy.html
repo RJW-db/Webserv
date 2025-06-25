@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>File Upload Test</title>
+  <script>
+    function clearFileInput() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('preview').src = '';
+      document.getElementById('preview').style.display = 'none';
+    }
+    function goToPhotoViewer() {
+      window.location.href = 'DELETE_photo.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(this);
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.text()) // Expect filename or URL as plain text
+        .then(filename => {
+          if (filename && filename !== 'Upload failed.') {
+            document.getElementById('status').textContent = 'Upload successful!';
+            const preview = document.getElementById('preview');
+            preview.src = '/upload/' + filename.trim();
+            preview.style.display = 'block';
+          } else {
+            document.getElementById('status').textContent = 'Upload failed.';
+          }
+        })
+        .catch(error => {
+          document.getElementById('status').textContent = 'Error: ' + error;
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <h2>Upload a File</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="myfile" accept="image/*" required />
+    <br /><br />
+    <img id="preview" src="" alt="Image preview" style="display:none; max-width:300px; max-height:300px; border:1px solid #ccc; margin-bottom:10px;" />
+    <br />
+    <button type="submit">Upload</button>
+  </form>
+  <div id="status"></div>
+  <br />
+  <button onclick="goToPhotoViewer()">Go to Photo Viewer</button>
+</body>
+</html>

@@ -168,7 +168,7 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _path = _path.substr(0, _path.size() - 1);
     if (_root.size() > 2)
         _path = _root + _path;
-    else
+	else
         _path = "." + _path;
     if (_clientBodySize == 0)
         _clientBodySize = curConf.getClientBodySize();

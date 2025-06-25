@@ -111,8 +111,19 @@ bool HandleTransfer::handlePostTransfer()
             if (_fileBuffer.find("--" + string(_client._bodyBoundary) + "--\r\n") == 2)
             {
                 FileDescriptor::closeFD(_fd);
-                string ok = HttpRequest::HttpResponse(200, "", 0);
-                send(_client._fd, ok.data(), ok.size(), 0);
+                // string ok = HttpRequest::HttpResponse(200, "", 0);
+                // std::cout << escape_special_chars(ok) << std::endl;
+                // send(_client._fd, ok.data(), ok.size(), 0);
+                std::string body = _client._pathFilename + '\n';
+                // std::string body = "photo.png\n";
+                std::string headers =
+                    "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/plain\r\n"
+                    "Content-Length: " + to_string(body.size()) + "\r\n"
+                    "\r\n" +
+                    body;
+
+                send(_client._fd, headers.data(), headers.size(), 0);
                 return true;
             }
         }

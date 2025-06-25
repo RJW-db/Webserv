@@ -32,6 +32,7 @@ class Client
 
         unique_ptr<Server> _usedServer;
         Location _location;
+        string_view _uploadPath;
 
         int8_t _headerParseState;
         string _header;

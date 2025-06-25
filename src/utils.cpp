@@ -5,7 +5,7 @@
 
 bool directoryCheck(string &path)
 {
-	std::cout << "\t" << path << std::endl;
+	// std::cout << "\t" << path << std::endl;
     DIR *d = opendir(path.c_str());	// path = rde-brui
     if (d == NULL) {
         perror("opendir");
