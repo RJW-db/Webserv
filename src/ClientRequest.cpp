@@ -73,7 +73,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        cerr << "Client disconnected after read of 0" << endl;
+        cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
         RunServers::cleanupClient(client);
         throw runtime_error("Client disconnected after read of 0");
     }
@@ -99,41 +99,47 @@ static string NumIpToString(uint32_t addr)
     return result;
 }
 
+static bool pickServer(Client &client, pair<const string, string> &porthost, uint16_t port, string &ip, unique_ptr<Server> &server)
+{
+    if (porthost.second.find("0.0.0.0") != string::npos ||
+        porthost.second.find(ip) != string::npos)
+    {
+        if (to_string(port) == porthost.first)
+        {
+            uint find = client._header.find("Host:") + 5; // TODO uint sam?
+            string_view hostname = string_view(client._header).substr(find);
+            hostname.remove_prefix(hostname.find_first_not_of(" \t"));
+            size_t len = hostname.find_first_of(" \t\n\r");
+            hostname = hostname.substr(0, len);
+            if (hostname == server->getServerName())
+            {
+                client._usedServer = make_unique<Server>(*server);
+                return true;
+            }
+            if (client._usedServer == nullptr)
+                client._usedServer = make_unique<Server>(*server);
+        }
+    }
+    return false;
+}
+
 void RunServers::setServer(Client &client)
 {
-    uint find = client._header.find("Host:") + 5;       // TODO uint sam?
-    string_view hostname = string_view(client._header).substr(find);
-    hostname.remove_prefix(hostname.find_first_not_of(" \t"));
-    size_t len = hostname.find_first_of(" \t\n\r");
-    hostname = hostname.substr(0, len);
-
     sockaddr_in res;
     socklen_t resLen = sizeof(res);
-    int err = getsockname(client._fd, (struct sockaddr*)&res, &resLen);
+    int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
     if (err != 0)
         throw ClientException("getsockname failed: " + string(strerror(errno)));
     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
     uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
     client._usedServer = nullptr;
+
     for (unique_ptr<Server> &server : _servers)
     {
         for (pair<const string, string> &porthost : server->getPortHost())
         {
-            if (porthost.second.find("0.0.0.0") != string::npos || 
-                porthost.second.find(ip) != string::npos)
-            {
-                if (to_string(port) == porthost.first)
-                {
-                    if (hostname == server->getServerName())
-                    {
-                        client._usedServer = make_unique<Server>(*server);
-                        return;
-                    }
-                    if (client._usedServer == nullptr)
-                        client._usedServer = make_unique<Server>(*server);
-                    break ;
-                }
-            }
+            if (pickServer(client, porthost, port, ip, server) == true)
+                return;
         }
     }
 }

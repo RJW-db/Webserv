@@ -82,7 +82,7 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
 
-    client._rootPath = client._rootPath + "/" + string(client._filename);
+    client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
@@ -95,23 +95,14 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
     ssize_t bytesWritten = write(fd, content.data(), writeSize);
     if (bytesWritten == -1)
-    {
-        FileDescriptor::closeFD(fd);
-        // TODO remove(filename.data());
-        throw ErrorCodeClientException(client, 500, "write failed post request: " + string(strerror(errno)));
-    }
+        HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
+    
     unique_ptr<HandleTransfer> handle;
     if (bytesWritten == totalWriteSize)
     {
-        if (content.find("--" + string(client._bodyBoundary) + "--\r\n") == totalWriteSize + 2)
-        {
-            FileDescriptor::closeFD(fd);
-            // Fix: Complete HTTP response with proper headers
-            string ok = HttpRequest::HttpResponse(200, "", 0);
-            send(client._fd, ok.data(), ok.size(), 0);
-            RunServers::clientHttpCleanup(client);
+        std::string boundaryCheck = content.substr(bytesWritten);
+        if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
             return true;
-        }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
     }
     else
