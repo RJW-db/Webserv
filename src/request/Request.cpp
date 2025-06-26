@@ -123,7 +123,6 @@ void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWrit
 }
 
 
-
 static string_view trimWhiteSpace(string_view sv)
 {
     const char* ws = " \t";
