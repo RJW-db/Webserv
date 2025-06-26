@@ -3,6 +3,7 @@
 #include <Server.hpp>
 
 #include <RunServer.hpp>
+#include <ErrorCodeClientException.hpp>
 
 #include <unordered_set>
 #include <arpa/inet.h>
@@ -54,13 +55,24 @@ class HttpRequest
         // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
+        static bool processHttpBody(Client &client, size_t bodyEnd);
+        static void getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd);
 
+        static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
+            if (delimiter == std::string::npos) {
+                if (receivedBytes == CLIENT_BUFFER_SIZE)
+                    return false;
+                throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
+            }
+            return true;
+        }
 
         static void validateHEAD(Client &client);
         static void	handleRequest(Client &client);
 
         static void	parseHeaders(Client &client);
         static void	getBodyInfo(Client &client);
+
 
         static void	POST(Client &client);
 
