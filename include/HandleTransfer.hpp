@@ -22,6 +22,7 @@ class HandleTransfer
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         virtual ~HandleTransfer() = default;
+        // static bool foundBoundaryPost(Client &client, string rootPath, int fd);
         bool handleGetTransfer();
         bool handlePostTransfer();
 

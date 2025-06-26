@@ -54,6 +54,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
     else
         client._rootPath = client._location.getRoot() + string(client._requestPath);
+    decodeSafeFilenameChars(client);
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
@@ -188,9 +189,30 @@ void HttpRequest::parseHeaders(Client &client)
     }
 }
 
+void HttpRequest::decodeSafeFilenameChars(Client &client)
+{
+    static const map<string, string> specialChars = {
+        {"%20", " "},
+        {"%21", "!"},
+        {"%24", "$"},
+        {"%25", "%"},
+        {"%26", "&"}};
+    for (pair<string, string> pair : specialChars)
+    {
+        size_t pos;
+        while ((pos = client._rootPath.find(pair.first)) != string::npos)
+            client._rootPath.replace(pos, 3, pair.second);
+    }
+    if (client._rootPath.find('%') != string::npos)
+        throw ErrorCodeClientException(client, 400, "bad filename given by client:" + client._rootPath);
+}
+
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
+    
+
+
     if (stat(client._rootPath.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");
@@ -332,10 +354,8 @@ void HttpRequest::getContentLength(Client &client)
 void    HttpRequest::handleRequest(Client &client)
 {
     // validateHEAD(_client);
-    if (client._rootPath == "/favicon.ico")
-	{
-        client._rootPath = "/favicon.svg";
-	}
+    if (client._rootPath.find("/favicon.ico") != string::npos)
+        client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._headerFields.find("Host") == client._headerFields.end())
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")

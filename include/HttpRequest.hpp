@@ -84,9 +84,9 @@ class HttpRequest
 
         static void getContentLength(Client &client);
 
-
+        static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
-		// static Location &setLocation();
+        // static Location &setLocation();
 
         
     private:

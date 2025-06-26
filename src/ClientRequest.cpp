@@ -63,6 +63,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     buff[CLIENT_BUFFER_SIZE] = '\0';
     client.setDisconnectTime(disconnectDelaySeconds);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
+    if (bytesReceived > 0)
+        return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
     {
         cerr << "recv: " << strerror(errno);
@@ -75,7 +77,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
         RunServers::cleanupClient(client);
         throw runtime_error("Client disconnected after read of 0");
     }
-    return static_cast<size_t>(bytesReceived);
+    return (0); // You never get here
 }
 
 static string NumIpToString(uint32_t addr)
@@ -186,6 +188,13 @@ void RunServers::cleanupClient(Client &client)
 {
     // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
     std::cout << "disconnecting client with fd:" << client._fd << std::endl;
+    for (auto it = _handle.begin(); it != _handle.end(); )
+    {
+        if ((*it)->_client._fd == client._fd)
+            it = _handle.erase(it);
+        else
+            ++it;
+    }
     cleanupFD(client._fd);
     _clients.erase(client._fd);
 }
