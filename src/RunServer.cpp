@@ -157,19 +157,19 @@ void RunServers::handleEvents(size_t eventCount)
         //     (currentEvent.events & EPOLLIN) == 0)
         // {
         // std::cout << '1' << std::endl;
-            // if (currentEvent.events & EPOLLHUP)
-            // {
-            //     int socket_error = 0;
-            //     socklen_t len = sizeof(socket_error);
-            //     if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
-            //     {
-            //         std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
-            //     }
-            //     std::cerr << "epoll error on fd " << currentEvent.data.fd
-            //               << " (events: " << currentEvent.events << ")" << std::endl;
-            //     cleanupClient(*_clients[currentEvent.data.fd].get());
-            //     continue;
-            // }
+            if (currentEvent.events & EPOLLHUP)
+            {
+                int socket_error = 0;
+                socklen_t len = sizeof(socket_error);
+                if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
+                {
+                    std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
+                }
+                std::cerr << "epoll error on fd " << currentEvent.data.fd
+                          << " (events: " << currentEvent.events << ")" << std::endl;
+                cleanupClient(*_clients[currentEvent.data.fd].get());
+                continue;
+            }
         // std::cout << '2' << std::endl;
 
         if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
