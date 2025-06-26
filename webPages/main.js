@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', function() {
         if (filename && filename !== 'Upload failed.') {
           status.textContent = 'Upload successful!';
           const img = document.createElement('img');
-          img.src = '/upload/' + filename.trim();
+          img.src = '/' + filename.trim();
           img.alt = filename.trim();
           gallery.appendChild(img);
         } else {

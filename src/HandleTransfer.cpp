@@ -79,6 +79,7 @@ bool HandleTransfer::handleGetTransfer()
         // std::cout << "setting fd" << _client._fd << ", to epollin" << std::endl;
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
+        
         return true;
     }
     _fileBuffer = _fileBuffer.substr(_sent);
@@ -114,7 +115,8 @@ bool HandleTransfer::handlePostTransfer()
                 // string ok = HttpRequest::HttpResponse(200, "", 0);
                 // std::cout << escape_special_chars(ok) << std::endl;
                 // send(_client._fd, ok.data(), ok.size(), 0);
-                std::string body = _client._pathFilename + '\n';
+                std::cout << "handletrafsner:  " << _client._rootPath << std::endl;
+                std::string body = _client._rootPath + '\n';
                 // std::string body = "photo.png\n";
                 std::string headers =
                     "HTTP/1.1 200 OK\r\n"

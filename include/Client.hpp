@@ -38,7 +38,8 @@ class Client
         string _header;
         string _body;
         string _method;
-        string _path;
+        string _requestPath;
+        string _rootPath; // root + requestpath + filename
         string _version;
         size_t _contentLength = 0;
 

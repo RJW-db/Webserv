@@ -119,6 +119,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
         if ((*it)->_client._fd == eventFD)
         {
             HandleTransfer &handle = **it;
+            Client &client = handle._client;
             _clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
@@ -132,6 +133,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 }
                 it = _handle.erase(it);
+                clientHttpCleanup(client);
                 // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 
                 // std::cout << "current epoll event:" << currentEvent.events << std::endl;
@@ -164,8 +166,7 @@ void RunServers::handleEvents(size_t eventCount)
                 }
                 std::cerr << "epoll error on fd " << currentEvent.data.fd
                           << " (events: " << currentEvent.events << ")" << std::endl;
-                cleanupFD(currentEvent.data.fd);
-                exit(1);
+                cleanupClient(*_clients[currentEvent.data.fd].get());
                 continue;
             }
         // std::cout << '2' << std::endl;

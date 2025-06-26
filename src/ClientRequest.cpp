@@ -9,37 +9,26 @@ void    RunServers::setLocation(Client &client)
 	if (pos == string::npos || client._header[pos] != '/')
 		throw RunServers::ClientException("missing path in HEAD");
 	size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
-	client._path = client._header.substr(pos, len);
+	client._requestPath = client._header.substr(pos, len);
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
-        // std::cout << locationPair.first << std::endl;
-		if (strncmp(client._path.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
-        (client._path[client._path.size()] == '\0' || client._path[locationPair.first.size() - 1] == '/'))
+		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
+        (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
             return;
-            continue;
         }
-		// if (locationPair.first )
-		// {
-        //     client._location = locationPair.second;
-        //     // return;
-        //     continue;
-        // }
-        // _uploadPath
     }
-    exit(0);
-
-    throw RunServers::ClientException("No matching location found for path: " + client._path);
+    throw RunServers::ClientException("No matching location found for path: " + client._requestPath);
 }
 
 void RunServers::processClientRequest(Client &client)
 {
     try
     {
-        char   buff[CLIENT_BUFFER_SIZE];
+        char   buff[CLIENT_BUFFER_SIZE + 1];
         size_t bytesReceived = receiveClientData(client, buff);
-
+        buff[CLIENT_BUFFER_SIZE] = '\0';
         static bool (*const handlers[])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
             &HttpRequest::parseHttpBody,                       // HEADER_PARSED_POST (1)
@@ -49,7 +38,6 @@ void RunServers::processClientRequest(Client &client)
             return;
 
         HttpRequest::handleRequest(client);
-        clientHttpCleanup(client);
     }
     catch(const exception& e)   // if catch we don't handle well
     {
@@ -172,7 +160,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._headerParseState = HEADER_NOT_PARSED;
     client._header.clear();
     client._body.clear();
-    client._path.clear();
+    client._requestPath.clear();
     client._method.clear();
     client._contentLength = 0;
     client._headerFields.clear();

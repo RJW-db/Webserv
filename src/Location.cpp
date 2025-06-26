@@ -35,7 +35,7 @@ string Location::getLocationPath(string &line)
 	if (path.length() != 1 && directoryCheck(pathCheck) == false)
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
 	line = line.substr(len);
-	_path = path;
+	_locationPath = path;
 	return path;
 }
 
@@ -164,12 +164,13 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 		_root.insert(0, ".");
 	if (_root[_root.size() - 1] == '/' && _root.size() > 2)
 		_root = _root.substr(0, _root.size() - 1);
-    if (_path[_path.size() - 1] == '/' && _path.size() > 1)
-        _path = _path.substr(0, _path.size() - 1);
+    if (_locationPath[_locationPath.size() - 1] == '/' && _locationPath.size() > 1)
+        _locationPath = _locationPath.substr(0, _locationPath.size() - 1);
     if (_root.size() > 2)
-        _path = _root + _path;
+        _locationPath = _root + _locationPath;
 	else
-        _path = "." + _path;
+        _locationPath = "." + _locationPath;
+	std::cout << "path: " << _locationPath << std::endl;
     if (_clientBodySize == 0)
         _clientBodySize = curConf.getClientBodySize();
     if (_returnRedirect.first == 0)
@@ -215,7 +216,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 		_upload_store = other._upload_store;
 		_cgiPath = other._cgiPath;
 		_cgiExtension = other._cgiExtension;
-        _path = other._path;
+        _locationPath = other._locationPath;
 	}
 	return (*this);
 }
@@ -239,5 +240,5 @@ string Alocation::getCgiPath() const
 
 string Alocation::getPath() const
 {
-	return _path;
+	return _locationPath;
 }
