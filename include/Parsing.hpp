@@ -45,7 +45,7 @@ class Parsing
 
 		bool    runReadblock(void);
 		template <typename T>
-		void skipLine(string &line, bool forceSkip, T &curConf);
+		void skipLine(string &line, bool forceSkip, T &curConf, bool skipSpace);
 		// void foundServer(std::fstream &fs, std::string line);
 
 		// ConfigServer	*_confServers;

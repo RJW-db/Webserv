@@ -7,6 +7,8 @@
 
 using namespace std;
 
+
+
 bool    emptyLine(string &line, size_t &skipSpace)
 {
     skipSpace = line.find_first_not_of(" \t\f\v\r");
@@ -41,7 +43,7 @@ bool    Parsing::runReadblock()
 }
 
 template <typename T>
-void Parsing::skipLine(string &line, bool forceSkip, T &curConf)
+void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkipSpace)
 {
 	size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
     if (string::npos == skipSpace || forceSkip)
@@ -52,6 +54,8 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf)
         line = _lines.begin()->second;
         curConf.setLineNbr(_lines.begin()->first);
     }
+    if (shouldSkipSpace == true)
+        ftSkipspace(line);
 }
 
 template <typename T>
@@ -66,16 +70,13 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 		{
             throw runtime_error (to_string(_lines.begin()->first) + ": no space found after command");
 		}
-        skipLine(line, false, block);
-        ftSkipspace(line);
+        skipLine(line, false, block, true);
         string path = location.getLocationPath(line);
-        skipLine(line, false, block);
-        ftSkipspace(line);
+        skipLine(line, false, block, false);
         if (line[0] != '{')
             throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
         line = line.substr(1);
-        skipLine(line, false, block);
-        ftSkipspace(line);
+        skipLine(line, false, block, false);
         const map<string, bool (Location::*)(string &)> cmds = {
             {"root", &Location::root},
             {"client_max_body_size", &Location::ClientMaxBodysize},
@@ -102,14 +103,15 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 	bool findColon;
 	line = line.substr(cmd.first.size());
 	if (string(" \t\f\v\r\n").find(line[0]) == std::string::npos)
+    {
 		throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
+    }
 	size_t run = 0;
 	while (++run)
 	{
-		skipLine(line, false, block);
-		ftSkipspace(line);
+		skipLine(line, false, block, true);
 		findColon = (block.*(cmd.second))(line);
-		skipLine(line, false, block);
+		skipLine(line, false, block, true);
 		if (findColon == true)
 		{
 			if (run == 1)
@@ -124,19 +126,21 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
 {
 	bool findColon;
     line = line.substr(cmd.first.size());
-    skipLine(line, false, block);
+    skipLine(line, false, block, false);
     if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
+    {
         throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
+    }
     ftSkipspace(line);
     findColon = (block.*(cmd.second))(line);
     if (!findColon)
     {
-        skipLine(line, true, block);
+        skipLine(line, true, block, false);
         if (line[0] != ';')
             throw runtime_error(to_string(_lines.begin()->first) + ": no semi colon found after input");
         line = line.substr(1);
     }
-    skipLine(line, false, block);
+    skipLine(line, false, block, false);
 }
 
 template <typename T>
@@ -147,33 +151,28 @@ void Parsing::readBlock(T &block,
     string line = _lines.begin()->second;
     do
     {
-		bool in = false;
 		validSyntax = false;
         ftSkipspace(line);
-        // for (const pair<string, bool (T::*)(string &)> &cmd : cmds)
         for (const auto& cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
 			{
     			validSyntax = true;
                 cmdCheck(line, block, cmd);
-				in = true;
 			}
         }
-		// if (in == false)
-		// {
-			// for (const pair<string, bool (T::*)(string &)> &whileCmd : whileCmds)
+		if (validSyntax == false)
+		{
 			for (const auto& whileCmd : whileCmds)
 			{
 				if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
 				{
 					whileCmdCheck(line, block, whileCmd);
 					validSyntax = true;
-					in = true;
 				}
 			}
-		// }
-        if (strncmp(line.c_str(), "location", 8) == 0/*  && in == false */)
+		}
+        if (strncmp(line.c_str(), "location", 8) == 0 && validSyntax == false)
             LocationCheck(line, block, validSyntax);
 		if (validSyntax == false)
 			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
@@ -187,11 +186,11 @@ void Parsing::ServerCheck()
     curConf.setLineNbr(_lines.begin()->first);
 	string line = _lines.begin()->second;
     line = line.substr(6);
-    skipLine(line, false, curConf);
+    skipLine(line, false, curConf, false);
     if (line[0] == '{')
     {
         line = line.substr(1);
-        skipLine(line, false, curConf);
+        skipLine(line, false, curConf, false);
         const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
             {"listen", &ConfigServer::listenHostname},
             {"root", &ConfigServer::root},

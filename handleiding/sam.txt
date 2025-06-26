@@ -15,3 +15,5 @@ for us this causes: EPOLLER because we are trying to send data to a socket that 
 this also causes event EPOLLRDHUP that means the client closed the connection
 
 need to check if post still works after disconnetion after favicon loaded from cache.
+
+dingen die nog moeten worden geimplementeerd: upload_store, limit_except, autoindex, return (redirect)

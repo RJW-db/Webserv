@@ -31,9 +31,9 @@ string Location::getLocationPath(string &line)
 	string path = line.substr(0, len);
 	if (path[0] != '/')
 		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path given for location block: " + path);	
-	string pathCheck = path.substr(1);
-	if (path.length() != 1 && directoryCheck(pathCheck) == false)
-		throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
+	// string pathCheck = path.substr(1);
+	// if (path.length() != 1 && directoryCheck(pathCheck) == false)
+	// 	throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
 	line = line.substr(len);
 	_locationPath = path;
 	return path;
@@ -194,6 +194,8 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 		else
 			indexPage = _root + "/" + indexPage;
 	}
+    // if (_locationPath.size() > 2 && directoryCheck(_locationPath) == false)
+    //     throw runtime_error("invalid root + path given: " + _locationPath);
 	// if (_upload_store.empty())
 	//     _upload_store = _root;
     setDefaultErrorPages();

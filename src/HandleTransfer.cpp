@@ -38,11 +38,11 @@ HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
     return *this;
 }
 
-bool HandleTransfer::handleGetTransfer()
+void HandleTransfer::readToBuf()
 {
-    char buff[CLIENT_BUFFER_SIZE];
     if (_fd != -1)
     {
+        char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
             throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd));
@@ -60,29 +60,58 @@ bool HandleTransfer::handleGetTransfer()
         }
         if (_bytesRead == 0 || _bytesReadTotal >= _fileSize)
         {
-            // EOF reached, close file descriptor if needed
             FileDescriptor::closeFD(_fd);
             _fd = -1;
         }
     }
+}
+
+bool HandleTransfer::handleGetTransfer()
+{
+    readToBuf();
     ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), 0);
     if (sent == -1)
-        throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno));
+        throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno)); // TODO throw out client and remove handleTransfer
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
-        
         return true;
     }
     _fileBuffer = _fileBuffer.substr(_sent);
     return false;
 }
 
-// bool HandleTransfer::
+bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, int fd)
+{
+    if (boundaryBuffer.find("--" + string(client._bodyBoundary) + "--\r\n") == 2)
+    {
+        FileDescriptor::closeFD(fd);
+        string body = client._rootPath + '\n';
+        string headers =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "Content-Length: " +
+            to_string(body.size()) + "\r\n"
+                                     "\r\n" +
+            body;
 
+        send(client._fd, headers.data(), headers.size(), 0);
+        RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        return true;
+    }
+    return false;
+}
+
+void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd)
+{
+    if (remove(client._rootPath.data()))
+        std::cout << "remove failed on file:" << client._rootPath << std::endl;
+    FileDescriptor::closeFD(fd);
+    throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
+}
 
 bool HandleTransfer::handlePostTransfer()
 {
@@ -96,32 +125,12 @@ bool HandleTransfer::handlePostTransfer()
             byteswrite = _fileSize - _bytesWrittenTotal;
         ssize_t bytesWritten = write(_fd, buff, byteswrite);
         if (bytesWritten == -1)
-        {
-            // remove and filedesciptor
-            // if (!handle._filename.empty()) // assuming HandleTransfer has a _filename member
-            // 	remove(handle._filename.data());
-            FileDescriptor::closeFD(_fd);
-            throw ErrorCodeClientException(_client, 500, string("write failed HandlePostTransfer: ") + strerror(errno) + ", on fileDescriptor: " + to_string(_fd));
-        }
+            errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
         _bytesWrittenTotal += static_cast<size_t>(bytesWritten);
         if (_bytesWrittenTotal == _fileSize)
         {
             _fileBuffer.append(buff + bytesWritten, bytesReceived - byteswrite);
-            if (_fileBuffer.find("--" + string(_client._bodyBoundary) + "--\r\n") == 2)
-            {
-                FileDescriptor::closeFD(_fd);
-                string body = _client._rootPath + '\n';
-                string headers =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: text/plain\r\n"
-                    "Content-Length: " + to_string(body.size()) + "\r\n"
-                    "\r\n" +
-                    body;
-
-                send(_client._fd, headers.data(), headers.size(), 0);
-                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                return true;
-            }
+            return (foundBoundaryPost(_client, _fileBuffer, _fd));
         }
         return false;
     }
