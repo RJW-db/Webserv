@@ -112,6 +112,7 @@ bool HandleTransfer::handlePostTransfer()
                 FileDescriptor::closeFD(_fd);
                 string ok = HttpRequest::HttpResponse(200, "", 0);
                 send(_client._fd, ok.data(), ok.size(), 0);
+                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
                 return true;
             }
         }

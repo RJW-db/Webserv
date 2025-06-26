@@ -129,7 +129,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 it = _handle.erase(it);
-                setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
                 // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
