@@ -32,7 +32,7 @@ class HandleTransfer
 
 		
 
-        size_t _offset; // Offset for the data transfer
+        size_t  _offset; // Offset for the data transfer
         size_t  _bytesReadTotal;
         size_t  _headerSize;
 		

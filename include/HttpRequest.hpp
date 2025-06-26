@@ -62,7 +62,7 @@ class HttpRequest
             if (delimiter == std::string::npos) {
                 if (receivedBytes == CLIENT_BUFFER_SIZE)
                     return false;
-                throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
+                throw runtime_error("for debugging purposes, remove this line, and kick client through keep-alive check");
             }
             return true;
         }

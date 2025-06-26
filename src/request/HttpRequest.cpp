@@ -38,6 +38,7 @@
 
 bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t receivedBytes)
 {
+    
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
@@ -49,6 +50,10 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     HttpRequest::validateHEAD(client);  // TODO cleanupClient
     HttpRequest::parseHeaders(client);  // TODO cleanupClient
+    if (client._location.getRoot().back() == '/')
+        client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
+    else
+        client._rootPath = client._location.getRoot() + string(client._requestPath);
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
@@ -75,16 +80,15 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
-    client._pathFilename = client._location.getPath() + '/' + string(client._filename);
-    // client._pathFilename = client._location.getPath() + '/' + string("photo.png");
-    int fd = open(client._pathFilename.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    std::cout << "File descriptor set to: " << fd << "for post" << std::endl;
+
+    client._rootPath = client._rootPath + "/" + string(client._filename);
+    int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
         if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._pathFilename);
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
         else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._pathFilename);
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
     }
     FileDescriptor::setFD(fd);
     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
@@ -104,6 +108,7 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
             // Fix: Complete HTTP response with proper headers
             string ok = HttpRequest::HttpResponse(200, "", 0);
             send(client._fd, ok.data(), ok.size(), 0);
+            RunServers::clientHttpCleanup(client);
             return true;
         }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
@@ -128,8 +133,7 @@ void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWrit
 void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
-    headStream >> client._method >> client._path >> client._version;
-
+    headStream >> client._method >> client._requestPath >> client._version;
     RunServers::setServer(client);
     RunServers::setLocation(client);
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
@@ -138,9 +142,9 @@ void    HttpRequest::validateHEAD(Client &client)
             // sendErrorResponse(client._fd, "400 Bad Request");
     }
 
-    if (client._path.empty() || client._path.data()[0] != '/')
+    if (client._requestPath.empty() || client._requestPath.data()[0] != '/' || client._requestPath.find("../") != string::npos)
     {
-        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._path);
+        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
     }
 
     if (client._version != "HTTP/1.1")
@@ -187,14 +191,7 @@ void HttpRequest::parseHeaders(Client &client)
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
-
-    size_t isPhoto = client._path.find(".png");
-
-    if (client._path[0] == '/' && client._path.size() == 1)
-        client._path = client._location.getRoot() + string(client._path);
-    
-    cout << "\thiero " <<  client._path << endl;
-    if (stat(client._path.data(), &status) == -1)
+    if (stat(client._rootPath.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");
     }
@@ -217,7 +214,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
                     cerr << "locateRequestedFile: " << strerror(errno) << endl;
                     continue;
                 }
-                client._path = indexPage; // found index
+                client._rootPath = indexPage; // found index
                 // cout << "\t" << client._path << endl;
                 return;
             }
@@ -234,11 +231,10 @@ void    HttpRequest::locateRequestedFile(Client &client)
         }
     } else if (S_ISREG(status.st_mode))
     {
-        if (access(client._path.data(), R_OK) == -1)
+        if (access(client._rootPath.data(), R_OK) == -1)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
-        // cout << "\t" << client._path << endl;
     }
     else
     {
@@ -282,13 +278,13 @@ void    HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
 
-    int fd = open(client._path.data(), R_OK);
+    int fd = open(client._rootPath.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(client._path);
-    string responseStr = HttpResponse(200, client._path, fileSize);
+    size_t fileSize = getFileLength(client._rootPath);
+    string responseStr = HttpResponse(200, client._rootPath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 }
@@ -336,11 +332,9 @@ void HttpRequest::getContentLength(Client &client)
 void    HttpRequest::handleRequest(Client &client)
 {
     // validateHEAD(_client);
-
-    // std::cout << escape_special_chars(client._header) << std::endl;
-    if (client._path == "/favicon.ico")
+    if (client._rootPath == "/favicon.ico")
 	{
-        client._path = "/favicon.svg";
+        client._rootPath = "/favicon.svg";
 	}
     if (client._headerFields.find("Host") == client._headerFields.end())
         throw RunServers::ClientException("Missing Host header");
@@ -357,26 +351,26 @@ void    HttpRequest::handleRequest(Client &client)
     else if (client._method == "DELETE")
     {
         struct stat status;
-        size_t isPhoto = client._path.find(".png");
+        size_t isPhoto = client._rootPath.find(".png");
 
-        client._path = "./upload" + string(client._path);
+        client._rootPath = "./upload" + string(client._requestPath);
         
-        cout << client._path << endl;
-        if (stat(client._path.data(), &status) == -1)
+        cout << client._requestPath << endl;
+        if (stat(client._rootPath.data(), &status) == -1)
         {
             throw RunServers::ClientException("non existent file in DELETE");
         }
 
         if (S_ISREG(status.st_mode))
         {
-            if (access(client._path.data(), R_OK) == -1)
+            if (access(client._rootPath.data(), R_OK) == -1)
             {
                 cerr << "locateRequestedFile: " << strerror(errno) << endl;
             }
         }
 
         // if (remove("sam") != 0)
-        if (remove(client._path.data()) != 0)
+        if (remove(client._rootPath.data()) != 0)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }

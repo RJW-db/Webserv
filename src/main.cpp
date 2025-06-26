@@ -34,8 +34,7 @@ static void examples(void);
 int main()
 {
 	Parsing test("config/default.conf");
-	test.printAll();
-
+	// test.printAll();
 	RunServers::createServers(test.getConfigs());
     RunServers::runServers();
 	

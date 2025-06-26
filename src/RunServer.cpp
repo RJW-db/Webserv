@@ -95,6 +95,7 @@ int RunServers::runServers()
         }
         try
         {
+            // std::cout << "event count "<<  eventCount << std::endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
         catch(const ErrorCodeClientException& e)
@@ -118,6 +119,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
         if ((*it)->_client._fd == eventFD)
         {
             HandleTransfer &handle = **it;
+            Client &client = handle._client;
             _clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
@@ -127,8 +129,13 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             if (finished == true)
             {
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
+                {
                     cleanupClient(*_clients[(*it)->_client._fd]);
+                }
                 it = _handle.erase(it);
+                clientHttpCleanup(client);
+                // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+
                 // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
@@ -144,27 +151,37 @@ void RunServers::handleEvents(size_t eventCount)
     for (size_t i = 0; i < eventCount; ++i)
     {
 		struct epoll_event &currentEvent = _events[i];
-        int eventFD = currentEvent.data.fd;
-        if (currentEvent.events & EPOLLHUP) // turned off epollerr
-        {
-            cout << "client closed connection on fd: " << eventFD << std::endl;
-            cleanupClient(*_clients[eventFD].get());
-            continue ;
-        }
-        if (currentEvent.events & EPOLLERR || !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-        {
-            int socket_error = 0;
-            socklen_t len = sizeof(socket_error);
-            if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
+        // if ((currentEvent.events & EPOLLERR) ||
+        //     (currentEvent.events & EPOLLHUP) ||
+        //     (currentEvent.events & EPOLLIN) == 0)
+        // {
+        // std::cout << '1' << std::endl;
+            if (currentEvent.events & EPOLLERR)
             {
-                std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
+                int socket_error = 0;
+                socklen_t len = sizeof(socket_error);
+                if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
+                {
+                    std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
+                }
+                std::cerr << "epoll error on fd " << currentEvent.data.fd
+                          << " (events: " << currentEvent.events << ")" << std::endl;
+                cleanupClient(*_clients[currentEvent.data.fd].get());
+                continue;
             }
-            std::cerr << "epoll error on fd " << currentEvent.data.fd
-                      << " (events: " << currentEvent.events << ")" << std::endl;
-            cleanupFD(currentEvent.data.fd);
-            exit(1);
+        // std::cout << '2' << std::endl;
+
+        if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
+           !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
+        {
+            std::cerr << "epoll fault on fd " << currentEvent.data.fd
+            << " (events: " << currentEvent.events << ")" << std::endl;
+            // std::cout << errno << std::endl;
+                cleanupFD(currentEvent.data.fd);
             continue;
         }
+        // std::cout << '3' << std::endl;
+
         // bool handltransfers = true;
         for (const unique_ptr<Server> &server : _servers)
         {
@@ -173,17 +190,23 @@ void RunServers::handleEvents(size_t eventCount)
             {
                 // handltransfers = false;
                 acceptConnection(server);
-                continue ;
+                break;
             }
         }
+        // std::cout << '4' << std::endl;
+
         if (runHandleTransfer(currentEvent) == true)
-            continue ;
+            continue;
+        // std::cout << '5' << std::endl;
+        
 		if ((_clients.find(eventFD) != _clients.end()) &&
 			(currentEvent.events & EPOLLIN))
 		{
+            // std::cout << "5in" << std::endl;
 			processClientRequest(*_clients[eventFD].get());
-			continue ;
+			continue;
 		}
+        // std::cout << '6' << std::endl;
         
     }
 }

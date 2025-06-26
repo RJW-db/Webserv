@@ -29,7 +29,7 @@ class Alocation : public Aconfig
 		string _upload_store;
 		string _cgiExtension;
 		string _cgiPath;
-		string _path; // includes root + path;
+		string _locationPath; // includes root + path;
 };
 
 

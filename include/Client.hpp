@@ -32,12 +32,14 @@ class Client
 
         unique_ptr<Server> _usedServer;
         Location _location;
+        string_view _uploadPath;
 
         int8_t _headerParseState;
         string _header;
         string _body;
         string _method;
-        string _path;
+        string _requestPath;
+        string _rootPath; // root + requestpath + filename
         string _version;
         size_t _contentLength = 0;
 
