@@ -66,10 +66,6 @@ bool HandleTransfer::handleGetTransfer()
         }
     }
     ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), 0);
-    // std::cout << "headersize:" << _headerSize << std::endl;
-    // std::cout << "sent bytes: " << sent << ",send data:" << _fileBuffer.substr(0, sent) << std::endl;
-    // std::cout << "sent:" << escape_special_chars( _fileBuffer) << std::endl;
-    // std::cout << "total file size:" << _fileSize  << std::endl;
     if (sent == -1)
         throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno));
     size_t _sent = static_cast<size_t>(sent);
@@ -112,13 +108,8 @@ bool HandleTransfer::handlePostTransfer()
             if (_fileBuffer.find("--" + string(_client._bodyBoundary) + "--\r\n") == 2)
             {
                 FileDescriptor::closeFD(_fd);
-                // string ok = HttpRequest::HttpResponse(200, "", 0);
-                // std::cout << escape_special_chars(ok) << std::endl;
-                // send(_client._fd, ok.data(), ok.size(), 0);
-                std::cout << "handletrafsner:  " << _client._rootPath << std::endl;
-                std::string body = _client._rootPath + '\n';
-                // std::string body = "photo.png\n";
-                std::string headers =
+                string body = _client._rootPath + '\n';
+                string headers =
                     "HTTP/1.1 200 OK\r\n"
                     "Content-Type: text/plain\r\n"
                     "Content-Length: " + to_string(body.size()) + "\r\n"
@@ -131,9 +122,9 @@ bool HandleTransfer::handlePostTransfer()
         }
         return false;
     }
-    catch(const std::exception& e)
+    catch(const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
         return true;
     }
     return true;

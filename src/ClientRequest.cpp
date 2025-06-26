@@ -28,7 +28,8 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[CLIENT_BUFFER_SIZE + 1];
         size_t bytesReceived = receiveClientData(client, buff);
-        buff[CLIENT_BUFFER_SIZE] = '\0';
+        
+
         static bool (*const handlers[])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
             &HttpRequest::parseHttpBody,                       // HEADER_PARSED_POST (1)
@@ -60,6 +61,7 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
+    buff[CLIENT_BUFFER_SIZE] = '\0';
     client.setDisconnectTime(disconnectDelaySeconds);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     if (bytesReceived < 0)

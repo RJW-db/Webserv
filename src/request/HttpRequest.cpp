@@ -41,7 +41,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
-    std::cout << escape_special_chars(client._header) << std::endl;
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
         return false;
 
@@ -78,15 +77,11 @@ bool HttpRequest::parseHttpBody(Client &client, const char* buff, size_t receive
 
 bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
 {
-    // std::cout << escape_special_chars(client._header) << std::endl;
-    // std::cout << client._filename << std::endl;
-    // std::cout << client._location.getPath() << std::endl;
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
 
     client._rootPath = client._rootPath + "/" + string(client._filename);
-    std::cout << "before post filename: " << client._rootPath << std::endl;
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
@@ -141,7 +136,6 @@ void    HttpRequest::validateHEAD(Client &client)
     headStream >> client._method >> client._requestPath >> client._version;
     RunServers::setServer(client);
     RunServers::setLocation(client);
-    std::cout << "setlocation" << std::endl;
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
         throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
@@ -175,7 +169,6 @@ void HttpRequest::parseHeaders(Client &client)
     while (start < client._header.size())
     {
         size_t end = client._header.find("\r\n", start);
-        std::cout << client._header << std::endl;
         if (end == string::npos)
             throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
 
@@ -198,16 +191,10 @@ void HttpRequest::parseHeaders(Client &client)
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
-
-
-    // std::cout << "getpath " << client._location.getRoot() << std::endl;
-    std::cout << "sam: " << client._rootPath << std::endl;
-
     if (stat(client._rootPath.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");
     }
-    // std::cout << "getroot " << client._location.getRoot() << std::endl;
 
     if (S_ISDIR(status.st_mode))
     {
@@ -248,7 +235,6 @@ void    HttpRequest::locateRequestedFile(Client &client)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
-        // cout << "\t" << client._path << endl;
     }
     else
     {
@@ -346,7 +332,6 @@ void HttpRequest::getContentLength(Client &client)
 void    HttpRequest::handleRequest(Client &client)
 {
     // validateHEAD(_client);
-    // std::cout << escape_special_chars(client._header) << std::endl;
     if (client._rootPath == "/favicon.ico")
 	{
         client._rootPath = "/favicon.svg";

@@ -170,7 +170,6 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _locationPath = _root + _locationPath;
 	else
         _locationPath = "." + _locationPath;
-	std::cout << "path: " << _locationPath << std::endl;
     if (_clientBodySize == 0)
         _clientBodySize = curConf.getClientBodySize();
     if (_returnRedirect.first == 0)
