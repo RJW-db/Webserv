@@ -34,13 +34,14 @@ int RunServers::epollInit(/* ServerList &servers */)
     return 0;
 }
 
-void RunServers::acceptConnection(const unique_ptr<Server> &server)
+void RunServers::acceptConnection(const int listener)
 {
     while (true)
     {
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
-        int infd = accept(server->getListeners()[0], &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
+        errno = 0;
+        int infd = accept(listener, &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
         if(infd == -1)
         {
             if(errno != EAGAIN)

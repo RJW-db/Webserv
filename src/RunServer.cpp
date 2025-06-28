@@ -78,7 +78,7 @@ int RunServers::runServers()
     {
         int eventCount;
         
-        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        std::cout << "Blocking and waiting for epoll event..." << std::endl;
         // for (auto it = _clients.begin(); it != _clients.end();)
 		// {
 		// 	unique_ptr<Client> &client = it->second;
@@ -86,7 +86,6 @@ int RunServers::runServers()
 		// 	if (client->_keepAlive == false || client->_disconnectTime <= chrono::steady_clock::now())
 		// 		cleanupClient(*client);
 		// }
-		
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -97,10 +96,6 @@ int RunServers::runServers()
         {
             // std::cout << "event count "<<  eventCount << std::endl;
             handleEvents(static_cast<size_t>(eventCount));
-        }
-        catch(const ErrorCodeClientException& e)
-        {
-            e.handleErrorClient();
         }
         catch(const std::exception& e)
         {
@@ -129,13 +124,13 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             if (finished == true)
             {
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
-                {
                     cleanupClient(*_clients[(*it)->_client._fd]);
+                else
+                {
+                    _handle.erase(it);
+                    clientHttpCleanup(client);
                 }
-                it = _handle.erase(it);
-                clientHttpCleanup(client);
                 // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-
                 // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
@@ -150,65 +145,51 @@ void RunServers::handleEvents(size_t eventCount)
     // std::cout << "\t" << eventCount << std::endl;
     for (size_t i = 0; i < eventCount; ++i)
     {
-		struct epoll_event &currentEvent = _events[i];
-        int eventFD = currentEvent.data.fd;
-        // if ((currentEvent.events & EPOLLERR) ||
-        //     (currentEvent.events & EPOLLHUP) ||
-        //     (currentEvent.events & EPOLLIN) == 0)
-        // {
-        // std::cout << '1' << std::endl;
-            if (currentEvent.events & EPOLLHUP)
+        try
+        {
+            struct epoll_event &currentEvent = _events[i];
+            int eventFD = currentEvent.data.fd;
+
+            if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
+                !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
-                int socket_error = 0;
-                socklen_t len = sizeof(socket_error);
-                if (getsockopt(currentEvent.data.fd, SOL_SOCKET, SO_ERROR, &socket_error, &len) == 0)
-                {
-                    std::cerr << "Socket error: " << strerror(socket_error) << std::endl;
-                }
-                std::cerr << "epoll error on fd " << currentEvent.data.fd
+                std::cerr << "epoll fault on fd " << currentEvent.data.fd
                           << " (events: " << currentEvent.events << ")" << std::endl;
+                // std::cout << errno << std::endl;
                 cleanupClient(*_clients[currentEvent.data.fd].get());
                 continue;
             }
-        // std::cout << '2' << std::endl;
-
-        if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
-           !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-        {
-            std::cerr << "epoll fault on fd " << currentEvent.data.fd
-            << " (events: " << currentEvent.events << ")" << std::endl;
-            // std::cout << errno << std::endl;
-            cleanupClient(*_clients[currentEvent.data.fd].get());
-            continue;
-        }
-        // std::cout << '3' << std::endl;
-
-        // bool handltransfers = true;
-        for (const unique_ptr<Server> &server : _servers)
-        {
-            vector<int> &listeners = server->getListeners();
-            if (find(listeners.begin(), listeners.end(), eventFD) != listeners.end() && currentEvent.events == EPOLLIN)
+            for (const unique_ptr<Server> &server : _servers)
             {
-                // handltransfers = false;
-                acceptConnection(server);
-                break;
+                vector<int> &listeners = server->getListeners();
+                auto it = find(listeners.begin(), listeners.end(), eventFD);
+                if (it != listeners.end() && currentEvent.events == EPOLLIN)
+                {
+                    // handltransfers = false;
+                    acceptConnection(*it);
+                    break;
+                }
             }
-        }
-        // std::cout << '4' << std::endl;
+            // std::cout << '4' << std::endl;
 
-        if (runHandleTransfer(currentEvent) == true)
-            continue;
-        // std::cout << '5' << std::endl;
-        
-		if ((_clients.find(eventFD) != _clients.end()) &&
-			(currentEvent.events & EPOLLIN))
-		{
-            // std::cout << "5in" << std::endl;
-			processClientRequest(*_clients[eventFD].get());
-			continue;
-		}
-        // std::cout << '6' << std::endl;
-        
+            if (runHandleTransfer(currentEvent) == true)
+                continue;
+            // std::cout << '5' << std::endl;
+
+            if ((_clients.find(eventFD) != _clients.end()) &&
+                (currentEvent.events & EPOLLIN))
+            {
+                // std::cout << "5in" << std::endl;
+                processClientRequest(*_clients[eventFD].get());
+                continue;
+            }
+            // std::cout << '6' << std::endl;
+        }
+        catch (const ErrorCodeClientException &e)
+        {
+            std::cout << "error client" << std::endl; // testcout
+            e.handleErrorClient();
+        }
     }
 }
 

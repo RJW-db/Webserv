@@ -70,6 +70,7 @@ bool HandleTransfer::handleGetTransfer()
 {
     readToBuf();
     ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), 0);
+    std::cout << "sent:" << _fileBuffer << std::endl; //testcout
     if (sent == -1)
         throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno)); // TODO throw out client and remove handleTransfer
     size_t _sent = static_cast<size_t>(sent);
