@@ -31,7 +31,7 @@
 extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
-FileDescriptor RunServers::_fds;
+// FileDescriptor RunServers::_fds;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
@@ -130,6 +130,8 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                     _handle.erase(it);
                     clientHttpCleanup(client);
                 }
+                // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+                // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
         }
@@ -185,6 +187,7 @@ void RunServers::handleEvents(size_t eventCount)
         }
         catch (const ErrorCodeClientException &e)
         {
+            std::cout << "error client" << std::endl; // testcout
             e.handleErrorClient();
         }
     }
