@@ -75,7 +75,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     {
         cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
         RunServers::cleanupClient(client);
-        throw runtime_error("Client disconnected after read of 0");
+        // throw runtime_error("Client disconnected after read of 0");
     }
     return (0); // You never get here
 }

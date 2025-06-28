@@ -28,4 +28,5 @@ void ErrorCodeClientException::handleErrorClient() const
     string response = HttpRequest::HttpResponse(it->first, it->second, fileSize);
     auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
+    _client._keepAlive = false; // TODO: check if this is needed
 }

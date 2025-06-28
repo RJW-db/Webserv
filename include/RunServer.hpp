@@ -43,7 +43,7 @@ class RunServers
         // static int runServers(vector<Server>& servers);
         static int runServers();
         static void handleEvents(size_t eventCount);
-        static void acceptConnection(const unique_ptr<Server> &server);
+        static void acceptConnection(const int listener);
         static void processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);
 
