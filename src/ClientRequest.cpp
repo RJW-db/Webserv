@@ -26,6 +26,7 @@ void RunServers::processClientRequest(Client &client)
 {
     try
     {
+        std::cout << "client request received from fd: " << client._fd << std::endl; //testcout
         char   buff[CLIENT_BUFFER_SIZE + 1];
         size_t bytesReceived = receiveClientData(client, buff);
         
@@ -36,11 +37,12 @@ void RunServers::processClientRequest(Client &client)
             [](Client&, const char*, size_t) { return true; } // HEADER_PARSED_NON_POST (2)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
-            return;
+            return ;
         HttpRequest::handleRequest(client);
     }
     catch(const exception& e)   // if catch we don't handle well
-    {
+    {\
+        std::cout << "got here" << std::endl; //testcout
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
@@ -60,7 +62,7 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
-    buff[CLIENT_BUFFER_SIZE] = '\0';
+    // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(disconnectDelaySeconds);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     if (bytesReceived > 0)
@@ -73,7 +75,17 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
+        std::cerr << "client read 0 unsure what to do? errno is :" << errno << std::endl; //TODO: handle this better
+    int error = 0;
+    socklen_t len = sizeof(error);
+    getsockopt(client._fd, SOL_SOCKET, SO_ERROR, &error, &len);
+    std::cout << "Client disconnected, socket error: " << error << std::endl;
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            // cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
+            return 0; // No data to read, just return
+        }
+        // cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
         RunServers::cleanupClient(client);
         // throw runtime_error("Client disconnected after read of 0");
     }

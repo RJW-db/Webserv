@@ -1,19 +1,34 @@
-check if stoi should throw errors for letters in Configserver or check before
-
-methods POST GET; doesn't work for nginx:  limit_except GET POST {deny all;}
-
-{} location
-
-check nginx default location
-
-
-testen of recv als firefox sluit alleen gebeurd als firefox epoll error heeft
-
-epoll error:
-client requests to close connection after finding something in cache before it receives the data from the server.
-for us this causes: EPOLLER because we are trying to send data to a socket that was closed by the client. 
-this also causes event EPOLLRDHUP that means the client closed the connection
-
-need to check if post still works after disconnetion after favicon loaded from cache.
 
 dingen die nog moeten worden geimplementeerd: upload_store, limit_except, autoindex, return (redirect)
+
+How to Handle POST Content Types
+
+Your server should read the Content-Type header to determine how to parse the body.
+
+For application/x-www-form-urlencoded, parse the body as key-value pairs.
+
+For multipart/form-data, implement multipart parsing to handle file uploads and fields.
+
+For text/plain and others, treat the body as raw data.
+
+For application/json, treat the body as a JSON string (parsing is optional unless required by your application logic).
+
+Project-Specific Features
+
+
+
+tests te maken
+
+Get indexpage
+get pdf (different HOst)
+get nonexistent
+get js (different Host)
+get jpg (different host matches but nut port match)
+get xml
+
+Post txt
+post jpg
+post png
+
+
+

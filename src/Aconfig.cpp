@@ -27,6 +27,8 @@ bool Aconfig::root(string &line)
 {
 	if (!_root.empty())
 		throw runtime_error(to_string(_lineNbr) + ": root: tried setting second root");
+	if (line[0] != '/')
+		throw runtime_error(to_string(_lineNbr) + ": root: first character must be /: " + line);
 	size_t lenRoot = line.find_first_of(" \t\f\v\r;");
 	if (lenRoot == string::npos)
 	{
