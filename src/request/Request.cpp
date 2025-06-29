@@ -182,7 +182,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
     
     if (stat(client._rootPath.data(), &status) == -1)
     {
-        throw RunServers::ClientException("non existent file GET");
+        throw ErrorCodeClientException(client, 404, "couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
     }
 
     if (S_ISDIR(status.st_mode))
@@ -248,7 +248,8 @@ string HttpRequest::getMimeType(string &path)
         { "pdf",  "application/pdf" },
         { "txt",  "text/plain" },
         { "mp4",  "video/mp4" },
-        { "webm", "video/webm" }
+        { "webm", "video/webm" },
+        { "xml",  "application/xml" }
     };
 
     size_t dotIndex = path.find_last_of('.');

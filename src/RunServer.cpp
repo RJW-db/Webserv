@@ -123,6 +123,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 finished = handle.handlePostTransfer();
             if (finished == true)
             {
+                std::cout << "file proccessed succesfully" << std::endl; //testcout
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 else

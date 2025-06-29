@@ -119,11 +119,16 @@ bool HandleTransfer::handlePostTransfer()
     {
         char buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = RunServers::receiveClientData(_client, buff);
+        // if (bytesReceived == 0)
+        // {
+        //     std::cout << "hier" << std::endl; //testcout
+        // }
         size_t byteswrite = bytesReceived;
 
         if (bytesReceived > _fileSize - _bytesWrittenTotal)
             byteswrite = _fileSize - _bytesWrittenTotal;
         ssize_t bytesWritten = write(_fd, buff, byteswrite);
+        // std::cout << bytesWritten << ", " << _bytesWrittenTotal << std::endl; //testcout
         if (bytesWritten == -1)
             errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
         _bytesWrittenTotal += static_cast<size_t>(bytesWritten);

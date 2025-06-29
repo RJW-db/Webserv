@@ -31,9 +31,12 @@ volatile sig_atomic_t g_signal_status = 0;
 // Static Functions
 static void examples(void);
 
-int main()
+int main(int argc, char **argv)
 {
-	Parsing test("config/default.conf");
+    string configFile = "config/default.conf";
+    if (argc > 1)
+        configFile = argv[1];
+	Parsing test(configFile.data());
 	// test.printAll();
 	RunServers::createServers(test.getConfigs());
     RunServers::runServers();
