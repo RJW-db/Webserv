@@ -28,7 +28,6 @@
 #include <dirent.h>
 
 #include <signal.h>
-extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
 // FileDescriptor RunServers::_fds;
@@ -39,6 +38,10 @@ ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
+
+void RunServers::cleanupServer()
+{
+}
 
 RunServers::~RunServers()
 {
