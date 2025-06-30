@@ -92,7 +92,8 @@ int RunServers::runServers()
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
-            break ;
+            if (errno == EINTR)
+                break ;
             throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
         }
         try
