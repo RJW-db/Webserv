@@ -212,7 +212,7 @@ bool Aconfig::handleNearEndOfLine(string &line, size_t pos, string err)
 
 void Aconfig::setDefaultErrorPages()
 {
-    uint16_t errorCodes[11] = {400, 403, 404, 405, 413, 431, 500, 501, 502, 503, 504};
+    uint16_t errorCodes[12] = {400, 403, 404, 405, 413, 414, 431, 500, 501, 502, 503, 504};
 
     for (uint16_t errorCode : errorCodes)
     {

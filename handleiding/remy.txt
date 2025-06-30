@@ -33,6 +33,7 @@ inside the project
 echo -e "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n" > test.txt
 
 cat handleiding/clientHttpRequest.txt | nc 10.11.4.3 8080
+cat test.txt | nc 10.11.4.3 8080
 
 
 als request geparseerd en volledig ontvangen dan clear fdBuffer van fd
