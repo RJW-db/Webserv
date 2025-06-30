@@ -29,7 +29,7 @@
 
 #include <signal.h>
 
-#include <cstdio>   // std::remove
+#include <cstdio>   // remove
 
 #include <fstream>
 #include <sstream>
@@ -100,7 +100,7 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     unique_ptr<HandleTransfer> handle;
     if (bytesWritten == totalWriteSize)
     {
-        std::string boundaryCheck = content.substr(bytesWritten);
+        string boundaryCheck = content.substr(bytesWritten);
         if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
             return true;
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
@@ -122,64 +122,7 @@ void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWrit
     totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
 }
 
-bool pathContainsValidCharacters(const string& path)
-{
-    for (size_t i = 0; i < path.size(); ++i) {
-        char c = path[i];
-        if (!isprint(static_cast<unsigned char>(c)) || c == '/' || c == '\0') {
-            return false; // Invalid character found
-        }
-    }
-    return true; // All characters are allowed
-}
 
-bool normalizeRequestPath(Client &client)
-{
-    string &path = client._requestPath;
-
-    if (client._requestPath.empty() || client._requestPath.data()[0] != '/' ||
-        path.find("...") != string::npos || pathContainsValidCharacters(path))
-    {
-        return false;
-    }
-std::cout << "nope" << std::endl; //testcout
-    size_t pos = 0;
-    size_t lastOccurence = 0;
-    while ((pos = path.find("..", pos)) != string::npos)
-    {
-        if (path[pos - 1] != '/')
-            return false;
-        std::cout << "times" << std::endl; //testcout
-        pos += 3;
-        lastOccurence += 3;
-    }
-    std::cout << pos << std::endl; //testcout
-    std::cout << lastOccurence << std::endl; //testcout
-    std::cout << path.substr(lastOccurence) << std::endl; //testcout
-    return false;
-}
-void    HttpRequest::validateHEAD(Client &client)
-{
-    istringstream headStream(client._header);
-    headStream >> client._method >> client._requestPath >> client._version;
-    RunServers::setServer(client);
-    RunServers::setLocation(client);
-    if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
-    {
-        throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
-            // sendErrorResponse(client._fd, "400 Bad Request");
-    }
-    
-    if (client._requestPath.empty() || client._requestPath.data()[0] != '/' || normalizeRequestPath(client)/* client._requestPath.find("../") != string::npos */)
-    {
-        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
-    }
-
-    if (client._version != "HTTP/1.1")
-    {
-        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
-    }
-}
 
 static string_view trimWhiteSpace(string_view sv)
 {
@@ -238,8 +181,6 @@ void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
     
-
-
     if (stat(client._rootPath.data(), &status) == -1)
     {
         throw RunServers::ClientException("non existent file GET");

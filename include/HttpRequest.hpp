@@ -87,8 +87,6 @@ class HttpRequest
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
         // static Location &setLocation();
-
-        
     private:
         // Client &_client;
 
