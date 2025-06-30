@@ -28,10 +28,9 @@
 #include <dirent.h>
 
 #include <signal.h>
-extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
-FileDescriptor RunServers::_fds;
+// FileDescriptor RunServers::_fds;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
@@ -39,6 +38,10 @@ ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
+
+void RunServers::cleanupServer()
+{
+}
 
 RunServers::~RunServers()
 {
@@ -89,7 +92,8 @@ int RunServers::runServers()
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
-            break ;
+            if (errno == EINTR)
+                break ;
             throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
         }
         try
@@ -131,8 +135,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                     _handle.erase(it);
                     clientHttpCleanup(client);
                 }
-                // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
         }
@@ -198,8 +200,6 @@ void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
     _handle.push_back(move(handle));
     // TODO removal functions
 }
-
-
 
 
 // bool RunServers::handlingSend(HandleTransfer &ht)

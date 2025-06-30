@@ -7,8 +7,6 @@
 
 using namespace std;
 
-
-
 bool    emptyLine(string &line, size_t &skipSpace)
 {
     skipSpace = line.find_first_not_of(" \t\f\v\r");

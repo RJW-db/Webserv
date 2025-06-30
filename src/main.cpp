@@ -24,27 +24,38 @@
 // #include <iostream>
 // #include <memory>
 // #include <vector>
-#include <signal.h>
 volatile sig_atomic_t g_signal_status = 0;
 
 #include <sys/stat.h>
 // Static Functions
 static void examples(void);
 
-int main(int argc, char **argv)
+void sigint_handler(int signum)
 {
-    string configFile = "config/default.conf";
-    if (argc > 1)
-        configFile = argv[1];
-	Parsing test(configFile.data());
-	// test.printAll();
-	RunServers::createServers(test.getConfigs());
+    std::cout << "sigint received stopping webserver" << std::endl; //testcout
+    g_signal_status = signum;
+}
+
+int main()
+{
+    FileDescriptor::initializeAtexit();
+    if (signal(SIGINT, &sigint_handler))
+    {
+        std::cerr << "Error setting up signal handler: " << strerror(errno) << std::endl;
+        return 1;
+    }
+    
+    Parsing test("config/default.conf");
+    // test.printAll();
+    RunServers::createServers(test.getConfigs());
     RunServers::runServers();
-	
-	
-	// examples();
+    
+    RunServers::cleanupServer(); // does nothing for now
+    // FileDescriptor::cleanupFD();
+    // examples();
     return 0;
 }
+
 
 
 static void examples(void)
