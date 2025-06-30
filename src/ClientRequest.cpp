@@ -187,7 +187,7 @@ void RunServers::cleanupFD(int fd)
     {
         cerr << "epoll_ctl: " << strerror(errno) << endl;
     }
-    _fds.closeFD(fd);
+    FileDescriptor::closeFD(fd);
 }
 
 void RunServers::cleanupClient(Client &client)

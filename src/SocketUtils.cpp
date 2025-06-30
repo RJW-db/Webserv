@@ -12,6 +12,7 @@ int RunServers::epollInit(/* ServerList &servers */)
         cerr << "Server epoll_create: " << strerror(errno);
         return -1;
     }
+    FileDescriptor::setFD(_epfd);
     vector<int> seenInts;
     for (const unique_ptr<Server> &server : _servers)
     {
@@ -70,7 +71,7 @@ void RunServers::acceptConnection(const int listener)
             close(infd);
             break;
         }
-        _fds.setFD(infd);
+        FileDescriptor::setFD(infd);
         // insertClientFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
 		_clients[infd]->setDisconnectTime(disconnectDelaySeconds);

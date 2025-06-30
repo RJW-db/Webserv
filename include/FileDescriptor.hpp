@@ -17,8 +17,8 @@ using namespace std;
 class FileDescriptor
 {
 	public:
-		FileDescriptor();
-		~FileDescriptor();
+        static void initializeAtexit();
+        static void cleanupFD();
 
 		static void	setFD(int fd);
 		static void	closeFD(int fd);
@@ -29,7 +29,8 @@ class FileDescriptor
 		
 	private:
 		static vector<int> _fds;
-		static map<chrono::steady_clock::time_point, int> _clientFDS;
+        FileDescriptor() = delete;
+        // static std::vector<int>& getFds();
 };
 
 
