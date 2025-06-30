@@ -21,7 +21,6 @@ rm -rf results/*
 mkdir -p results/upload1 results/upload2 results/upload3
 
 # Create results directory if it doesn't exist
-mkdir -p results/upload1
 
 # # Test 1: Basic GET request to port 8080
 # echo "1. Testing GET / request to localhost:15000/"
