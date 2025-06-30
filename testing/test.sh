@@ -63,13 +63,13 @@ curl -i -X POST -H "Expect:" -H "Host: server1" -F "myfile=@expectedResults/uplo
 echo -e "\n"
 
 # Test 9: POST request to upload large text file to server3
-echo "9. Testing POST request to upload large100mb.txt to localhost:15000/upload with Host header 'server3' which should fail due to size limit"
-curl -i -X POST -H "Expect:" -H "Host: server3" -F "myfile=@expectedResults/upload3/large100mb.txt" http://localhost:15000/upload3 > results/post4.txt
+echo "9. Testing POST request to upload large1mb.txt to localhost:15000/upload with Host header 'server3' which should fail due to size limit"
+curl -i -X POST -H "Expect:" -H "Host: server3" -F "myfile=@expectedResults/upload3/large1mb.txt" http://localhost:15000/upload3 > results/post4.txt
 echo -e "\n"
 
-# Test 9: POST request to upload large text file to server1
-echo "10. Testing POST request to upload large100mb.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Host: server1" -F "myfile=@expectedResults/upload1/large100mb.txt" http://localhost:15000/upload1 > results/post4.txt
+# Test 10: POST request to upload large text file to server1
+echo "10. Testing POST request to upload large1mb.txt to localhost:15000/upload with Host header 'server1'"
+curl -i -X POST -H "Expect:" -H "Host: server1" -F "myfile=@expectedResults/upload1/large1mb.txt" http://localhost:15000/upload1 > results/post5.txt
 echo -e "\n"
 
 sleep 0.5
