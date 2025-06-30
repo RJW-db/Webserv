@@ -130,8 +130,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                     _handle.erase(it);
                     clientHttpCleanup(client);
                 }
-                // setEpollEvents((*it)->_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                // std::cout << "current epoll event:" << currentEvent.events << std::endl;
             }
             return true;
         }
@@ -187,7 +185,6 @@ void RunServers::handleEvents(size_t eventCount)
         }
         catch (const ErrorCodeClientException &e)
         {
-            std::cout << "error client" << std::endl; // testcout
             e.handleErrorClient();
         }
     }
