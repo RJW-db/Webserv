@@ -50,8 +50,7 @@ int main()
     RunServers::createServers(test.getConfigs());
     RunServers::runServers();
     
-    RunServers::cleanupServer();
-    std::cout << "ervoor\n\n" << std::endl; //testcout
+    RunServers::cleanupServer(); // does nothing for now
     // FileDescriptor::cleanupFD();
     // examples();
     return 0;

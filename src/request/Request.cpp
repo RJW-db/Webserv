@@ -176,6 +176,41 @@ void HttpRequest::decodeSafeFilenameChars(Client &client)
         throw ErrorCodeClientException(client, 400, "bad filename given by client:" + client._rootPath);
 }
 
+void    HttpRequest::findIndexFile(Client &client, struct stat &status)
+{
+    // searching for indexpage in directory
+    for (string &indexPage : client._location.getIndexPage())
+    {
+        // cout << "indexPage " << indexPage << endl;
+        if (stat(indexPage.data(), &status) == 0)
+        {
+            if (S_ISDIR(status.st_mode) == true ||
+                S_ISREG(status.st_mode) == false)
+            {
+                continue;
+            }
+            if (access(indexPage.data(), R_OK) == -1)
+            {
+                cerr << "locateRequestedFile: " << strerror(errno) << endl;
+                continue;
+            }
+            client._rootPath = indexPage; // found index
+            // cout << "\t" << client._path << endl;
+            return;
+        }
+    }
+    // autoindex
+
+    if (client._location.getAutoIndex() == true)
+    {
+        // use cgi using opendir,readdir to create a dynamic html page
+    }
+    else
+    {
+        throw ErrorCodeClientException(client, 404, "couldn't find index page");
+    }
+}
+
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
@@ -186,39 +221,8 @@ void    HttpRequest::locateRequestedFile(Client &client)
     }
 
     if (S_ISDIR(status.st_mode))
-    {
-        // searching for indexpage in directory
-        for (string &indexPage : client._location.getIndexPage())
-        {
-            // cout << "indexPage " << indexPage << endl;
-            if (stat(indexPage.data(), &status) == 0)
-            {
-                if (S_ISDIR(status.st_mode) == true ||
-                    S_ISREG(status.st_mode) == false)
-                {
-                    continue;
-                }
-                if (access(indexPage.data(), R_OK) == -1)
-                {
-                    cerr << "locateRequestedFile: " << strerror(errno) << endl;
-                    continue;
-                }
-                client._rootPath = indexPage; // found index
-                // cout << "\t" << client._path << endl;
-                return;
-            }
-        }
-        // autoindex
-
-        if (client._location.getAutoIndex() == true)
-        {
-            // use cgi using opendir,readdir to create a dynamic html page
-        }
-        else
-        {
-            throw ErrorCodeClientException(client, 404, "couldn't find index page");
-        }
-    } else if (S_ISREG(status.st_mode))
+        findIndexFile(client, status);
+    else if (S_ISREG(status.st_mode))
     {
         if (access(client._rootPath.data(), R_OK) == -1)
         {
