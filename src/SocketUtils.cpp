@@ -49,7 +49,6 @@ void RunServers::acceptConnection(const int listener)
                 perror("accept");
             break;
         }
-        
         char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
         if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
             sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)

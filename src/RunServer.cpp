@@ -81,7 +81,7 @@ int RunServers::runServers()
     {
         int eventCount;
         
-        std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         // for (auto it = _clients.begin(); it != _clients.end();)
 		// {
 		// 	unique_ptr<Client> &client = it->second;
@@ -127,7 +127,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 finished = handle.handlePostTransfer();
             if (finished == true)
             {
-                std::cout << "file proccessed succesfully" << std::endl; //testcout
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 else
@@ -152,7 +151,6 @@ void RunServers::handleEvents(size_t eventCount)
         {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
-
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
@@ -169,7 +167,7 @@ void RunServers::handleEvents(size_t eventCount)
                 if (it != listeners.end() && currentEvent.events == EPOLLIN)
                 {
                     // handltransfers = false;
-                    acceptConnection(*it);
+                    acceptConnection(eventFD);
                     break;
                 }
             }
@@ -180,7 +178,7 @@ void RunServers::handleEvents(size_t eventCount)
             // std::cout << '5' << std::endl;
 
             if ((_clients.find(eventFD) != _clients.end()) &&
-                (currentEvent.events & EPOLLIN))
+                (currentEvent.events == EPOLLIN))
             {
                 // std::cout << "5in" << std::endl;
                 processClientRequest(*_clients[eventFD].get());

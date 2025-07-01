@@ -62,7 +62,7 @@ class HttpRequest
             if (delimiter == std::string::npos) {
                 if (receivedBytes == CLIENT_BUFFER_SIZE)
                     return false;
-                throw runtime_error("for debugging purposes, remove this line, and kick client through keep-alive check");
+                // throw runtime_error("for debugging purposes, remove this line, and kick client through keep-alive check");
             }
             return true;
         }
@@ -87,7 +87,6 @@ class HttpRequest
 
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
-        // static Location &setLocation();
 
         
     private:

@@ -32,20 +32,22 @@ static void examples(void);
 
 void sigint_handler(int signum)
 {
-    std::cout << "sigint received stopping webserver" << std::endl; //testcout
+    std::cout << "sigint received stopping webserver" << std::endl;
     g_signal_status = signum;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     FileDescriptor::initializeAtexit();
     if (signal(SIGINT, &sigint_handler))
     {
         std::cerr << "Error setting up signal handler: " << strerror(errno) << std::endl;
-        return 1;
+        // return 1;
     }
-    
-    Parsing test("config/default.conf");
+    string confFile = "config/default.conf";
+    if (argc == 2)
+        confFile = argv[1];
+    Parsing test(confFile.data());
     // test.printAll();
     RunServers::createServers(test.getConfigs());
     RunServers::runServers();

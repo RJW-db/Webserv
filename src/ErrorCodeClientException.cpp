@@ -19,6 +19,11 @@ const char *ErrorCodeClientException::what() const throw()
 void ErrorCodeClientException::handleErrorClient() const
 {
     std::cerr << _message << std::endl;
+    if (_errorCode == 0)
+    {
+        RunServers::cleanupClient(_client);
+        return ;
+    }
     auto it = _errorPages.find(_errorCode);
     if (it == _errorPages.end())
         throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
