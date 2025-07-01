@@ -15,6 +15,10 @@ void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
     headStream >> client._method >> client._requestPath >> client._version;
+
+    if (client._method.empty() || client._requestPath.empty() || client._version.empty()) {
+        throw ErrorCodeClientException(client, 400, "Malformed request line");
+    }
     RunServers::setServer(client);
     RunServers::setLocation(client);
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
@@ -22,12 +26,11 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
             // sendErrorResponse(client._fd, "400 Bad Request");
     }
-    
-    if (isValidAndNormalizeRequestPath(client))
+    if (isValidAndNormalizeRequestPath(client) == false)
     {
         throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
     }
-
+    std::cout << client._requestPath << std::endl; //testcout
     if (client._version != "HTTP/1.1")
     {
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
@@ -106,7 +109,7 @@ static void    joinSegmentsToPath(string &path, const vector<string_view> &segme
         if (i + 1 < segments.size())
             newPath += "/";
     }
-    if (path.back() == '/')
+    if (path.back() == '/' && newPath.size() > 1)
         newPath += "/";
     path = newPath;
 }
