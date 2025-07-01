@@ -36,11 +36,11 @@ void RunServers::processClientRequest(Client &client)
             [](Client&, const char*, size_t) { return true; } // HEADER_PARSED_NON_POST (2)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
-            return;
+            return ;
         HttpRequest::handleRequest(client);
     }
     catch(const exception& e)   // if catch we don't handle well
-    {
+    {\
         cerr << e.what() << endl;
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
@@ -60,8 +60,9 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
-    buff[CLIENT_BUFFER_SIZE] = '\0';
+    // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(disconnectDelaySeconds);
+    static int i = 0; // test
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
@@ -73,8 +74,17 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
-        RunServers::cleanupClient(client);
+        std::cerr << "client read 0 unsure what to do right now cleaning up client? errno is :" << errno << std::endl; //TODO: handle this better
+        // int error = 0;
+        // socklen_t len = sizeof(error);
+        // getsockopt(client._fd, SOL_SOCKET, SO_ERROR, &error, &len);
+        // std::cout << "Client disconnected, socket error: " << error << std::endl;
+        // if (errno == EAGAIN || errno == EWOULDBLOCK)
+        // {
+        //     // cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
+        //     return 0; // No data to read, just return
+        // }
+        throw ErrorCodeClientException(client, 0, "read of 0 because client disconnected"); // todo find different solution maybe
         // throw runtime_error("Client disconnected after read of 0");
     }
     return (0); // You never get here
@@ -178,6 +188,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._method.clear();
     client._contentLength = 0;
     client._headerFields.clear();
+    client._rootPath.clear();
     client.setDisconnectTime(disconnectDelaySeconds);
 }
 
@@ -187,7 +198,7 @@ void RunServers::cleanupFD(int fd)
     {
         cerr << "epoll_ctl: " << strerror(errno) << endl;
     }
-    _fds.closeFD(fd);
+    FileDescriptor::closeFD(fd);
 }
 
 void RunServers::cleanupClient(Client &client)
@@ -197,7 +208,9 @@ void RunServers::cleanupClient(Client &client)
     for (auto it = _handle.begin(); it != _handle.end(); )
     {
         if ((*it)->_client._fd == client._fd)
+        {
             it = _handle.erase(it);
+        }
         else
             ++it;
     }

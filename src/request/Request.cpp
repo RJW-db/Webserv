@@ -55,6 +55,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     else
         client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
+
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
@@ -81,7 +82,6 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     string content;
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize, bodyEnd);
-
     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
@@ -96,13 +96,15 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     ssize_t bytesWritten = write(fd, content.data(), writeSize);
     if (bytesWritten == -1)
         HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-    
     unique_ptr<HandleTransfer> handle;
     if (bytesWritten == totalWriteSize)
     {
         string boundaryCheck = content.substr(bytesWritten);
         if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
+        {
+            RunServers::clientHttpCleanup(client);
             return true;
+        }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
     }
     else
@@ -177,49 +179,53 @@ void HttpRequest::decodeSafeFilenameChars(Client &client)
         throw ErrorCodeClientException(client, 400, "bad filename given by client:" + client._rootPath);
 }
 
+void    HttpRequest::findIndexFile(Client &client, struct stat &status)
+{
+    // searching for indexpage in directory
+    for (string &indexPage : client._location.getIndexPage())
+    {
+        // cout << "indexPage " << indexPage << endl;
+        if (stat(indexPage.data(), &status) == 0)
+        {
+            if (S_ISDIR(status.st_mode) == true ||
+                S_ISREG(status.st_mode) == false)
+            {
+                continue;
+            }
+            if (access(indexPage.data(), R_OK) == -1)
+            {
+                cerr << "locateRequestedFile: " << strerror(errno) << endl;
+                continue;
+            }
+            client._rootPath = indexPage; // found index
+            // cout << "\t" << client._path << endl;
+            return;
+        }
+    }
+    // autoindex
+
+    if (client._location.getAutoIndex() == true)
+    {
+        // use cgi using opendir,readdir to create a dynamic html page
+    }
+    else
+    {
+        throw ErrorCodeClientException(client, 404, "couldn't find index page");
+    }
+}
+
 void    HttpRequest::locateRequestedFile(Client &client)
 {
     struct stat status;
     
     if (stat(client._rootPath.data(), &status) == -1)
     {
-        throw RunServers::ClientException("non existent file GET");
+        throw ErrorCodeClientException(client, 400, "Invalid path sent by client for get request: " + client._rootPath);
     }
 
     if (S_ISDIR(status.st_mode))
-    {
-        // searching for indexpage in directory
-        for (string &indexPage : client._location.getIndexPage())
-        {
-            // cout << "indexPage " << indexPage << endl;
-            if (stat(indexPage.data(), &status) == 0)
-            {
-                if (S_ISDIR(status.st_mode) == true ||
-                    S_ISREG(status.st_mode) == false)
-                {
-                    continue;
-                }
-                if (access(indexPage.data(), R_OK) == -1)
-                {
-                    cerr << "locateRequestedFile: " << strerror(errno) << endl;
-                    continue;
-                }
-                client._rootPath = indexPage; // found index
-                // cout << "\t" << client._path << endl;
-                return;
-            }
-        }
-        // autoindex
-
-        if (client._location.getAutoIndex() == true)
-        {
-            // use cgi using opendir,readdir to create a dynamic html page
-        }
-        else
-        {
-            throw ErrorCodeClientException(client, 404, "couldn't find index page");
-        }
-    } else if (S_ISREG(status.st_mode))
+        findIndexFile(client, status);
+    else if (S_ISREG(status.st_mode))
     {
         if (access(client._rootPath.data(), R_OK) == -1)
         {
@@ -249,7 +255,8 @@ string HttpRequest::getMimeType(string &path)
         { "pdf",  "application/pdf" },
         { "txt",  "text/plain" },
         { "mp4",  "video/mp4" },
-        { "webm", "video/webm" }
+        { "webm", "video/webm" },
+        { "xml",  "application/xml" }
     };
 
     size_t dotIndex = path.find_last_of('.');

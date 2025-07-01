@@ -100,6 +100,7 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
 
         send(client._fd, headers.data(), headers.size(), 0);
         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        std::cout << "post succesfull for client with fd:" << client._fd << std::endl; //testcout
         return true;
     }
     return false;

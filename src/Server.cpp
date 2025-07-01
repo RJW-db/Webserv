@@ -25,6 +25,7 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 {
 	map<pair<const string, string>, int> listenersMade;
 	int fd;
+    
 	for (auto &server : servers)
 	{
 		for (pair<const string, string> &hostPort : server->getPortHost())
@@ -34,6 +35,7 @@ void    Server::createListeners(vector<unique_ptr<Server>> &servers)
 			{
 				ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
 				fd = listenerFD.getFD();
+                FileDescriptor::setFD(fd);
 				listenersMade.insert({hostPort, fd});
 			}
 			else

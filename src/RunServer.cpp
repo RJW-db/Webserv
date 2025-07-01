@@ -28,10 +28,9 @@
 #include <dirent.h>
 
 #include <signal.h>
-extern volatile sig_atomic_t g_signal_status;
 
 // Static member variables
-FileDescriptor RunServers::_fds;
+// FileDescriptor RunServers::_fds;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
@@ -39,6 +38,10 @@ ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
+
+void RunServers::cleanupServer()
+{
+}
 
 RunServers::~RunServers()
 {
@@ -78,7 +81,7 @@ int RunServers::runServers()
     {
         int eventCount;
         
-        std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         // for (auto it = _clients.begin(); it != _clients.end();)
 		// {
 		// 	unique_ptr<Client> &client = it->second;
@@ -89,7 +92,8 @@ int RunServers::runServers()
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
-            break ;
+            if (errno == EINTR)
+                break ;
             throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
         }
         try
@@ -147,7 +151,6 @@ void RunServers::handleEvents(size_t eventCount)
         {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
-
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
@@ -164,7 +167,7 @@ void RunServers::handleEvents(size_t eventCount)
                 if (it != listeners.end() && currentEvent.events == EPOLLIN)
                 {
                     // handltransfers = false;
-                    acceptConnection(*it);
+                    acceptConnection(eventFD);
                     break;
                 }
             }
@@ -175,7 +178,7 @@ void RunServers::handleEvents(size_t eventCount)
             // std::cout << '5' << std::endl;
 
             if ((_clients.find(eventFD) != _clients.end()) &&
-                (currentEvent.events & EPOLLIN))
+                (currentEvent.events == EPOLLIN))
             {
                 // std::cout << "5in" << std::endl;
                 processClientRequest(*_clients[eventFD].get());

@@ -22,9 +22,13 @@
 #include <HandleTransfer.hpp>
 // #include <utils.hpp>
 #include <Client.hpp>
+#include <signal.h>
+
 
 using namespace std;
 
+
+extern volatile sig_atomic_t g_signal_status;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
@@ -69,6 +73,7 @@ class RunServers
 
         static void clientHttpCleanup(Client &client);
 
+        static void cleanupServer();
         static void cleanupFD(int fd);
         static void cleanupClient(Client &client);
 
@@ -96,7 +101,7 @@ class RunServers
         // string _serverName;
         // int _listener; // moet weg
 
-		static FileDescriptor _fds;
+		// static FileDescriptor _fds;
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 		
