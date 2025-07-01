@@ -103,6 +103,8 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
         if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
         {
             RunServers::clientHttpCleanup(client);
+            if (client._keepAlive == false)
+                RunServers::cleanupClient(client);
             return true;
         }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
@@ -281,7 +283,7 @@ void    HttpRequest::GET(Client &client)
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._rootPath);
-    string responseStr = HttpResponse(200, client._rootPath, fileSize);
+    string responseStr = HttpResponse(client, 200, client._rootPath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 }
@@ -310,7 +312,7 @@ void HttpRequest::getContentLength(Client &client)
             throw RunServers::ClientException("Content-Length cannot be negative.");
 
         if (static_cast<size_t>(value) > client._location.getClientBodySize())
-            throw RunServers::ClientException("Content-Length exceeds maximum allowed."); // (413, "Payload Too Large");
+            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed:" + to_string(value)); // (413, "Payload Too Large");
 
         if (value == 0)
             throw RunServers::ClientException("Content-Length cannot be zero.");
@@ -371,11 +373,9 @@ void    HttpRequest::handleRequest(Client &client)
         }
         
     }
-	else
-		client._keepAlive = false;
 }
 
-string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
+string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
 {
     static const map<uint16_t, string> responseCodes = {
         { 200, "OK" },
@@ -402,9 +402,8 @@ string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)
 	if (!path.empty())
     	response << "Content-Type: " << getMimeType(path) << "\r\n";
     response << "Content-Length: " << fileSize << "\r\n";
-    // response << "Connection: close\r\n";
+    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
     response << "\r\n";
-
     return response.str();
 
 }
