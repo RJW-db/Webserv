@@ -112,7 +112,6 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
     RunServers::insertHandleTransfer(move(handle));
     return true;
 }
-
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd)
 {
     HttpRequest::getContentLength(client);
