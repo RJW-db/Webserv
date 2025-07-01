@@ -17,11 +17,11 @@ using namespace std;
 class HandleTransfer
 {
     public:
-        HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize);
-		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary);
+        HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
+		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary); //post
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
-        virtual ~HandleTransfer() = default;
+        ~HandleTransfer() = default;
 
         void readToBuf();
         bool handleGetTransfer();
