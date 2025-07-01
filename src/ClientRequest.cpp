@@ -87,7 +87,7 @@ static string NumIpToString(uint32_t addr)
     int bitshift = 24;
     uint32_t rev_addr = htonl(addr);
 
-    for (uint8_t i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < 4; ++i)
     {
         num = rev_addr >> bitshift;
         result = result + to_string(num);
