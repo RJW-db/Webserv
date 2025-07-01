@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,7 +59,11 @@
       </form>
       <div id="status"></div>
       <br />
-      <button onclick="goToPhotoViewer()">Go to Photo Viewer</button>
+      <div style="margin-top: 20px;">
+        <input type="text" id="deletePathInput" placeholder="Enter path to delete" style="width: 90%;" />
+        <button id="deletePathBtn" style="margin-top: 5px;">Delete by Path</button>
+        <div id="deletePathStatus" style="color: #b00; margin-top: 5px;"></div>
+      </div>
     </div>
     <div class="main-content">
       <div class="gallery" id="gallery"></div>

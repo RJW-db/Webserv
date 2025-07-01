@@ -1,3 +1,4 @@
+
 window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -64,5 +65,32 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // Optionally clear the file input
     document.getElementById('fileInput').value = '';
+  });
+  
+  // Add DELETE by path functionality
+  document.getElementById('deletePathBtn').addEventListener('click', function() {
+    const path = document.getElementById('deletePathInput').value.trim();
+    const statusDiv = document.getElementById('deletePathStatus');
+    statusDiv.textContent = '';
+    if (!path) {
+      statusDiv.textContent = 'Please enter a path.';
+      return;
+    }
+    fetch('/upload/' + encodeURIComponent(path), {
+      method: 'DELETE'
+    })
+    .then(res => {
+      if (res.ok) {
+        statusDiv.style.color = 'green';
+        statusDiv.textContent = 'Delete successful!';
+      } else {
+        statusDiv.style.color = '#b00';
+        statusDiv.textContent = 'Delete failed.';
+      }
+    })
+    .catch(() => {
+      statusDiv.style.color = '#b00';
+      statusDiv.textContent = 'Error sending delete request.';
+    });
   });
 });

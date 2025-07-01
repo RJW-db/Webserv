@@ -38,7 +38,6 @@
 
 bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t receivedBytes)
 {
-    
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
@@ -224,7 +223,7 @@ void    HttpRequest::locateRequestedFile(Client &client)
     
     if (stat(client._rootPath.data(), &status) == -1)
     {
-        throw ErrorCodeClientException(client, 404, "couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
+        throw ErrorCodeClientException(client, 404, "Couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
     }
 
     if (S_ISDIR(status.st_mode))
@@ -348,51 +347,42 @@ void    HttpRequest::handleRequest(Client &client)
     }
     else if (client._method == "DELETE")
     {
-        struct stat status;
-        // size_t isPhoto = client._rootPath.find(".png");
-
-        client._requestPath = '.' + client._requestPath;
-        
-        // cout << "DELETE " << client._rootPath << endl;
-        cout << "DELETE " << client._requestPath << endl;
-        if (stat(client._requestPath.data(), &status) == -1)
+        int code = 200;
+        string body = "File deleted";
+        if (remove(('.' + client._requestPath).data()) != 0)
         {
-            throw RunServers::ClientException("non existent file in DELETE");
-        }
-
-        if (S_ISREG(status.st_mode))
-        {
-            if (access(client._requestPath.data(), R_OK) == -1)
+            
+            switch (errno)
             {
-                cerr << "locateRequestedFile: " << strerror(errno) << endl;
+                case EACCES:
+                case EPERM:
+                case EROFS:
+                    code = 403; // Forbidden";
+                    break;
+                case ENOENT:
+                case ENOTDIR:
+                    code = 404; // Not Found";
+                    break;
+                case EISDIR:
+                    // if (limit_except == Doesn't allow DELETE)
+                        code = 405; // Method Not Allowed";
+                    // else
+                        // code = 403; // Forbidden";
+                    break;
+                default:
+                    code = 500; // Internal Server Error;
+
+                /**
+                 * Status codes already been handled
+                 * 414 - ENAMETOOLONG - URI Too Long
+                 */
             }
+            body = "Failed to delete file";
         }
-
-        // if (remove("sam") != 0)
-        if (remove(client._requestPath.data()) != 0)
-        {
-            cerr << "locateRequestedFile: " << strerror(errno) << endl;
-
-            std::string body = "Failed to delete file";
-            std::ostringstream oss;
-            oss << "HTTP/1.1 500 Internal Server Error\r\n"
-                << "Content-Type: text/plain\r\n"
-                << "Content-Length: " << body.size() << "\r\n"
-                // << "Connection: close\r\n\r\n"
-                << body;
-            // client._response = oss.str();
-            string response = oss.str();
-            send(client._fd, response.data(), response.size(), 0);
-        }
-        else
-        {
-            std::string body = "File deleted";
-            string response = HttpRequest::HttpResponse(client, 200, "txt", body.size());
-            std::cout << "removed" << std::endl; //testcout
-            response += body;
-            send(client._fd, response.data(), response.size(), 0);
-        }
-        
+        string response = HttpRequest::HttpResponse(client, code, "txt", body.size());
+        response += body;
+        send(client._fd, response.data(), response.size(), 0);
+        RunServers::clientHttpCleanup(client);
     }
 	else
 		throw ErrorCodeClientException(client, 405, "Method Not Allowed: " + client._method);
