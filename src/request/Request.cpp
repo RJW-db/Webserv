@@ -56,6 +56,10 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
 
+    auto it = client._headerFields.find("Connection");
+    if (it != client._headerFields.end() && it->second == "closed")
+        client._keepAlive = false;
+
     if (client._method == "POST")
     {
         client._headerParseState = HEADER_PARSED_POST;
@@ -326,7 +330,6 @@ void HttpRequest::getContentLength(Client &client)
 
 void    HttpRequest::handleRequest(Client &client)
 {
-    // validateHEAD(_client);
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._headerFields.find("Host") == client._headerFields.end())
@@ -344,33 +347,53 @@ void    HttpRequest::handleRequest(Client &client)
     else if (client._method == "DELETE")
     {
         struct stat status;
-        size_t isPhoto = client._rootPath.find(".png");
+        // size_t isPhoto = client._rootPath.find(".png");
 
-        client._rootPath = "./upload" + string(client._requestPath);
+        client._requestPath = '.' + client._requestPath;
         
-        cout << client._requestPath << endl;
-        if (stat(client._rootPath.data(), &status) == -1)
+        // cout << "DELETE " << client._rootPath << endl;
+        cout << "DELETE " << client._requestPath << endl;
+        if (stat(client._requestPath.data(), &status) == -1)
         {
             throw RunServers::ClientException("non existent file in DELETE");
         }
 
         if (S_ISREG(status.st_mode))
         {
-            if (access(client._rootPath.data(), R_OK) == -1)
+            if (access(client._requestPath.data(), R_OK) == -1)
             {
                 cerr << "locateRequestedFile: " << strerror(errno) << endl;
             }
         }
 
         // if (remove("sam") != 0)
-        if (remove(client._rootPath.data()) != 0)
+        if (remove(client._requestPath.data()) != 0)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
+
+            std::string body = "Failed to delete file";
+            std::ostringstream oss;
+            oss << "HTTP/1.1 500 Internal Server Error\r\n"
+                << "Content-Type: text/plain\r\n"
+                << "Content-Length: " << body.size() << "\r\n"
+                // << "Connection: close\r\n\r\n"
+                << body;
+            // client._response = oss.str();
+            string response = oss.str();
+            send(client._fd, response.data(), response.size(), 0);
+        }
+        else
+        {
+            std::string body = "File deleted";
+            string response = HttpRequest::HttpResponse(200, "txt", body.size());
+            std::cout << "removed" << std::endl; //testcout
+            response += body;
+            send(client._fd, response.data(), response.size(), 0);
         }
         
     }
 	else
-		client._keepAlive = false;
+		throw ErrorCodeClientException(client, 405, "Method Not Allowed: " + client._method);
 }
 
 string HttpRequest::HttpResponse(uint16_t code, string path, size_t fileSize)

@@ -21,6 +21,7 @@ void    HttpRequest::validateHEAD(Client &client)
     }
     RunServers::setServer(client);
     RunServers::setLocation(client);
+    const string& method = client._method;
     if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
         throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
