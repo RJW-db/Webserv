@@ -62,7 +62,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
 {
     // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(disconnectDelaySeconds);
-    static int i = 0; // test
+    errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
@@ -74,18 +74,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        std::cerr << "client read 0 unsure what to do right now cleaning up client? errno is :" << errno << std::endl; //TODO: handle this better
-        // int error = 0;
-        // socklen_t len = sizeof(error);
-        // getsockopt(client._fd, SOL_SOCKET, SO_ERROR, &error, &len);
-        // std::cout << "Client disconnected, socket error: " << error << std::endl;
-        // if (errno == EAGAIN || errno == EWOULDBLOCK)
-        // {
-        //     // cerr << "Client disconnected after read of 0 on fd: " << client._fd << endl;
-        //     return 0; // No data to read, just return
-        // }
-        throw ErrorCodeClientException(client, 0, "read of 0 because client disconnected"); // todo find different solution maybe
-        // throw runtime_error("Client disconnected after read of 0");
+        std::cout << "received 0 bytes: " << errno << std::endl; //testcout
+        throw ErrorCodeClientException(client, 0, ""); // todo find different solution maybe
     }
     return (0); // You never get here
 }

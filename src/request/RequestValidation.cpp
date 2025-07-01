@@ -30,7 +30,6 @@ void    HttpRequest::validateHEAD(Client &client)
     {
         throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
     }
-    std::cout << client._requestPath << std::endl; //testcout
     if (client._version != "HTTP/1.1")
     {
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);

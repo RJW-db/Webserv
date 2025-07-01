@@ -93,6 +93,7 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
         string headers =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
+            "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n"
             "Content-Length: " +
             to_string(body.size()) + "\r\n"
                                      "\r\n" +
@@ -100,7 +101,7 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
 
         send(client._fd, headers.data(), headers.size(), 0);
         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-        std::cout << "post succesfull for client with fd:" << client._fd << std::endl; //testcout
+        std::cout << "post succesfull for client with fd:" << client._fd <<", on file with rootpath" << client._rootPath << std::endl; //testcout
         return true;
     }
     return false;

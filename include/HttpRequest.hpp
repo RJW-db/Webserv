@@ -81,7 +81,7 @@ class HttpRequest
         static void    locateRequestedFile(Client &client);
 
         static string getMimeType(string &path);
-        static string HttpResponse(uint16_t code, string path, size_t fileSize);
+        static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
 
         static void getContentLength(Client &client);
 
