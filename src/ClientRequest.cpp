@@ -5,11 +5,6 @@
 
 void    RunServers::setLocation(Client &client)
 {
-	// size_t pos = string_view(client._header).find_first_not_of(" \t", client._method.size());
-	// if (pos == string::npos || client._header[pos] != '/')
-	// 	throw RunServers::ClientException("missing path in HEAD");
-	// size_t len = string_view(client._header).substr(pos).find_first_of(" \t\n\r");
-	// client._requestPath = client._header.substr(pos, len);
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
 		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 

@@ -23,7 +23,7 @@ static string percentDecode(const string& input)
         {
             string hex = input.substr(i + 1, 2);
             // strol doesn't need a protection because of isxdigit
-            result += static_cast<char>(strtol(hex.c_str(), nullptr, 16));;
+            result += static_cast<char>(stoi(hex.c_str(), nullptr, 16));
             i += 2;
         }
         else

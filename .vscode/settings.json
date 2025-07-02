@@ -58,6 +58,9 @@
         "typeinfo": "cpp",
         "charconv": "cpp",
         "format": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "semaphore": "cpp"
     }
 }
