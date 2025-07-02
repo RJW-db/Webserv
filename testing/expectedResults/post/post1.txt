@@ -1,5 +1,6 @@
 HTTP/1.1 200 OK
 Content-Type: text/plain
+Connection: close
 Content-Length: 41
 
 ./testing/results/post/upload1/test1.jpg

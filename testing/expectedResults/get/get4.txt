@@ -1,6 +1,7 @@
 HTTP/1.1 200 OK
 Content-Type: application/xml
 Content-Length: 1602
+Connection: close
 
 <?xml version="1.0" encoding="UTF-8"?>
 <catalog>

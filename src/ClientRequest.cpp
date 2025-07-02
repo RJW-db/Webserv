@@ -42,6 +42,7 @@ void RunServers::processClientRequest(Client &client)
     catch(const exception& e)   // if catch we don't handle well
     {\
         cerr << e.what() << endl;
+        std::cout << "caught message in processclient request" << std::endl; //testcout
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
@@ -64,6 +65,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
+    buff[bytesReceived - 1] = '\0'; // Ensure null-termination for safety
+    // std::cout << escape_special_chars(buff) << std::endl; //testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
@@ -74,7 +77,6 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        std::cout << "received 0 bytes: " << errno << std::endl; //testcout
         throw ErrorCodeClientException(client, 0, ""); // todo find different solution maybe
     }
     return (0); // You never get here

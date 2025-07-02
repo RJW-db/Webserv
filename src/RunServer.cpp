@@ -144,7 +144,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
 void RunServers::handleEvents(size_t eventCount)
 {
     // int errHndl = 0;
-    // std::cout << "\t" << eventCount << std::endl;
     for (size_t i = 0; i < eventCount; ++i)
     {
         try

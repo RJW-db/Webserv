@@ -1,6 +1,7 @@
 HTTP/1.1 200 OK
 Content-Type: application/pdf
 Content-Length: 585
+Connection: close
 
 %PDF-1.4
 1 0 obj

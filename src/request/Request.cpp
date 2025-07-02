@@ -57,7 +57,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     decodeSafeFilenameChars(client);
 
     auto it = client._headerFields.find("Connection");
-    if (it != client._headerFields.end() && it->second == "closed")
+    if (it != client._headerFields.end() && it->second == "close")
         client._keepAlive = false;
 
     if (client._method == "POST")
@@ -109,7 +109,7 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
             RunServers::clientHttpCleanup(client);
             if (client._keepAlive == false)
                 RunServers::cleanupClient(client);
-            return true;
+            return false;
         }
         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
     }
@@ -121,8 +121,8 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd)
 {
     HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
     HttpRequest::getContentType(client);
+    HttpRequest::getBodyInfo(client);
     content = client._body.substr(bodyEnd + 4);
     size_t headerOverhead = bodyEnd + 4;                       // \r\n\r\n
     size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n

@@ -66,7 +66,7 @@ void RunServers::acceptConnection(const int listener)
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
         if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
-            cout << "epoll_ctl: " << strerror(errno) << endl;
+            cerr << "epoll_ctl: " << strerror(errno) << endl;
             close(infd);
             break;
         }

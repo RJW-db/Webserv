@@ -101,7 +101,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	if (_clientBodySize == 0)
 		_clientBodySize = SIZE_MAX;
 	line = line.substr(len);
-	if (string("kKmMgG").find(line[0]) != string::npos)
+	if (string("kKmMgG;").find(line[0]) != string::npos)
 	{
 		if (isupper(line[0]) != 0)
 			line[0] += 32;
@@ -114,6 +114,11 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	}
 	else if (string(" \t\f\v\r;").find(line[0]) == string::npos)
 		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: invalid character found after value: " + line[0]);
+	if (line[0] == ';')
+	{
+		line = line.substr(1);
+		return true;
+	}
 	return handleNearEndOfLine(line, 1, "client_max_body_size");
 }
 

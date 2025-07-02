@@ -19,16 +19,12 @@ Project-Specific Features
 
 tests te maken
 
-Get indexpage
-get pdf (different HOst)
-get nonexistent
-get js (different Host)
-get jpg (different host matches but nut port match)
-get xml
+get
 
-Post txt
-post jpg
-post png
+post
+
+too big
 
 
 
+should we handle other then multipart form/data?

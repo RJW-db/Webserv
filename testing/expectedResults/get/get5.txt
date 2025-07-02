@@ -1,11 +1,12 @@
-HTTP/1.1 400 Bad Request
+HTTP/1.1 404 Not Found
 Content-Type: text/html
-Content-Length: 187
+Content-Length: 164
+Connection: close
 
 <html>
-  <head><title>400 Bad Request</title></head>
+  <head><title>404 Not Found</title></head>
   <body>
-    <h1>400 Bad Request</h1>
-    <p>Your browser sent a request that this server could not understand.</p>
+    <h1>404 Not Found</h1>
+    <p>The requested URL was not found on this server.</p>
   </body>
 </html>

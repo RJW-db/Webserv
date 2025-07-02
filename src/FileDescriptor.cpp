@@ -36,7 +36,6 @@ void	FileDescriptor::setFD(int fd)
 void	FileDescriptor::closeFD(int fd)
 {
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
-    // std::cout << "closing fd:" << fd << std::endl;
     if (it != _fds.end())
 	{
         close(fd);

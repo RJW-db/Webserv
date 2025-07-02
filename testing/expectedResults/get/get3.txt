@@ -1,6 +1,7 @@
 HTTP/1.1 200 OK
 Content-Type: application/javascript
 Content-Length: 1238
+Connection: close
 
 // Main JavaScript file for web2
 console.log("Main.js loaded from web2 directory");

@@ -32,7 +32,7 @@ void httpRequestLogger(string str)
 
     result += "[client <ip>:<port>] " + escape_special_chars(str);
     // std::cout << "\t>" << str << "<" << std::endl;
-    std::cout << result << std::endl;
+    std::cout << "httprequestlogerr: " << result << std::endl;
 }
 
 
