@@ -92,7 +92,11 @@ bool HttpRequest::processHttpBody(Client &client, size_t bodyEnd)
         if (errno == EACCES)
             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
         else
+        {
+            std::cout << "hiero\n" << std::endl; //testcout
+
             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
+        }
     }
     FileDescriptor::setFD(fd);
     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
