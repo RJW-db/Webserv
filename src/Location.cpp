@@ -221,7 +221,6 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _methods[1] = "POST";
         _methods[2] = "DELETE";
     }
-    std::cout << "method" << +_allowedMethods << std::endl; //testcout
     if (_allowedMethods == 0)
     {
         _allowedMethods = 1 + 2 + 4 + 8;
@@ -266,22 +265,6 @@ Alocation &Alocation::operator=(const Alocation &other)
 	return (*this);
 }
 
-// bool Alocation::containsMethod(const char *method)
-// {
-//     for (size_t i = 0; i < 3; i++)
-//     {
-//         // size_t size = _methods[i].size() > 
-//         if (strncmp(_methods[i].data(), method, _methods[i].size()) == 0)
-//             return true;
-//         std::cout << "methods: " << _methods[i] << std::endl; //testcout
-//     }
-//     return false;
-// } 
-
-array<string, 3> Alocation::getMethods() const
-{
-	return _methods;
-}
 string Alocation::getUploadStore() const
 {
 	return _upload_store;

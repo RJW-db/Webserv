@@ -27,7 +27,6 @@ class Alocation : public Aconfig
 	protected:
     	Alocation() = default;
 		Alocation(const Alocation &other);
-		array<string, 3> _methods;
         uint8_t _allowedMethods = 0;
 		string _upload_store;
 		string _cgiExtension;

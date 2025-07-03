@@ -303,10 +303,15 @@ void Parsing::printAll() const
 			}
 			cout << endl;
 			cout << "  Methods: ";
-			for (const string &method : location.getMethods())
-			{
-				cout << method << " ";
-			}
+			if (location.getAllowedMethods() & 1)
+                cout << "HEAD ";
+            if (location.getAllowedMethods() & 2)
+                cout << "GET ";
+            if (location.getAllowedMethods() & 4)
+                cout << "POST ";
+            if (location.getAllowedMethods() & 8)
+                cout << "DELETE ";
+                
 			cout << endl;
 			cout << "  Upload Store: " << location.getUploadStore() << endl;
 			cout << "  CGI Extension: " << location.getExtension() << endl;
