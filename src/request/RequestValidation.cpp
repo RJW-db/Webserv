@@ -11,21 +11,43 @@ static vector<string_view> normalizeSegments(const vector<string_view> &segments
 static void    joinSegmentsToPath(string &path, const vector<string_view> &segments);
 static void    validatePathAndSegmentLengths(Client &client, const vector<string_view> &segments);
 
+// #include <cctype>
+// #include <cstdlib>
+
+static string percentDecode(const string& input)
+{
+    string result;
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (input[i] == '%' && i + 2 < input.length() &&
+            isxdigit(input[i + 1]) && isxdigit(input[i + 2]))
+        {
+            string hex = input.substr(i + 1, 2);
+            // strol doesn't need a protection because of isxdigit
+            result += static_cast<char>(stoi(hex.c_str(), nullptr, 16));
+            i += 2;
+        }
+        else
+            result += input[i];
+    }
+    return result;
+}
+
 void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
     headStream >> client._method >> client._requestPath >> client._version;
 
+    client._requestPath = percentDecode(client._requestPath);
     if (client._method.empty() || client._requestPath.empty() || client._version.empty()) {
         throw ErrorCodeClientException(client, 400, "Malformed request line");
     }
     RunServers::setServer(client);
     RunServers::setLocation(client);
-    if (/* client._method != "HEAD" &&  */client._method != "GET" && client._method != "POST" && client._method != "DELETE")
+    if (client._method != "HEAD" && client._method != "GET" && client._method != "POST" && client._method != "DELETE")
     {
         throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
-            // sendErrorResponse(client._fd, "400 Bad Request");
     }
+
     if (isValidAndNormalizeRequestPath(client) == false)
     {
         throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
@@ -34,6 +56,7 @@ void    HttpRequest::validateHEAD(Client &client)
     {
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     }
+
 }
 
 static bool isValidAndNormalizeRequestPath(Client &client)
@@ -43,12 +66,10 @@ static bool isValidAndNormalizeRequestPath(Client &client)
     {
         return false;
     }
-
     vector<string_view> pathSegments = splitPathSegments(client._requestPath);
     vector<string_view> normalizedSegments = normalizeSegments(pathSegments, client);
     joinSegmentsToPath(client._requestPath, normalizedSegments);
     validatePathAndSegmentLengths(client, normalizedSegments);
-
     return true;
 }
 

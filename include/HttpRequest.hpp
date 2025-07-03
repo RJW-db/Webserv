@@ -47,7 +47,6 @@ enum ContentType
     MULTIPART
 };
 
-
 class HttpRequest
 {
     public:
@@ -55,8 +54,8 @@ class HttpRequest
         // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
-        static bool processHttpBody(Client &client, size_t bodyEnd);
-        static void getInfoPost(Client &client, string &content, size_t &totalWriteSize, size_t bodyEnd);
+        static bool processHttpBody(Client &client);
+        static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
 
         static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
             if (delimiter == std::string::npos) {
@@ -87,14 +86,4 @@ class HttpRequest
 
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
-
-        
-    private:
-        // Client &_client;
-
-        // string_view _contentType;
-        // string_view _bodyBoundary;
-        
-        // string_view _filename;
-        // string_view _fileContent;
 };

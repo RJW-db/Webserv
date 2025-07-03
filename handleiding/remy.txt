@@ -35,15 +35,12 @@ echo -e "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n" > test.txt
 cat handleiding/clientHttpRequest.txt | nc 10.11.4.3 8080
 cat test.txt | nc 10.11.4.3 8080
 
+siege -c 10 http://localhost:8080/
 
-als request geparseerd en volledig ontvangen dan clear fdBuffer van fd
-post handletransfer equal aanmaken (epollin en epollout fixen(handletransfer boven handlerequest))
-
-GET and POST at the same time.
-
+HEAD request
+curl -I http://localhost:8080
+printf "HEAD / HTTP/1.1\r\nHost: localhost\r\n\r\n" | nc localhost 8080
 
 
-probleematisch
-if (strncmp(client._path.data(), locationPair.first.c_str(), locationPair.first.length()) == 0)
 
-if locationPair.lenght = 1, and client._path is more than one, it still gets into the if.. 
+problem with overwriting the file, if 2 or 3 people trying to create the same file

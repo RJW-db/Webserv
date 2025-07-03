@@ -21,7 +21,8 @@ void ErrorCodeClientException::handleErrorClient() const
     std::cerr << _message << std::endl;
     if (_errorCode == 0)
     {
-        // RunServers::cleanupClient(_client);
+        // RunServers::clientHttpCleanup(_client);
+        RunServers::cleanupClient(_client);
         return ;
     }
     auto it = _errorPages.find(_errorCode);

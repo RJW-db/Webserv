@@ -38,6 +38,7 @@ ServerList RunServers::_servers;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
+int RunServers::_level = -1;
 
 void RunServers::cleanupServer()
 {
@@ -58,6 +59,7 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 }
 
 #include <chrono>
+#include <thread>
 #include <ctime> 
 void clocking()
 {
@@ -73,23 +75,49 @@ void clocking()
               << endl;
 }
 
+void RunServers::addStdinToEpoll()
+{
+    int stdin_fd = 0; // stdin is always fd 0
+
+    // Set stdin to non-blocking
+    if (make_socket_non_blocking(stdin_fd) == -1)
+    {
+        std::cerr << "Failed to set stdin non-blocking" << std::endl;
+        return;
+    }
+
+    // Add stdin to epoll
+    struct epoll_event current_event;
+    current_event.data.fd = stdin_fd;
+    current_event.events = EPOLLIN;
+    if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
+    {
+        std::cerr << "epoll_ctl (stdin): " << strerror(errno) << std::endl;
+        return;
+    }
+
+    // Optionally, treat stdin as a special client
+    // _clients[stdin_fd] = std::make_unique<Client>(stdin_fd);
+    // You may want to skip setDisconnectTime for stdin
+}
+
 int RunServers::runServers()
 {
     epollInit();
+    addStdinToEpoll();
     clocking();
     while (g_signal_status == 0)
     {
         int eventCount;
-        
+        for (auto it = _clients.begin(); it != _clients.end();)
+		{
+			unique_ptr<Client> &client = it->second;
+			++it;
+			if (client->_keepAlive == false || client->_disconnectTime <= chrono::steady_clock::now())
+				cleanupClient(*client);
+		}
         // std::cout << "Blocking and waiting for epoll event..." << std::endl;
-        // for (auto it = _clients.begin(); it != _clients.end();)
-		// {
-		// 	unique_ptr<Client> &client = it->second;
-		// 	++it;
-		// 	if (client->_keepAlive == false || client->_disconnectTime <= chrono::steady_clock::now())
-		// 		cleanupClient(*client);
-		// }
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, 2500);
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
             if (errno == EINTR)
@@ -150,6 +178,24 @@ void RunServers::handleEvents(size_t eventCount)
         {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
+
+            if (eventFD == 0 && (currentEvent.events & EPOLLIN)) {
+                char buffer[1024];
+                ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
+                if (bytesRead > 0)
+                {
+                    buffer[bytesRead] = '\0';
+                }
+                int snooze = stoi(buffer, nullptr, 16);
+                if (snooze > 0 && snooze < 20)
+                {
+                    std::cout << "sleep for " << snooze << " seconds" << std::endl; //testcout
+                    this_thread::sleep_for(chrono::seconds(snooze));
+                    std::cout << "no more snoozing" << std::endl; //testcout
+                }
+                // processStdinInput(); // Your function to handle terminal input
+                continue;
+            }
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
@@ -171,7 +217,6 @@ void RunServers::handleEvents(size_t eventCount)
                 }
             }
             // std::cout << '4' << std::endl;
-
             if (runHandleTransfer(currentEvent) == true)
                 continue;
             // std::cout << '5' << std::endl;
@@ -195,7 +240,6 @@ void RunServers::handleEvents(size_t eventCount)
 void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
 {
     _handle.push_back(move(handle));
-    // TODO removal functions
 }
 
 

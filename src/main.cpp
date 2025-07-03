@@ -35,9 +35,18 @@ void sigint_handler(int signum)
     std::cout << "sigint received stopping webserver" << std::endl;
     g_signal_status = signum;
 }
-
+#include <fcntl.h>
 int main(int argc, char *argv[])
 {
+    // int fd = open("./upload/werkend space.txt", O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    // if (fd == -1)
+    // {
+    //     std::cout << "Error: " << strerror(errno) << std::endl; //testcout
+    // }
+    // else
+    //     std::cout << "Succes" << std::endl; //testcout
+    // return 0;
+
     FileDescriptor::initializeAtexit();
     if (signal(SIGINT, &sigint_handler))
     {

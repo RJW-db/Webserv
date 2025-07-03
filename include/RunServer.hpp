@@ -12,6 +12,8 @@
 
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
 #include <iostream>
+#include <sstream> // logMessage
+
 #include <memory>
 #include <vector>
 #include <array>
@@ -42,6 +44,8 @@ class RunServers
         ~RunServers();
 
         static int epollInit(/* ServerList &servers */);
+        static void addStdinToEpoll();
+
 		static void createServers(vector<ConfigServer> &configs);
         // int run(FileDescriptor& fds);
         // static int runServers(vector<Server>& servers);
@@ -79,6 +83,16 @@ class RunServers
 
         static bool runHandleTransfer(struct epoll_event &currentEvent);
 
+        template<typename... Args>
+        static void logMessage(int arg, Args&&... args)
+        {
+            if (_level == -1 || arg >= _level)
+            {
+                std::ostringstream oss;
+                (oss << ... << args);
+                std::cout << oss.str() << std::endl;
+            }
+        }
         class ClientException : public exception
 		{
             private:
@@ -113,6 +127,8 @@ class RunServers
         static vector<unique_ptr<HandleTransfer>> _handle;
 
         static unordered_map<int, unique_ptr<Client>> _clients;
+
+        static int _level;
 };
 
 void	poll_usages(void);

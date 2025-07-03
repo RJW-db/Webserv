@@ -20,9 +20,11 @@ class Client
 {
     public:
             // Add more fields as needed
-        Client(int fd) : _fd(fd), _headerParseState(HEADER_NOT_PARSED), _keepAlive(true) {}
+        Client(int fd) : _fd(fd), _headerParseState(HEADER_NOT_PARSED), _keepAlive(true), _contentLength(0){}
         // Client &operator=(const Client &other);
 		
+        void resetRequestState();
+
 		void setDisconnectTime(uint16_t disconectTimeSeconds)
 		{
 			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
@@ -41,8 +43,8 @@ class Client
         string _requestPath;
         string _rootPath; // root + requestpath + filename
         string _version;
-        size_t _contentLength = 0;
-
+        size_t _contentLength;
+        size_t _bodyEnd;
         string_view _contentType;
         string_view _bodyBoundary;
 
@@ -75,4 +77,5 @@ class Client
 //     }
 //     return *this;
 // }
+
 #endif
