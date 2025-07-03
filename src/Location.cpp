@@ -45,7 +45,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 	const string search[5] = {"{", "deny", "all", ";", "}"};
 	if (strncmp(line.c_str(), search[index].c_str(), search[index].length()) == 0)
 	{
-		if (_methods.size() == 0)
+		if (_allowedMethods == 0)
 			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods given for limit_except");
 		line = line.substr(search[index].length());
 		++index;
@@ -215,12 +215,6 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         for (string indexPage : curConf.getIndexPage())
             _indexPage.push_back(indexPage);
     }
-    if (_methods[0].empty())
-    {
-		_methods[0] = "GET";
-        _methods[1] = "POST";
-        _methods[2] = "DELETE";
-    }
     if (_allowedMethods == 0)
     {
         _allowedMethods = 1 + 2 + 4 + 8;
@@ -255,7 +249,6 @@ Alocation &Alocation::operator=(const Alocation &other)
     if (this != &other)
 	{
         Aconfig::operator=(other);
-		_methods = other._methods;
 		_upload_store = other._upload_store;
 		_cgiPath = other._cgiPath;
 		_cgiExtension = other._cgiExtension;

@@ -1,19 +1,8 @@
 
-dingen die nog moeten worden geimplementeerd: upload_store, limit_except, autoindex, return (redirect)
+dingen die nog moeten worden geimplementeerd: upload_store, autoindex, return (redirect)
 
-How to Handle POST Content Types
+voor upload store implementeren voor post
 
-Your server should read the Content-Type header to determine how to parse the body.
-
-For application/x-www-form-urlencoded, parse the body as key-value pairs.
-
-For multipart/form-data, implement multipart parsing to handle file uploads and fields.
-
-For text/plain and others, treat the body as raw data.
-
-For application/json, treat the body as a JSON string (parsing is optional unless required by your application logic).
-
-Project-Specific Features
 
 
 
@@ -24,6 +13,12 @@ get
 post
 
 too big
+no filename
+incorrect content Type
+missing boundary start
+missing boundary end
+missing HOST
+
 
 
 

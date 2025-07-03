@@ -194,7 +194,7 @@ void RunServers::handleEvents(size_t eventCount)
                     std::cout << "no more snoozing" << std::endl; //testcout
                 }
                 // processStdinInput(); // Your function to handle terminal input
-                continue;
+                continue ;
             }
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
