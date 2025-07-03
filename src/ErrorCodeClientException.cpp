@@ -34,7 +34,7 @@ const char *ErrorCodeClientException::what() const throw()
 
 void ErrorCodeClientException::handleErrorClient() const
 {
-    std::cerr << _message << std::endl;
+    std::cerr << "errorCodeClient" << _message << std::endl;
     if (_errorCode == 0)
     {
         // RunServers::clientHttpCleanup(_client);
