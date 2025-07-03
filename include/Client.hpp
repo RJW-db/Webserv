@@ -40,6 +40,7 @@ class Client
         string _header;
         string _body;
         string _method;
+        uint8_t _useMethod;
         string _requestPath;
         string _rootPath; // root + requestpath + filename
         string _version;

@@ -4,15 +4,43 @@
 #include <RunServer.hpp>
 
 // Static Functions
+static string percentDecode(const string& input);
 static bool isValidAndNormalizeRequestPath(Client &client);
 static bool pathContainsInvalidCharacters(const string &path);
 static vector<string_view> splitPathSegments(const string &path);
 static vector<string_view> normalizeSegments(const vector<string_view> &segments, Client &client);
 static void    joinSegmentsToPath(string &path, const vector<string_view> &segments);
 static void    validatePathAndSegmentLengths(Client &client, const vector<string_view> &segments);
+static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods);
 
-// #include <cctype>
-// #include <cstdlib>
+void    HttpRequest::validateHEAD(Client &client)
+{
+    istringstream headStream(client._header);
+    headStream >> client._method >> client._requestPath >> client._version;
+
+    client._requestPath = percentDecode(client._requestPath);
+    if (client._method.empty() || client._requestPath.empty() || client._version.empty())
+    {
+        throw ErrorCodeClientException(client, 400, "Malformed request line");
+    }
+    RunServers::setServer(client);
+    RunServers::setLocation(client);
+    client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
+    if (client._useMethod == 0)
+    {
+        throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
+    }
+
+    if (isValidAndNormalizeRequestPath(client) == false)
+    {
+        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
+    }
+    if (client._version != "HTTP/1.1")
+    {
+        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
+    }
+
+}
 
 static string percentDecode(const string& input)
 {
@@ -30,33 +58,6 @@ static string percentDecode(const string& input)
             result += input[i];
     }
     return result;
-}
-
-void    HttpRequest::validateHEAD(Client &client)
-{
-    istringstream headStream(client._header);
-    headStream >> client._method >> client._requestPath >> client._version;
-
-    client._requestPath = percentDecode(client._requestPath);
-    if (client._method.empty() || client._requestPath.empty() || client._version.empty()) {
-        throw ErrorCodeClientException(client, 400, "Malformed request line");
-    }
-    RunServers::setServer(client);
-    RunServers::setLocation(client);
-    if (client._method != "HEAD" && client._method != "GET" && client._method != "POST" && client._method != "DELETE")
-    {
-        throw ErrorCodeClientException(client, 405, "Invalid HTTP method: " + client._method);
-    }
-
-    if (isValidAndNormalizeRequestPath(client) == false)
-    {
-        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
-    }
-    if (client._version != "HTTP/1.1")
-    {
-        throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
-    }
-
 }
 
 static bool isValidAndNormalizeRequestPath(Client &client)
@@ -146,4 +147,17 @@ static void    validatePathAndSegmentLengths(Client &client, const vector<string
             throw ErrorCodeClientException(client, 414, "URI too long");
         }
     }
+}
+
+static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
+{
+    if (method == "HEAD" && allowedMethods & 1)
+        return 1;
+    if (method == "GET" && allowedMethods & 2)
+        return 2;
+    if (method == "POST" && allowedMethods & 4)
+        return 4;
+    if (method == "DELETE" && allowedMethods & 8)
+        return 8;
+    return 0;
 }

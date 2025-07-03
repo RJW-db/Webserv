@@ -14,7 +14,7 @@ void    RunServers::setLocation(Client &client)
             return;
         }
     }
-    throw RunServers::ClientException("No matching location found for path: " + client._requestPath);
+    throw ErrorCodeClientException(client, 400, "Couldn't find location block: malformed request");
 }
 
 void RunServers::processClientRequest(Client &client)
@@ -126,7 +126,7 @@ void RunServers::setServer(Client &client)
     socklen_t resLen = sizeof(res);
     int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
     if (err != 0)
-        throw ClientException("getsockname failed: " + string(strerror(errno)));
+        throw ErrorCodeClientException(client, 500, (string("Getsockname: ") + strerror(errno)));
     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
     uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
     client._usedServer = nullptr;

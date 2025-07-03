@@ -76,22 +76,56 @@ bool Location::methods(string &line)
 	size_t len = line.find_first_of(" \t\f\v\r{");
 	if (len == string::npos)
 		len = line.length();
-	size_t index = (!_methods[0].empty() + !_methods[1].empty() + !_methods[2].empty());
-	if (index > 2)
-		throw runtime_error(to_string(_lineNbr) + ": limit_except: too many methods given to limit_except");
-	_methods[index] = line.substr(0, len);
-	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
-	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
-	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)
-		throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid methods given after limit_exept");
-	for (ssize_t i = index - 1; i >= 0; --i)
-	{
-		if (strncmp(_methods[i].c_str(), _methods[index].c_str(), _methods[i].size()) == 0)
-			throw runtime_error(to_string(_lineNbr) + ": limit_except: Method given already entered before");
-	}
+    string method = line.substr(0, len);
+    uint8_t binary_bit;
+    if (method == "HEAD")
+        binary_bit = 1;
+    else if (method == "GET")
+        binary_bit = 2;
+    else if (method == "POST")
+        binary_bit = 4;
+    else if (method == "DELETE")
+        binary_bit = 8;
+    else
+        throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid methods given after limit_exept");
+    if (_allowedMethods & binary_bit)
+        throw runtime_error(to_string(_lineNbr) + ": limit_except: Method given already entered before");
+    _allowedMethods += binary_bit;
 	line = line.substr(len);
 	return false;
 }
+
+// bool Location::methods(string &line)
+// {
+// 	bool findColon = false;
+// 	if (checkMethodEnd(findColon, line) == true)
+// 	{
+// 		if (findColon == true)
+// 		{
+// 			findColon = false;
+// 			return true;
+// 		}
+// 		return false;
+// 	}
+// 	size_t len = line.find_first_of(" \t\f\v\r{");
+// 	if (len == string::npos)
+// 		len = line.length();
+// 	size_t index = (!_methods[0].empty() + !_methods[1].empty() + !_methods[2].empty());
+// 	if (index > 2)
+// 		throw runtime_error(to_string(_lineNbr) + ": limit_except: too many methods given to limit_except");
+// 	_methods[index] = line.substr(0, len);
+// 	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
+// 	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
+// 	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)
+// 		throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid methods given after limit_exept");
+// 	for (ssize_t i = index - 1; i >= 0; --i)
+// 	{
+// 		if (strncmp(_methods[i].c_str(), _methods[index].c_str(), _methods[i].size()) == 0)
+// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: Method given already entered before");
+// 	}
+// 	line = line.substr(len);
+// 	return false;
+// }
 
 bool Location::indexPage(string &line)
 {
@@ -187,6 +221,11 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _methods[1] = "POST";
         _methods[2] = "DELETE";
     }
+    std::cout << "method" << +_allowedMethods << std::endl; //testcout
+    if (_allowedMethods == 0)
+    {
+        _allowedMethods = 1 + 2 + 4 + 8;
+    }
 	for (string &indexPage : _indexPage)
 	{
 		if (_root[_root.size() - 1] == '/')
@@ -196,8 +235,12 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 	}
     // if (_locationPath.size() > 2 && directoryCheck(_locationPath) == false)
     //     throw runtime_error("invalid root + path given: " + _locationPath);
-	// if (_upload_store.empty())
-	//     _upload_store = _root;
+	if (_upload_store.empty())
+	    _upload_store = _root;
+    else
+    {
+        
+    }
     setDefaultErrorPages();
 }
 
@@ -205,22 +248,35 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 Alocation::Alocation(const Alocation &other)
 : Aconfig(other)
 {
-	*this = other;
+    *this = other;
 }
 
 Alocation &Alocation::operator=(const Alocation &other)
 {
-	if (this != &other)
+    if (this != &other)
 	{
-		Aconfig::operator=(other);
+        Aconfig::operator=(other);
 		_methods = other._methods;
 		_upload_store = other._upload_store;
 		_cgiPath = other._cgiPath;
 		_cgiExtension = other._cgiExtension;
         _locationPath = other._locationPath;
+        _allowedMethods = other._allowedMethods;
 	}
 	return (*this);
 }
+
+// bool Alocation::containsMethod(const char *method)
+// {
+//     for (size_t i = 0; i < 3; i++)
+//     {
+//         // size_t size = _methods[i].size() > 
+//         if (strncmp(_methods[i].data(), method, _methods[i].size()) == 0)
+//             return true;
+//         std::cout << "methods: " << _methods[i] << std::endl; //testcout
+//     }
+//     return false;
+// } 
 
 array<string, 3> Alocation::getMethods() const
 {
@@ -242,4 +298,9 @@ string Alocation::getCgiPath() const
 string Alocation::getPath() const
 {
 	return _locationPath;
+}
+
+uint8_t Alocation::getAllowedMethods() const
+{
+    return _allowedMethods;
 }

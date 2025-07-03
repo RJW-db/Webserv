@@ -15,17 +15,20 @@ class Alocation : public Aconfig
 {
 	public:
 		Alocation &operator=(const Alocation &other);
-		Alocation() = default;
 
 		array<string, 3> getMethods() const;
+        // bool containsMethod(const char *method);
+        uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
 		string getExtension() const;
 		string getCgiPath() const;
 		string getPath() const;
 
 	protected:
+    	Alocation() = default;
 		Alocation(const Alocation &other);
 		array<string, 3> _methods;
+        uint8_t _allowedMethods = 0;
 		string _upload_store;
 		string _cgiExtension;
 		string _cgiPath;

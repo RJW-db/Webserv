@@ -341,24 +341,26 @@ void HttpRequest::handleRequest(Client &client)
         throw RunServers::ClientException("Missing Host header");
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
-    
-    if (client._method == "HEAD")
+    switch (client._useMethod)
+    {
+    case 1:
     {
         locateRequestedFile(client);
         string response = HttpRequest::HttpResponse(client, 200, "txt", 0);
         send(client._fd, response.data(), response.size(), 0);
+        break;
     }
-    else if (client._method == "GET")
+    case 2:
     {
         GET(client);
+        break;
     }
-    else if (client._method == "POST")
+    case 4:
     {
-        
         processHttpBody(client);
-        // POST(client);
+        break;
     }
-    else if (client._method == "DELETE")
+    case 8:
     {
         int code = 200;
         if (remove(('.' + client._requestPath).data()) == 0)
@@ -373,34 +375,36 @@ void HttpRequest::handleRequest(Client &client)
         {
             switch (errno)
             {
-                case EACCES:
-                case EPERM:
-                case EROFS:
-                    code = 403; // Forbidden";
-                    break;
-                case ENOENT:
-                case ENOTDIR:
-                    code = 404; // Not Found";
-                    break;
-                case EISDIR:
-                    // if (limit_except == Doesn't allow DELETE)
-                    code = 405; // Method Not Allowed";
-                    // else
-                    // code = 403; // Forbidden";
-                    break;
-                default:
-                    code = 500; // Internal Server Error;
+            case EACCES:
+            case EPERM:
+            case EROFS:
+                code = 403; // Forbidden";
+                break;
+            case ENOENT:
+            case ENOTDIR:
+                code = 404; // Not Found";
+                break;
+            case EISDIR:
+                // if (limit_except == Doesn't allow DELETE)
+                code = 405; // Method Not Allowed";
+                // else
+                // code = 403; // Forbidden";
+                break;
+            default:
+                code = 500; // Internal Server Error;
 
-                    /**
-                     * Status codes already been handled
-                     * 414 - ENAMETOOLONG - URI Too Long
-                     */
+                /**
+                 * Status codes already been handled
+                 * 414 - ENAMETOOLONG - URI Too Long
+                 */
             }
             throw ErrorCodeClientException(client, code, string("Remove failed: ") + strerror(errno));
         }
+        break;
     }
-    else
+    default:
         throw ErrorCodeClientException(client, 405, "Method Not Allowed: " + client._method);
+    }
 }
 
 string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
