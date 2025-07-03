@@ -40,3 +40,7 @@ siege -c 10 http://localhost:8080/
 HEAD request
 curl -I http://localhost:8080
 printf "HEAD / HTTP/1.1\r\nHost: localhost\r\n\r\n" | nc localhost 8080
+
+
+
+problem with overwriting the file, if 2 or 3 people trying to create the same file

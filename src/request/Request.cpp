@@ -66,6 +66,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._bodyEnd = client._body.find("\r\n\r\n");
         if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
             return false;
+        cout << "POST request found, bodyEnd: " << client._bodyEnd << endl;
         return true;
     }
     client._headerParseState = HEADER_PARSED_NON_POST;
@@ -121,6 +122,9 @@ bool HttpRequest::processHttpBody(Client &client)
 
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
 {
+    cout << escape_special_chars(client._header) << endl;
+    cout << escape_special_chars(client._body) << endl;
+
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
     HttpRequest::getContentType(client); // TODO return isn't used at all
@@ -308,7 +312,7 @@ void HttpRequest::getContentLength(Client &client)
     try
     {
         value = stoll(content.data());
-
+        cout << "content.data() " <<  content.data() << endl;
         if (value < 0)
             throw RunServers::ClientException("Content-Length cannot be negative.");
 
