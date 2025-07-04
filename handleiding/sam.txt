@@ -9,6 +9,16 @@ voor upload store implementeren voor post
 tests te maken
 
 get
+missing HOST
+not in limit except
+wrong path not starting with /
+different http version
+Accept not text/html
+incorrect Connection type
+request with incorrect characters that turn into %
+request with body in GET request
+request with duplicate headers
+
 
 post
 
@@ -17,10 +27,15 @@ no filename
 incorrect content Type
 missing boundary start
 missing boundary end
-missing HOST
+missing content length
+wrong Connection header
+missing content-disposition
+wrong content-disposition line
+missing content Type
+unsupported content type
+not in limit except
+empty body
+body with only boundary, no data
+content-length smaller than actual body
+content-length larger than actual body
 
-
-
-
-
-should we handle other then multipart form/data?
