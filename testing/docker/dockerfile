@@ -1,0 +1,28 @@
+FROM debian:latest
+
+# Install dependencies
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+      git \
+      build-essential \
+      autoconf \
+      automake \
+      libtool \
+      libssl-dev \
+      pkg-config \
+      net-tools
+
+# Clone Siege into /opt/siege
+RUN git clone https://github.com/JoeDog/siege.git /opt/siege
+
+RUN git clone --branch rjw https://github.com/RJW-db/Webserv.git /opt/webserv
+
+# Set working directory to /opt/siege
+WORKDIR /opt/siege
+
+# Build and install Siege
+RUN chmod +x ./utils/bootstrap && \
+    ./utils/bootstrap && \
+    ./configure && \
+    make -j && \
+    make install
