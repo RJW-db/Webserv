@@ -1,0 +1,8 @@
+services:
+  webserv:
+    build: .
+    image: myimage
+    container_name: webserv
+    command: sleep infinity
+    volumes:
+      - ./:/workspace

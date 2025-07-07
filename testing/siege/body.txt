@@ -1,0 +1,7 @@
+--boundary123
+Content-Disposition: form-data; name="myfile"; filename="test.txt"
+Content-Type: text/plain
+
+hello from siege!
+--boundary123--
+

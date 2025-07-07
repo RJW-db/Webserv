@@ -31,11 +31,18 @@ inside the project
 
 
 echo -e "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n" > test.txt
-
 cat handleiding/clientHttpRequest.txt | nc 10.11.4.3 8080
 cat test.txt | nc 10.11.4.3 8080
 
-siege -c 10 http://localhost:8080/
+siege -c1 -t1s http://localhost:8080/
+or with hostname
+siege -c500 -t10s http://localhost:8080 -H "Host: mycustomhost.com"
+
+siege POST request
+BODY=$'--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n'
+siege -c150 -t5s -f ./testing/siege/urls.txt \
+  --content-type="multipart/form-data; boundary=boundary123" \
+  --body="$BODY"
 
 HEAD request
 curl -I http://localhost:8080
@@ -44,3 +51,22 @@ printf "HEAD / HTTP/1.1\r\nHost: localhost\r\n\r\n" | nc localhost 8080
 
 
 problem with overwriting the file, if 2 or 3 people trying to create the same file
+
+
+
+
+
+DOCKER
+docker compose down -v
+docker system prune -af --volumes
+docker compose build --no-cache
+docker compose up -d
+
+other terminal
+docker exec -it webserv bash
+
+cd /opt/postRequest
+siege -c1 -t1s http://192.168.122.1:8080/
+siege -c1 -t1s --content-type "multipart/form-data; boundary=boundary" --file=urls.txt
+
+ONLY ip changes of main computer, hostname -I (SECOND OPTION), input this ip in the dockerfile
