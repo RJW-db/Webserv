@@ -6,10 +6,15 @@ cd ../
 
 
 make
-# Start the web server in the background
+
+read -p "Do you want to start the web server? (y/n): " start_server
+if [[ "$start_server" == "y" || "$start_server" == "Y" ]]; then
+    # Start the web server in the background
 # disable if you don't want server to start
 ./Webserv testing/test1.conf &
 SERVER_PID=$!
+fi
+
 
 
 cd testing
@@ -21,11 +26,16 @@ echo "=== Testing Web Server ==="
 
 
 ./tests/post_tests.sh &
+POST_PID=$!
 ./tests/get_tests.sh &
+GET_PID=$!
 
 echo "testing started, waiting for tests to finish..."
 
-sleep 3
+wait $POST_PID
+wait $GET_PID
+
+
 
 echo "=== Tests Completed ==="
 echo "Check the results in the 'results' directory. and summary.txt for details."

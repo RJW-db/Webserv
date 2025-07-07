@@ -56,11 +56,11 @@ void RunServers::acceptConnection(const int listener)
             printf("%s: Accepted connection on descriptor %d"
                 "(host=%s, port=%s)\n", "server->getServerName().c_str()", infd, hbuf, sbuf);
         }
-        if(make_socket_non_blocking(infd) == -1)
-        {
-            close(infd);
-            break;
-        }
+        // if(make_socket_non_blocking(infd) == -1)
+        // {
+        //     close(infd);
+        //     break;
+        // }
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende

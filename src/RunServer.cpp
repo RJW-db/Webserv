@@ -116,7 +116,7 @@ int RunServers::runServers()
 			if (client->_disconnectTime <= chrono::steady_clock::now())
 				cleanupClient(*client);
 		}
-        std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {

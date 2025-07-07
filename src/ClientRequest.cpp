@@ -23,7 +23,6 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
-        std::cout << escape_special_chars(buff) << std::endl; //testcout
         client.setDisconnectTime(disconnectDelaySeconds);
         static bool (*const handlers[])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)

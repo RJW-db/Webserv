@@ -58,6 +58,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         else
             throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
     }
+    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
 
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
@@ -76,7 +77,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._bodyEnd = client._body.find("\r\n\r\n");
         if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
             return false;
-        cout << "POST request found, bodyEnd: " << client._bodyEnd << endl;
         return true;
     }
     client._headerParseState = HEADER_PARSED_NON_POST;
@@ -98,7 +98,7 @@ bool HttpRequest::processHttpBody(Client &client)
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize);
     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    cout << "\n\nclient._rootPath " << client._rootPath << endl;
+    // cout << "\n\nclient._rootPath " << client._rootPath << endl; // testcout
 
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
@@ -135,8 +135,8 @@ bool HttpRequest::processHttpBody(Client &client)
 
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
 {
-    cout << escape_special_chars(client._header) << endl;
-    cout << escape_special_chars(client._body) << endl;
+    // cout << escape_special_chars(client._header) << endl;
+    // cout << escape_special_chars(client._body) << endl;
 
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
@@ -325,7 +325,7 @@ void HttpRequest::getContentLength(Client &client)
     try
     {
         value = stoll(content.data());
-        cout << "content.data() " <<  content.data() << endl;
+        // cout << "content.data() " <<  content.data() << endl; // testcout
         if (value < 0)
             throw RunServers::ClientException("Content-Length cannot be negative.");
 

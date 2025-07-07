@@ -88,10 +88,8 @@ bool HandleTransfer::handleGetTransfer()
 
 bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, int fd)
 {
-    cout << "foundBoundaryPost, boundaryBuffer: \"" << boundaryBuffer << "\"" << endl; //testcout
     if (boundaryBuffer.find("--" + string(client._bodyBoundary) + "--\r\n") == 2)
     {
-        cout << "in foundBoundaryPost, boundary found" << endl; //testcout
         FileDescriptor::closeFD(fd);
         string body = client._rootPath + '\n';
         string headers =
@@ -108,7 +106,6 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
         RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
         return true;
     }
-    cout << "after foundBoundaryPost, boundary not found" << endl; //testcout
 
     return false;
 }
