@@ -23,8 +23,7 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
-        
-
+        client.setDisconnectTime(disconnectDelaySeconds);
         static bool (*const handlers[])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
             &HttpRequest::parseHttpBody,                       // HEADER_PARSED_POST (1)
@@ -190,7 +189,7 @@ void RunServers::cleanupFD(int fd)
 void RunServers::cleanupClient(Client &client)
 {
     // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
-    std::cout << "disconnecting client with fd:" << client._fd << std::endl;
+    std::cout << "cleaning up client with fd:" << client._fd << std::endl;
     for (auto it = _handle.begin(); it != _handle.end(); )
     {
         if ((*it)->_client._fd == client._fd)

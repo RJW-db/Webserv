@@ -1,5 +1,0 @@
-test 1 failed because there is difference in expected output
-test 2 failed because there is difference in expected output
-test 3 failed because there is difference in expected output
-test 4 failed because there is difference in expected output
-test 5 failed because there is difference in expected output

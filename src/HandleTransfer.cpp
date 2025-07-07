@@ -74,8 +74,10 @@ bool HandleTransfer::handleGetTransfer()
         throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno)); // TODO throw out client and remove handleTransfer
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;
+    _client.setDisconnectTime(disconnectDelaySeconds);
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
+        std::cout << "completed get request for: " << _client._rootPath << std::endl; //testcout
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
         return true;
@@ -86,8 +88,10 @@ bool HandleTransfer::handleGetTransfer()
 
 bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, int fd)
 {
+    cout << "foundBoundaryPost, boundaryBuffer: \"" << boundaryBuffer << "\"" << endl; //testcout
     if (boundaryBuffer.find("--" + string(client._bodyBoundary) + "--\r\n") == 2)
     {
+        cout << "in foundBoundaryPost, boundary found" << endl; //testcout
         FileDescriptor::closeFD(fd);
         string body = client._rootPath + '\n';
         string headers =
@@ -104,6 +108,8 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
         RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
         return true;
     }
+    cout << "after foundBoundaryPost, boundary not found" << endl; //testcout
+
     return false;
 }
 
@@ -126,6 +132,7 @@ bool HandleTransfer::handlePostTransfer()
         if (bytesReceived > _fileSize - _bytesWrittenTotal)
             byteswrite = _fileSize - _bytesWrittenTotal;
         ssize_t bytesWritten = write(_fd, buff, byteswrite);
+        _client.setDisconnectTime(disconnectDelaySeconds);
         if (bytesWritten == -1)
             errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
         _bytesWrittenTotal += static_cast<size_t>(bytesWritten);

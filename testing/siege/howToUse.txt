@@ -1,0 +1,14 @@
+
+POST
+urls.txt
+WSL
+http://192.168.2.99:8080/upload POST < ./testing/siege/body.txt
+linux
+http://localhost:8080/upload POST < ./testing/siege/body.txt
+
+body.txt
+echo -e '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n' > ./testing/siege/body.txt
+
+
+siege in terminal
+siege -c1 -t10s -f testing/siege/urls.txt --content-type="multipart/form-data; boundary=boundary123"

@@ -88,6 +88,8 @@ bool HttpRequest::processHttpBody(Client &client)
     size_t totalWriteSize;
     getInfoPost(client, content, totalWriteSize);
     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    cout << "\n\nclient._rootPath " << client._rootPath << endl;
+
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (fd == -1)
     {
@@ -96,6 +98,7 @@ bool HttpRequest::processHttpBody(Client &client)
         else
             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
     }
+    cout << "\n\nclient._rootPath " << client._rootPath << endl;
     FileDescriptor::setFD(fd);
     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
     ssize_t bytesWritten = write(fd, content.data(), writeSize);

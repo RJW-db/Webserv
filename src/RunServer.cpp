@@ -113,10 +113,10 @@ int RunServers::runServers()
 		{
 			unique_ptr<Client> &client = it->second;
 			++it;
-			if (client->_keepAlive == false || client->_disconnectTime <= chrono::steady_clock::now())
+			if (client->_disconnectTime <= chrono::steady_clock::now())
 				cleanupClient(*client);
 		}
-        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
+        std::cout << "Blocking and waiting for epoll event..." << std::endl;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -155,6 +155,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 finished = handle.handlePostTransfer();
             if (finished == true)
             {
+                std::cout << "finished transfer" << std::endl; //testcout
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 else
