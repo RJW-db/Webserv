@@ -10,12 +10,15 @@ RUN apt-get update && apt-get upgrade -y && \
       libtool \
       libssl-dev \
       pkg-config \
-      net-tools
+      net-tools \
+      nano
 
 # Clone Siege into /opt/siege
 RUN git clone https://github.com/JoeDog/siege.git /opt/siege
 
-RUN git clone --branch rjw https://github.com/RJW-db/Webserv.git /opt/webserv
+RUN mkdir -p /opt/postRequest && \
+    echo 'http://192.168.122.1:8080/upload POST < body.txt' > /opt/postRequest/urls.txt && \
+    echo -e '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n' > /opt/postRequest/body.txt
 
 # Set working directory to /opt/siege
 WORKDIR /opt/siege
