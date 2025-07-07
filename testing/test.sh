@@ -8,6 +8,8 @@ cd ../
 make
 # Start the web server in the background
 # disable if you don't want server to start
+./Webserv testing/test1.conf &
+SERVER_PID=$!
 
 
 cd testing

@@ -48,6 +48,7 @@ class ConfigServer : public AconfigServ
 
         bool listenHostname(string &line);
         bool serverName(string &line);
+        int getLineNbr(void) const;
 
         void addLocation(const Location &location, string &path);
 

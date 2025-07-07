@@ -77,7 +77,7 @@ bool HandleTransfer::handleGetTransfer()
     _client.setDisconnectTime(disconnectDelaySeconds);
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        std::cout << "completed get request for: " << _client._rootPath << std::endl; //testcout
+        std::cout << "completed get request for file: " << _client._rootPath << ", on fd: " << _client._fd << std::endl; //test
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
         return true;
