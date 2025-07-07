@@ -6,3 +6,5 @@ services:
     command: sleep infinity
     volumes:
       - ./:/workspace
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

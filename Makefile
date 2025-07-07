@@ -33,6 +33,7 @@ CCPFLAGS		+=	-g
 #		Directories
 BUILD_DIR		:=	.build/
 INCD			:=	include/
+DOCKER_DIR		:=	testing/docker
 
 #		SOURCE FILES
 SRC_DIR			:=	src/
@@ -94,13 +95,28 @@ test: all
 valgrind: all
 	valgrind --track-fds=yes ./$(NAME)
 
+build:
+	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --no-cache --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
+
+up:
+	docker compose -f $(DOCKER_DIR)/docker-compose.yml up -d
+
+down:
+	docker compose -f $(DOCKER_DIR)/docker-compose.yml down -v
+
+docker_clean:
+	docker system prune -af --volumes
+
+enter:
+	docker exec -it webserv bash
+
 print-%:
 	$(info $($*))
 
 #		Include the dependency files
 -include $(DEPS)
 
-.PHONY: all clean fclean re test valgrind
+.PHONY: all clean fclean re test valgrind build up down docker_clean
 
 # ----------------------------------- colors --------------------------------- #
 BOLD		= \033[1m

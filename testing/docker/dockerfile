@@ -9,15 +9,18 @@ RUN apt-get update && apt-get upgrade -y && \
       automake \
       libtool \
       libssl-dev \
-      pkg-config \
-      net-tools \
-      nano
+      pkg-config
+    #   net-tools \
+    #   nano
 
 # Clone Siege into /opt/siege
 RUN git clone https://github.com/JoeDog/siege.git /opt/siege
 
+# HOST_IP = $(shell hostname -I | awk '{print $1}')
+ARG HOST_IP
+ENV HOST_IP=${HOST_IP}
 RUN mkdir -p /opt/postRequest && \
-    echo 'http://192.168.122.1:8080/upload POST < body.txt' > /opt/postRequest/urls.txt && \
+    echo "http://${HOST_IP}:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
     echo -e '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n' > /opt/postRequest/body.txt
 
 # Set working directory to /opt/siege
@@ -29,3 +32,11 @@ RUN chmod +x ./utils/bootstrap && \
     ./configure && \
     make -j && \
     make install
+
+# GET and POST
+RUN echo '#!/bin/sh\nsiege -c1 -t1s http://$HOST_IP:8080/' > /usr/local/bin/get && \
+    chmod +x /usr/local/bin/get && \
+    echo '#!/bin/sh\nsiege -c1 -t1s --content-type "multipart/form-data; boundary=boundary" --file=/opt/postRequest/urls.txt' > /usr/local/bin/post && \
+    chmod +x /usr/local/bin/post
+
+WORKDIR /opt/postRequest

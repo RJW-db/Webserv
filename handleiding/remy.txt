@@ -52,21 +52,3 @@ printf "HEAD / HTTP/1.1\r\nHost: localhost\r\n\r\n" | nc localhost 8080
 
 problem with overwriting the file, if 2 or 3 people trying to create the same file
 
-
-
-
-
-DOCKER
-docker compose down -v
-docker system prune -af --volumes
-docker compose build --no-cache
-docker compose up -d
-
-other terminal
-docker exec -it webserv bash
-
-cd /opt/postRequest
-siege -c1 -t1s http://192.168.122.1:8080/
-siege -c1 -t1s --content-type "multipart/form-data; boundary=boundary" --file=urls.txt
-
-ONLY ip changes of main computer, hostname -I (SECOND OPTION), input this ip in the dockerfile
