@@ -23,6 +23,7 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
+        std::cout << escape_special_chars(buff) << std::endl; //testcout
         client.setDisconnectTime(disconnectDelaySeconds);
         static bool (*const handlers[])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
@@ -36,7 +37,7 @@ void RunServers::processClientRequest(Client &client)
     catch(const exception& e)   // if catch we don't handle well
     {\
         cerr << e.what() << endl;
-        std::cout << "caught message in processclient request" << std::endl; //testcout
+        std::cout << "caught message in processclient request" << std::endl; //test
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
@@ -70,7 +71,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     }
     if (bytesReceived == 0)
     {
-        throw ErrorCodeClientException(client, 0, ""); // todo find different solution maybe
+        throw ErrorCodeClientException(client, 0, "kicking out client after read of 0"); // todo find different solution maybe
     }
     return (0); // You never get here
 }

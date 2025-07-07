@@ -34,7 +34,7 @@ const char *ErrorCodeClientException::what() const throw()
 
 void ErrorCodeClientException::handleErrorClient() const
 {
-    std::cerr << "errorCodeClient" << _message << std::endl;
+    std::cerr << "errorCodeClient: " << _message << std::endl;
     if (_errorCode == 0)
     {
         // RunServers::clientHttpCleanup(_client);
@@ -66,6 +66,7 @@ void ErrorCodeClientException::handleErrorClient() const
     }
     int fd = open(it->second.c_str(), O_RDONLY);
     size_t fileSize = getFileLength(it->second.c_str());
+    _client._rootPath = it->second;  // test
     FileDescriptor::setFD(fd);
     string response = HttpRequest::HttpResponse(_client, it->first, it->second, fileSize);
     auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);

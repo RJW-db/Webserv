@@ -160,3 +160,8 @@ AconfigServ &AconfigServ::operator=(const AconfigServ &other)
     }
     return (*this);
 }
+
+int ConfigServer::getLineNbr(void) const
+{
+    return _lineNbr;
+}

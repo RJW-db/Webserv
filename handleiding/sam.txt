@@ -39,3 +39,19 @@ body with only boundary, no data
 content-length smaller than actual body
 content-length larger than actual body
 
+
+
+Nieuwe post
+
+result = oude buffer + read opslaan
+
+kijken of volledige buffer in result staat
+
+Buffer houden van lengte van boundary en dat nog niet schrijven
+
+schrijf van result tot buffer van boundary
+
+
+
+steeds kijken of volledige buffer is gevonden
+

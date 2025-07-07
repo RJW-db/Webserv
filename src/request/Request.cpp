@@ -48,17 +48,27 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
+    size_t ConnectionIndex = client._header.find("Connection:");
+    if (ConnectionIndex != string::npos)
+    {
+        if (client._header.find("close\r\n", ConnectionIndex) != string::npos)
+            client._keepAlive = false;
+        else if (client._header.find("keep-alive\r\n", ConnectionIndex) != string::npos)
+            client._keepAlive = true;
+        else
+            throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
+    }
+
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
+    // Check if there is a null character in buff
+    if (client._header.find('\0') != string::npos)
+       throw ErrorCodeClientException(client, 400, "Null bytes not allowed in HTTP request");
     if (client._location.getRoot().back() == '/')
         client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
     else
         client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
-
-    auto it = client._headerFields.find("Connection");
-    if (it != client._headerFields.end() && it->second == "close")
-        client._keepAlive = false;
 
     if (client._method == "POST")
     {
@@ -338,7 +348,7 @@ void HttpRequest::handleRequest(Client &client)
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._headerFields.find("Host") == client._headerFields.end())
-        throw RunServers::ClientException("Missing Host header");
+        throw ErrorCodeClientException(client, 400, "Host header is missing in request: " + client._header);
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
     switch (client._useMethod)

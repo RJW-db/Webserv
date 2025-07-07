@@ -70,7 +70,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 		}
         skipLine(line, false, block, true);
         string path = location.getLocationPath(line);
-        skipLine(line, false, block, false);
+        skipLine(line, false, block, true);
         if (line[0] != '{')
             throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
         line = line.substr(1);
@@ -184,7 +184,7 @@ void Parsing::ServerCheck()
     curConf.setLineNbr(_lines.begin()->first);
 	string line = _lines.begin()->second;
     line = line.substr(6);
-    skipLine(line, false, curConf, false);
+    skipLine(line, false, curConf, true);
     if (line[0] == '{')
     {
         line = line.substr(1);
@@ -204,7 +204,10 @@ void Parsing::ServerCheck()
         _configs.push_back(curConf);
     }
     else
-        throw runtime_error("Couldn't find closing curly bracket server block");
+    {
+        
+        throw runtime_error(to_string(curConf.getLineNbr()) + ": Couldn't find opening curly bracket server block");
+    }
 }
 
 Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
