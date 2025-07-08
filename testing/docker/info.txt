@@ -1,0 +1,22 @@
+docker compose down -v
+docker system prune -af --volumes
+docker compose build --no-cache --build-arg HOST_IP=$(hostname -I | awk '{print $1}')
+docker compose up -d
+
+If you change the Dockerfile or dependencies:
+docker compose build --no-cache
+docker compose up -d
+
+
+other terminal
+docker exec -it webserv bash
+
+cd /opt/postRequest
+siege -c1 -t1s http://192.168.122.1:8080/
+siege -c1 -t1s --content-type "multipart/form-data; boundary=boundary" --file=urls.txt
+
+ONLY ip changes of main computer, hostname -I (SECOND OPTION), input this ip in the dockerfile
+
+
+
+getent hosts host.docker.internal
