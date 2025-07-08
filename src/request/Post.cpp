@@ -44,6 +44,7 @@ ContentType HttpRequest::getContentType(Client &client)
 
 void HttpRequest::getBodyInfo(Client &client)
 {
+    std::cout << "body: " << client._body.substr(0, 100) << std::endl; //testcout
     size_t cdPos = client._body.find("Content-Disposition:");
     if (cdPos == string::npos)
         throw RunServers::ClientException("Content-Disposition header not found in multipart body");
