@@ -57,12 +57,10 @@ class HttpRequest
         static bool processHttpBody(Client &client);
         static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
 
-        static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
-            if (delimiter == std::string::npos) {
-                if (receivedBytes == CLIENT_BUFFER_SIZE)
-                    return false;
-                // throw runtime_error("for debugging purposes, remove this line, and kick client through keep-alive check");
-            }
+        static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes)
+        {
+            if (delimiter == std::string::npos)
+                return false;
             return true;
         }
 

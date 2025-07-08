@@ -20,3 +20,9 @@ ONLY ip changes of main computer, hostname -I (SECOND OPTION), input this ip in 
 
 
 getent hosts host.docker.internal
+
+
+
+
+file check for  \r \n
+od -c body.txt

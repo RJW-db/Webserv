@@ -88,7 +88,7 @@ bool HandleTransfer::handleGetTransfer()
 
 bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, int fd)
 {
-    if (boundaryBuffer.find("--" + string(client._bodyBoundary) + "--\r\n") == 2)
+    if (boundaryBuffer.find("--" + string(client._bodyBoundary) + "--") == 2)
     {
         FileDescriptor::closeFD(fd);
         string body = client._rootPath + '\n';

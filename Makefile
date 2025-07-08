@@ -96,7 +96,7 @@ valgrind: all
 	valgrind --track-fds=yes ./$(NAME)
 
 build:
-	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --no-cache --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
+	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
 
 up:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml up -d
