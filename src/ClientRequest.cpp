@@ -156,7 +156,7 @@ string extractHeader(const string &header, const string &key)
 void sendErrorResponse(int clientFD, const string &message)
 {
     string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
-    send(clientFD, response.c_str(), response.size(), 0);
+    send(clientFD, response.c_str(), response.size(), MSG_NOSIGNAL);
 }
 
 // void RunServers::insertClientFD(int fd)

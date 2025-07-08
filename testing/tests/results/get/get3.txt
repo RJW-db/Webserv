@@ -1,0 +1,41 @@
+HTTP/1.1 200 OK
+Content-Type: application/javascript
+Content-Length: 1238
+Connection: close
+
+// Main JavaScript file for web2
+console.log("Main.js loaded from web2 directory");
+
+// Simple DOM manipulation when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM Content Loaded in web2");
+    
+    // Add a greeting message
+    const body = document.body;
+    const greeting = document.createElement('div');
+    greeting.innerHTML = '<h2>JavaScript is working in web2!</h2>';
+    greeting.style.color = 'blue';
+    greeting.style.padding = '20px';
+    greeting.style.border = '2px solid #333';
+    greeting.style.margin = '20px';
+    greeting.style.borderRadius = '10px';
+    body.appendChild(greeting);
+    
+    // Add current time
+    const timeDiv = document.createElement('div');
+    timeDiv.innerHTML = '<p>Current time: ' + new Date().toLocaleString() + '</p>';
+    timeDiv.style.fontStyle = 'italic';
+    timeDiv.style.color = 'green';
+    body.appendChild(timeDiv);
+});
+
+// Simple function to test JavaScript functionality
+function testFunction() {
+    alert('Test function called from web2/main.js');
+    return "Function executed successfully";
+}
+
+// Export for testing if using modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { testFunction };
+}

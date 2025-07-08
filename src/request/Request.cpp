@@ -346,24 +346,24 @@ void HttpRequest::handleRequest(Client &client)
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
     switch (client._useMethod)
     {
-    case 1:
+    case 1: // HEAD
     {
         locateRequestedFile(client);
         string response = HttpRequest::HttpResponse(client, 200, "txt", 0);
-        send(client._fd, response.data(), response.size(), 0);
+        send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
         break;
     }
-    case 2:
+    case 2: // GET
     {
         GET(client);
         break;
     }
-    case 4:
+    case 4: // POST
     {
         processHttpBody(client);
         break;
     }
-    case 8:
+    case 8: // DELETE
     {
         int code = 200;
         if (remove(('.' + client._requestPath).data()) == 0)
@@ -371,7 +371,7 @@ void HttpRequest::handleRequest(Client &client)
             string body = "File deleted";
             string response = HttpRequest::HttpResponse(client, code, "txt", body.size());
             response += body;
-            send(client._fd, response.data(), response.size(), 0);
+            send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
             RunServers::clientHttpCleanup(client);
         }
         else

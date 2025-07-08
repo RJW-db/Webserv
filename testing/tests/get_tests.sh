@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/saleunin/Desktop/Webserv/testing 
+# cd /home/saleunin/Desktop/Webserv/testing 
 
 mkdir -p results/get
 # Test 1: Basic GET request to port 8080
@@ -28,13 +28,14 @@ echo "5. Testing GET request for non-existent file to localhost:15000/nonexisten
 curl -i -H "Connection: close" http://localhost:15000/nonexistent > results/get/get5.txt &
 echo -e "\n"
 
-# sleep 1
-# {
-# cmp -s expectedResults/get/get1.txt results/get/get1.txt && echo "test 1 completed successfully" || echo "test 1 failed because there is difference in expected output"
-# cmp -s expectedResults/get/get2.txt results/get/get2.txt && echo "test 2 completed successfully" || echo "test 2 failed because there is difference in expected output"
-# cmp -s expectedResults/get/get3.txt results/get/get3.txt && echo "test 3 completed successfully" || echo "test 3 failed because there is difference in expected output"
-# cmp -s expectedResults/get/get4.txt results/get/get4.txt && echo "test 4 completed successfully" || echo "test 4 failed because there is difference in expected output"
-# cmp -s expectedResults/get/get5.txt results/get/get5.txt && echo "test 5 completed successfully" || echo "test 5 failed because there is difference in expected output"
-# } >> results/get/summary.txt 2>&1
+sleep 1
+wait
+{
+cmp -s expectedResults/get/get1.txt results/get/get1.txt && echo "test 1 completed successfully" || echo "test 1 failed because there is difference in expected output"
+cmp -s expectedResults/get/get2.txt results/get/get2.txt && echo "test 2 completed successfully" || echo "test 2 failed because there is difference in expected output"
+cmp -s expectedResults/get/get3.txt results/get/get3.txt && echo "test 3 completed successfully" || echo "test 3 failed because there is difference in expected output"
+cmp -s expectedResults/get/get4.txt results/get/get4.txt && echo "test 4 completed successfully" || echo "test 4 failed because there is difference in expected output"
+cmp -s expectedResults/get/get5.txt results/get/get5.txt && echo "test 5 completed successfully" || echo "test 5 failed because there is difference in expected output"
+} >> results/get/summary.txt 2>&1
 
 echo "Get tests completed"
