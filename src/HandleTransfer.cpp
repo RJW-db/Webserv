@@ -162,7 +162,6 @@ bool HandleTransfer::handlePostTransfer()
         if (_foundEndingBoundary == true)
         {
             size_t foundReturn = _fileBuffer.find("\r\n");
-            std::cout << "foundreturn here:" << foundReturn << std::endl; //testcout
             // if (foundReturn + 2 < _fileBuffer.size())
             //     throw ErrorCodeClientException(_client, 400, "after post boundary and \\r\\n found more characters");
             if (foundReturn != string::npos)
@@ -189,14 +188,12 @@ bool HandleTransfer::handlePostTransfer()
                 }
             }
         }
-        std::cout << "filebuffer: " << _fileBuffer << std::endl; //testcout
         ssize_t bytesWritten = 0;
         if (writeSize > 0)
         {
             ssize_t bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
             if (bytesWritten == -1)
                 HandleTransfer::errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
-            std::cout << "removed from filebuffer:" << _fileBuffer.substr(0, bytesWritten) << std::endl; //testcout
             _fileBuffer = _fileBuffer.substr(bytesWritten);
         }
         if (boundaryFound != string::npos)

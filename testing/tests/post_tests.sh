@@ -29,7 +29,7 @@ echo -e "\n"
 # curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server3" -F "myfile=@expectedResults/post/upload3/1M.txt" http://localhost:15000/upload3 > results/post/post5.txt &
 # echo -e "\n"
 
-sleep 3
+sleep 15
 
 # test 1: Check results
 {

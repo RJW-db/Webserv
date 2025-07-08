@@ -110,21 +110,7 @@ bool HttpRequest::processHttpBody(Client &client)
             return false;
     }
     unique_ptr<HandleTransfer> handle;
-    // if (bytesWritten == totalWriteSize)
-    // {
-    // string boundaryCheck = content.substr(bytesWritten);
-    // if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
-    // {
-    //     RunServers::clientHttpCleanup(client);
-    //     if (client._keepAlive == false)
-    //         RunServers::cleanupClient(client);
-    //     return false;
-    // }
-
     handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-    // }
-    // else
-        // handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
     RunServers::insertHandleTransfer(move(handle));
     return true;
 }
