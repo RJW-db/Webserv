@@ -17,7 +17,7 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
 }
 
 HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary)
-: _client(client), _fd(fd), _bytesWrittenTotal(bytesWritten), _fileSize(finalFileSize), _fileBuffer(boundary)
+: _client(client), _fd(fd), _bytesWrittenTotal(bytesWritten), _fileSize(finalFileSize), _fileBuffer(boundary), _foundEndingBoundary(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -118,32 +118,126 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
 }
 
+// bool HandleTransfer::handlePostTransfer()
+// {
+//     try
+//     {
+//         char buff[CLIENT_BUFFER_SIZE];
+//         size_t bytesReceived = RunServers::receiveClientData(_client, buff);
+//         size_t byteswrite = bytesReceived;
+
+//         if (bytesReceived > _fileSize - _bytesWrittenTotal)
+//             byteswrite = _fileSize - _bytesWrittenTotal;
+//         ssize_t bytesWritten = write(_fd, buff, byteswrite);
+//         _client.setDisconnectTime(disconnectDelaySeconds);
+//         if (bytesWritten == -1)
+//             errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
+//         _bytesWrittenTotal += static_cast<size_t>(bytesWritten);
+//         if (_bytesWrittenTotal == _fileSize)
+//         {
+//             _fileBuffer.append(buff + bytesWritten, bytesReceived - byteswrite);
+//             return (foundBoundaryPost(_client, _fileBuffer, _fd));
+//         }
+//         return false;
+//     }
+//     catch(const exception& e)
+//     {
+//         cerr << e.what() << '\n';
+//         return true;
+//     }
+//     return true;
+// }
+
 bool HandleTransfer::handlePostTransfer()
 {
     try
     {
         char buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = RunServers::receiveClientData(_client, buff);
-        size_t byteswrite = bytesReceived;
 
-        if (bytesReceived > _fileSize - _bytesWrittenTotal)
-            byteswrite = _fileSize - _bytesWrittenTotal;
-        ssize_t bytesWritten = write(_fd, buff, byteswrite);
-        _client.setDisconnectTime(disconnectDelaySeconds);
-        if (bytesWritten == -1)
-            errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
-        _bytesWrittenTotal += static_cast<size_t>(bytesWritten);
-        if (_bytesWrittenTotal == _fileSize)
+        size_t byteswrite = bytesReceived;
+        size_t boundaryBufferSize = _client._bodyBoundary.size() + 6; // \r\n\r\n--boundary
+
+        _fileBuffer.append(buff, bytesReceived);
+        if (_foundEndingBoundary == true)
         {
-            _fileBuffer.append(buff + bytesWritten, bytesReceived - byteswrite);
-            return (foundBoundaryPost(_client, _fileBuffer, _fd));
+            size_t foundReturn = _fileBuffer.find("\r\n");
+            std::cout << "foundreturn here:" << foundReturn << std::endl; //testcout
+            // if (foundReturn + 2 < _fileBuffer.size())
+            //     throw ErrorCodeClientException(_client, 400, "after post boundary and \\r\\n found more characters");
+            if (foundReturn != string::npos)
+                return true;
+            if (_fileBuffer.size() - _client._bodyBoundary.size() > 4)
+                throw ErrorCodeClientException(_client, 400, "couldn't find \\r\\n after ending boundary in post request");
+        }
+        size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
+        ssize_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
+        if (boundaryFound != string::npos)
+        {
+            for (ssize_t i = boundaryFound; i >= 0; i--)
+            {
+                if (_fileBuffer[i] == '\n')
+                {
+                    if (i > 0 && _fileBuffer[i - 1] == '\r')
+                    {
+                        if (i > 1 && _fileBuffer[i - 1] != '\n')
+                        {
+                            writeSize = i - 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        std::cout << "filebuffer: " << _fileBuffer << std::endl; //testcout
+        ssize_t bytesWritten = 0;
+        if (writeSize > 0)
+        {
+            ssize_t bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
+            if (bytesWritten == -1)
+                HandleTransfer::errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
+            std::cout << "removed from filebuffer:" << _fileBuffer.substr(0, bytesWritten) << std::endl; //testcout
+            _fileBuffer = _fileBuffer.substr(bytesWritten);
+        }
+        if (boundaryFound != string::npos)
+        {
+            _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + 4);
+            FileDescriptor::closeFD(_fd);
+            string body = _client._rootPath + '\n';
+            string headers =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                "Connection: " +
+                string(_client._keepAlive ? "keep-alive" : "close") + "\r\n"
+                "Content-Length: " +
+                to_string(body.size()) + "\r\n"
+                                         "\r\n" +
+                body;
+            send(_client._fd, headers.data(), headers.size(), 0);
+            RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+            RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", rootpath: ", _client._rootPath);
+            _foundEndingBoundary = true;
+            std::cout <<"\n\n filebuffer after finding boundary:" << _fileBuffer << std::endl; //testcout
+            size_t foundReturn = _fileBuffer.find("\r\n");
+            // std::cout << "foundreturn: " << foundReturn << std::endl; //testcout
+            // std::cout << "removed foundreturn: " << _fileBuffer.substr(foundReturn) << std::endl; //testcout
+            // exit(0);
+            std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
+            if (foundReturn + 2 < _fileBuffer.size())
+                throw ErrorCodeClientException(_client, 400, "after post boundary and \\r\\n found more characters");
+            if (foundReturn != string::npos)
+            {
+                std::cout << "returning here" << std::endl; //testcout
+                return true;
+            }
+            // return true;
+            return false;
         }
         return false;
     }
-    catch(const exception& e)
+    catch(const std::exception& e)
     {
-        cerr << e.what() << '\n';
+        std::cerr << e.what() << '\n';
         return true;
     }
-    return true;
 }

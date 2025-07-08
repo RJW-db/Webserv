@@ -41,19 +41,9 @@ content-length larger than actual body
 
 content disposition not found in first post request testing
 
-Nieuwe post
+make sure no characters in buff after last \r\n
 
-\\\\--boundary123
+check for just \r\n before boundary and add -- check
 
-result = oude buffer + read opslaan
-
-kijken of volledige buffer in result staat 
-
-Buffer houden van lengte van boundary en dat nog niet schrijven
-
-schrijf van result tot buffer van boundary
-
-
-
-steeds kijken of volledige buffer is gevonden
+compare bodysize to contentLength
 

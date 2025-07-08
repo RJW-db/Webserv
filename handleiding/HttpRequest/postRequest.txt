@@ -16,7 +16,7 @@ Sec-Fetch-Site: same-origin
 Sec-Fetch-User: ?1
 Priority: u=0, i
 
-------geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9
+----geckoformboundary5c44fc7df0b090cea945f1f1f2626ae9
 Content-Disposition: form-data; name="myfile"; filename="example.txt"
 Content-Type: text/plain
 

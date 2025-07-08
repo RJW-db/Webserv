@@ -18,7 +18,7 @@ class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundary); //post
+		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundaryBuffer); //post
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -42,6 +42,7 @@ class HandleTransfer
         size_t  _headerSize;
 		
         bool    _epollout_enabled;
+        bool    _foundEndingBoundary;
 
 		size_t	_bytesWrittenTotal;
     protected:

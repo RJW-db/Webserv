@@ -21,7 +21,7 @@ ARG HOST_IP
 ENV HOST_IP=${HOST_IP}
 RUN mkdir -p /opt/postRequest && \
     echo "http://${HOST_IP}:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
-    printf -- '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n\r\n\r\n' > /opt/postRequest/body.txt
+    printf -- '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n' > /opt/postRequest/body.txt
 
 # Set working directory to /opt/siege
 WORKDIR /opt/siege
@@ -36,7 +36,7 @@ RUN chmod +x ./utils/bootstrap && \
 # GET and POST
 RUN echo '#!/bin/sh\nsiege -c1 -t1s http://$HOST_IP:8080/' > /usr/local/bin/get && \
     chmod +x /usr/local/bin/get && \
-    echo '#!/bin/sh\nsiege -c1 -t1s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls.txt' > /usr/local/bin/post && \
+    echo '#!/bin/sh\nsiege -c2 -t10s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls.txt' > /usr/local/bin/post && \
     chmod +x /usr/local/bin/post
 
 WORKDIR /opt/postRequest

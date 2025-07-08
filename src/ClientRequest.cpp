@@ -59,9 +59,6 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    buff[bytesReceived] = '\0'; // Ensure null-termination for safety
-    std::cout << escape_special_chars(buff) << std::endl; //testcout
-    // buff[bytesReceived - 1] = '\0'; // Ensure null-termination for safety
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
