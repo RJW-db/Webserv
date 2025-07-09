@@ -43,21 +43,20 @@
 
 bool HttpRequest::processHttpBody(Client &client)
 {
-    string content;
     size_t totalWriteSize;
-    std::cout << escape_special_chars(client._body) << std::endl << endl; //testcout
+    string content = client._body.substr(client._bodyEnd + 4);
     getInfoPost(client, content, totalWriteSize);
     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    bool hasBoundaryPrefix = false;
+    if (client._body.find(client._bodyBoundary) == 2)
+        hasBoundaryPrefix = true;
     if (fd == -1)
     {
         if (errno == EACCES)
             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
         else
-        {
-            std::cout << "method: " << client._method << std::endl; //testcout
             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
-        }
     }
     FileDescriptor::setFD(fd);
     // if (client._body.find(client._bodyBoundary) != 0)
@@ -110,7 +109,7 @@ bool HttpRequest::processHttpBody(Client &client)
             return false;
     }
     unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
+    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(bytesWritten), hasBoundaryPrefix);
     RunServers::insertHandleTransfer(move(handle));
     return true;
 }
@@ -157,7 +156,6 @@ ContentType HttpRequest::getContentType(Client &client)
 
 void HttpRequest::getBodyInfo(Client &client)
 {
-    // std::cout << "body: " << client._body.substr(0, 100) << std::endl; //testcout
     size_t cdPos = client._body.find("Content-Disposition:");
     if (cdPos == string::npos)
         throw RunServers::ClientException("Content-Disposition header not found in multipart body");
@@ -196,12 +194,10 @@ void HttpRequest::getBodyInfo(Client &client)
 
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
 {
-    // std::cout << escape_special_chars(client._header) << escape_special_chars(client._body) << endl;; //testcout
     
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
     HttpRequest::getContentType(client); // TODO return isn't used at all
-    content = client._body.substr(client._bodyEnd + 4);
     size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
     size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
     totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
@@ -226,7 +222,6 @@ void HttpRequest::getContentLength(Client &client)
     try
     {
         value = stoll(content.data());
-        // cout << "content.data() " <<  content.data() << endl; // testcout
         if (value < 0)
             throw RunServers::ClientException("Content-Length cannot be negative.");
 

@@ -18,7 +18,7 @@ class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, int fd, size_t bytesWritten, size_t finalFileSize, string boundaryBuffer); //post
+		HandleTransfer(Client &client, int fd, size_t bytesWritten, string boundaryBuffer, bool hasBoundaryPrefix); //post
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -43,6 +43,7 @@ class HandleTransfer
 		
         bool    _epollout_enabled;
         bool    _foundEndingBoundary;
+        bool    _hasBoundaryPrefix; // Indicates if the boundary preceded by --
 
 		size_t	_bytesWrittenTotal;
     protected:

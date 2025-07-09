@@ -57,7 +57,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         else
             throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
     }
-    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
 
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
