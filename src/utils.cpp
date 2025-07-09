@@ -40,3 +40,29 @@ size_t getFileLength(const string_view filename)
 
     return static_cast<size_t>(status.st_size);;
 }
+
+uint64_t stoullSafe(string_view stringValue)
+{
+    if (stringValue.empty())
+    {
+        throw runtime_error("Given buffer_size for Webserv is \"\"");
+    }
+    if (all_of(stringValue.begin(), stringValue.end(), ::isdigit) == false)
+    {
+        throw runtime_error("Given buffer_size for Webserv contains non-digit characters: " + string(stringValue));
+    }
+    unsigned long long value;
+    try
+    {
+        value = stoull(stringValue.data());
+    }
+    catch (const invalid_argument &)
+    {
+        throw runtime_error("Given buffer_size for Webserv is invalid: " + string(stringValue));
+    }
+    catch (const out_of_range &)
+    {
+        throw runtime_error("Given buffer_size for Webserv is out of range: " + string(stringValue));
+    }
+    return static_cast<uint64_t>(value);
+}

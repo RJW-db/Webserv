@@ -2,7 +2,7 @@
 
 void Client::resetRequestState()
 {
-    _headerParseState = HEADER_NOT_PARSED;
+    _headerParseState = HEADER_AWAITING;
     _header.clear();
     _body.clear();
     _method.clear();

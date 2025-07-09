@@ -26,11 +26,11 @@ ContentType HttpRequest::getContentType(Client &client)
     if (ct.find("multipart/form-data") == 0)
     {
         size_t semi = ct.find(';');
-        if (semi != std::string_view::npos)
+        if (semi != string_view::npos)
         {
             client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
-            if (boundaryPos != std::string_view::npos)
+            if (boundaryPos != string_view::npos)
                 client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
                 throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
@@ -72,10 +72,68 @@ void HttpRequest::getBodyInfo(Client &client)
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
 
     size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
-    // size_t fileEnd = client._body.find("\r\n--" + std::string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
+    // size_t fileEnd = client._body.find("\r\n--" + string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
 
     // if (position == string::npos)
     //     throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
     // client._fileContent = string_view(client._body).substr(fileStart, fileEnd - fileStart);
+}
+
+
+
+
+void HttpRequest::validateChunkSizeLine(const string &input)
+{
+    if (input.size() < 3)
+    {
+        cout << "wrong1" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+
+    size_t hexPart = input.size() - 2;
+    if (all_of(input.begin(), input.begin() + hexPart, ::isxdigit) == false)
+    {
+        cout << "wrong2" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+        
+    if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
+    {
+        cout << "wrong3" << endl; //testcout
+        if (input[hexPart] == '\r')
+            cout << "\\r" << endl; //testcout
+        if (input[hexPart + 1] == '\n')
+            cout << "\\n" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+}
+#include <string>
+uint64_t HttpRequest::parseChunkSize(const string &input)
+{
+    uint64_t chunkSize;
+    stringstream ss;
+    ss << hex << input;
+    ss >> chunkSize;
+    // cout << "chunkSize " << chunkSize << endl;
+    // if (static_cast<size_t>(chunkSize) > client._location.getClientBodySize())
+    // {
+    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkSize)); // (413, "Payload Too Large");
+    // }
+    return chunkSize;
+}
+
+void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
+{
+    if (input.size() - 2 != chunkSize)
+    {
+        cout << "test1" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
+    }
+
+    if (input[chunkSize] != '\r' || input[chunkSize + 1] != '\n')
+    {
+        cout << "test2" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
+    }
 }

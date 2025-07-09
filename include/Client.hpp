@@ -11,16 +11,17 @@
 #define disconnectDelaySeconds 5
 
 enum HeaderParseState {
-    HEADER_NOT_PARSED = 0,
-    HEADER_PARSED_POST = 1,
-    HEADER_PARSED_NON_POST = 2
+    HEADER_AWAITING = 0,
+    BODY_CHUNKED = 1,
+    BODY_AWAITING = 2,
+    BODY_READY = 3
 };
 
 class Client
 {
     public:
             // Add more fields as needed
-        Client(int fd) : _fd(fd), _headerParseState(HEADER_NOT_PARSED), _keepAlive(true), _contentLength(0){}
+        Client(int fd) : _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0){}
         // Client &operator=(const Client &other);
 		
         void resetRequestState();
@@ -55,7 +56,6 @@ class Client
 
         chrono::steady_clock::time_point _disconnectTime;
 		bool _keepAlive;
-
         unordered_map<string, string_view> _headerFields;
 };
 

@@ -1,0 +1,29 @@
+POST /upload HTTP/1.1\r\n
+Host: example.com\r\n
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Transfer-Encoding: chunked\r\n
+\r\n
+4A\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Content-Disposition: form-data; name="file"; filename="hello.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+13\r\n
+Hello, Webserv\r\n
+29\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n
+0\r\n
+\r\n
+
+-n for no new line
+-e to print \r & \n as a whitepace
+
+echo -ne "POST /upload HTTP/1.1\r\nHost: example.com\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\nTransfer-Encoding: chunked\r\n\r\n" > header.txt
+
+echo -ne "4A\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" > 1chunk.txt
+
+echo -ne "13\r\nHello, Webserv\r\n" > 2chunk.txt
+
+echo -ne "29\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n" > 3chunk.txt
+
+echo -ne "0\r\n\r\n" > 4chunk.txt

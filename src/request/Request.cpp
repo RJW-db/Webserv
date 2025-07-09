@@ -62,14 +62,19 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     if (client._method == "POST")
     {
-        client._headerParseState = HEADER_PARSED_POST;
+        it = client._headerFields.find("Transfer-Encoding");
+        if (it != client._headerFields.end() && it->second == "chunked")
+        {
+            client._headerParseState = BODY_CHUNKED;
+            return true;
+        }
+        client._headerParseState = BODY_AWAITING;
         client._bodyEnd = client._body.find("\r\n\r\n");
         if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
             return false;
-        cout << "POST request found, bodyEnd: " << client._bodyEnd << endl;
         return true;
     }
-    client._headerParseState = HEADER_PARSED_NON_POST;
+    client._headerParseState = BODY_READY;
     return true;
 }
 
@@ -296,44 +301,66 @@ void HttpRequest::GET(Client &client)
     RunServers::insertHandleTransfer(move(handle));
 }
 
+// void HttpRequest::getContentLength(Client &client)
+// {
+//     auto contentLength = client._headerFields.find("Content-Length");
+//     if (contentLength == client._headerFields.end())
+//         throw RunServers::ClientException("Broken POST request");
+//     const string_view content = contentLength->second;
+//     if (content.empty())
+//     {
+//         throw RunServers::LengthRequiredException("Content-Length header is empty.");
+//     }
+//     for (size_t i = 0; i < content.size(); ++i)
+//     {
+//         if (!isdigit(static_cast<unsigned char>(content[i])))
+//             throw RunServers::ClientException("Content-Length contains non-digit characters.");
+//     }
+//     long long value;
+//     try
+//     {
+//         value = stoll(content.data());
+//     }
+//     catch (const invalid_argument &)
+//     {
+//         throw RunServers::ClientException("Content-Length is invalid (not a number).");
+//     }
+//     catch (const out_of_range &)
+//     {
+//         throw RunServers::ClientException("Content-Length value is out of range.");
+//     }
+
+//     if (value < 0)
+//         throw RunServers::ClientException("Content-Length cannot be negative.");
+
+//     if (static_cast<size_t>(value) > client._location.getClientBodySize())
+//         throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value)); // (413, "Payload Too Large");
+
+//     if (value == 0)
+//         throw RunServers::ClientException("Content-Length cannot be zero.");
+//     client._contentLength = static_cast<size_t>(value);
+// }
+
 void HttpRequest::getContentLength(Client &client)
 {
     auto contentLength = client._headerFields.find("Content-Length");
     if (contentLength == client._headerFields.end())
         throw RunServers::ClientException("Broken POST request");
+
     const string_view content = contentLength->second;
-    if (content.empty())
-    {
-        throw RunServers::LengthRequiredException("Content-Length header is empty.");
-    }
-    for (size_t i = 0; i < content.size(); ++i)
-    {
-        if (!isdigit(static_cast<unsigned char>(content[i])))
-            throw RunServers::ClientException("Content-Length contains non-digit characters.");
-    }
-    long long value;
     try
     {
-        value = stoll(content.data());
-        cout << "content.data() " <<  content.data() << endl;
-        if (value < 0)
-            throw RunServers::ClientException("Content-Length cannot be negative.");
-
+        uint64_t value = stoullSafe(content);
         if (static_cast<size_t>(value) > client._location.getClientBodySize())
-            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed:" + to_string(value)); // (413, "Payload Too Large");
-
+            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
         if (value == 0)
             throw RunServers::ClientException("Content-Length cannot be zero.");
+        client._contentLength = static_cast<size_t>(value);
     }
-    catch (const invalid_argument &)
+    catch (const std::runtime_error &e)
     {
-        throw RunServers::ClientException("Content-Length is invalid (not a number).");
+        throw RunServers::ClientException(e.what());
     }
-    catch (const out_of_range &)
-    {
-        throw RunServers::ClientException("Content-Length value is out of range.");
-    }
-    client._contentLength = static_cast<size_t>(value);
 }
 
 void HttpRequest::handleRequest(Client &client)
@@ -360,7 +387,20 @@ void HttpRequest::handleRequest(Client &client)
     }
     case 4: // POST
     {
-        processHttpBody(client);
+        switch (client._headerParseState)
+        {
+            case BODY_AWAITING:
+                processHttpBody(client);
+                break;
+            
+            case BODY_CHUNKED:
+                {
+                    std::cout << escape_special_chars(client._header) << std::endl; //testcout
+                    std::cout << escape_special_chars(client._body) << std::endl; //testcout
+                    // std::cout << "okeeeee\n\n" << std::endl; //testcout
+                }
+        }
+        
         break;
     }
     case 8: // DELETE

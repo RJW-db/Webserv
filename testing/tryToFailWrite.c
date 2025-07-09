@@ -22,14 +22,13 @@ ssize_t write_with_retry(int fd, const void *buf, size_t len) {
 int main(){
     struct sigaction sa = {.sa_handler = handler, .sa_flags = 0};
     sigemptyset(&sa.sa_mask);
-    sigaction(SIGALRM, &sa, NULL);
-
+    sigaction(SIGINT, &sa, NULL);
 
     size_t size = 1024*1024*500; // 500 MB
     char *buf = malloc(size);
     memset(buf, 'A', size);
 
-    alarm(1); // send SIGALRM after 1 sec
+    printf("Start writing. Press Ctrl+C to send SIGINT and interrupt write().\n");
 
     ssize_t r = write(STDOUT_FILENO, buf, size);
     if (r < 0) {
@@ -41,5 +40,6 @@ int main(){
     } else {
         printf("write() completed successfully: %zd bytes\n", r);
     }
+    free(buf);
     return 0;
 }

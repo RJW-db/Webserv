@@ -57,6 +57,11 @@ class HttpRequest
         static bool processHttpBody(Client &client);
         static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
 
+        static inline bool appendToBody(Client &client, const char *buff, size_t receivedBytes)
+        {
+            client._body.append(buff, receivedBytes);
+            return (true);
+        }
         static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
             if (delimiter == std::string::npos) {
                 if (receivedBytes == CLIENT_BUFFER_SIZE)
@@ -86,4 +91,11 @@ class HttpRequest
 
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
+
+
+        // Chunked request
+        static void validateChunkSizeLine(const string &input);
+        static uint64_t parseChunkSize(const string &input);
+        static void ParseChunkStr(const string &input, uint64_t chunkSize);
+
 };

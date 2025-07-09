@@ -83,6 +83,12 @@ class RunServers
 
         static bool runHandleTransfer(struct epoll_event &currentEvent);
 
+        static void setClientBufferSize(uint64_t value)
+        {
+            _clientBufferSize = value;
+        }
+
+
         template<typename... Args>
         static void logMessage(int arg, Args&&... args)
         {
@@ -129,6 +135,7 @@ class RunServers
         static unordered_map<int, unique_ptr<Client>> _clients;
 
         static int _level;
+        static uint64_t _clientBufferSize;
 };
 
 void	poll_usages(void);

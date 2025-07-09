@@ -23,18 +23,20 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
+        // std::cout << escape_special_chars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
         client.setDisconnectTime(disconnectDelaySeconds);
-        static bool (*const handlers[])(Client&, const char*, size_t) = {
-            &HttpRequest::parseHttpHeader,                     // HEADER_NOT_PARSED (0)
-            &HttpRequest::parseHttpBody,                       // HEADER_PARSED_POST (1)
-            [](Client&, const char*, size_t) { return true; } // HEADER_PARSED_NON_POST (2)
+        static bool (*const handlers[4])(Client&, const char*, size_t) = {
+            &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
+            &HttpRequest::appendToBody,                      // BODY_CHUNKED (1)
+            &HttpRequest::parseHttpBody,                       // BODY_AWAITING (2)
+            [](Client&, const char*, size_t) { return true; } // BODY_READY (3)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;
         HttpRequest::handleRequest(client);
     }
     catch(const exception& e)   // if catch we don't handle well
-    {\
+    {
         cerr << e.what() << endl;
         std::cout << "caught message in processclient request" << std::endl; //testcout
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
@@ -166,7 +168,7 @@ void sendErrorResponse(int clientFD, const string &message)
 
 void RunServers::clientHttpCleanup(Client &client)
 {
-    client._headerParseState = HEADER_NOT_PARSED;
+    client._headerParseState = HEADER_AWAITING;
     client._header.clear();
     client._body.clear();
     client._requestPath.clear();
