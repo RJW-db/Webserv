@@ -92,6 +92,7 @@ class HttpRequest
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
 
+        static void handleChunks(Client &client);
 
         // Chunked request
         static void validateChunkSizeLine(const string &input);

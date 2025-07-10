@@ -1,21 +1,51 @@
 #!/bin/bash
 
 {
-    echo -ne "POST /upload HTTP/1.1\r\nHost: example.com\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\nTransfer-Encoding: chunked\r\n\r\n"
-    echo "Sent header" >&2
+    echo -ne "POST /upload HTTP/1.1\r\n"
+    echo -ne "Host: example.com\r\n"
+    echo -ne "Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+    echo -ne "Transfer-Encoding: chunked\r\n\r\n"
+
+    # Part 1: Start of multipart and file header
+    CHUNK1=$'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="upload.txt"\r\nContent-Type: text/plain\r\n\r\n'
+    printf "%X\r\n" "$(echo -n "$CHUNK1" | wc -c)"
+    echo -ne "$CHUNK1\r\n"
     sleep 1
-    echo -ne "4A\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
-    echo "Sent 1st chunk" >&2
+
+    # Part 2: File content
+    FILE_CONTENT=$'This is the content of the file.\nSecond line of text.\n'
+    printf "%X\r\n" "$(echo -n "$FILE_CONTENT" | wc -c)"
+    echo -ne "$FILE_CONTENT\r\n"
     sleep 1
-    echo -ne "13\r\nHello, Webserv\r\n"
-    echo "Sent 2nd chunk" >&2
+
+    # Part 3: Ending boundary
+    END_BOUNDARY=$'------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n'
+    printf "%X\r\n" "$(echo -n "$END_BOUNDARY" | wc -c)"
+    echo -ne "$END_BOUNDARY\r\n"
     sleep 1
-    echo -ne "29\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"
-    echo "Sent 3rd chunk" >&2
-    sleep 1
+
+    # Final zero-length chunk
     echo -ne "0\r\n\r\n"
-    echo "Sent last chunk" >&2
+
 } | nc localhost 8080
+
+
+# {
+#     echo -ne "POST /upload HTTP/1.1\r\nHost: example.com\r\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\nTransfer-Encoding: chunked\r\n\r\n"
+#     echo "Sent header" >&2
+#     sleep 1
+#     echo -ne "4A\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+#     echo "Sent 1st chunk" >&2
+#     sleep 1
+#     echo -ne "13\r\nHello, Webserv\r\n"
+#     echo "Sent 2nd chunk" >&2
+#     sleep 1
+#     echo -ne "29\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"
+#     echo "Sent 3rd chunk" >&2
+#     sleep 1
+#     echo -ne "0\r\n\r\n"
+#     echo "Sent last chunk" >&2
+# } | nc localhost 8080
 
 # echo -ne
 # -n for no new line

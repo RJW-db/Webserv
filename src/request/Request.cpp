@@ -389,12 +389,13 @@ void HttpRequest::handleRequest(Client &client)
     {
         switch (client._headerParseState)
         {
-            case BODY_AWAITING:
+            case BODY_READY:
                 processHttpBody(client);
                 break;
             
             case BODY_CHUNKED:
                 {
+                    handleChunks(client);
                     std::cout << escape_special_chars(client._header) << std::endl; //testcout
                     std::cout << escape_special_chars(client._body) << std::endl; //testcout
                     // std::cout << "okeeeee\n\n" << std::endl; //testcout

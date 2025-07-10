@@ -21,7 +21,7 @@ class Client
 {
     public:
             // Add more fields as needed
-        Client(int fd) : _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0){}
+        Client(int fd) : _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0), _chunkPos(0){}
         // Client &operator=(const Client &other);
 		
         void resetRequestState();
@@ -47,6 +47,7 @@ class Client
         string _version;
         size_t _contentLength;
         size_t _bodyEnd;
+        size_t _chunkPos;
         string_view _contentType;
         string_view _bodyBoundary;
 

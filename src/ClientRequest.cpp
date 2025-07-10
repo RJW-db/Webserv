@@ -27,9 +27,9 @@ void RunServers::processClientRequest(Client &client)
         client.setDisconnectTime(disconnectDelaySeconds);
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
-            &HttpRequest::appendToBody,                      // BODY_CHUNKED (1)
+            &HttpRequest::appendToBody,                        // BODY_CHUNKED (1)
             &HttpRequest::parseHttpBody,                       // BODY_AWAITING (2)
-            [](Client&, const char*, size_t) { return true; } // BODY_READY (3)
+            [](Client&, const char*, size_t) { return true; }  // BODY_READY (3)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;

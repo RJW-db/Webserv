@@ -85,28 +85,28 @@ void HttpRequest::getBodyInfo(Client &client)
 
 void HttpRequest::validateChunkSizeLine(const string &input)
 {
-    if (input.size() < 3)
+    if (input.size() < 1)
     {
         cout << "wrong1" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
     }
 
-    size_t hexPart = input.size() - 2;
-    if (all_of(input.begin(), input.begin() + hexPart, ::isxdigit) == false)
+    // size_t hexPart = input.size() - 2;
+    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
     {
         cout << "wrong2" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
     }
         
-    if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
-    {
-        cout << "wrong3" << endl; //testcout
-        if (input[hexPart] == '\r')
-            cout << "\\r" << endl; //testcout
-        if (input[hexPart + 1] == '\n')
-            cout << "\\n" << endl; //testcout
-        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    }
+    // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
+    // {
+    //     cout << "wrong3" << endl; //testcout
+    //     if (input[hexPart] == '\r')
+    //         cout << "\\r" << endl; //testcout
+    //     if (input[hexPart + 1] == '\n')
+    //         cout << "\\n" << endl; //testcout
+    //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    // }
 }
 #include <string>
 uint64_t HttpRequest::parseChunkSize(const string &input)
@@ -136,4 +136,33 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
         cout << "test2" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
     }
+}
+
+
+void HttpRequest::handleChunks(Client &client)
+{
+    string line = client._body.substr(client._chunkPos);
+    std::cout << escape_special_chars(line) << "\nyur\n" <<endl; //testcout
+    size_t crlf = line.find("\r\n");
+    if (crlf == string::npos)
+        return;
+    string chunkSizeLine = line.substr(0, crlf);
+    std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
+    validateChunkSizeLine(chunkSizeLine);
+    
+    uint64_t chunkSize = parseChunkSize(chunkSizeLine);
+    std::cout << "chunkSize = " << chunkSize << std::endl << endl; //testcout
+
+    size_t chunkDataCrlf = line.find("\r\n", crlf + 2);
+    if (chunkDataCrlf == string::npos)
+        return; // but should start looking for chunkData and not chunkSize
+    string chunkData = line.substr(crlf + 2, chunkDataCrlf);
+    std::cout << escape_special_chars(chunkData) << std::endl; //testcout
+
+    std::cout << "chunkData = " << chunkData.size() << std::endl; //testcout
+
+    // if (chunkData[39] == '\r')
+    //     std::cout << "made it" << std::endl; //testcout
+    // std::cout << chunkData[39] << std::endl; //testcout
+    exit(0);
 }
