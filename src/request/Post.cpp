@@ -2,45 +2,6 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 
-
-// bool HttpRequest::processHttpBody(Client &client)
-// {
-//     string content;
-//     size_t totalWriteSize;
-//     getInfoPost(client, content, totalWriteSize);
-//     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-//     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-//     if (fd == -1)
-//     {
-//         if (errno == EACCES)
-//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
-//         else
-//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
-//     }
-//     FileDescriptor::setFD(fd);
-//     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
-//     ssize_t bytesWritten = write(fd, content.data(), writeSize);
-//     if (bytesWritten == -1)
-//         HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-//     unique_ptr<HandleTransfer> handle;
-//     if (bytesWritten == totalWriteSize)
-//     {
-//         string boundaryCheck = content.substr(bytesWritten);
-//         if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
-//         {
-//             RunServers::clientHttpCleanup(client);
-//             if (client._keepAlive == false)
-//                 RunServers::cleanupClient(client);
-//             return false;
-//         }
-//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-//     }
-//     else
-//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
-//     RunServers::insertHandleTransfer(move(handle));
-//     return true;
-// }
-
 bool HttpRequest::processHttpBody(Client &client)
 {
     size_t totalWriteSize;
@@ -57,53 +18,6 @@ bool HttpRequest::processHttpBody(Client &client)
             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
     }
     FileDescriptor::setFD(fd);
-    // size_t boundaryBufferSize = client._bodyBoundary.size() + 6; // \r\n\r\n--boundary
-    // size_t writeSize = (boundaryBufferSize >= content.size()) ? 0 : content.size() - boundaryBufferSize;
-    // ssize_t boundaryFound = content.find(client._bodyBoundary);
-    // if (boundaryFound != string::npos)
-    // {
-    //     for (ssize_t i = boundaryFound; i >= 0; i--)
-    //     {
-    //         if (content[i] == '\n')
-    //         {
-    //             if (i > 0 && content[i - 1] == '\r')
-    //             {
-    //                 if (i > 1 && content[i - 1] != '\n')
-    //                 {
-    //                     writeSize = i - 1; // TODO underflow 0 -1
-    //                     break ;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // ssize_t bytesWritten = 0;
-    // if (writeSize > 0)
-    // {
-    //     ssize_t bytesWritten = write(fd, content.data(), writeSize);
-    //     if (bytesWritten == -1)
-    //         HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-    // }
-    // if (boundaryFound != string::npos)
-    // {
-    //         FileDescriptor::closeFD(fd);
-    //         string body = client._rootPath + '\n';
-    //         string headers =
-    //             "HTTP/1.1 200 OK\r\n"
-    //             "Content-Type: text/plain\r\n"
-    //             "Connection: " +
-    //             string(client._keepAlive ? "keep-alive" : "close") + "\r\n"
-    //             "Content-Length: " +
-    //             to_string(body.size()) + "\r\n"
-    //                                      "\r\n" +
-    //             body;
-
-    //         send(client._fd, headers.data(), headers.size(), 0);
-    //         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-    //         RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
-    //         RunServers::clientHttpCleanup(client);
-    //         return false;
-    // }
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(0));
     ssize_t bytesWritten = 0;
@@ -114,7 +28,7 @@ bool HttpRequest::processHttpBody(Client &client)
         handle->_fileBuffer = handle->_fileBuffer.substr(client._bodyBoundary.size() + boundaryFound - bytesWritten);
         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
         RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
-        handle->_foundEndingBoundary = true;
+        handle->_foundBoundary = true;
         if (handle->validateFinalCRLF() == true)
         {
             if (client._keepAlive == false)

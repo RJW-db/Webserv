@@ -22,12 +22,12 @@ echo "4. Testing POST request to upload 1M.txt to localhost:15000/upload with Ho
 curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload3/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
 echo -e "\n"
 
-
-# # error posts
-# # Test 5: POST request to upload large text file to server3
-# echo "5. Testing POST request to upload 1M.txt to localhost:15000/upload with Host header 'server3' which should fail due to size limit"
-# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server3" -F "myfile=@expectedResults/post/upload3/1M.txt" http://localhost:15000/upload3 > results/post/post5.txt &
+# # Test 5: POST request to upload multiple files to server1
+# echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15000/upload3 with Host header 'server1'"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "file1=@expectedResults/post/upload1/small2.txt" -F "file2=@expectedResults/post/upload1/small3.txt" http://localhost:15000/upload3 > results/post/post5.txt &
 # echo -e "\n"
+
+
 
 sleep 3
 
@@ -64,6 +64,15 @@ else
     cmp -s expectedResults/post/post4.txt results/post/post4.txt || echo "post test 4 failed because there is difference in expected for post.txt"
     cmp -s expectedResults/post/upload3/1M.txt results/post/upload1/1M.txt || echo "post test 4 failed because there is difference in expected for uploaded file"
 fi
+
+# # test 5: Check results for multiple file upload
+# if cmp -s expectedResults/post/post5.txt results/post/post5.txt && cmp -s expectedResults/post/upload1/small2.txt results/post/upload3/small2.txt && cmp -s expectedResults/post/upload1/small3.txt results/post/upload3/small3.txt; then
+#     echo "post test 5 completed successfully"
+# else
+#     cmp -s expectedResults/post/post5.txt results/post/post5.txt || echo "post test 5 failed because there is difference in expected for post.txt"
+#     cmp -s expectedResults/post/upload1/small2.txt results/post/upload3/small2.txt || echo "post test 5 failed because there is difference in expected for small2.txt"
+#     cmp -s expectedResults/post/upload1/small3.txt results/post/upload3/small3.txt || echo "post test 5 failed because there is difference in expected for small3.txt"
+# fi
 
 } > results/post/summary.txt 2>&1
 

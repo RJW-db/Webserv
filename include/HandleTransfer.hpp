@@ -31,6 +31,7 @@ class HandleTransfer
         bool handlePostTransfer();
         bool validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
+        void    searchContentDisposition();
 
         Client  &_client;
         int     _fd;
@@ -44,7 +45,9 @@ class HandleTransfer
         size_t  _headerSize;
 		
         bool    _epollout_enabled;
-        bool    _foundEndingBoundary;
+        bool    _foundBoundary;
+        bool    _searchContentDisposition;
+        
         
 
 		size_t	_bytesWrittenTotal;
