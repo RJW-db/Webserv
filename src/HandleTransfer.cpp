@@ -16,8 +16,8 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string boundary, bool hasBoundaryPrefix)
-: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundEndingBoundary(false), _hasBoundaryPrefix(hasBoundaryPrefix)
+HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string boundary)
+: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundEndingBoundary(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -45,7 +45,7 @@ void HandleTransfer::readToBuf()
         char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
-            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd));
+            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._rootPath);
         size_t _bytesRead = static_cast<size_t>(bytesRead);
         _bytesReadTotal += _bytesRead;
         if (_bytesRead > 0)
@@ -112,9 +112,9 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
 
 void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd)
 {
+    FileDescriptor::closeFD(fd);
     if (remove(client._rootPath.data()))
         std::cout << "remove failed on file:" << client._rootPath << std::endl;
-    FileDescriptor::closeFD(fd);
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
 }
 
@@ -148,6 +148,64 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
 //     return true;
 // }
 
+bool HandleTransfer::validateFinalCRLF()
+{
+    size_t foundReturn = _fileBuffer.find("\r\n");
+    if (foundReturn == 0)
+    {
+        _fileBuffer.substr(2);
+        // bool // needtofindNewcontentDisposition line true
+        FileDescriptor::closeFD(_fd);
+        _fd = -1;
+        _foundEndingBoundary = false;
+        return false;
+    }
+    if (foundReturn != 2 && foundReturn != string::npos)
+        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
+    for (size_t i = 0; i < _fileBuffer.size(); ++i)
+    {
+        char c = _fileBuffer[i];
+        if (c != '-' && c != '\r' && c != '\n')
+        {
+            errorPostTransfer(_client, 400, "post request has invalid characters after boundary", _fd);
+        }
+    }
+    if (foundReturn == 2 && foundReturn + 2 == _fileBuffer.size())
+    {
+        if (_bytesReadTotal != _client._contentLength)
+            throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
+        FileDescriptor::closeFD(_fd);
+        string body = _client._rootPath + '\n';
+        string headers =  HttpRequest::HttpResponse(_client, 200, ".txt", body.size()) + body;
+        send(_client._fd, headers.data(), headers.size(), 0);
+        return true;
+    }
+    if (_fileBuffer.size() > 4)
+        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
+    return false;
+}
+
+size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
+{
+    size_t boundaryBufferSize = _client._bodyBoundary.size() + 4; // \r\n--boundary
+    size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
+    size_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
+    if (boundaryFound != string::npos)
+    {
+        if (_fileBuffer.find("\r\n") != boundaryFound - 4)
+            throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
+        writeSize = boundaryFound - 4;
+    }
+    if (writeSize > 0)
+    {
+        bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
+        if (bytesWritten == -1)
+            ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
+        _fileBuffer = _fileBuffer.substr(bytesWritten);
+    }
+    return boundaryFound;
+}
+
 bool HandleTransfer::handlePostTransfer()
 {
     try
@@ -155,92 +213,35 @@ bool HandleTransfer::handlePostTransfer()
         char buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = RunServers::receiveClientData(_client, buff);
         _bytesReadTotal += bytesReceived;
-        // size_t byteswrite = bytesReceived;
-        size_t boundaryBufferSize = _client._bodyBoundary.size() + 2 + (_hasBoundaryPrefix * 2); // \r\n\r\n--boundary
-        _fileBuffer.append(buff, bytesReceived);
+        if (_bytesReadTotal > _client._contentLength)
+            throw ErrorCodeClientException(_client, 413, "Content length smaller then body received for fd: " + to_string(_fd));
         if (_foundEndingBoundary == true)
-        {
-            size_t foundReturn = _fileBuffer.find("\r\n");
-            
-            if (foundReturn != _hasBoundaryPrefix * 2 && foundReturn != string::npos)
-                throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between boundary and return characters");
-            if (foundReturn == _hasBoundaryPrefix * 2 && foundReturn + 2 == _fileBuffer.size() )
-            {
-                std::cout << "returning in foundendingBoundary" << std::endl; //testcout
-                return true;
-            }
-
-            if (_fileBuffer.size() > 2 + _hasBoundaryPrefix * 2)
-                throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between boundary and return characters");
-            return false;
-        }
-        size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
-        ssize_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
-        if (boundaryFound != string::npos)
-        {
-            for (ssize_t i = boundaryFound; i >= 0; i--)
-            {
-                if (_fileBuffer[i] == '\n')
-                {
-                    if (i > 0 && _fileBuffer[i - 1] == '\r')
-                    {
-                        if (i > 1 && _fileBuffer[i - 1] != '\n')
-                        {
-                            writeSize = i - 1;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+            return validateFinalCRLF();
+        _fileBuffer.append(buff, bytesReceived);
         ssize_t bytesWritten = 0;
-        if (writeSize > 0)
-        {
-            bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
-            if (bytesWritten == -1)
-                HandleTransfer::errorPostTransfer(_client, 500, "write failed post request: " + string(strerror(errno)), _fd);
-            if (boundaryFound != string::npos)
-            _fileBuffer = _fileBuffer.substr(bytesWritten);
-        }
+        size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
         if (boundaryFound != string::npos)
         {
-            FileDescriptor::closeFD(_fd);
             size_t offset = 0;
-            if (_hasBoundaryPrefix == true)
-                offset = 2;
-            if (boundaryFound - bytesWritten != offset + 2)
-                throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
             _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + boundaryFound - bytesWritten);
-            string body = _client._rootPath + '\n';
-            string headers =
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/plain\r\n"
-                "Connection: " +
-                string(_client._keepAlive ? "keep-alive" : "close") + "\r\n"
-                "Content-Length: " +
-                to_string(body.size()) + "\r\n"
-                                         "\r\n" +
-                body;
-            send(_client._fd, headers.data(), headers.size(), 0);
             RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
             RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", rootpath: ", _client._rootPath);
             _foundEndingBoundary = true;
-            std::cout << "here" << std::endl; //testcout
-            size_t foundReturn = _fileBuffer.find("\r\n");
-            if (foundReturn != offset && foundReturn != string::npos)
-                throw ErrorCodeClientException(_client, 400, "after post boundary and \\r\\n found more characters");
-            if (foundReturn != string::npos)
-            {
-                std::cout << "returning here" << std::endl; //testcout
-                return true;
-            }
-            return false;
+            return (validateFinalCRLF());
         }
         return false;
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
-        return true;
+        cerr << "Error in handlePostTransfer: " << e.what() << endl;
+        FileDescriptor::closeFD(_fd);
+        if (remove(_client._rootPath.data()))
+            cerr << "remove failed on file:" << _client._rootPath << "with error: " << strerror(errno) << std::endl;
+        RunServers::cleanupClient(_client);
     }
+    catch (const ErrorCodeClientException &e)
+    {
+        errorPostTransfer(_client, e.getErrorCode(), e.getMessage(), _fd);
+    }
+    return true;
 }

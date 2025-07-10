@@ -40,9 +40,22 @@ content-length smaller than actual body
 content-length larger than actual body
 
 
-make sure no characters in buff after last \r\n
+make sure no characters in buff after last \r\n ~
 
-check for just \r\n before boundary and add -- check
+check for just \r\n before boundary and add -- check ~
 
-compare bodysize to contentLength
+compare bodysize to contentLength ~
+
+meer boundary kunnen hanteren 
+
+ook hanteren als er geen file is maar gewoon form
+
+
+
+
+for cgi
+
+when receiving multipart data without filename we should convert to url encoded before sending to stdin cgi
+
+query string(? in requestpath) only for cgi and otherwise ignored
 

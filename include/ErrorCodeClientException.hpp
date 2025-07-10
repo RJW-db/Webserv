@@ -21,6 +21,8 @@ public:
     void handleErrorClient() const;
     explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
     const char *what() const throw();
+    uint16_t getErrorCode() const;
+    string getMessage() const;
 };
 
 #endif
