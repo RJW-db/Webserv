@@ -395,9 +395,9 @@ void HttpRequest::handleRequest(Client &client)
             
             case BODY_CHUNKED:
                 {
+                    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
+                    // std::cout << "body " << escape_special_chars(client._body) << " <" << std::endl; //testcout
                     handleChunks(client);
-                    std::cout << escape_special_chars(client._header) << std::endl; //testcout
-                    std::cout << escape_special_chars(client._body) << std::endl; //testcout
                     // std::cout << "okeeeee\n\n" << std::endl; //testcout
                 }
         }

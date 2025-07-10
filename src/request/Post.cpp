@@ -142,20 +142,28 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
 void HttpRequest::handleChunks(Client &client)
 {
     string line = client._body.substr(client._chunkPos);
-    std::cout << escape_special_chars(line) << "\nyur\n" <<endl; //testcout
+    // std::cout << escape_special_chars(line) <<endl; //testcout
     size_t crlf = line.find("\r\n");
     if (crlf == string::npos)
+    {
+        std::cout << "handleChunks 1" << std::endl; //testcout
         return;
+    }
+    std::cout << escape_special_chars(line) <<endl<<endl; //testcout
     string chunkSizeLine = line.substr(0, crlf);
     std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
     validateChunkSizeLine(chunkSizeLine);
     
     uint64_t chunkSize = parseChunkSize(chunkSizeLine);
-    std::cout << "chunkSize = " << chunkSize << std::endl << endl; //testcout
+    std::cout << "chunkSize = " << chunkSize << endl; //testcout
 
     size_t chunkDataCrlf = line.find("\r\n", crlf + 2);
     if (chunkDataCrlf == string::npos)
+    if (crlf == string::npos)
+    {
+        std::cout << "handleChunks 2" << std::endl; //testcout
         return; // but should start looking for chunkData and not chunkSize
+    }
     string chunkData = line.substr(crlf + 2, chunkDataCrlf);
     std::cout << escape_special_chars(chunkData) << std::endl; //testcout
 
