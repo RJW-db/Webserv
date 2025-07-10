@@ -46,8 +46,10 @@ int main(int argc, char *argv[])
         // return 1;
     }
     string confFile = "config/default.conf";
-    if (argc == 2)
+    if (argc >= 2)
         confFile = argv[1];
+    if (argc == 3)
+        RunServers::setClientBufferSize(stoullSafe(argv[2]));
     Parsing test(confFile.data());
     // test.printAll();
     RunServers::createServers(test.getConfigs());

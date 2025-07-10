@@ -40,6 +40,7 @@ vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 int RunServers::_level = -1;
 
+uint64_t RunServers::_clientBufferSize = 8192; // 8KB
 void RunServers::cleanupServer()
 {
 }

@@ -69,7 +69,7 @@ void HandleTransfer::readToBuf()
 bool HandleTransfer::handleGetTransfer()
 {
     readToBuf();
-    ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), 0);
+    ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), MSG_NOSIGNAL);
     if (sent == -1)
         throw RunServers::ClientException(string("handlingTransfer send: ") + strerror(errno)); // TODO throw out client and remove handleTransfer
     size_t _sent = static_cast<size_t>(sent);
@@ -101,7 +101,7 @@ bool HandleTransfer::foundBoundaryPost(Client &client, string &boundaryBuffer, i
                                      "\r\n" +
             body;
 
-        send(client._fd, headers.data(), headers.size(), 0);
+        send(client._fd, headers.data(), headers.size(), MSG_NOSIGNAL);
         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
         RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
         return true;

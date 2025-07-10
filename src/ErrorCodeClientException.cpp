@@ -60,7 +60,7 @@ void ErrorCodeClientException::handleErrorClient() const
         else
             throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
         message += body;
-        send(_client._fd, message.data(), message.size(), 0);
+        send(_client._fd, message.data(), message.size(), MSG_NOSIGNAL);
         RunServers::cleanupClient(_client);
         return;
     }

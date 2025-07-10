@@ -153,11 +153,11 @@ ContentType HttpRequest::getContentType(Client &client)
     if (ct.find("multipart/form-data") == 0)
     {
         size_t semi = ct.find(';');
-        if (semi != std::string_view::npos)
+        if (semi != string_view::npos)
         {
             client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
-            if (boundaryPos != std::string_view::npos)
+            if (boundaryPos != string_view::npos)
                 client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
                 throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
@@ -200,7 +200,7 @@ void HttpRequest::getBodyInfo(Client &client)
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
 
     size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
-    // size_t fileEnd = client._body.find("\r\n--" + std::string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
+    // size_t fileEnd = client._body.find("\r\n--" + string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
 
     // if (position == string::npos)
     //     throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
@@ -208,55 +208,97 @@ void HttpRequest::getBodyInfo(Client &client)
     // client._fileContent = string_view(client._body).substr(fileStart, fileEnd - fileStart);
 }
 
-void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
+
+
+
+void HttpRequest::validateChunkSizeLine(const string &input)
 {
-    // std::cout << escape_special_chars(client._header) << escape_special_chars(client._body) << endl;; //testcout
-    
-    HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
-    HttpRequest::getContentType(client); // TODO return isn't used at all
-    content = client._body.substr(client._bodyEnd + 4);
-    size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
-    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
-    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
+    if (input.size() < 1)
+    {
+        cout << "wrong1" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+
+    // size_t hexPart = input.size() - 2;
+    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
+    {
+        cout << "wrong2" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+        
+    // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
+    // {
+    //     cout << "wrong3" << endl; //testcout
+    //     if (input[hexPart] == '\r')
+    //         cout << "\\r" << endl; //testcout
+    //     if (input[hexPart + 1] == '\n')
+    //         cout << "\\n" << endl; //testcout
+    //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    // }
+}
+#include <string>
+uint64_t HttpRequest::parseChunkSize(const string &input)
+{
+    uint64_t chunkSize;
+    stringstream ss;
+    ss << hex << input;
+    ss >> chunkSize;
+    // cout << "chunkSize " << chunkSize << endl;
+    // if (static_cast<size_t>(chunkSize) > client._location.getClientBodySize())
+    // {
+    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkSize)); // (413, "Payload Too Large");
+    // }
+    return chunkSize;
 }
 
-void HttpRequest::getContentLength(Client &client)
+void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
 {
-    auto contentLength = client._headerFields.find("Content-Length");
-    if (contentLength == client._headerFields.end())
-        throw RunServers::ClientException("Broken POST request");
-    const string_view content = contentLength->second;
-    if (content.empty())
+    if (input.size() - 2 != chunkSize)
     {
-        throw RunServers::LengthRequiredException("Content-Length header is empty.");
+        cout << "test1" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
     }
-    for (size_t i = 0; i < content.size(); ++i)
-    {
-        if (!isdigit(static_cast<unsigned char>(content[i])))
-            throw RunServers::ClientException("Content-Length contains non-digit characters.");
-    }
-    long long value;
-    try
-    {
-        value = stoll(content.data());
-        // cout << "content.data() " <<  content.data() << endl; // testcout
-        if (value < 0)
-            throw RunServers::ClientException("Content-Length cannot be negative.");
 
-        if (static_cast<size_t>(value) > client._location.getClientBodySize())
-            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed:" + to_string(value)); // (413, "Payload Too Large");
+    if (input[chunkSize] != '\r' || input[chunkSize + 1] != '\n')
+    {
+        cout << "test2" << endl; //testcout
+        // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
+    }
+}
 
-        if (value == 0)
-            throw RunServers::ClientException("Content-Length cannot be zero.");
-    }
-    catch (const invalid_argument &)
+
+void HttpRequest::handleChunks(Client &client)
+{
+    string line = client._body.substr(client._chunkPos);
+    // std::cout << escape_special_chars(line) <<endl; //testcout
+    size_t crlf = line.find("\r\n");
+    if (crlf == string::npos)
     {
-        throw RunServers::ClientException("Content-Length is invalid (not a number).");
+        std::cout << "handleChunks 1" << std::endl; //testcout
+        return;
     }
-    catch (const out_of_range &)
+    std::cout << escape_special_chars(line) <<endl<<endl; //testcout
+    string chunkSizeLine = line.substr(0, crlf);
+    std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
+    validateChunkSizeLine(chunkSizeLine);
+    
+    uint64_t chunkSize = parseChunkSize(chunkSizeLine);
+    std::cout << "chunkSize = " << chunkSize << endl; //testcout
+
+    size_t chunkDataCrlf = line.find("\r\n", crlf + 2);
+    if (chunkDataCrlf == string::npos)
+    if (crlf == string::npos)
     {
-        throw RunServers::ClientException("Content-Length value is out of range.");
+        std::cout << "handleChunks 2" << std::endl; //testcout
+        return; // but should start looking for chunkData and not chunkSize
     }
-    client._contentLength = static_cast<size_t>(value);
+    string chunkData = line.substr(crlf + 2, chunkDataCrlf);
+    std::cout << escape_special_chars(chunkData) << std::endl; //testcout
+
+    std::cout << "chunkData = " << chunkData.size() << std::endl; //testcout
+
+    // if (chunkData[39] == '\r')
+    //     std::cout << "made it" << std::endl; //testcout
+    // std::cout << chunkData[39] << std::endl; //testcout
+    exit(0);
 }

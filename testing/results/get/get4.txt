@@ -1,0 +1,43 @@
+HTTP/1.1 200 OK
+Content-Type: application/xml
+Content-Length: 1602
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+    <book id="1">
+        <title>The Great Gatsby</title>
+        <author>F. Scott Fitzgerald</author>
+        <genre>Classic Literature</genre>
+        <price currency="USD">12.99</price>
+        <publication_date>1925-04-10</publication_date>
+        <isbn>978-0-7432-7356-5</isbn>
+        <description>A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream.</description>
+        <availability>in_stock</availability>
+    </book>
+    <book id="2">
+        <title>To Kill a Mockingbird</title>
+        <author>Harper Lee</author>
+        <genre>Fiction</genre>
+        <price currency="USD">14.99</price>
+        <publication_date>1960-07-11</publication_date>
+        <isbn>978-0-06-112008-4</isbn>
+        <description>A gripping tale of racial injustice and childhood innocence in the American South.</description>
+        <availability>in_stock</availability>
+    </book>
+    <book id="3">
+        <title>1984</title>
+        <author>George Orwell</author>
+        <genre>Dystopian Fiction</genre>
+        <price currency="USD">13.99</price>
+        <publication_date>1949-06-08</publication_date>
+        <isbn>978-0-452-28423-4</isbn>
+        <description>A dystopian social science fiction novel about totalitarian control and surveillance.</description>
+        <availability>limited</availability>
+    </book>
+    <metadata>
+        <last_updated>2025-06-29T10:30:00Z</last_updated>
+        <catalog_version>1.2</catalog_version>
+        <total_books>3</total_books>
+    </metadata>
+</catalog>

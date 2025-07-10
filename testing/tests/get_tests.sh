@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/saleunin/Desktop/Webserv/testing 
+# cd /home/saleunin/Desktop/Webserv/testing 
 
 mkdir -p results/get
 # Test 1: Basic GET request to port 8080
