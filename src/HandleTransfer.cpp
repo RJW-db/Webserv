@@ -45,13 +45,13 @@ void HandleTransfer::readToBuf()
         char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
-            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._rootPath);
+            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._filenamePath);
         size_t _bytesRead = static_cast<size_t>(bytesRead);
         _bytesReadTotal += _bytesRead;
         if (_bytesRead > 0)
         {
             _fileBuffer.append(buff, _bytesRead);
-            
+
             if (_epollout_enabled == false)
             {
                 RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
@@ -77,7 +77,7 @@ bool HandleTransfer::handleGetTransfer()
     _client.setDisconnectTime(disconnectDelaySeconds);
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        std::cout << "completed get request for file: " << _client._rootPath << ", on fd: " << _client._fd << std::endl; //test
+        std::cout << "completed get request for file: " << _client._filenamePath << ", on fd: " << _client._fd << std::endl; //test
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
         return true;
@@ -89,8 +89,8 @@ bool HandleTransfer::handleGetTransfer()
 void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd)
 {
     FileDescriptor::closeFD(fd);
-    if (remove(client._rootPath.data()))
-        std::cout << "remove failed on file:" << client._rootPath << std::endl;
+    if (remove(client._filenamePath.data()))
+        std::cout << "remove failed on file:" << client._filenamePath << std::endl;
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
 }
 
@@ -122,7 +122,7 @@ bool HandleTransfer::validateFinalCRLF()
         if (_bytesReadTotal != _client._contentLength)
             throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
         FileDescriptor::closeFD(_fd);
-        string body = _client._rootPath + '\n';
+        string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 200, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
         return true;
@@ -153,27 +153,26 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     return boundaryFound;
 }
 
-// void HandleTransfer::searchContentDisposition()
-// {
-//     size_t bodyEnd = _fileBuffer.find("\r\n\r\n");
-//     if (bodyEnd == string::npos)
-//         return ;
-//     HttpRequest::getBodyInfo(_client);
-//     _client._rootPath = _client._rootPath.substr(0, _client._rootPath.find_last_of('/'));
-//     _client._rootPath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-//     std::cout << "rootpath after: " << _client._rootPath << std::endl; //testcout
-//     _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
-//     _fd = open(_client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-//     bool hasBoundaryPrefix = false;
-//     if (_fd == -1)
-//     {
-//         if (errno == EACCES)
-//             throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._rootPath);
-//         else
-//             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._rootPath);
-//     }
-//     _searchContentDisposition = false;
-// }
+void HandleTransfer::searchContentDisposition()
+{
+    size_t bodyEnd = _fileBuffer.find("\r\n\r\n");
+    if (bodyEnd == string::npos)
+        return ;
+    HttpRequest::getBodyInfo(_client);
+    _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
+    std::cout << "filepath after: " << _client._filenamePath << std::endl; //testcout
+    _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
+    _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    bool hasBoundaryPrefix = false;
+    if (_fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+        else
+            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+    }
+    _searchContentDisposition = false;
+}
 
 bool HandleTransfer::handlePostTransfer()
 {
@@ -199,7 +198,7 @@ bool HandleTransfer::handlePostTransfer()
             size_t offset = 0;
             _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + boundaryFound - bytesWritten);
             RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-            RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", rootpath: ", _client._rootPath);
+            RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
             _foundBoundary = true;
             return (validateFinalCRLF());
         }
@@ -209,8 +208,8 @@ bool HandleTransfer::handlePostTransfer()
     {
         cerr << "Error in handlePostTransfer: " << e.what() << endl;
         FileDescriptor::closeFD(_fd);
-        if (remove(_client._rootPath.data()))
-            cerr << "remove failed on file:" << _client._rootPath << "with error: " << strerror(errno) << std::endl;
+        if (remove(_client._filenamePath.data()))
+            cerr << "remove failed on file:" << _client._filenamePath << "with error: " << strerror(errno) << std::endl;
         RunServers::cleanupClient(_client);
     }
     catch (const ErrorCodeClientException &e)

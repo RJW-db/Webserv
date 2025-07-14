@@ -162,7 +162,7 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
                 cerr << "locateRequestedFile: " << strerror(errno) << endl;
                 continue;
             }
-            client._rootPath = indexPage; // found index
+            client._pathFilename = indexPage; // found index
             // cout << "\t" << client._path << endl;
             return;
         }
@@ -187,7 +187,6 @@ void HttpRequest::locateRequestedFile(Client &client)
     {
         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
     }
-
     if (S_ISDIR(status.st_mode))
         findIndexFile(client, status);
     else if (S_ISREG(status.st_mode))
@@ -196,6 +195,7 @@ void HttpRequest::locateRequestedFile(Client &client)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
+		client._filenamePath = client._rootPath;
     }
     else
     {
@@ -238,13 +238,13 @@ void HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
 
-    int fd = open(client._rootPath.data(), R_OK);
+    int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed");
 
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(client._rootPath);
-    string responseStr = HttpResponse(client, 200, client._rootPath, fileSize);
+    size_t fileSize = getFileLength(client._filenamePath);
+    string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 }

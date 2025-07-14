@@ -7,15 +7,15 @@ bool HttpRequest::processHttpBody(Client &client)
     size_t totalWriteSize;
     string content = client._body.substr(client._bodyEnd + 4);
     getInfoPost(client, content, totalWriteSize);
-    client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     bool hasBoundaryPrefix = false;
     if (fd == -1)
     {
         if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
         else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
     }
     FileDescriptor::setFD(fd);
     unique_ptr<HandleTransfer> handle;
@@ -27,7 +27,7 @@ bool HttpRequest::processHttpBody(Client &client)
         size_t offset = 0;
         handle->_fileBuffer = handle->_fileBuffer.substr(client._bodyBoundary.size() + boundaryFound - bytesWritten);
         RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-        RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
+        RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", filenamePath: ", client._filenamePath);
         handle->_foundBoundary = true;
         if (handle->validateFinalCRLF() == true)
         {

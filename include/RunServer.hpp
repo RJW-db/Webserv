@@ -7,7 +7,7 @@
 // 4th is listener FD, 5th FD is client.
 #define FD_LIMIT 1024 - RESERVED_FDS
 
-#define CLIENT_BUFFER_SIZE 16000
+#define CLIENT_BUFFER_SIZE 32000
 #define PORT "8080"
 
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
@@ -118,7 +118,7 @@ class RunServers
 		// static FileDescriptor _fds;
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
-		
+
 		static ServerList _servers;
         // static unordered_map<int, string> _fdBuffers;
         // static unordered_map<int, ClientRequestState> _clientStates;

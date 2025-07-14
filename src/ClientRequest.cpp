@@ -7,7 +7,7 @@ void    RunServers::setLocation(Client &client)
 {
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
 	{
-		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 && 
+		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
@@ -59,7 +59,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    std::cout << "received data" << std::endl; //testcout
+	std::cout << "buffer: " << escape_special_chars(buff) << std::endl << endl << endl; // testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
@@ -174,6 +174,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._contentLength = 0;
     client._headerFields.clear();
     client._rootPath.clear();
+	client._filenamePath.clear();
     client.setDisconnectTime(disconnectDelaySeconds);
 }
 
@@ -203,4 +204,4 @@ void RunServers::cleanupClient(Client &client)
     _clients.erase(client._fd);
 }
 
-// unique_ptr<Client> &RunServers::getClient(int clientFd) 
+// unique_ptr<Client> &RunServers::getClient(int clientFd)
