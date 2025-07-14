@@ -44,7 +44,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
         return false;
 
-    client._headerParseState = true;
+    client._headerParseState = REQUEST_READY; // sam if something break it might be that this was 'true';
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
@@ -76,7 +76,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
             return false;
         return true;
     }
-    client._headerParseState = BODY_READY;
+    client._headerParseState = REQUEST_READY;
     return true;
 }
 
@@ -391,7 +391,7 @@ void HttpRequest::handleRequest(Client &client)
     {
         switch (client._headerParseState)
         {
-            case BODY_READY:
+            case REQUEST_READY:
                 processHttpBody(client);
                 break;
             

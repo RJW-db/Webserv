@@ -97,6 +97,6 @@ class HttpRequest
         // Chunked request
         static void validateChunkSizeLine(const string &input);
         static uint64_t parseChunkSize(const string &input);
-        static void ParseChunkStr(const string &input, uint64_t chunkSize);
+        static void ParseChunkStr(const string &input, uint64_t chunkTargetSize);
 
 };

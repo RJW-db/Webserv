@@ -7,7 +7,7 @@
 // 4th is listener FD, 5th FD is client.
 #define FD_LIMIT 1024 - RESERVED_FDS
 
-#define CLIENT_BUFFER_SIZE 8000
+#define CLIENT_BUFFER_SIZE 50
 #define PORT "8080"
 
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible

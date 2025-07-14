@@ -111,27 +111,27 @@ void HttpRequest::validateChunkSizeLine(const string &input)
 #include <string>
 uint64_t HttpRequest::parseChunkSize(const string &input)
 {
-    uint64_t chunkSize;
+    uint64_t chunkTargetSize;
     stringstream ss;
     ss << hex << input;
-    ss >> chunkSize;
-    // cout << "chunkSize " << chunkSize << endl;
-    // if (static_cast<size_t>(chunkSize) > client._location.getClientBodySize())
+    ss >> chunkTargetSize;
+    // cout << "chunkTargetSize " << chunkTargetSize << endl;
+    // if (static_cast<size_t>(chunkTargetSize) > client._location.getClientBodySize())
     // {
-    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkSize)); // (413, "Payload Too Large");
+    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize)); // (413, "Payload Too Large");
     // }
-    return chunkSize;
+    return chunkTargetSize;
 }
 
-void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
+void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
 {
-    if (input.size() - 2 != chunkSize)
+    if (input.size() - 2 != chunkTargetSize)
     {
         cout << "test1" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
     }
 
-    if (input[chunkSize] != '\r' || input[chunkSize + 1] != '\n')
+    if (input[chunkTargetSize] != '\r' || input[chunkTargetSize + 1] != '\n')
     {
         cout << "test2" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
@@ -141,45 +141,47 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkSize)
 
 void HttpRequest::handleChunks(Client &client)
 {
-    string line = client._body.substr(client._chunkPos);
-    // std::cout << escape_special_chars(line) <<endl; //testcout
-    size_t crlf = line.find("\r\n");
-    if (crlf == string::npos)
+    // if (client._)
+    if (client._chunkTargetSize == 0)
     {
-        std::cout << "\nhandleChunks 1" << std::endl; //testcout
-        return;
+        size_t crlf = client._body.find("\r\n");
+        if (crlf == string::npos)
+        {
+            std::cout << "\nhandleChunks 1" << std::endl; //testcout
+            return;
+        }
+        string chunkSizeLine = client._body.substr(0, crlf);
+        validateChunkSizeLine(chunkSizeLine);
+        
+        client._chunkTargetSize = parseChunkSize(chunkSizeLine);
+        client._chunkBodyPos = crlf + 2;
+        
+        // std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
+        std::cout << "_chunkTargetSize = " << client._chunkTargetSize << endl; //testcout
     }
-    std::cout << "\n\n" << escape_special_chars(line) <<endl<<endl; //testcout
-    string chunkSizeLine = line.substr(0, crlf);
-    std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
-    validateChunkSizeLine(chunkSizeLine);
-    
-    uint64_t chunkSize = parseChunkSize(chunkSizeLine);
-    std::cout << "chunkSize = " << chunkSize << endl; //testcout
 
-    size_t chunkDataCrlf = line.find("\r\n", crlf + 2);
-    if (chunkDataCrlf == string::npos)
-    if (crlf == string::npos)
+    if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
+        client._body[client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
+        client._body[client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
     {
-        std::cout << "\nhandleChunks 2" << std::endl; //testcout
-        return; // but should start looking for chunkData and not chunkSize
+        std::cout << "GOT IT" << std::endl; //testcout
+        string_view boundaryCheck(&client._body[client._chunkBodyPos + 2], client._bodyBoundary.size());
+        if (client._body.substr(client._chunkBodyPos, 2) != "--" ||
+            boundaryCheck != client._bodyBoundary)
+        {
+            std::cout << "error??" << std::endl; //testcout
+            ErrorCodeClientException(client, 400, "Malformed boundary");
+        }
+        std::cout << "geen error" << std::endl; //testcout
+        client._bodyHeader = client._body.substr(client._chunkBodyPos, client._chunkTargetSize);
+        client._unchunkedBody = client._body.substr(client._chunkTargetSize + client._chunkBodyPos + 2);
+        std::cout << escape_special_chars(client._unchunkedBody) << std::endl; //testcout
+        std::cout << "_unchunkedBody.size() " << client._unchunkedBody.size() << std::endl; //testcout
+        std::cout << std::endl; //testcout
+        std::cout << escape_special_chars(client._bodyHeader) << std::endl; //testcout
+        exit(0);
     }
-    string chunkData = line.substr(crlf + 2, chunkDataCrlf - (crlf + 2));
-    std::cout << escape_special_chars(chunkData) << std::endl; //testcout
-
-    std::cout << "chunkData = " << chunkData.size() << std::endl; //testcout
-
-    std::cout << "<" <<client._bodyBoundary << ">"<< std::endl; //testcout
-    if (string("--") + string(client._bodyBoundary) == chunkData)
-    {
-        std::cout << "worked well" << std::endl; //testcout
-    }
-    // if (chunkData[39] == '\r')
-    //     std::cout << "made it" << std::endl; //testcout
-    // std::cout << chunkData[39] << std::endl; //testcout
-    exit(0);
+    else
+        std::cout << "bad" << std::endl; //testcout
+    // std::cout << escape_special_chars(client._body) << std::endl; //testcout
 }
-
-
-// first parse body header till \r\n\r\n
-// '------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="upload.txt"\r\nContent-Type: text/plain\r\n\r\n'

@@ -14,14 +14,14 @@ enum HeaderParseState {
     HEADER_AWAITING = 0,
     BODY_CHUNKED = 1,
     BODY_AWAITING = 2,
-    BODY_READY = 3
+    REQUEST_READY = 3
 };
 
 class Client
 {
     public:
             // Add more fields as needed
-        Client(int fd) : _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0), _chunkPos(0){}
+        Client(int fd);
         // Client &operator=(const Client &other);
 		
         void resetRequestState();
@@ -47,9 +47,16 @@ class Client
         string _version;
         size_t _contentLength;
         size_t _bodyEnd;
-        size_t _chunkPos;
         string_view _contentType;
         string_view _bodyBoundary;
+
+        string _bodyHeader;
+        // size_t _bodyPos;
+        size_t _chunkBodyPos;   
+        // size_t _chunkPos;
+        size_t _chunkTargetSize;
+        size_t _chunkReceivedSize;
+        string _unchunkedBody;
 
         string_view _filename;
         string _pathFilename;
