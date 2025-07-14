@@ -62,6 +62,8 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     if (client._method == "POST")
     {
+        // HttpRequest::getContentLength(client);
+        HttpRequest::getContentType(client); // TODO return isn't used at all
         it = client._headerFields.find("Transfer-Encoding");
         if (it != client._headerFields.end() && it->second == "chunked")
         {
@@ -135,7 +137,7 @@ void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWrit
 
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
-    HttpRequest::getContentType(client); // TODO return isn't used at all
+    // HttpRequest::getContentType(client); // TODO return isn't used at all
     content = client._body.substr(client._bodyEnd + 4);
     size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
     size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
@@ -395,7 +397,8 @@ void HttpRequest::handleRequest(Client &client)
             
             case BODY_CHUNKED:
                 {
-                    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
+                    // std::cout << escape_special_chars(client._header); //testcout
+                    // std::cout << escape_special_chars(client._body) << std::endl; //testcout
                     // std::cout << "body " << escape_special_chars(client._body) << " <" << std::endl; //testcout
                     handleChunks(client);
                     // std::cout << "okeeeee\n\n" << std::endl; //testcout
