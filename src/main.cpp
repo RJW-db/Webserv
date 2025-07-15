@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
         confFile = argv[1];
     if (argc == 3)
         RunServers::setClientBufferSize(stoullSafe(argv[2]));
+
+    
     Parsing test(confFile.data());
     // test.printAll();
     RunServers::createServers(test.getConfigs());

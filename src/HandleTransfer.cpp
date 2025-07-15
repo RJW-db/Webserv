@@ -42,8 +42,8 @@ void HandleTransfer::readToBuf()
 {
     if (_fd != -1)
     {
-        char buff[CLIENT_BUFFER_SIZE];
-        ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
+        char buff[RunServers::getClientBufferSize()];
+        ssize_t bytesRead = read(_fd, buff, RunServers::getClientBufferSize());
         if (bytesRead == -1)
             throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._filenamePath);
         size_t _bytesRead = static_cast<size_t>(bytesRead);
@@ -183,7 +183,7 @@ bool HandleTransfer::handlePostTransfer(bool readData)
 {
     try
     {
-        char buff[CLIENT_BUFFER_SIZE];
+        char buff[RunServers::getClientBufferSize()];
         if (readData == true)
         {
             size_t bytesReceived = RunServers::receiveClientData(_client, buff);

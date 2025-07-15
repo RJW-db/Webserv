@@ -7,7 +7,6 @@
 // 4th is listener FD, 5th FD is client.
 #define FD_LIMIT 1024 - RESERVED_FDS
 
-#define CLIENT_BUFFER_SIZE 50
 #define PORT "8080"
 
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
@@ -88,6 +87,10 @@ class RunServers
             _clientBufferSize = value;
         }
 
+        static inline uint64_t getClientBufferSize()
+        {
+            return _clientBufferSize;
+        }
 
         template<typename... Args>
         static void logMessage(int arg, Args&&... args)

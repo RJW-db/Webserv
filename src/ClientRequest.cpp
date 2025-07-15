@@ -21,7 +21,7 @@ void RunServers::processClientRequest(Client &client)
 {
     try
     {
-        char   buff[CLIENT_BUFFER_SIZE];
+        char   buff[_clientBufferSize];
         size_t bytesReceived = receiveClientData(client, buff);
         // std::cout << "buff: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
         client.setDisconnectTime(disconnectDelaySeconds);
@@ -57,10 +57,10 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
-    // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
+    // buff[_clientBufferSize] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
-    ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
+    ssize_t bytesReceived = recv(client._fd, buff, _clientBufferSize, 0);
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
