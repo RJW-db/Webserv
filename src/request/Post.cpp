@@ -138,19 +138,22 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
     }
 }
 
+void unchunkingProcess(Client &client)
+{
 
+}
 void HttpRequest::handleChunks(Client &client)
 {
     // if (client._)
     if (client._chunkTargetSize == 0)
     {
-        size_t crlf = client._body.find("\r\n");
+        size_t crlf = client._body.find("\r\n", client._bodyPos);
         if (crlf == string::npos)
         {
             std::cout << "\nhandleChunks 1" << std::endl; //testcout
             return;
         }
-        string chunkSizeLine = client._body.substr(0, crlf);
+        string chunkSizeLine = client._body.substr(client._bodyPos, crlf);
         validateChunkSizeLine(chunkSizeLine);
         
         client._chunkTargetSize = parseChunkSize(chunkSizeLine);
@@ -160,25 +163,36 @@ void HttpRequest::handleChunks(Client &client)
         std::cout << "_chunkTargetSize = " << client._chunkTargetSize << endl; //testcout
     }
 
-    if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
-        client._body[client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
-        client._body[client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
+    
+    // if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
+    //     client._body[client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
+    //     client._body[client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
+    if (client._body.size() - client._bodyPos >= client._chunkTargetSize + client._chunkBodyPos &&
+        client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
+        client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
     {
         std::cout << "GOT IT" << std::endl; //testcout
-        string_view boundaryCheck(&client._body[client._chunkBodyPos + 2], client._bodyBoundary.size());
-        if (client._body.substr(client._chunkBodyPos, 2) != "--" ||
+        string_view boundaryCheck(&client._body[client._bodyPos + client._chunkBodyPos + 2], client._bodyBoundary.size());
+        if (client._body.substr(client._bodyPos + client._chunkBodyPos, 2) != "--" ||
             boundaryCheck != client._bodyBoundary)
         {
-            std::cout << "error??" << std::endl; //testcout
             ErrorCodeClientException(client, 400, "Malformed boundary");
         }
-        std::cout << "geen error" << std::endl; //testcout
-        client._bodyHeader = client._body.substr(client._chunkBodyPos, client._chunkTargetSize);
-        client._unchunkedBody = client._body.substr(client._chunkTargetSize + client._chunkBodyPos + 2);
-        std::cout << escape_special_chars(client._unchunkedBody) << std::endl; //testcout
-        std::cout << "_unchunkedBody.size() " << client._unchunkedBody.size() << std::endl; //testcout
+        size_t endBodyHeader = client._body.find("\r\n\r\n", client._bodyPos + client._chunkBodyPos + client._bodyBoundary.size() + 2);
+        // std::cout << escape_special_chars(client._body.substr(endBodyHeader)) << std::endl; //testcout
+        if (endBodyHeader == string::npos)
+        {
+            ErrorCodeClientException(client, 400, "body header didn't end in \\r\\n\\r\\n");
+        }
+
+        client._bodyHeader = client._body.substr(client._bodyPos + client._chunkBodyPos, endBodyHeader + 4 - client._chunkBodyPos);
+
+        client._unchunkedBody = client._body.substr(client._bodyPos + endBodyHeader + 4);
+        // std::cout << escape_special_chars(client._body.substr(endBodyHeader + 4)) << std::endl; //testcout
+        // std::cout << escape_special_chars(client._unchunkedBody) << std::endl; //testcout
         std::cout << std::endl; //testcout
         std::cout << escape_special_chars(client._bodyHeader) << std::endl; //testcout
+        std::cout << ">" << escape_special_chars(client._unchunkedBody) << "<" << std::endl; //testcout
         exit(0);
     }
     else

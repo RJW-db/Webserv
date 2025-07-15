@@ -10,7 +10,8 @@
 
 #define disconnectDelaySeconds 5
 
-enum HeaderParseState {
+enum HeaderParseState
+{
     HEADER_AWAITING = 0,
     BODY_CHUNKED = 1,
     BODY_AWAITING = 2,
@@ -51,7 +52,7 @@ class Client
         string_view _bodyBoundary;
 
         string _bodyHeader;
-        // size_t _bodyPos;
+        size_t _bodyPos;
         size_t _chunkBodyPos;   
         // size_t _chunkPos;
         size_t _chunkTargetSize;
@@ -61,6 +62,8 @@ class Client
         string_view _filename;
         string _pathFilename;
         string_view _fileContent;
+
+  
 
         chrono::steady_clock::time_point _disconnectTime;
 		bool _keepAlive;

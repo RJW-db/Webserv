@@ -1,7 +1,7 @@
 #include <Client.hpp>
 
 Client::Client(int fd)
-: _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0), /* _bodyPos(0), */
+: _fd(fd), _headerParseState(HEADER_AWAITING), _keepAlive(true), _contentLength(0), _bodyPos(0),
 _chunkBodyPos(0), _chunkTargetSize(0), _chunkReceivedSize(0)
 {}
 
