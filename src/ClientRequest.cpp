@@ -13,6 +13,10 @@ void    RunServers::setLocation(Client &client)
             client._location = locationPair.second;
             return;
         }
+        else
+        {
+            std::cout << "location block not used: " << locationPair.first << std::endl; //testcout
+        }
     }
     throw ErrorCodeClientException(client, 400, "Couldn't find location block: malformed request");
 }
@@ -59,7 +63,6 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-	// std::cout << "buffer: " << escape_special_chars(buff) << std::endl << endl << endl; // testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)

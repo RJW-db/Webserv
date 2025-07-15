@@ -95,7 +95,9 @@ void HttpRequest::getBodyInfo(Client &client)
             throw RunServers::ClientException("Filename is empty in Content-Disposition header");
     }
     else
+    {
         throw RunServers::ClientException("Filename not found in Content-Disposition header");
+    }
 
     const string contentType = "Content-Type: ";
     size_t position = client._body.find(contentType);

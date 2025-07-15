@@ -97,11 +97,9 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
 
 
 // return 0 if should continue reading, 1 if should stop reading 2 if should continue function
-int HandleTransfer::validateFinalCRLF()
+bool HandleTransfer::validateFinalCRLF()
 {
     size_t foundReturn = _fileBuffer.find("\r\n");
-    std::cout << "foundreturn: " << foundReturn << std::endl; //testcout
-    std::cout << "filebuff: " << escape_special_chars(_fileBuffer) << std::endl; //testcout
     if (foundReturn == 0)
     {
         _fileBuffer = _fileBuffer.substr(2);
@@ -109,7 +107,7 @@ int HandleTransfer::validateFinalCRLF()
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         _foundBoundary = false;
-        return 2;
+        return (handlePostTransfer(false));
     }
     if (foundReturn != 2 && foundReturn != string::npos)
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
@@ -126,14 +124,15 @@ int HandleTransfer::validateFinalCRLF()
         if (_bytesReadTotal != _client._contentLength)
             throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
         FileDescriptor::closeFD(_fd);
+        _fd = -1;
         string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 200, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
-        return 1;
+        return true;
     }
     if (_fileBuffer.size() > 4)
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
-    return 0;
+    return false;
 }
 
 size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
@@ -166,9 +165,7 @@ bool HandleTransfer::searchContentDisposition()
     HttpRequest::getBodyInfo(_client);
     _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
     _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-    _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    
     bool hasBoundaryPrefix = false;
     if (_fd == -1)
     {
@@ -198,11 +195,7 @@ bool HandleTransfer::handlePostTransfer(bool readData)
         if (_searchContentDisposition == true && searchContentDisposition() == false)
             return false;
         if (_foundBoundary == true)
-        {
-            int val = validateFinalCRLF();
-            if (val < 2)
-                return (val == 1);
-        }
+            return (validateFinalCRLF());
         ssize_t bytesWritten = 0;
         size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
         if (boundaryFound != string::npos)
