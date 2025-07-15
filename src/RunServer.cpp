@@ -3,6 +3,7 @@
 #include <HttpRequest.hpp>
 #include <iostream>
 #include <FileDescriptor.hpp>
+#include <HandleTransfer.hpp>
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -153,7 +154,13 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             if (currentEvent.events & EPOLLOUT)
                 finished = handle.handleGetTransfer();
             else if (currentEvent.events & EPOLLIN)
-                finished = handle.handlePostTransfer();
+            {
+                if ((*it)->getIsChunk() == false)
+                    finished = handle.handlePostTransfer();
+                else
+                    finished = handle.handleChunkTransfer();
+
+            }
             if (finished == true)
             {
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)

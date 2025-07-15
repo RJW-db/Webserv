@@ -17,10 +17,16 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
 }
 
 HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string boundary)
-: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundBoundary(false), _searchContentDisposition(false)
+: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundBoundary(false), _searchContentDisposition(false), _isChunked(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
+
+// HandleTransfer::HandleTransfer(Client &client)
+// : _client(client)
+// {
+//     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+// }
 
 HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
 {
@@ -221,5 +227,13 @@ bool HandleTransfer::handlePostTransfer(bool readData)
     {
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage(), _fd);
     }
+    return true;
+}
+
+
+bool HandleTransfer::handleChunkTransfer()
+{
+    std::cout << "we got here" << std::endl; //testcout
+    std::cout << _client._unchunkedBody << std::endl; //testcout
     return true;
 }

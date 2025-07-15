@@ -55,6 +55,8 @@ class HttpRequest
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static bool processHttpBody(Client &client);
+        static bool processHttpBody2(Client &client);
+
         static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
 
         static inline bool appendToBody(Client &client, const char *buff, size_t receivedBytes)
@@ -63,10 +65,7 @@ class HttpRequest
             return (true);
         }
         static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
-            if (delimiter == std::string::npos) {
-                return false;
-            }
-            return true;
+            return (delimiter == string::npos ? false : true);
         }
 
         static void validateHEAD(Client &client);

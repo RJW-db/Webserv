@@ -1,16 +1,15 @@
 #include <HttpRequest.hpp>
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <HandleTransfer.hpp>
 
 bool HttpRequest::processHttpBody(Client &client)
 {
     size_t totalWriteSize;
-    std::cout << "client.body: " << client._body << ", bodyend: " << client._bodyEnd << std::endl; //testcout
     string content = client._body.substr(client._bodyEnd + 4);
     getInfoPost(client, content, totalWriteSize);
     client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
     int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    bool hasBoundaryPrefix = false;
     if (fd == -1)
     {
         if (errno == EACCES)
@@ -20,7 +19,7 @@ bool HttpRequest::processHttpBody(Client &client)
     }
     FileDescriptor::setFD(fd);
     unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(0));
+    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content);
     if (handle->handlePostTransfer(false) == true)
     {
         if (client._keepAlive == false)
@@ -164,10 +163,6 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
     }
 }
 
-void unchunkingProcess(Client &client)
-{
-
-}
 void HttpRequest::handleChunks(Client &client)
 {
     if (client._chunkTargetSize == 0)
@@ -182,30 +177,76 @@ void HttpRequest::handleChunks(Client &client)
         
         client._chunkTargetSize = parseChunkSize(chunkSizeLine);
         client._chunkBodyPos = crlf + 2;
-        
     }
 
-    // if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
-    //     client._body[client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
-    //     client._body[client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
-    if (client._body.size() - client._bodyPos >= client._chunkTargetSize + client._chunkBodyPos &&
-        client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
-        client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
+    size_t chunkDataStart = client._bodyPos + client._chunkBodyPos;
+    size_t chunkDataEnd = chunkDataStart + client._chunkTargetSize;
+
+    if (client._body.size() >= chunkDataEnd + 2 &&
+        client._body[chunkDataEnd] == '\r' &&
+        client._body[chunkDataEnd + 1] == '\n')
     {
-        string_view boundaryCheck(&client._body[client._bodyPos + client._chunkBodyPos + 2], client._bodyBoundary.size());
-        if (client._body.substr(client._bodyPos + client._chunkBodyPos, 2) != "--" ||
+        size_t boundaryStart = chunkDataStart + 2;
+        string_view boundaryCheck(&client._body[boundaryStart], client._bodyBoundary.size());
+        if (client._body.substr(chunkDataStart, 2) != "--" ||
             boundaryCheck != client._bodyBoundary)
         {
             ErrorCodeClientException(client, 400, "Malformed boundary");
         }
-        size_t endBodyHeader = client._body.find("\r\n\r\n", client._bodyPos + client._chunkBodyPos + client._bodyBoundary.size() + 2);
+
+        size_t headerStart = chunkDataStart + client._bodyBoundary.size() + 2;
+        size_t endBodyHeader = client._body.find("\r\n\r\n", headerStart);
         if (endBodyHeader == string::npos)
         {
             ErrorCodeClientException(client, 400, "body header didn't end in \\r\\n\\r\\n");
         }
-        client._bodyHeader = client._body.substr(client._bodyPos + client._chunkBodyPos, endBodyHeader + 4 - client._chunkBodyPos);
+        client._bodyHeader = client._body.substr(chunkDataStart, endBodyHeader + 4 - client._chunkBodyPos);
 
-        client._unchunkedBody = client._body.substr(client._bodyPos + endBodyHeader + 4);
+        size_t chunkEndCrlfPos = client._bodyPos + endBodyHeader + 4;
+        client._unchunkedBody = client._body.substr(chunkEndCrlfPos);
+
+        // Check for final CRLF after chunk
+        if (client._body.size() < chunkEndCrlfPos + 3 || // out of bounds check
+            client._body[chunkEndCrlfPos + 1] != '\r' ||
+            client._body[chunkEndCrlfPos + 2] != '\n')
+        {
+            ErrorCodeClientException(client, 400, "Chunk didn't end in \\r\\n");
+        }
+        client._bodyPos = chunkEndCrlfPos + 2;
+        std::cout << escape_special_chars(client._bodyHeader)<< std::endl; //testcout
+        std::cout << escape_special_chars(client._unchunkedBody)<< std::endl; //testcout
         exit(0);
+        processHttpBody2(client);
     }
+}
+
+bool HttpRequest::processHttpBody2(Client &client)
+{
+    size_t totalWriteSize;
+    HttpRequest::getBodyInfo(client);
+    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+        else
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+    }
+    FileDescriptor::setFD(fd);
+    unique_ptr<HandleTransfer> handle;
+    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
+    handle->setBoolToChunk();
+    // if (handle->handlePostTransfer(false) == true)
+    // {
+    //     if (client._keepAlive == false)
+    //         RunServers::cleanupClient(client);
+    //     else
+    //     {
+    //         RunServers::clientHttpCleanup(client);
+    //     }
+    //     return false;
+    // }
+    RunServers::insertHandleTransfer(move(handle));
+    return true;
 }

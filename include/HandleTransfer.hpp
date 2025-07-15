@@ -19,6 +19,7 @@ class HandleTransfer
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
 		HandleTransfer(Client &client, int fd, size_t bytesWritten, string boundaryBuffer); //post
+        // HandleTransfer(Client &client); // POST
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -29,9 +30,19 @@ class HandleTransfer
         static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
         static void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd);
         bool handlePostTransfer(bool ReadData = true);
+        bool handleChunkTransfer();
         bool validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
         bool    searchContentDisposition();
+
+        inline void setBoolToChunk() {
+            _isChunked = true;
+        }
+        inline bool getIsChunk() const{
+            return _isChunked;
+        }
+        // void setBoolToChunk();
+        // bool getIsChunk();
 
         Client  &_client;
         int     _fd;
@@ -51,6 +62,18 @@ class HandleTransfer
         
 
 		size_t	_bytesWrittenTotal;
+
+        // chunked
+        bool   _isChunked;
+        string _bodyHeader;
+        size_t _bodyPos;
+        size_t _chunkBodyPos;   
+        // size_t _chunkPos;
+        size_t _chunkTargetSize;
+        size_t _chunkReceivedSize;
+        string _unchunkedBody;
+
+
     protected:
         // Helper function to send data over a socket
 

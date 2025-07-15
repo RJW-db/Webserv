@@ -108,7 +108,6 @@ void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWrit
 {
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
-    // HttpRequest::getContentType(client); // TODO return isn't used at all
     content = client._body.substr(client._bodyEnd + 4);
     size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
     size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
@@ -367,13 +366,20 @@ void HttpRequest::handleRequest(Client &client)
     {
         switch (client._headerParseState)
         {
+
             case REQUEST_READY:
+            {
                 processHttpBody(client);
                 break;
-            
+            }
             case BODY_CHUNKED:
                 {
                     handleChunks(client);
+                    // unique_ptr<HandleTransfer> handle;
+                    // handle = make_unique<HandleTransfer>(client);
+                    
+                    // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
+                    // RunServers::insertHandleTransfer(move(handle));
                 }
         }
         
