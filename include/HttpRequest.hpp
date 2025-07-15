@@ -64,9 +64,7 @@ class HttpRequest
         }
         static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
             if (delimiter == std::string::npos) {
-                if (receivedBytes == RunServers::getClientBufferSize())
-                    return false;
-                // throw runtime_error("for debugging purposes, remove this line, and kick client through keep-alive check");
+                return false;
             }
             return true;
         }

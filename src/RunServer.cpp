@@ -190,9 +190,7 @@ void RunServers::handleEvents(size_t eventCount)
                 int snooze = stoi(buffer, nullptr, 16);
                 if (snooze > 0 && snooze < 20)
                 {
-                    std::cout << "sleep for " << snooze << " seconds" << std::endl; //testcout
                     this_thread::sleep_for(chrono::seconds(snooze));
-                    std::cout << "no more snoozing" << std::endl; //testcout
                 }
                 // processStdinInput(); // Your function to handle terminal input
                 continue ;
