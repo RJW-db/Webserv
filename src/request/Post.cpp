@@ -20,23 +20,15 @@ bool HttpRequest::processHttpBody(Client &client)
     FileDescriptor::setFD(fd);
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(0));
-    ssize_t bytesWritten = 0;
-    size_t boundaryFound = handle->FindBoundaryAndWrite(bytesWritten);
-    if (boundaryFound != string::npos)
+    if (handle->handlePostTransfer(false) == true)
     {
-        size_t offset = 0;
-        handle->_fileBuffer = handle->_fileBuffer.substr(client._bodyBoundary.size() + boundaryFound - bytesWritten);
-        RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-        RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", filenamePath: ", client._filenamePath);
-        handle->_foundBoundary = true;
-        if (handle->validateFinalCRLF() == true)
+        if (client._keepAlive == false)
+            RunServers::cleanupClient(client);
+        else
         {
-            if (client._keepAlive == false)
-                RunServers::cleanupClient(client);
-            else
-                RunServers::clientHttpCleanup(client);
-            return false;
+            RunServers::clientHttpCleanup(client);
         }
+        return false;
     }
     RunServers::insertHandleTransfer(move(handle));
     return true;

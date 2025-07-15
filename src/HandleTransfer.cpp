@@ -90,22 +90,26 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
 {
     FileDescriptor::closeFD(fd);
     if (remove(client._filenamePath.data()))
-        std::cout << "remove failed on file:" << client._filenamePath << std::endl;
+        std::cout << "remove failed on file: " << client._filenamePath << std::endl;
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
 }
 
-bool HandleTransfer::validateFinalCRLF()
+
+
+// return 0 if should continue reading, 1 if should stop reading 2 if should continue function
+int HandleTransfer::validateFinalCRLF()
 {
     size_t foundReturn = _fileBuffer.find("\r\n");
+    std::cout << "foundreturn: " << foundReturn << std::endl; //testcout
+    std::cout << "filebuff: " << escape_special_chars(_fileBuffer) << std::endl; //testcout
     if (foundReturn == 0)
     {
-        _fileBuffer.substr(2);
+        _fileBuffer = _fileBuffer.substr(2);
         _searchContentDisposition = true;
-        // bool // needtofindNewcontentDisposition line true
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         _foundBoundary = false;
-        return false;
+        return 2;
     }
     if (foundReturn != 2 && foundReturn != string::npos)
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
@@ -125,11 +129,11 @@ bool HandleTransfer::validateFinalCRLF()
         string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 200, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
-        return true;
+        return 1;
     }
     if (_fileBuffer.size() > 4)
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
-    return false;
+    return 0;
 }
 
 size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
@@ -153,16 +157,18 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     return boundaryFound;
 }
 
-void HandleTransfer::searchContentDisposition()
+bool HandleTransfer::searchContentDisposition()
 {
     size_t bodyEnd = _fileBuffer.find("\r\n\r\n");
     if (bodyEnd == string::npos)
-        return ;
+        return false;
+    _client._body = _fileBuffer.substr(0, bodyEnd);
     HttpRequest::getBodyInfo(_client);
+    _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
     _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-    std::cout << "filepath after: " << _client._filenamePath << std::endl; //testcout
     _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    
     bool hasBoundaryPrefix = false;
     if (_fd == -1)
     {
@@ -171,26 +177,32 @@ void HandleTransfer::searchContentDisposition()
         else
             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
+    FileDescriptor::setFD(_fd);
     _searchContentDisposition = false;
+    return true;
 }
 
-bool HandleTransfer::handlePostTransfer()
+bool HandleTransfer::handlePostTransfer(bool readData)
 {
-
     try
     {
         char buff[CLIENT_BUFFER_SIZE];
-        size_t bytesReceived = RunServers::receiveClientData(_client, buff);
-        _bytesReadTotal += bytesReceived;
-        // if (_searchContentDisposition == true)
-        // {
-        //     searchContentDisposition();
-        // }
+        if (readData == true)
+        {
+            size_t bytesReceived = RunServers::receiveClientData(_client, buff);
+            _bytesReadTotal += bytesReceived;
+            _fileBuffer.append(buff, bytesReceived);
+        }
         if (_bytesReadTotal > _client._contentLength)
             throw ErrorCodeClientException(_client, 413, "Content length smaller then body received for fd: " + to_string(_fd));
-        _fileBuffer.append(buff, bytesReceived);
+        if (_searchContentDisposition == true && searchContentDisposition() == false)
+            return false;
         if (_foundBoundary == true)
-            return validateFinalCRLF();
+        {
+            int val = validateFinalCRLF();
+            if (val < 2)
+                return (val == 1);
+        }
         ssize_t bytesWritten = 0;
         size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
         if (boundaryFound != string::npos)
@@ -209,7 +221,7 @@ bool HandleTransfer::handlePostTransfer()
         cerr << "Error in handlePostTransfer: " << e.what() << endl;
         FileDescriptor::closeFD(_fd);
         if (remove(_client._filenamePath.data()))
-            cerr << "remove failed on file:" << _client._filenamePath << "with error: " << strerror(errno) << std::endl;
+            cerr << "remove failed on file:" << _client._filenamePath << ", with error: " << strerror(errno) << std::endl;
         RunServers::cleanupClient(_client);
     }
     catch (const ErrorCodeClientException &e)

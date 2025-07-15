@@ -28,10 +28,10 @@ class HandleTransfer
 
         static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
         static void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd);
-        bool handlePostTransfer();
-        bool validateFinalCRLF();
+        bool handlePostTransfer(bool ReadData = true);
+        int validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
-        void    searchContentDisposition();
+        bool    searchContentDisposition();
 
         Client  &_client;
         int     _fd;

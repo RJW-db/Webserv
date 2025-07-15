@@ -59,7 +59,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(disconnectDelaySeconds);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-	std::cout << "buffer: " << escape_special_chars(buff) << std::endl << endl << endl; // testcout
+	// std::cout << "buffer: " << escape_special_chars(buff) << std::endl << endl << endl; // testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
