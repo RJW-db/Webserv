@@ -6,20 +6,23 @@ cd ../
 
 
 make
+mkdir -p testing/results
+rm -rf testing/results/*
+
 
 read -p "Do you want to start the web server? (y/n): " start_server
 if [[ "$start_server" == "y" || "$start_server" == "Y" ]]; then
     # Start the web server in the background
 # disable if you don't want server to start
-./Webserv testing/test1.conf > results/webservOut.txt &
+./Webserv testing/test1.conf > testing/results/webservOut.txt &
 SERVER_PID=$!
+sleep 2  # Wait a moment for the server to start
 fi
 
 
 
 cd testing
 
-rm -rf results/*
 # Wait a moment for the server to start
 
 echo "=== Testing Web Server ==="

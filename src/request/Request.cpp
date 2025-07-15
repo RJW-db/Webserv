@@ -57,7 +57,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         else
             throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
     }
-    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
 
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
@@ -88,6 +87,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._bodyEnd = client._body.find("\r\n\r\n");
         if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
             return false;
+        client._headerParseState = REQUEST_READY;
         return true;
     }
     client._headerParseState = REQUEST_READY;
@@ -100,55 +100,13 @@ bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receive
     client._bodyEnd = client._body.find("\r\n\r\n");
     if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
         return false;
+    client._headerParseState = REQUEST_READY;
     return true;
 }
 
-bool HttpRequest::processHttpBody(Client &client)
-{
-    string content;
-    size_t totalWriteSize;
-    getInfoPost(client, content, totalWriteSize);
-    client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    cout << "\n\nclient._rootPath " << client._rootPath << endl;
-
-    int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
-    }
-    cout << "\n\nclient._rootPath " << client._rootPath << endl;
-    FileDescriptor::setFD(fd);
-    size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
-    ssize_t bytesWritten = write(fd, content.data(), writeSize);
-    if (bytesWritten == -1)
-        HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-    unique_ptr<HandleTransfer> handle;
-    if (bytesWritten == totalWriteSize)
-    {
-        string boundaryCheck = content.substr(bytesWritten);
-        if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
-        {
-            RunServers::clientHttpCleanup(client);
-            if (client._keepAlive == false)
-                RunServers::cleanupClient(client);
-            return false;
-        }
-        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-    }
-    else
-        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
-    RunServers::insertHandleTransfer(move(handle));
-    return true;
-}
 
 void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
 {
-    cout << escape_special_chars(client._header) << endl;
-    cout << escape_special_chars(client._body) << endl;
-
     HttpRequest::getContentLength(client);
     HttpRequest::getBodyInfo(client);
     // HttpRequest::getContentType(client); // TODO return isn't used at all
@@ -230,7 +188,8 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
                 cerr << "locateRequestedFile: " << strerror(errno) << endl;
                 continue;
             }
-            client._rootPath = indexPage; // found index
+            client._pathFilename = indexPage; // found index
+            std::cout << "opened index file: " << client._pathFilename << std::endl; //testcout
             // cout << "\t" << client._path << endl;
             return;
         }
@@ -255,15 +214,18 @@ void HttpRequest::locateRequestedFile(Client &client)
     {
         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
     }
-
     if (S_ISDIR(status.st_mode))
+    {
         findIndexFile(client, status);
+        std::cout << "indexfile 1: " << client._filenamePath << std::endl; //testcout
+    }
     else if (S_ISREG(status.st_mode))
     {
         if (access(client._rootPath.data(), R_OK) == -1)
         {
             cerr << "locateRequestedFile: " << strerror(errno) << endl;
         }
+		client._filenamePath = client._rootPath;
     }
     else
     {
@@ -305,14 +267,18 @@ string HttpRequest::getMimeType(string &path)
 void HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
+    std::cout << "" << std::endl; //testcout
 
-    int fd = open(client._rootPath.data(), R_OK);
+    int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
+    {
+        std::cout << "open failed on file:" << client._filenamePath << std::endl; //testcout
         throw RunServers::ClientException("open failed");
+    }
 
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(client._rootPath);
-    string responseStr = HttpResponse(client, 200, client._rootPath, fileSize);
+    size_t fileSize = getFileLength(client._filenamePath);
+    string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
     RunServers::insertHandleTransfer(move(handle));
 }
@@ -385,6 +351,7 @@ void HttpRequest::handleRequest(Client &client)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._headerFields.find("Host") == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Host header is missing in request: " + client._header);
+    std::cout << "client state: " << +client._headerParseState << std::endl; //testcout
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
     switch (client._useMethod)

@@ -2,132 +2,38 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 
-
-// bool HttpRequest::processHttpBody(Client &client)
-// {
-//     string content;
-//     size_t totalWriteSize;
-//     getInfoPost(client, content, totalWriteSize);
-//     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-//     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-//     if (fd == -1)
-//     {
-//         if (errno == EACCES)
-//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
-//         else
-//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
-//     }
-//     FileDescriptor::setFD(fd);
-//     size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
-//     ssize_t bytesWritten = write(fd, content.data(), writeSize);
-//     if (bytesWritten == -1)
-//         HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-//     unique_ptr<HandleTransfer> handle;
-//     if (bytesWritten == totalWriteSize)
-//     {
-//         string boundaryCheck = content.substr(bytesWritten);
-//         if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
-//         {
-//             RunServers::clientHttpCleanup(client);
-//             if (client._keepAlive == false)
-//                 RunServers::cleanupClient(client);
-//             return false;
-//         }
-//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-//     }
-//     else
-//         handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
-//     RunServers::insertHandleTransfer(move(handle));
-//     return true;
-// }
-
-// bool HttpRequest::processHttpBody(Client &client)
-// {
-//     string content;
-//     size_t totalWriteSize;
-//     std::cout << escape_special_chars(client._body) << std::endl << endl; //testcout
-//     getInfoPost(client, content, totalWriteSize);
-//     client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-//     int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-//     if (fd == -1)
-//     {
-//         if (errno == EACCES)
-//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
-//         else
-//         {
-//             std::cout << "method: " << client._method << std::endl; //testcout
-//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
-//         }
-//     }
-//     FileDescriptor::setFD(fd);
-//     // if (client._body.find(client._bodyBoundary) != 0)
-         
-//     size_t boundaryBufferSize = client._bodyBoundary.size() + 6; // \r\n\r\n--boundary
-//     size_t writeSize = (boundaryBufferSize >= content.size()) ? 0 : content.size() - boundaryBufferSize;
-//     ssize_t boundaryFound = content.find(client._bodyBoundary);
-//     if (boundaryFound != string::npos)
-//     {
-//         for (ssize_t i = boundaryFound; i >= 0; i--)
-//         {
-//             if (content[i] == '\n')
-//             {
-//                 if (i > 0 && content[i - 1] == '\r')
-//                 {
-//                     if (i > 1 && content[i - 1] != '\n')
-//                     {
-//                         writeSize = i - 1; // TODO underflow 0 -1
-//                         break ;
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     ssize_t bytesWritten = 0;
-//     if (writeSize > 0)
-//     {
-//         ssize_t bytesWritten = write(fd, content.data(), writeSize);
-//         if (bytesWritten == -1)
-//             HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
-//     }
-//     if (boundaryFound != string::npos)
-//     {
-//             FileDescriptor::closeFD(fd);
-//             string body = client._rootPath + '\n';
-//             string headers =
-//                 "HTTP/1.1 200 OK\r\n"
-//                 "Content-Type: text/plain\r\n"
-//                 "Connection: " +
-//                 string(client._keepAlive ? "keep-alive" : "close") + "\r\n"
-//                 "Content-Length: " +
-//                 to_string(body.size()) + "\r\n"
-//                                          "\r\n" +
-//                 body;
-
-//             send(client._fd, headers.data(), headers.size(), 0);
-//             RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-//             RunServers::logMessage(5, "POST success, clientFD: ", client._fd, ", rootpath: ", client._rootPath);
-//             RunServers::clientHttpCleanup(client);
-//             return false;
-//     }
-//     unique_ptr<HandleTransfer> handle;
-//     // if (bytesWritten == totalWriteSize)
-//     // {
-//     // string boundaryCheck = content.substr(bytesWritten);
-//     // if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
-//     // {
-//     //     RunServers::clientHttpCleanup(client);
-//     //     if (client._keepAlive == false)
-//     //         RunServers::cleanupClient(client);
-//     //     return false;
-//     // }
-
-//     handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
-//     // }
-//     // else
-//         // handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
-//     RunServers::insertHandleTransfer(move(handle));
-//     return true;
-// }
+bool HttpRequest::processHttpBody(Client &client)
+{
+    size_t totalWriteSize;
+    std::cout << "hier" << std::endl; //testcout
+    string content = client._body.substr(client._bodyEnd + 4);
+    getInfoPost(client, content, totalWriteSize);
+    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    bool hasBoundaryPrefix = false;
+    if (fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+        else
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+    }
+    FileDescriptor::setFD(fd);
+    unique_ptr<HandleTransfer> handle;
+    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(0));
+    if (handle->handlePostTransfer(false) == true)
+    {
+        if (client._keepAlive == false)
+            RunServers::cleanupClient(client);
+        else
+        {
+            RunServers::clientHttpCleanup(client);
+        }
+        return false;
+    }
+    RunServers::insertHandleTransfer(move(handle));
+    return true;
+}
 
 ContentType HttpRequest::getContentType(Client &client)
 {
@@ -171,7 +77,6 @@ ContentType HttpRequest::getContentType(Client &client)
 
 void HttpRequest::getBodyInfo(Client &client)
 {
-    // std::cout << "body: " << client._body.substr(0, 100) << std::endl; //testcout
     size_t cdPos = client._body.find("Content-Disposition:");
     if (cdPos == string::npos)
         throw RunServers::ClientException("Content-Disposition header not found in multipart body");
@@ -191,7 +96,9 @@ void HttpRequest::getBodyInfo(Client &client)
             throw RunServers::ClientException("Filename is empty in Content-Disposition header");
     }
     else
+    {
         throw RunServers::ClientException("Filename not found in Content-Disposition header");
+    }
 
     const string contentType = "Content-Type: ";
     size_t position = client._body.find(contentType);
@@ -272,13 +179,12 @@ void unchunkingProcess(Client &client)
 }
 void HttpRequest::handleChunks(Client &client)
 {
-    // if (client._)
     if (client._chunkTargetSize == 0)
     {
         size_t crlf = client._body.find("\r\n", client._bodyPos);
         if (crlf == string::npos)
         {
-            std::cout << "\nhandleChunks 1" << std::endl; //testcout
+            // std::cout << "\nhandleChunks 1" << std::endl; //testcout
             return;
         }
         string chunkSizeLine = client._body.substr(client._bodyPos, crlf);
@@ -287,11 +193,9 @@ void HttpRequest::handleChunks(Client &client)
         client._chunkTargetSize = parseChunkSize(chunkSizeLine);
         client._chunkBodyPos = crlf + 2;
         
-        // std::cout << escape_special_chars(chunkSizeLine) << endl; //testcout
-        std::cout << "_chunkTargetSize = " << client._chunkTargetSize << endl; //testcout
+        // std::cout << "_chunkTargetSize = " << client._chunkTargetSize << endl; //testcout
     }
 
-    
     // if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
     //     client._body[client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
     //     client._body[client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
@@ -299,7 +203,6 @@ void HttpRequest::handleChunks(Client &client)
         client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos] == '\r' &&
         client._body[client._bodyPos + client._chunkTargetSize + client._chunkBodyPos + 1] == '\n')
     {
-        std::cout << "GOT IT" << std::endl; //testcout
         string_view boundaryCheck(&client._body[client._bodyPos + client._chunkBodyPos + 2], client._bodyBoundary.size());
         if (client._body.substr(client._bodyPos + client._chunkBodyPos, 2) != "--" ||
             boundaryCheck != client._bodyBoundary)
@@ -307,23 +210,17 @@ void HttpRequest::handleChunks(Client &client)
             ErrorCodeClientException(client, 400, "Malformed boundary");
         }
         size_t endBodyHeader = client._body.find("\r\n\r\n", client._bodyPos + client._chunkBodyPos + client._bodyBoundary.size() + 2);
-        // std::cout << escape_special_chars(client._body.substr(endBodyHeader)) << std::endl; //testcout
         if (endBodyHeader == string::npos)
         {
             ErrorCodeClientException(client, 400, "body header didn't end in \\r\\n\\r\\n");
         }
-
         client._bodyHeader = client._body.substr(client._bodyPos + client._chunkBodyPos, endBodyHeader + 4 - client._chunkBodyPos);
 
         client._unchunkedBody = client._body.substr(client._bodyPos + endBodyHeader + 4);
-        // std::cout << escape_special_chars(client._body.substr(endBodyHeader + 4)) << std::endl; //testcout
-        // std::cout << escape_special_chars(client._unchunkedBody) << std::endl; //testcout
-        std::cout << std::endl; //testcout
         std::cout << escape_special_chars(client._bodyHeader) << std::endl; //testcout
         std::cout << ">" << escape_special_chars(client._unchunkedBody) << "<" << std::endl; //testcout
         exit(0);
     }
-    else
-        std::cout << "bad" << std::endl; //testcout
-    // std::cout << escape_special_chars(client._body) << std::endl; //testcout
+    // else
+    //     std::cout << "bad" << std::endl; //testcout
 }

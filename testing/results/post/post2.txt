@@ -1,3 +1,6 @@
-HTTP/1.1 400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>
-Content-Length: 0
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 41
+Connection: close
 
+./testing/results/post/upload1/test2.png

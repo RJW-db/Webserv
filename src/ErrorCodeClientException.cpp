@@ -65,11 +65,26 @@ void ErrorCodeClientException::handleErrorClient() const
         return;
     }
     int fd = open(it->second.c_str(), O_RDONLY);
+    if (fd == -1)
+    {
+    RunServers::cleanupClient(_client);
+        throw runtime_error("Couldn't open errorpage: " + it->second);
+    }
     size_t fileSize = getFileLength(it->second.c_str());
-    _client._rootPath = it->second;  // test
+    _client._filenamePath = it->second;  // test
     FileDescriptor::setFD(fd);
     string response = HttpRequest::HttpResponse(_client, it->first, it->second, fileSize);
     auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
     // _client._keepAlive = false; // TODO: check if this is needed
     RunServers::insertHandleTransfer(move(transfer));
+}
+
+uint16_t ErrorCodeClientException::getErrorCode() const
+{
+    return _errorCode;
+}
+
+string ErrorCodeClientException::getMessage() const
+{
+    return _message;
 }

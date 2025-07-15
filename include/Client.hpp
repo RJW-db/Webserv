@@ -24,14 +24,14 @@ class Client
             // Add more fields as needed
         Client(int fd);
         // Client &operator=(const Client &other);
-		
+
         void resetRequestState();
 
 		void setDisconnectTime(uint16_t disconectTimeSeconds)
 		{
 			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
 		};
-        
+
 		int _fd;
 
         unique_ptr<Server> _usedServer;
@@ -44,7 +44,8 @@ class Client
         string _method;
         uint8_t _useMethod;
         string _requestPath;
-        string _rootPath; // root + requestpath + filename
+        string _rootPath; // root + requestpath
+		string _filenamePath; // rootpath + filename
         string _version;
         size_t _contentLength;
         size_t _bodyEnd;
@@ -77,7 +78,7 @@ class Client
 //     if (this != &other)
 //     {
 //         _fd = other._fd;
-//         _usedServer = move(other._usedServer); 
+//         _usedServer = move(other._usedServer);
 //         _location = other._location;
 //         _headerParseState = other._headerParseState;
 //         _header = other._header;

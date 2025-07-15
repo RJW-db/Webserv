@@ -20,7 +20,7 @@ RM				:=	rm -rf
 PRINT_NO_DIR	:=	--no-print-directory
 
 #		CCPFLAGS for testing
-COMPILER		:=	c++
+COMPILER		:=	g++
 CCPFLAGS		:=	-std=c++17
 # CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Werror

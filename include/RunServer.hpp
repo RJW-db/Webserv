@@ -124,7 +124,7 @@ class RunServers
 		// static FileDescriptor _fds;
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
-		
+
 		static ServerList _servers;
         // static unordered_map<int, string> _fdBuffers;
         // static unordered_map<int, ClientRequestState> _clientStates;
