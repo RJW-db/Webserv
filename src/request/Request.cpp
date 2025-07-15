@@ -43,7 +43,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
         return false;
 
-    client._headerParseState = true;
+    client._headerParseState = REQUEST_READY; // sam if something break it might be that this was 'true';
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
@@ -70,8 +70,14 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
 
+    auto it = client._headerFields.find("Connection");
+    if (it != client._headerFields.end() && it->second == "close")
+        client._keepAlive = false;
     if (client._method == "POST")
     {
+        
+        // HttpRequest::getContentLength(client);
+        HttpRequest::getContentType(client); // TODO return isn't used at all
         it = client._headerFields.find("Transfer-Encoding");
         if (it != client._headerFields.end() && it->second == "chunked")
         {
@@ -84,7 +90,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
             return false;
         return true;
     }
-    client._headerParseState = BODY_READY;
+    client._headerParseState = REQUEST_READY;
     return true;
 }
 
@@ -95,6 +101,61 @@ bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receive
     if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
         return false;
     return true;
+}
+
+bool HttpRequest::processHttpBody(Client &client)
+{
+    string content;
+    size_t totalWriteSize;
+    getInfoPost(client, content, totalWriteSize);
+    client._rootPath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    cout << "\n\nclient._rootPath " << client._rootPath << endl;
+
+    int fd = open(client._rootPath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._rootPath);
+        else
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._rootPath);
+    }
+    cout << "\n\nclient._rootPath " << client._rootPath << endl;
+    FileDescriptor::setFD(fd);
+    size_t writeSize = (content.size() < totalWriteSize) ? content.size() : totalWriteSize;
+    ssize_t bytesWritten = write(fd, content.data(), writeSize);
+    if (bytesWritten == -1)
+        HandleTransfer::errorPostTransfer(client, 500, "write failed post request: " + string(strerror(errno)), fd);
+    unique_ptr<HandleTransfer> handle;
+    if (bytesWritten == totalWriteSize)
+    {
+        string boundaryCheck = content.substr(bytesWritten);
+        if (HandleTransfer::foundBoundaryPost(client, boundaryCheck, fd) == true)
+        {
+            RunServers::clientHttpCleanup(client);
+            if (client._keepAlive == false)
+                RunServers::cleanupClient(client);
+            return false;
+        }
+        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, content.substr(bytesWritten));
+    }
+    else
+        handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(bytesWritten), totalWriteSize, "");
+    RunServers::insertHandleTransfer(move(handle));
+    return true;
+}
+
+void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
+{
+    cout << escape_special_chars(client._header) << endl;
+    cout << escape_special_chars(client._body) << endl;
+
+    HttpRequest::getContentLength(client);
+    HttpRequest::getBodyInfo(client);
+    // HttpRequest::getContentType(client); // TODO return isn't used at all
+    content = client._body.substr(client._bodyEnd + 4);
+    size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
+    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
+    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
 }
 
 static string_view trimWhiteSpace(string_view sv)
@@ -344,13 +405,14 @@ void HttpRequest::handleRequest(Client &client)
     {
         switch (client._headerParseState)
         {
-            case BODY_READY:
+            case REQUEST_READY:
                 processHttpBody(client);
                 break;
             
             case BODY_CHUNKED:
                 {
-                    // std::cout << escape_special_chars(client._header) << std::endl; //testcout
+                    // std::cout << escape_special_chars(client._header); //testcout
+                    // std::cout << escape_special_chars(client._body) << std::endl; //testcout
                     // std::cout << "body " << escape_special_chars(client._body) << " <" << std::endl; //testcout
                     handleChunks(client);
                     // std::cout << "okeeeee\n\n" << std::endl; //testcout
