@@ -43,7 +43,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     if (findDelimiter(client, headerEnd, receivedBytes) == false)
         return false;
 
-    client._headerParseState = REQUEST_READY; // sam if something break it might be that this was 'true';
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
@@ -188,8 +187,7 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
                 cerr << "locateRequestedFile: " << strerror(errno) << endl;
                 continue;
             }
-            client._pathFilename = indexPage; // found index
-            std::cout << "opened index file: " << client._pathFilename << std::endl; //testcout
+            client._filenamePath = indexPage;
             // cout << "\t" << client._path << endl;
             return;
         }
@@ -217,7 +215,6 @@ void HttpRequest::locateRequestedFile(Client &client)
     if (S_ISDIR(status.st_mode))
     {
         findIndexFile(client, status);
-        std::cout << "indexfile 1: " << client._filenamePath << std::endl; //testcout
     }
     else if (S_ISREG(status.st_mode))
     {
@@ -267,12 +264,11 @@ string HttpRequest::getMimeType(string &path)
 void HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
-    std::cout << "" << std::endl; //testcout
 
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
     {
-        std::cout << "open failed on file:" << client._filenamePath << std::endl; //testcout
+        std::cout << "open failed on file: " << client._filenamePath << std::endl; //testcout
         throw RunServers::ClientException("open failed");
     }
 
@@ -349,9 +345,8 @@ void HttpRequest::handleRequest(Client &client)
 {
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
-    if (client._headerFields.find("Host") == client._headerFields.end())
-        throw ErrorCodeClientException(client, 400, "Host header is missing in request: " + client._header);
-    std::cout << "client state: " << +client._headerParseState << std::endl; //testcout
+    // if (client._headerFields.find("Host") == client._headerFields.end())
+    //     throw ErrorCodeClientException(client, 400, "Host header is missing in request: " + client._header);
     // else if (it->second != "127.0.1.1:8080")
     //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
     switch (client._useMethod)
@@ -378,11 +373,7 @@ void HttpRequest::handleRequest(Client &client)
             
             case BODY_CHUNKED:
                 {
-                    // std::cout << escape_special_chars(client._header); //testcout
-                    // std::cout << escape_special_chars(client._body) << std::endl; //testcout
-                    // std::cout << "body " << escape_special_chars(client._body) << " <" << std::endl; //testcout
                     handleChunks(client);
-                    // std::cout << "okeeeee\n\n" << std::endl; //testcout
                 }
         }
         

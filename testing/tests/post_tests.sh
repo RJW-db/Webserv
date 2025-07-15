@@ -1,4 +1,4 @@
-# cd /home/saleunin/Desktop/Webserv/testing 
+cd /home/saleunin/Desktop/Webserv/testing 
 
 mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
@@ -45,7 +45,7 @@ if cmp -s expectedResults/post/post2.txt results/post/post2.txt && cmp -s expect
     echo "post test 2 completed successfully"
 else
     cmp -s expectedResults/post/post2.txt results/post/post2.txt || echo "post test 2 failed because there is difference in expected for post.txt"
-    cmp -s expectedResults/post/upload1/test2.png results/post/upload2/test2.png || echo "post test 2 failed because there is difference in expected for uploaded file"
+    cmp -s expectedResults/post/upload1/test2.png results/post/upload1/test2.png || echo "post test 2 failed because there is difference in expected for uploaded file"
 fi
 
 # test 3: Check results

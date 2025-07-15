@@ -5,7 +5,7 @@
 bool HttpRequest::processHttpBody(Client &client)
 {
     size_t totalWriteSize;
-    std::cout << "hier" << std::endl; //testcout
+    std::cout << "client.body: " << client._body << ", bodyend: " << client._bodyEnd << std::endl; //testcout
     string content = client._body.substr(client._bodyEnd + 4);
     getInfoPost(client, content, totalWriteSize);
     client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
@@ -122,24 +122,17 @@ void HttpRequest::validateChunkSizeLine(const string &input)
 {
     if (input.size() < 1)
     {
-        cout << "wrong1" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
     }
 
     // size_t hexPart = input.size() - 2;
     if (all_of(input.begin(), input.end(), ::isxdigit) == false)
     {
-        cout << "wrong2" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
     }
         
     // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
     // {
-    //     cout << "wrong3" << endl; //testcout
-    //     if (input[hexPart] == '\r')
-    //         cout << "\\r" << endl; //testcout
-    //     if (input[hexPart + 1] == '\n')
-    //         cout << "\\n" << endl; //testcout
     //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
     // }
 }
@@ -162,13 +155,11 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
 {
     if (input.size() - 2 != chunkTargetSize)
     {
-        cout << "test1" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
     }
 
     if (input[chunkTargetSize] != '\r' || input[chunkTargetSize + 1] != '\n')
     {
-        cout << "test2" << endl; //testcout
         // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
     }
 }
@@ -184,7 +175,6 @@ void HttpRequest::handleChunks(Client &client)
         size_t crlf = client._body.find("\r\n", client._bodyPos);
         if (crlf == string::npos)
         {
-            // std::cout << "\nhandleChunks 1" << std::endl; //testcout
             return;
         }
         string chunkSizeLine = client._body.substr(client._bodyPos, crlf);
@@ -193,7 +183,6 @@ void HttpRequest::handleChunks(Client &client)
         client._chunkTargetSize = parseChunkSize(chunkSizeLine);
         client._chunkBodyPos = crlf + 2;
         
-        // std::cout << "_chunkTargetSize = " << client._chunkTargetSize << endl; //testcout
     }
 
     // if (client._body.size() >= client._chunkTargetSize + client._chunkBodyPos &&
@@ -217,10 +206,6 @@ void HttpRequest::handleChunks(Client &client)
         client._bodyHeader = client._body.substr(client._bodyPos + client._chunkBodyPos, endBodyHeader + 4 - client._chunkBodyPos);
 
         client._unchunkedBody = client._body.substr(client._bodyPos + endBodyHeader + 4);
-        std::cout << escape_special_chars(client._bodyHeader) << std::endl; //testcout
-        std::cout << ">" << escape_special_chars(client._unchunkedBody) << "<" << std::endl; //testcout
         exit(0);
     }
-    // else
-    //     std::cout << "bad" << std::endl; //testcout
 }
