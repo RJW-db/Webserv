@@ -158,8 +158,10 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 if ((*it)->getIsChunk() == false)
                     finished = handle.handlePostTransfer();
                 else
+                {
+                    handle.appendToBody();
                     finished = handle.handleChunkTransfer();
-
+                }
             }
             if (finished == true)
             {

@@ -9,24 +9,22 @@
 HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
 : _client(client), _fd(fd), _fileBuffer(responseHeader), _fileSize(fileSize)
 {
-    _offset = 0;
-    _bytesReadTotal = 0;
-    _epollout_enabled = true;
     _headerSize = responseHeader.size();
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string boundary)
-: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundBoundary(false), _searchContentDisposition(false), _isChunked(false)
+HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string buffer)
+: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(buffer)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
-// HandleTransfer::HandleTransfer(Client &client)
-// : _client(client)
-// {
-//     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-// }
+HandleTransfer::HandleTransfer(Client &client, string body)
+: _client(client), _isChunked(true)
+{
+    _body = body;
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+}
 
 HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
 {
@@ -230,10 +228,152 @@ bool HandleTransfer::handlePostTransfer(bool readData)
     return true;
 }
 
+bool HandleTransfer::extractChunkSize()
+{
+    size_t crlfPos = _body.find(CRLF, _bodyPos);
+    if (crlfPos != string::npos)
+    {
+        string chunkSizeLine = _body.substr(_bodyPos, crlfPos);
+        validateChunkSizeLine(chunkSizeLine);
+        
+        _chunkTargetSize = parseChunkSize(chunkSizeLine);
+        _chunkBodyPos = crlfPos + CRLF_LEN;
+        return true;
+    }
+    return false;
+}
+
+bool HandleTransfer::processChunkBodyHeader()
+{
+    if (extractChunkSize() == false)
+        return false;
+
+    size_t chunkDataStart = _bodyPos + _chunkBodyPos;
+    size_t chunkDataEnd = chunkDataStart + _chunkTargetSize;
+
+    if (_body.size() >= chunkDataEnd + CRLF_LEN &&
+        _body[chunkDataEnd] == '\r' &&
+        _body[chunkDataEnd + 1] == '\n')
+    {
+        size_t boundaryStart = chunkDataStart + CRLF_LEN;
+        string_view boundaryCheck(&_body[boundaryStart], _client._bodyBoundary.size());
+        if (_body.substr(chunkDataStart, 2) != "--" ||
+            boundaryCheck != _client._bodyBoundary)
+        {
+            ErrorCodeClientException(_client, 400, "Malformed boundary");
+        }
+
+        size_t headerStart = chunkDataStart + _client._bodyBoundary.size() + CRLF_LEN;
+        size_t endBodyHeader = _body.find(CRLF2, headerStart);
+        if (endBodyHeader == string::npos)
+        {
+            ErrorCodeClientException(_client, 400, "body header didn't end in \\r\\n\\r\\n");
+        }
+        _foundBoundary = true;
+        _bodyHeader = _body.substr(chunkDataStart, endBodyHeader + CRLF2_LEN - _chunkBodyPos);
+        HttpRequest::processHttpChunkBody(_client, _fd);
+
+        size_t chunkEndCrlfPos = _bodyPos + endBodyHeader + CRLF2_LEN;
+        _unchunkedBody = _body.substr(chunkEndCrlfPos/*  + CRLF_LEN */);
+
+        // exit(0);
+        if (_body.size() - _bodyPos < _chunkTargetSize + 2 ||
+            _body[chunkDataStart + _chunkTargetSize] != '\r' ||
+            _body[chunkDataStart + _chunkTargetSize + 1] != '\n')
+        {
+            throw ErrorCodeClientException(_client, 400, "Chunk didn't end in \\r\\n");
+        }
+        _bodyPos = chunkDataStart + _chunkTargetSize  + CRLF_LEN;
+        // std::cout << escape_special_chars(_bodyHeader)<< std::endl; //testcout
+        // std::cout << escape_special_chars(_unchunkedBody)<< std::endl; //testcout
+        // exit(0);
+        // std::cout << escape_special_chars(_body) << std::endl; //testcout
+        if (_bodyPos == _body.size())
+            std::cout << "ass big" << std::endl; //testcout
+
+        // std::cout << _bodyPos << std::endl; //testcout
+        // std::cout << _body.size() << std::endl; //testcout
+        // std::cout << chunkDataEnd + CRLF_LEN << std::endl; //testcout
+        // std::cout << escape_special_chars(&_body[_bodyPos]) << std::endl; //testcout
+        exit(0);
+        return true;
+    }
+    return false;
+}
+
+void    tmp()
+{
+    std::cout << "nothingness" << std::endl; //testcout
+    exit(0);
+}
+
+void HandleTransfer::appendToBody()
+{
+    char   buff[RunServers::getClientBufferSize()];
+    size_t bytesReceived = RunServers::receiveClientData(_client, buff);
+    _body.append(buff, bytesReceived);
+    _client.setDisconnectTime(disconnectDelaySeconds);
+}
+
 
 bool HandleTransfer::handleChunkTransfer()
 {
     std::cout << "we got here" << std::endl; //testcout
-    std::cout << _client._unchunkedBody << std::endl; //testcout
+
+    // std::cout << escape_special_chars(_body) << std::endl; //testcout
+    if (_foundBoundary == false)
+    {
+        return processChunkBodyHeader();
+    }
+    else
+    {
+        tmp();
+    }
     return true;
+}
+
+void HandleTransfer::validateChunkSizeLine(const string &input)
+{
+    if (input.size() < 1)
+    {
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+
+    // size_t hexPart = input.size() - 2;
+    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
+    {
+        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    }
+        
+    // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
+    // {
+    //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
+    // }
+}
+
+uint64_t HandleTransfer::parseChunkSize(const string &input)
+{
+    uint64_t chunkTargetSize;
+    stringstream ss;
+    ss << hex << input;
+    ss >> chunkTargetSize;
+    // cout << "chunkTargetSize " << chunkTargetSize << endl;
+    // if (static_cast<size_t>(chunkTargetSize) > client._location.getClientBodySize())
+    // {
+    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize)); // (413, "Payload Too Large");
+    // }
+    return chunkTargetSize;
+}
+
+void HandleTransfer::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
+{
+    if (input.size() - 2 != chunkTargetSize)
+    {
+        // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
+    }
+
+    if (input[chunkTargetSize] != '\r' || input[chunkTargetSize + 1] != '\n')
+    {
+        // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
+    }
 }

@@ -52,13 +52,14 @@ class Client
         string_view _contentType;
         string_view _bodyBoundary;
 
-        string _bodyHeader;
-        size_t _bodyPos;
-        size_t _chunkBodyPos;   
-        // size_t _chunkPos;
-        size_t _chunkTargetSize;
-        size_t _chunkReceivedSize;
-        string _unchunkedBody;
+        // string _bodyHeader;
+        // size_t _bodyPos;
+        // size_t _chunkBodyPos;   
+        // // size_t _chunkPos;
+        // size_t _chunkTargetSize;
+        // size_t _chunkReceivedSize;
+        // string _unchunkedBody;
+        // bool   _foundBoundary;
 
         string_view _filename;
         string_view _fileContent;

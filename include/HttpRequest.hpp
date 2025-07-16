@@ -38,6 +38,13 @@
 
 using namespace std;
 
+constexpr char CRLF[] = "\r\n";
+constexpr size_t CRLF_LEN = sizeof(CRLF) - 1;
+
+constexpr char CRLF2[] = "\r\n\r\n";
+constexpr size_t CRLF2_LEN = sizeof(CRLF2) - 1;
+
+
 enum ContentType
 {
     UNSUPPORTED,
@@ -55,7 +62,7 @@ class HttpRequest
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static bool processHttpBody(Client &client);
-        static bool processHttpBody2(Client &client);
+        static bool processHttpChunkBody(Client &client, int targetFilePathFD);
 
         static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
 
@@ -89,11 +96,7 @@ class HttpRequest
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
 
-        static void handleChunks(Client &client);
+        // static void handleChunks(Client &client);
 
-        // Chunked request
-        static void validateChunkSizeLine(const string &input);
-        static uint64_t parseChunkSize(const string &input);
-        static void ParseChunkStr(const string &input, uint64_t chunkTargetSize);
 
 };

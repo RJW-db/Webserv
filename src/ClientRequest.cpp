@@ -67,7 +67,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     {
         cerr << "recv: " << strerror(errno);
         RunServers::cleanupClient(client);
-                            throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
+        throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
     }
     if (bytesReceived == 0)
     {

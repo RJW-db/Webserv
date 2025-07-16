@@ -34,6 +34,25 @@ bool HttpRequest::processHttpBody(Client &client)
     return true;
 }
 
+
+bool HttpRequest::processHttpChunkBody(Client &client, int targetFilePathFD)
+{
+    size_t totalWriteSize;
+    HttpRequest::getBodyInfo(client);
+    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+        else
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+    }
+    FileDescriptor::setFD(fd);
+    targetFilePathFD = fd;
+    return true;
+}
+
 ContentType HttpRequest::getContentType(Client &client)
 {
     auto it = client._headerFields.find("Content-Type");
@@ -112,141 +131,4 @@ void HttpRequest::getBodyInfo(Client &client)
     //     throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
 
     // client._fileContent = string_view(client._body).substr(fileStart, fileEnd - fileStart);
-}
-
-
-
-
-void HttpRequest::validateChunkSizeLine(const string &input)
-{
-    if (input.size() < 1)
-    {
-        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    }
-
-    // size_t hexPart = input.size() - 2;
-    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
-    {
-        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    }
-        
-    // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
-    // {
-    //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    // }
-}
-#include <string>
-uint64_t HttpRequest::parseChunkSize(const string &input)
-{
-    uint64_t chunkTargetSize;
-    stringstream ss;
-    ss << hex << input;
-    ss >> chunkTargetSize;
-    // cout << "chunkTargetSize " << chunkTargetSize << endl;
-    // if (static_cast<size_t>(chunkTargetSize) > client._location.getClientBodySize())
-    // {
-    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize)); // (413, "Payload Too Large");
-    // }
-    return chunkTargetSize;
-}
-
-void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
-{
-    if (input.size() - 2 != chunkTargetSize)
-    {
-        // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
-    }
-
-    if (input[chunkTargetSize] != '\r' || input[chunkTargetSize + 1] != '\n')
-    {
-        // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
-    }
-}
-
-void HttpRequest::handleChunks(Client &client)
-{
-    if (client._chunkTargetSize == 0)
-    {
-        size_t crlf = client._body.find("\r\n", client._bodyPos);
-        if (crlf == string::npos)
-        {
-            return;
-        }
-        string chunkSizeLine = client._body.substr(client._bodyPos, crlf);
-        validateChunkSizeLine(chunkSizeLine);
-        
-        client._chunkTargetSize = parseChunkSize(chunkSizeLine);
-        client._chunkBodyPos = crlf + 2;
-    }
-
-    size_t chunkDataStart = client._bodyPos + client._chunkBodyPos;
-    size_t chunkDataEnd = chunkDataStart + client._chunkTargetSize;
-
-    if (client._body.size() >= chunkDataEnd + 2 &&
-        client._body[chunkDataEnd] == '\r' &&
-        client._body[chunkDataEnd + 1] == '\n')
-    {
-        size_t boundaryStart = chunkDataStart + 2;
-        string_view boundaryCheck(&client._body[boundaryStart], client._bodyBoundary.size());
-        if (client._body.substr(chunkDataStart, 2) != "--" ||
-            boundaryCheck != client._bodyBoundary)
-        {
-            ErrorCodeClientException(client, 400, "Malformed boundary");
-        }
-
-        size_t headerStart = chunkDataStart + client._bodyBoundary.size() + 2;
-        size_t endBodyHeader = client._body.find("\r\n\r\n", headerStart);
-        if (endBodyHeader == string::npos)
-        {
-            ErrorCodeClientException(client, 400, "body header didn't end in \\r\\n\\r\\n");
-        }
-        client._bodyHeader = client._body.substr(chunkDataStart, endBodyHeader + 4 - client._chunkBodyPos);
-
-        size_t chunkEndCrlfPos = client._bodyPos + endBodyHeader + 4;
-        client._unchunkedBody = client._body.substr(chunkEndCrlfPos);
-
-        // Check for final CRLF after chunk
-        if (client._body.size() < chunkEndCrlfPos + 3 || // out of bounds check
-            client._body[chunkEndCrlfPos + 1] != '\r' ||
-            client._body[chunkEndCrlfPos + 2] != '\n')
-        {
-            ErrorCodeClientException(client, 400, "Chunk didn't end in \\r\\n");
-        }
-        client._bodyPos = chunkEndCrlfPos + 2;
-        std::cout << escape_special_chars(client._bodyHeader)<< std::endl; //testcout
-        std::cout << escape_special_chars(client._unchunkedBody)<< std::endl; //testcout
-        exit(0);
-        processHttpBody2(client);
-    }
-}
-
-bool HttpRequest::processHttpBody2(Client &client)
-{
-    size_t totalWriteSize;
-    HttpRequest::getBodyInfo(client);
-    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
-    }
-    FileDescriptor::setFD(fd);
-    unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
-    handle->setBoolToChunk();
-    // if (handle->handlePostTransfer(false) == true)
-    // {
-    //     if (client._keepAlive == false)
-    //         RunServers::cleanupClient(client);
-    //     else
-    //     {
-    //         RunServers::clientHttpCleanup(client);
-    //     }
-    //     return false;
-    // }
-    RunServers::insertHandleTransfer(move(handle));
-    return true;
 }

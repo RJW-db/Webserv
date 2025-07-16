@@ -373,14 +373,25 @@ void HttpRequest::handleRequest(Client &client)
                 break;
             }
             case BODY_CHUNKED:
+            {
+                // handleChunks(client);
+                unique_ptr<HandleTransfer> handle;
+                handle = make_unique<HandleTransfer>(client, client._body);
+                if (handle->handleChunkTransfer() == true)
                 {
-                    handleChunks(client);
-                    // unique_ptr<HandleTransfer> handle;
-                    // handle = make_unique<HandleTransfer>(client);
-                    
-                    // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
-                    // RunServers::insertHandleTransfer(move(handle));
+                    // if (client._keepAlive == false)
+                    //     RunServers::cleanupClient(client);
+                    // else
+                    // {
+                    //     RunServers::clientHttpCleanup(client);
+                    // }
+                    // return false;
+
                 }
+                // handle->setBoolToChunk();
+                // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
+                // RunServers::insertHandleTransfer(move(handle));
+            }
         }
         
         break;
