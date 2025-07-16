@@ -61,6 +61,7 @@ class Client
         string _unchunkedBody;
 
         string_view _filename;
+        string _name;
         string_view _fileContent;
 
   

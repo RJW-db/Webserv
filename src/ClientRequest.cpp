@@ -176,6 +176,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._headerFields.clear();
     client._rootPath.clear();
 	client._filenamePath.clear();
+    client._name = "";
     client.setDisconnectTime(disconnectDelaySeconds);
 }
 

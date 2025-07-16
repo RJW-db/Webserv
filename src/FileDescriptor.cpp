@@ -35,6 +35,8 @@ void	FileDescriptor::setFD(int fd)
 
 void	FileDescriptor::closeFD(int fd)
 {
+    if (fd == -1)
+        return;
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
     if (it != _fds.end())
 	{

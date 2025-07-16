@@ -18,20 +18,19 @@ curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfil
 echo "4. Testing POST request to upload 1M.txt to localhost:15000/upload with Host header 'server1'"
 curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload1/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
 
-# # Test 5: POST request to upload multiple files to server1
-# echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15001/upload3 with Host header 'server1'"
-# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
-# -F "file1=@expectedResults/post/upload1/small.txt" -F "file2=@expectedResults/post/upload1/small2.txt" \
-# -F "file3=@expectedResults/post/upload1/small3.txt" -F "file4=@expectedResults/post/upload1/test1.jpg" \
-# -F "file5=@expectedResults/post/upload1/test2.png" \
-#  http://localhost:15000/upload2 > results/post/post5.txt &
-
+# Test 5: POST request to upload multiple files to server1
+echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15001/upload3 with Host header 'server1'"
+curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
+-F "file1=@expectedResults/post/upload1/small.txt" -F "file2=@expectedResults/post/upload1/small2.txt" \
+-F "file3=@expectedResults/post/upload1/small3.txt" -F "file4=@expectedResults/post/upload1/test1.jpg" \
+-F "file5=@expectedResults/post/upload1/test2.png" \
+ http://localhost:15001/upload2 > results/post/post5.txt &
 
 
 sleep 2
 
-# test 1: Check results
 {
+
 # test 1: Check results
 if cmp -s expectedResults/post/post1.txt results/post/post1.txt && cmp -s expectedResults/post/upload1/test1.jpg results/post/upload1/test1.jpg; then
     echo "post test 1 completed successfully"
@@ -64,24 +63,24 @@ else
     cmp -s expectedResults/post/upload1/1M.txt results/post/upload1/1M.txt || echo "post test 4 failed because there is difference in expected for uploaded file"
 fi
 
-# # test 5: Check results for multiple file upload
-# all_passed=true
+# test 5: Check results for multiple file upload
+all_passed=true
 
-# if ! cmp -s expectedResults/post/post5.txt results/post/post5.txt; then
-#     echo "post test 5 failed because there is difference in expected for post.txt" 
-#     all_passed=false
-# fi
+if ! cmp -s expectedResults/post/post5.txt results/post/post5.txt; then
+    echo "post test 5 failed because there is difference in expected for post.txt" 
+    all_passed=false
+fi
 
-# for file in small.txt small2.txt small3.txt test1.jpg test2.png; do
-#     if ! cmp -s "expectedResults/post/upload1/$file" "results/post/upload2/$file"; then
-#         echo "post test 5 failed because there is difference in expected for $file"
-#         all_passed=false
-#     fi
-# done
+for file in small.txt small2.txt small3.txt test1.jpg test2.png; do
+    if ! cmp -s "expectedResults/post/upload1/$file" "results/post/upload2/$file"; then
+        echo "post test 5 failed because there is difference in expected for $file"
+        all_passed=false
+    fi
+done
 
-# if $all_passed; then
-#     echo "post test 5 completed successfully"
-# fi
+if $all_passed; then
+    echo "post test 5 completed successfully"
+fi
 
 } > results/post/summary.txt 2>&1
 

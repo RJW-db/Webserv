@@ -8,7 +8,7 @@ static string percentDecode(const string& input);
 static bool isValidAndNormalizeRequestPath(Client &client);
 static bool pathContainsInvalidCharacters(const string &path);
 static vector<string_view> splitPathSegments(const string &path);
-static vector<string_view> normalizeSegments(const vector<string_view> &segments, Client &client);
+static vector<string_view> normalizeSegments(const vector<string_view> &segments);
 static void    joinSegmentsToPath(string &path, const vector<string_view> &segments);
 static void    validatePathAndSegmentLengths(Client &client, const vector<string_view> &segments);
 static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods);
@@ -68,7 +68,7 @@ static bool isValidAndNormalizeRequestPath(Client &client)
         return false;
     }
     vector<string_view> pathSegments = splitPathSegments(client._requestPath);
-    vector<string_view> normalizedSegments = normalizeSegments(pathSegments, client);
+    vector<string_view> normalizedSegments = normalizeSegments(pathSegments);
     joinSegmentsToPath(client._requestPath, normalizedSegments);
     validatePathAndSegmentLengths(client, normalizedSegments);
     return true;
@@ -102,7 +102,7 @@ static vector<string_view> splitPathSegments(const string &path)
 }
 
 // Helper: Normalize segments, handling ".." and preventing traversal above root
-static vector<string_view> normalizeSegments(const vector<string_view> &segments, Client &client)
+static vector<string_view> normalizeSegments(const vector<string_view> &segments)
 {
     vector<string_view> normalized;
     for (size_t i = 0; i < segments.size(); ++i)

@@ -5,22 +5,28 @@
 bool HttpRequest::processHttpBody(Client &client)
 {
     size_t totalWriteSize;
-    std::cout << "client.body: " << client._body << ", bodyend: " << client._bodyEnd << std::endl; //testcout
     string content = client._body.substr(client._bodyEnd + 4);
     getInfoPost(client, content, totalWriteSize);
-    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    bool hasBoundaryPrefix = false;
-    if (fd == -1)
+    int fd = -1;
+    if (!client._filename.empty())
     {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+        client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+        fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+        if (fd == -1)
+        {
+            if (errno == EACCES)
+                throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+            else
+                throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+        }
+        FileDescriptor::setFD(fd);
     }
-    FileDescriptor::setFD(fd);
+    else
+        client._filenamePath.clear();
     unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content.substr(0));
+    handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(client._body.size()), content);
+    if (!client._filenamePath.empty())
+        handle->_fileNamePaths.push_back(client._filenamePath);
     if (handle->handlePostTransfer(false) == true)
     {
         if (client._keepAlive == false)
@@ -97,16 +103,23 @@ void HttpRequest::getBodyInfo(Client &client)
     }
     else
     {
-        throw RunServers::ClientException("Filename not found in Content-Disposition header");
+        client._filename = "";
+        size_t nameKeyPos = cdLine.find("name=\"");
+        size_t nameStart = nameKeyPos + 6; // 6 = strlen("name=\"")
+        size_t nameEnd = cdLine.find("\"", nameStart);
+        if (nameEnd != string::npos)
+            client._name = cdLine.substr(nameStart, nameEnd - nameStart);
+        else
+            throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: missing name");
+        // throw RunServers::ClientException("Filename not found in Content-Disposition header");
     }
-
     const string contentType = "Content-Type: ";
     size_t position = client._body.find(contentType);
 
-    if (position == string::npos)
+    if (position == string::npos && !client._filename.empty())
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
 
-    size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
+    // size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
     // size_t fileEnd = client._body.find("\r\n--" + string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
 
     // if (position == string::npos)
@@ -164,10 +177,10 @@ void HttpRequest::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
     }
 }
 
-void unchunkingProcess(Client &client)
-{
+// void unchunkingProcess(Client &client)
+// {
 
-}
+// }
 void HttpRequest::handleChunks(Client &client)
 {
     if (client._chunkTargetSize == 0)

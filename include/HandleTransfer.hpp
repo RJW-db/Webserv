@@ -18,7 +18,7 @@ class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, int fd, size_t bytesWritten, string boundaryBuffer); //post
+		HandleTransfer(Client &client, int fd, size_t bytesRead, string buffer); //post
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -27,9 +27,9 @@ class HandleTransfer
         bool handleGetTransfer();
 
         static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
-        static void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd);
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
         bool handlePostTransfer(bool ReadData = true);
-        bool validateFinalCRLF();
+        int validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
         bool    searchContentDisposition();
 
@@ -38,7 +38,8 @@ class HandleTransfer
         string  _fileBuffer;
         size_t  _fileSize;
 
-		
+		map<string, string> _arguments; // for post transfer
+        vector<string> _fileNamePaths; // for post transfer
 
         size_t  _offset; // Offset for the data transfer
         size_t  _bytesReadTotal;

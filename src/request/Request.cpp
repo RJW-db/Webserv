@@ -40,7 +40,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 {
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
-    if (findDelimiter(client, headerEnd, receivedBytes) == false)
+    if (findDelimiter(headerEnd) == false)
         return false;
 
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
@@ -84,7 +84,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         }
         client._headerParseState = BODY_AWAITING;
         client._bodyEnd = client._body.find("\r\n\r\n");
-        if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
+        if (findDelimiter(client._bodyEnd) == false)
             return false;
         client._headerParseState = REQUEST_READY;
         return true;
@@ -97,7 +97,7 @@ bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receive
 {
     client._body.append(buff, receivedBytes);
     client._bodyEnd = client._body.find("\r\n\r\n");
-    if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
+    if (findDelimiter(client._bodyEnd) == false)
         return false;
     client._headerParseState = REQUEST_READY;
     return true;
@@ -267,15 +267,12 @@ void HttpRequest::GET(Client &client)
 
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
-    {
-        std::cout << "open failed on file: " << client._filenamePath << std::endl; //testcout
         throw RunServers::ClientException("open failed");
-    }
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
-    auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
+    auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
     RunServers::insertHandleTransfer(move(handle));
 }
 
@@ -430,6 +427,7 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
 {
     static const map<uint16_t, string> responseCodes = {
         {200, "OK"},
+        {201, "Created"},
         {400, "Bad Request"},
         {403, "Forbidden"},
         {404, "Not Found"},

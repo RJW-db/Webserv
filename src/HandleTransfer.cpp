@@ -4,8 +4,7 @@
 #include <HttpRequest.hpp>
 
 #include <sys/epoll.h>
-// HandleTransfer::HandleTransfer(int clientFD, string &responseHeader, int fd)
-// : _clientFD(clientFD), _header(responseHeader), _fd(fd)
+
 HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
 : _client(client), _fd(fd), _fileBuffer(responseHeader), _fileSize(fileSize)
 {
@@ -16,8 +15,8 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string boundary)
-: _client(client), _fd(fd), _bytesReadTotal(bytesRead), _fileBuffer(boundary), _foundBoundary(false), _searchContentDisposition(false)
+HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string buffer)
+: _client(client), _fd(fd), _fileBuffer(buffer), _bytesReadTotal(bytesRead), _foundBoundary(false), _searchContentDisposition(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -86,18 +85,20 @@ bool HandleTransfer::handleGetTransfer()
     return false;
 }
 
-void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd)
+void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
-    FileDescriptor::closeFD(fd);
-    if (remove(client._filenamePath.data()))
-        std::cout << "remove failed on file: " << client._filenamePath << std::endl;
-    throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on fileDescriptor: " + to_string(fd));
+    FileDescriptor::closeFD(_fd);
+    for (const auto &filePath : _fileNamePaths)
+    {
+        std::cout << "removing file: " << filePath << std::endl; //testcout
+        if (remove(filePath.data()) != 0)
+            std::cout << "remove failed on file: " << filePath << std::endl;
+    }
+    throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on file with fileDescriptor: " + to_string(_fd));
 }
 
-
-
-// return 0 if should continue reading, 1 if should stop reading 2 if should continue function
-bool HandleTransfer::validateFinalCRLF()
+// return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
+int HandleTransfer::validateFinalCRLF()
 {
     size_t foundReturn = _fileBuffer.find("\r\n");
     if (foundReturn == 0)
@@ -107,16 +108,16 @@ bool HandleTransfer::validateFinalCRLF()
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         _foundBoundary = false;
-        return (handlePostTransfer(false));
+        return 2;
     }
     if (foundReturn != 2 && foundReturn != string::npos)
-        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
+        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     for (size_t i = 0; i < _fileBuffer.size(); ++i)
     {
         char c = _fileBuffer[i];
         if (c != '-' && c != '\r' && c != '\n')
         {
-            errorPostTransfer(_client, 400, "post request has invalid characters after boundary", _fd);
+            errorPostTransfer(_client, 400, "post request has invalid characters after boundary");
         }
     }
     if (foundReturn == 2 && foundReturn + 2 == _fileBuffer.size())
@@ -126,12 +127,17 @@ bool HandleTransfer::validateFinalCRLF()
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         string body = _client._filenamePath + '\n';
-        string headers =  HttpRequest::HttpResponse(_client, 200, ".txt", body.size()) + body;
+        string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
+        //print arguments
+        for (const auto &arg : _arguments)
+        {
+            std::cout << "Argument: " << arg.first << " = " << arg.second << std::endl;
+        }
         return true;
     }
     if (_fileBuffer.size() > 4)
-        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters", _fd);
+        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     return false;
 }
 
@@ -142,13 +148,17 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     size_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
     if (boundaryFound != string::npos)
     {
-        if (_fileBuffer.find("\r\n") != boundaryFound - 4)
+        if (strncmp(_fileBuffer.data() + boundaryFound - 4, "\r\n--", 4) != 0)
             throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
         writeSize = boundaryFound - 4;
     }
     if (writeSize > 0)
     {
-        bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
+        bytesWritten = writeSize;
+        if (!_client._filename.empty())
+            bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
+        else
+            _arguments[_client._name].append(_fileBuffer.data(), writeSize);
         if (bytesWritten == -1)
             ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
         _fileBuffer = _fileBuffer.substr(bytesWritten);
@@ -164,17 +174,22 @@ bool HandleTransfer::searchContentDisposition()
     _client._body = _fileBuffer.substr(0, bodyEnd);
     HttpRequest::getBodyInfo(_client);
     _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
-    _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-    _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    bool hasBoundaryPrefix = false;
-    if (_fd == -1)
+    if (!_client._filename.empty())
     {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
-        else
-            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+        _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
+        _fileNamePaths.push_back(_client._filenamePath);
+        _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+        if (_fd == -1)
+        {
+            if (errno == EACCES)
+                throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+            else
+                throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+        }
+        FileDescriptor::setFD(_fd);
     }
-    FileDescriptor::setFD(_fd);
+    else
+        _client._filenamePath.clear();
     _searchContentDisposition = false;
     return true;
 }
@@ -190,36 +205,42 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             _bytesReadTotal += bytesReceived;
             _fileBuffer.append(buff, bytesReceived);
         }
-        if (_bytesReadTotal > _client._contentLength)
-            throw ErrorCodeClientException(_client, 413, "Content length smaller then body received for fd: " + to_string(_fd));
-        if (_searchContentDisposition == true && searchContentDisposition() == false)
-            return false;
-        if (_foundBoundary == true)
-            return (validateFinalCRLF());
-        ssize_t bytesWritten = 0;
-        size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
-        if (boundaryFound != string::npos)
+        while (true)
         {
-            size_t offset = 0;
-            _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + boundaryFound - bytesWritten);
-            RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-            RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
-            _foundBoundary = true;
-            return (validateFinalCRLF());
+            if (_bytesReadTotal > _client._contentLength)
+                throw ErrorCodeClientException(_client, 413, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
+            if (_searchContentDisposition == true && searchContentDisposition() == false)
+                return false;
+            if (_foundBoundary == true)
+            {
+                int result = validateFinalCRLF();
+                if (result == 2)
+                    continue ;
+                return (result == 1); // if result is true, then we are done with the post transfer
+            }
+            ssize_t bytesWritten = 0;
+            size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
+            if (boundaryFound != string::npos)
+            {
+                _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + boundaryFound - bytesWritten);
+                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+                RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
+                _foundBoundary = true;
+            }
+            else
+                return false;
         }
+
         return false;
     }
     catch(const std::exception& e)
     {
-        cerr << "Error in handlePostTransfer: " << e.what() << endl;
-        FileDescriptor::closeFD(_fd);
-        if (remove(_client._filenamePath.data()))
-            cerr << "remove failed on file:" << _client._filenamePath << ", with error: " << strerror(errno) << std::endl;
-        RunServers::cleanupClient(_client);
+        _client._keepAlive = false;
+        errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
     }
     catch (const ErrorCodeClientException &e)
     {
-        errorPostTransfer(_client, e.getErrorCode(), e.getMessage(), _fd);
+        errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     return true;
 }

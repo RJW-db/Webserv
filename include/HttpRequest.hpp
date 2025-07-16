@@ -62,7 +62,7 @@ class HttpRequest
             client._body.append(buff, receivedBytes);
             return (true);
         }
-        static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
+        static inline bool findDelimiter(size_t delimiter) {
             if (delimiter == std::string::npos) {
                 return false;
             }
