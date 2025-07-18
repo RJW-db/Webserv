@@ -8,7 +8,7 @@
 #include <Location.hpp>
 #include <chrono>
 
-#define disconnectDelaySeconds 5
+#define disconnectDelaySeconds 15
 
 enum HeaderParseState
 {
@@ -31,7 +31,7 @@ class Client
 		{
 			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
 		};
-
+        // bool _finishedProcessClientRequest = false;
 		int _fd;
 
         unique_ptr<Server> _usedServer;

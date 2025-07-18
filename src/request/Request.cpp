@@ -80,7 +80,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         if (it != client._headerFields.end() && it->second == "chunked")
         {
             client._headerParseState = BODY_CHUNKED;
-            return true;
+            return (client._body.size() > 0 ? true : false);
         }
         client._headerParseState = BODY_AWAITING;
         client._bodyEnd = client._body.find("\r\n\r\n");
@@ -267,7 +267,6 @@ void HttpRequest::GET(Client &client)
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
     {
-        std::cout << "open failed on file: " << client._filenamePath << std::endl; //testcout
         throw RunServers::ClientException("open failed");
     }
 
@@ -376,7 +375,8 @@ void HttpRequest::handleRequest(Client &client)
             {
                 // handleChunks(client);
                 unique_ptr<HandleTransfer> handle;
-                handle = make_unique<HandleTransfer>(client, client._body);
+                handle = make_unique<HandleTransfer>(client/* , client._body */);
+                // handle->_client.setDisconnectTime(disconnectDelaySeconds);
                 if (handle->handleChunkTransfer() == true)
                 {
                     // if (client._keepAlive == false)
@@ -390,7 +390,7 @@ void HttpRequest::handleRequest(Client &client)
                 }
                 // handle->setBoolToChunk();
                 // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
-                // RunServers::insertHandleTransfer(move(handle));
+                RunServers::insertHandleTransfer(move(handle));
             }
         }
         

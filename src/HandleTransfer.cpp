@@ -2,6 +2,7 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
+#include <Client.hpp>
 
 #include <sys/epoll.h>
 // HandleTransfer::HandleTransfer(int clientFD, string &responseHeader, int fd)
@@ -19,10 +20,10 @@ HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string 
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
-HandleTransfer::HandleTransfer(Client &client, string body)
+HandleTransfer::HandleTransfer(Client &client)
 : _client(client), _isChunked(true)
 {
-    _body = body;
+    // _body = body;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
@@ -230,14 +231,16 @@ bool HandleTransfer::handlePostTransfer(bool readData)
 
 bool HandleTransfer::extractChunkSize()
 {
-    size_t crlfPos = _body.find(CRLF, _bodyPos);
+    size_t crlfPos = _client._body.find(CRLF, _bodyPos);
+
     if (crlfPos != string::npos)
     {
-        string chunkSizeLine = _body.substr(_bodyPos, crlfPos);
+
+        string chunkSizeLine = _client._body.substr(_bodyPos, crlfPos);
         validateChunkSizeLine(chunkSizeLine);
-        
+
         _chunkTargetSize = parseChunkSize(chunkSizeLine);
-        _chunkBodyPos = crlfPos + CRLF_LEN;
+        _chunkDataStart = crlfPos + CRLF_LEN;
         return true;
     }
     return false;
@@ -248,88 +251,103 @@ bool HandleTransfer::processChunkBodyHeader()
     if (extractChunkSize() == false)
         return false;
 
-    size_t chunkDataStart = _bodyPos + _chunkBodyPos;
-    size_t chunkDataEnd = chunkDataStart + _chunkTargetSize;
+    string &body = _client._body;
+    size_t chunkDataEnd = _chunkDataStart + _chunkTargetSize;
 
-    if (_body.size() >= chunkDataEnd + CRLF_LEN &&
-        _body[chunkDataEnd] == '\r' &&
-        _body[chunkDataEnd + 1] == '\n')
+    if (body.size() >= chunkDataEnd + CRLF_LEN &&
+        body[chunkDataEnd] == '\r' &&
+        body[chunkDataEnd + 1] == '\n')
     {
-        size_t boundaryStart = chunkDataStart + CRLF_LEN;
-        string_view boundaryCheck(&_body[boundaryStart], _client._bodyBoundary.size());
-        if (_body.substr(chunkDataStart, 2) != "--" ||
+        size_t boundaryStart = _chunkDataStart + CRLF_LEN;
+        string_view boundaryCheck(&body[boundaryStart], _client._bodyBoundary.size());
+        if (body.substr(_chunkDataStart, 2) != "--" ||
             boundaryCheck != _client._bodyBoundary)
         {
             ErrorCodeClientException(_client, 400, "Malformed boundary");
         }
 
-        size_t headerStart = chunkDataStart + _client._bodyBoundary.size() + CRLF_LEN;
-        size_t endBodyHeader = _body.find(CRLF2, headerStart);
+        size_t headerStart = _chunkDataStart + _client._bodyBoundary.size() + CRLF_LEN;
+        size_t endBodyHeader = body.find(CRLF2, headerStart);
         if (endBodyHeader == string::npos)
         {
             ErrorCodeClientException(_client, 400, "body header didn't end in \\r\\n\\r\\n");
         }
         _foundBoundary = true;
-        _bodyHeader = _body.substr(chunkDataStart, endBodyHeader + CRLF2_LEN - _chunkBodyPos);
+        _bodyHeader = body.substr(_chunkDataStart, endBodyHeader + CRLF2_LEN - _chunkDataStart);
         HttpRequest::processHttpChunkBody(_client, _fd);
 
         size_t chunkEndCrlfPos = _bodyPos + endBodyHeader + CRLF2_LEN;
-        _unchunkedBody = _body.substr(chunkEndCrlfPos/*  + CRLF_LEN */);
 
-        // exit(0);
-        if (_body.size() - _bodyPos < _chunkTargetSize + 2 ||
-            _body[chunkDataStart + _chunkTargetSize] != '\r' ||
-            _body[chunkDataStart + _chunkTargetSize + 1] != '\n')
+        if (body.size() - _bodyPos < _chunkTargetSize + 2 ||
+            body[_chunkDataStart + _chunkTargetSize] != '\r' ||
+            body[_chunkDataStart + _chunkTargetSize + 1] != '\n')
         {
             throw ErrorCodeClientException(_client, 400, "Chunk didn't end in \\r\\n");
         }
-        _bodyPos = chunkDataStart + _chunkTargetSize  + CRLF_LEN;
-        // std::cout << escape_special_chars(_bodyHeader)<< std::endl; //testcout
-        // std::cout << escape_special_chars(_unchunkedBody)<< std::endl; //testcout
-        // exit(0);
-        // std::cout << escape_special_chars(_body) << std::endl; //testcout
-        if (_bodyPos == _body.size())
-            std::cout << "ass big" << std::endl; //testcout
+        _bodyPos = chunkDataEnd + CRLF_LEN;
 
-        // std::cout << _bodyPos << std::endl; //testcout
-        // std::cout << _body.size() << std::endl; //testcout
-        // std::cout << chunkDataEnd + CRLF_LEN << std::endl; //testcout
-        // std::cout << escape_special_chars(&_body[_bodyPos]) << std::endl; //testcout
-        exit(0);
-        return true;
+        if (body.size() > _bodyPos)
+        {
+            return true;
+        }
     }
     return false;
 }
 
-void    tmp()
+bool    HandleTransfer::unchunkedBody()
 {
-    std::cout << "nothingness" << std::endl; //testcout
-    exit(0);
+    if (extractChunkSize() == false)
+    {
+        return false;
+    }
+    string &body = _client._body;
+
+    size_t chunkDataEnd = _chunkDataStart + _chunkTargetSize;
+
+    if (body.size() >= chunkDataEnd + CRLF_LEN &&
+        body[chunkDataEnd] == '\r' &&
+        body[chunkDataEnd + 1] == '\n')
+    {
+        _unchunkedBody.append(body.substr(_chunkDataStart, chunkDataEnd - _chunkDataStart));
+        _bodyPos = chunkDataEnd + CRLF_LEN;
+    }
+    return true;
 }
 
 void HandleTransfer::appendToBody()
 {
     char   buff[RunServers::getClientBufferSize()];
     size_t bytesReceived = RunServers::receiveClientData(_client, buff);
-    _body.append(buff, bytesReceived);
-    _client.setDisconnectTime(disconnectDelaySeconds);
+    _client._body.append(buff, bytesReceived);
 }
 
+bool HandleTransfer::FinalCrlfCheck()
+{
+    size_t crlfPos = _unchunkedBody.find(_client._bodyBoundary);
+    if (crlfPos == string::npos)
+    {
+        std::cout << "not found" << std::endl; //testcout
+        return false;
+    }
+    std::cout << "found" << std::endl; //testcout
+    return true;
+}
 
 bool HandleTransfer::handleChunkTransfer()
 {
-    std::cout << "we got here" << std::endl; //testcout
-
-    // std::cout << escape_special_chars(_body) << std::endl; //testcout
     if (_foundBoundary == false)
     {
-        return processChunkBodyHeader();
+        if (processChunkBodyHeader() == false)
+            return false;
+        
     }
-    else
+    if (_foundBoundary == true)
     {
-        tmp();
+        unchunkedBody();
+        // return false;
     }
-    return true;
+    return FinalCrlfCheck();
+    // return true;
 }
 
 void HandleTransfer::validateChunkSizeLine(const string &input)

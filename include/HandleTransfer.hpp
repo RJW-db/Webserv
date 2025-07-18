@@ -5,35 +5,24 @@
 #include <string>
 
 using namespace std;
-// read in stukken kunnen lezen van fd
-// een class/struct met 
-// fd
-// buffer(geallocated)
-// index_ofsset
-
-// kan fd sluiten nadat read klaar is.
-
-// en dan send return opslaan in index_ofset om het in correcte delen te versturen.
-
 
 struct ChunkState
 {
-    string _body;
+    // string _body;
     string _bodyHeader;
     size_t _bodyPos = 0;
-    size_t _chunkBodyPos = 0;
+    size_t _chunkDataStart = 0;
     size_t _chunkTargetSize = 0;
     size_t _chunkReceivedSize = 0;
     string _unchunkedBody;
 
-    
     bool   _foundBoundary = false;
 
     void reset()
     {
         _bodyHeader.clear();
         _bodyPos = 0;
-        _chunkBodyPos = 0;
+        _chunkDataStart = 0;
         _chunkTargetSize = 0;
         _chunkReceivedSize = 0;
         _unchunkedBody.clear();
@@ -46,7 +35,7 @@ class HandleTransfer : protected ChunkState
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
 		HandleTransfer(Client &client, int fd, size_t bytesWritten, string buffer); //post
-        HandleTransfer(Client &client, string body); // POST
+        HandleTransfer(Client &client); // POST
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -91,6 +80,8 @@ class HandleTransfer : protected ChunkState
         void appendToBody();
         bool handleChunkTransfer();
         bool processChunkBodyHeader();
+        bool unchunkedBody();
+        bool FinalCrlfCheck();
 
         bool extractChunkSize();
         static void validateChunkSizeLine(const string &input);

@@ -24,7 +24,6 @@ void RunServers::processClientRequest(Client &client)
         char   buff[_clientBufferSize];
         size_t bytesReceived = receiveClientData(client, buff);
         // std::cout << "buff: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
-        client.setDisconnectTime(disconnectDelaySeconds);
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
             &HttpRequest::appendToBody,                        // BODY_CHUNKED (1)
@@ -33,6 +32,7 @@ void RunServers::processClientRequest(Client &client)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;
+        // client._finishedProcessClientRequest = true;
         HttpRequest::handleRequest(client);
     }
     catch(const exception& e)   // if catch we don't handle well

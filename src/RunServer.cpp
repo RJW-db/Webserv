@@ -116,7 +116,15 @@ int RunServers::runServers()
 			unique_ptr<Client> &client = it->second;
 			++it;
 			if (client->_disconnectTime <= chrono::steady_clock::now())
+            {
+                std::cout << "disconnectTime: "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
+                        << " ms" << std::endl;
+                std::cout << "now: "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
+                        << " ms" << std::endl;
 				cleanupClient(*client);
+            }
 		}
         // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);

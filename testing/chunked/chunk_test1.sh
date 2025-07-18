@@ -10,6 +10,7 @@
     echo -ne "Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
     echo -ne "Transfer-Encoding: chunked\r\n\r\n"
 
+    # sleep 1
     # Part 1: multipart header
     CHUNK1=$'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="upload.txt"\r\nContent-Type: text/plain\r\n\r\n'
     printf "%X\r\n" $(printf "%s" "$CHUNK1" | wc -c)    #size of chunk, HEX = 89, DEC = 137
@@ -17,19 +18,25 @@
     sleep 1
 
     # Part 2: file content
-    FILE_CONTENT=$'This is the content of the file.\nSecond line of text.\n'
-    printf "%X\r\n" $(printf "%s" "$FILE_CONTENT" | wc -c)
-    printf "%s\r\n" "$FILE_CONTENT"
+    CHUNK2=$'This is the content of the file.\nSecond line of text.\n'
+    printf "%X\r\n" $(printf "%s" "$CHUNK2" | wc -c)
+    printf "%s\r\n" "$CHUNK2"
     sleep 1
 
-    # Part 3: ending boundary
+    # Part 3: file content
+    CHUNK3=$'third line of text\n'
+    printf "%X\r\n" $(printf "%s" "$CHUNK3" | wc -c)
+    printf "%s\r\n" "$CHUNK3"
+    sleep 1
+
+    # Part 4: ending boundary
     END_BOUNDARY=$'------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n'
     printf "%X\r\n" $(printf "%s" "$END_BOUNDARY" | wc -c)
     printf "%s\r\n" "$END_BOUNDARY"
     sleep 1
 
-    # Final zero-length chunk
-    echo -ne "0\r\n\r\n"
+    # # Final zero-length chunk
+    # echo -ne "0\r\n\r\n"
 
 } | nc localhost 8080
 
