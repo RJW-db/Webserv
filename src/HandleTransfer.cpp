@@ -105,7 +105,7 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
 // return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
 int HandleTransfer::validateFinalCRLF()
 {
-    size_t foundReturn = _fileBuffer.find("\r\n");
+    size_t foundReturn = _fileBuffer.find(CRLF);
     if (foundReturn == 0)
     {
         _fileBuffer = _fileBuffer.erase(0, 2);
@@ -167,14 +167,13 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
 
 bool HandleTransfer::searchContentDisposition()
 {
-    size_t bodyEnd = _fileBuffer.find("\r\n\r\n");
+    size_t bodyEnd = _fileBuffer.find(CRLF2);
     if (bodyEnd == string::npos)
         return false;
     _client._body = _fileBuffer.substr(0, bodyEnd);
     HttpRequest::getBodyInfo(_client);
-    _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
+    _fileBuffer = _fileBuffer.erase(0, bodyEnd + CRLF2_LEN);
     _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-    _fileNamePaths.push_back(_client._filenamePath);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (_fd == -1)
     {
@@ -183,6 +182,7 @@ bool HandleTransfer::searchContentDisposition()
         else
             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
+    _fileNamePaths.push_back(_client._filenamePath);
     FileDescriptor::setFD(_fd);
     _searchContentDisposition = false;
     return true;
