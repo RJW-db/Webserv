@@ -23,22 +23,22 @@ bool HttpRequest::processHttpBody(Client &client)
 }
 
 
-bool HttpRequest::processHttpChunkBody(Client &client, int targetFilePathFD)
-{
-    HttpRequest::getBodyInfo(client);
-    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
-    }
-    FileDescriptor::setFD(fd);
-    targetFilePathFD = fd;
-    return true;
-}
+// bool HttpRequest::processHttpChunkBody(Client &client, int targetFilePathFD)
+// {
+//     HttpRequest::getBodyInfo(client);
+//     client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
+//     int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+//     if (fd == -1)
+//     {
+//         if (errno == EACCES)
+//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+//         else
+//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+//     }
+//     FileDescriptor::setFD(fd);
+//     targetFilePathFD = fd;
+//     return true;
+// }
 
 ContentType HttpRequest::getContentType(Client &client)
 {
@@ -80,15 +80,16 @@ ContentType HttpRequest::getContentType(Client &client)
     return UNSUPPORTED;
 }
 
-void HttpRequest::getBodyInfo(Client &client)
+void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
-    size_t cdPos = client._body.find("Content-Disposition:");
+    size_t cdPos = buff.find("Content-Disposition:");
     if (cdPos == string::npos)
         throw RunServers::ClientException("Content-Disposition header not found in multipart body");
 
     // Extract the Content-Disposition line
-    size_t cdEnd = client._body.find("\r\n", cdPos);
-    string_view cdLine = string_view(client._body).substr(cdPos, cdEnd - cdPos);
+    size_t cdEnd = buff.find("\r\n", cdPos);
+    // string_view cdLine = string_view(buff).substr(cdPos, cdEnd - cdPos);
+    string_view cdLine(buff.data(), cdEnd - cdPos);
 
     string filenameKey = "filename=\"";
     size_t fnPos = cdLine.find(filenameKey);
@@ -96,14 +97,14 @@ void HttpRequest::getBodyInfo(Client &client)
     {
         size_t fnStart = fnPos + filenameKey.size();
         size_t fnEnd = cdLine.find("\"", fnStart);
-        client._filename = cdLine.substr(fnStart, fnEnd - fnStart);
+        client._filename = string(cdLine).substr(fnStart, fnEnd - fnStart);
         if (client._filename.empty())
             throw RunServers::ClientException("Filename is empty in Content-Disposition header");
     }
     else
         throw RunServers::ClientException("Filename not found in Content-Disposition header");
     const string contentType = "Content-Type: ";
-    size_t position = client._body.find(contentType);
+    size_t position = buff.find(contentType);
 
     if (position == string::npos && !client._filename.empty())
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");

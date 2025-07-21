@@ -20,7 +20,7 @@ HandleTransfer::HandleTransfer(Client &client, size_t bytesRead, string buffer)
 }
 
 HandleTransfer::HandleTransfer(Client &client)
-: _client(client), _isChunked(true)
+: _client(client), _fd(-1), _bytesReadTotal(0), _isChunked(true)
 {
     // _body = body;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
@@ -81,7 +81,7 @@ bool HandleTransfer::handleGetTransfer()
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        std::cout << "completed get request for file: " << _client._filenamePath << ", on fd: " << _client._fd << std::endl; //test
+        cout << "completed get request for file: " << _client._filenamePath << ", on fd: " << _client._fd << endl; //test
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         _epollout_enabled = false;
         return true;
@@ -95,9 +95,9 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
     FileDescriptor::closeFD(_fd);
     for (const auto &filePath : _fileNamePaths)
     {
-        // std::cout << "removing file: " << filePath << std::endl; //testcout
+        // cout << "removing file: " << filePath << endl; //testcout
         if (remove(filePath.data()) != 0)
-            std::cout << "remove failed on file: " << filePath << std::endl;
+            cout << "remove failed on file: " << filePath << endl;
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on file with fileDescriptor: " + to_string(_fd));
 }
@@ -127,10 +127,11 @@ int HandleTransfer::validateFinalCRLF()
     }
     if (foundReturn == 2 && foundReturn + 2 == _fileBuffer.size())
     {
-        if (_bytesReadTotal != _client._contentLength)
-            throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
+        // if (_bytesReadTotal != _client._contentLength)
+        //     throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
         FileDescriptor::closeFD(_fd);
         _fd = -1;
+        RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
         string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
@@ -148,7 +149,7 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     size_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
     if (boundaryFound != string::npos)
     {
-        if (strncmp(_fileBuffer.data() + boundaryFound - 4, "\r\n--", 4) == 0)
+        if (boundaryFound >= 4 && strncmp(_fileBuffer.data() + boundaryFound - 4, "\r\n--", 4) == 0)
             writeSize = boundaryFound - 4;
         else if (strncmp(_fileBuffer.data() + boundaryFound - 2, "--",2 ) == 0)
             writeSize = boundaryFound - 2;
@@ -170,10 +171,10 @@ bool HandleTransfer::searchContentDisposition()
     size_t bodyEnd = _fileBuffer.find("\r\n\r\n");
     if (bodyEnd == string::npos)
         return false;
-    _client._body = _fileBuffer.substr(0, bodyEnd);
-    HttpRequest::getBodyInfo(_client);
+    HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
-    _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
+    _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
+    
     _fileNamePaths.push_back(_client._filenamePath);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (_fd == -1)
@@ -218,7 +219,6 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             {
                 _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryFound - bytesWritten);
                 RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
                 _foundBoundary = true;
             }
             else
@@ -227,7 +227,7 @@ bool HandleTransfer::handlePostTransfer(bool readData)
 
         return false;
     }
-    catch(const std::exception& e)
+    catch(const exception& e)
     {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
@@ -237,123 +237,4 @@ bool HandleTransfer::handlePostTransfer(bool readData)
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     return true;
-}
-
-bool HandleTransfer::extractChunkSize()
-{
-    size_t crlfPos = _client._body.find(CRLF, _bodyPos);
-
-    if (crlfPos != string::npos)
-    {
-
-        string chunkSizeLine = _client._body.substr(_bodyPos, crlfPos);
-        validateChunkSizeLine(chunkSizeLine);
-
-        _chunkTargetSize = parseChunkSize(chunkSizeLine);
-        _chunkDataStart = crlfPos + CRLF_LEN;
-        return true;
-    }
-    return false;
-}
-
-bool    HandleTransfer::decodeChunk()
-{
-    if (extractChunkSize() == false)
-    {
-        return false;
-    }
-    string &body = _client._body;
-
-    size_t chunkDataEnd = _chunkDataStart + _chunkTargetSize;
-
-    if (body.size() >= chunkDataEnd + CRLF_LEN &&
-        body[chunkDataEnd] == '\r' &&
-        body[chunkDataEnd + 1] == '\n')
-    {
-        // _unchunkedBody.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
-        _bodyPos = chunkDataEnd + CRLF_LEN;
-        _fileBuffer.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
-        // std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
-    }
-    else
-    {
-        ErrorCodeClientException(_client, 400, "Chunk data missing CRLF");
-    }
-    return true;
-}
-
-void HandleTransfer::appendToBody()
-{
-    char   buff[RunServers::getClientBufferSize()];
-    size_t bytesReceived = RunServers::receiveClientData(_client, buff);
-    _client._body.append(buff, bytesReceived);
-}
-
-bool HandleTransfer::FinalCrlfCheck()
-{
-    size_t crlfPos = _unchunkedBody.find("--" + string(_client._bodyBoundary) + "--\r\n");
-
-    if (crlfPos == string::npos)
-    {
-        std::cout << "not found" << std::endl; //testcout
-        return false;
-    }
-
-    std::cout << "found" << std::endl; //testcout
-    return true;
-}
-
-bool HandleTransfer::handleChunkTransfer()
-{
-
-    std::cout << "count" << std::endl; //testcout
-    decodeChunk();
-    handlePostTransfer(false);
-    return false;
-}
-
-void HandleTransfer::validateChunkSizeLine(const string &input)
-{
-    if (input.size() < 1)
-    {
-        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    }
-
-    // size_t hexPart = input.size() - 2;
-    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
-    {
-        // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    }
-        
-    // if (input[hexPart] != '\r' && input[hexPart + 1] != '\n')
-    // {
-    //     // throw ErrorCodeClientException(client, 400, "Invalid chunk size given: " + input);
-    // }
-}
-
-uint64_t HandleTransfer::parseChunkSize(const string &input)
-{
-    uint64_t chunkTargetSize;
-    stringstream ss;
-    ss << hex << input;
-    ss >> chunkTargetSize;
-    // cout << "chunkTargetSize " << chunkTargetSize << endl;
-    // if (static_cast<size_t>(chunkTargetSize) > client._location.getClientBodySize())
-    // {
-    //     throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize)); // (413, "Payload Too Large");
-    // }
-    return chunkTargetSize;
-}
-
-void HandleTransfer::ParseChunkStr(const string &input, uint64_t chunkTargetSize)
-{
-    if (input.size() - 2 != chunkTargetSize)
-    {
-        // throw ErrorCodeClientException(client, 400, "Chunk data does not match declared chunk size");
-    }
-
-    if (input[chunkTargetSize] != '\r' || input[chunkTargetSize + 1] != '\n')
-    {
-        // throw ErrorCodeClientException(client, 400, "chunk data missing CRLF");
-    }
 }
