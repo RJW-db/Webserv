@@ -4,29 +4,9 @@
 
 bool HttpRequest::processHttpBody(Client &client)
 {
-    size_t totalWriteSize;
-    string content = client._body.substr(client._bodyEnd + 4);
-    getInfoPost(client, content, totalWriteSize);
-    int fd = -1;
-    if (!client._filename.empty())
-    {
-        client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-        fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-        if (fd == -1)
-        {
-            if (errno == EACCES)
-                throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-            else
-                throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
-        }
-        FileDescriptor::setFD(fd);
-    }
-    else
-        client._filenamePath.clear();
+    HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, static_cast<size_t>(client._body.size()), content);
-    if (!client._filenamePath.empty())
-        handle->_fileNamePaths.push_back(client._filenamePath);
+    handle = make_unique<HandleTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
     {
         if (client._keepAlive == false)

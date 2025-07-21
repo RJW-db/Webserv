@@ -26,7 +26,7 @@ CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Werror
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
-CCPFLAGS		+=	-g
+CCPFLAGS		+=	-ggdb -fno-limit-debug-info
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-fsanitize=address
 

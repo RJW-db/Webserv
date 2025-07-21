@@ -18,7 +18,7 @@ class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, int fd, size_t bytesRead, string buffer); //post
+		HandleTransfer(Client &client, size_t bytesRead, string buffer); //post
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -28,7 +28,7 @@ class HandleTransfer
 
         static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
         void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
-        bool handlePostTransfer(bool ReadData = true);
+        bool handlePostTransfer(bool ReadData);
         int validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
         bool    searchContentDisposition();

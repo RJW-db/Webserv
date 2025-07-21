@@ -15,8 +15,8 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleTransfer::HandleTransfer(Client &client, int fd, size_t bytesRead, string buffer)
-: _client(client), _fd(fd), _fileBuffer(buffer), _bytesReadTotal(bytesRead), _foundBoundary(false), _searchContentDisposition(false)
+HandleTransfer::HandleTransfer(Client &client, size_t bytesRead, string buffer)
+: _client(client), _fd(-1), _fileBuffer(buffer), _bytesReadTotal(bytesRead), _foundBoundary(false), _searchContentDisposition(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -81,7 +81,7 @@ bool HandleTransfer::handleGetTransfer()
         _epollout_enabled = false;
         return true;
     }
-    _fileBuffer = _fileBuffer.substr(_sent);
+    _fileBuffer = _fileBuffer.erase(0, _sent);
     return false;
 }
 
@@ -90,7 +90,7 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
     FileDescriptor::closeFD(_fd);
     for (const auto &filePath : _fileNamePaths)
     {
-        std::cout << "removing file: " << filePath << std::endl; //testcout
+        // std::cout << "removing file: " << filePath << std::endl; //testcout
         if (remove(filePath.data()) != 0)
             std::cout << "remove failed on file: " << filePath << std::endl;
     }
@@ -103,7 +103,7 @@ int HandleTransfer::validateFinalCRLF()
     size_t foundReturn = _fileBuffer.find("\r\n");
     if (foundReturn == 0)
     {
-        _fileBuffer = _fileBuffer.substr(2);
+        _fileBuffer = _fileBuffer.erase(0, 2);
         _searchContentDisposition = true;
         FileDescriptor::closeFD(_fd);
         _fd = -1;
@@ -129,7 +129,6 @@ int HandleTransfer::validateFinalCRLF()
         string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
-        //print arguments
         for (const auto &arg : _arguments)
         {
             std::cout << "Argument: " << arg.first << " = " << arg.second << std::endl;
@@ -148,9 +147,12 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     size_t boundaryFound = _fileBuffer.find(_client._bodyBoundary);
     if (boundaryFound != string::npos)
     {
-        if (strncmp(_fileBuffer.data() + boundaryFound - 4, "\r\n--", 4) != 0)
+        if (strncmp(_fileBuffer.data() + boundaryFound - 4, "\r\n--", 4) == 0)
+            writeSize = boundaryFound - 4;
+        else if (strncmp(_fileBuffer.data() + boundaryFound - 2, "--",2 ) == 0)
+            writeSize = boundaryFound - 2;
+        else
             throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
-        writeSize = boundaryFound - 4;
     }
     if (writeSize > 0)
     {
@@ -161,7 +163,7 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
             _arguments[_client._name].append(_fileBuffer.data(), writeSize);
         if (bytesWritten == -1)
             ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
-        _fileBuffer = _fileBuffer.substr(bytesWritten);
+        _fileBuffer = _fileBuffer.erase(0, bytesWritten);
     }
     return boundaryFound;
 }
@@ -173,7 +175,7 @@ bool HandleTransfer::searchContentDisposition()
         return false;
     _client._body = _fileBuffer.substr(0, bodyEnd);
     HttpRequest::getBodyInfo(_client);
-    _fileBuffer = _fileBuffer.substr(bodyEnd + 4);
+    _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
     if (!_client._filename.empty())
     {
         _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
@@ -222,7 +224,7 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
             if (boundaryFound != string::npos)
             {
-                _fileBuffer = _fileBuffer.substr(_client._bodyBoundary.size() + boundaryFound - bytesWritten);
+                _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryFound - bytesWritten);
                 RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
                 RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
                 _foundBoundary = true;

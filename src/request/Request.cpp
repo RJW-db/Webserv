@@ -104,17 +104,6 @@ bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receive
 }
 
 
-void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
-{
-    HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
-    // HttpRequest::getContentType(client); // TODO return isn't used at all
-    content = client._body.substr(client._bodyEnd + 4);
-    size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
-    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
-    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
-}
-
 static string_view trimWhiteSpace(string_view sv)
 {
     const char *ws = " \t";
