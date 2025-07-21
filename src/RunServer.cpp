@@ -153,7 +153,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             if (currentEvent.events & EPOLLOUT)
                 finished = handle.handleGetTransfer();
             else if (currentEvent.events & EPOLLIN)
-                finished = handle.handlePostTransfer();
+                finished = handle.handlePostTransfer(true);
             if (finished == true)
             {
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)

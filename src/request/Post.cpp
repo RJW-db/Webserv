@@ -82,17 +82,7 @@ void HttpRequest::getBodyInfo(Client &client)
             throw RunServers::ClientException("Filename is empty in Content-Disposition header");
     }
     else
-    {
-        client._filename = "";
-        size_t nameKeyPos = cdLine.find("name=\"");
-        size_t nameStart = nameKeyPos + 6; // 6 = strlen("name=\"")
-        size_t nameEnd = cdLine.find("\"", nameStart);
-        if (nameEnd != string::npos)
-            client._name = cdLine.substr(nameStart, nameEnd - nameStart);
-        else
-            throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: missing name");
-        // throw RunServers::ClientException("Filename not found in Content-Disposition header");
-    }
+        throw RunServers::ClientException("Filename not found in Content-Disposition header");
     const string contentType = "Content-Type: ";
     size_t position = client._body.find(contentType);
 

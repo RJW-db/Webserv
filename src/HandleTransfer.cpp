@@ -129,10 +129,6 @@ int HandleTransfer::validateFinalCRLF()
         string body = _client._filenamePath + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
         send(_client._fd, headers.data(), headers.size(), 0);
-        for (const auto &arg : _arguments)
-        {
-            std::cout << "Argument: " << arg.first << " = " << arg.second << std::endl;
-        }
         return true;
     }
     if (_fileBuffer.size() > 4)
@@ -156,11 +152,7 @@ size_t HandleTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     }
     if (writeSize > 0)
     {
-        bytesWritten = writeSize;
-        if (!_client._filename.empty())
-            bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
-        else
-            _arguments[_client._name].append(_fileBuffer.data(), writeSize);
+        bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
         if (bytesWritten == -1)
             ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
         _fileBuffer = _fileBuffer.erase(0, bytesWritten);
@@ -176,22 +168,17 @@ bool HandleTransfer::searchContentDisposition()
     _client._body = _fileBuffer.substr(0, bodyEnd);
     HttpRequest::getBodyInfo(_client);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
-    if (!_client._filename.empty())
+    _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
+    _fileNamePaths.push_back(_client._filenamePath);
+    _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (_fd == -1)
     {
-        _client._filenamePath = _client._rootPath + "/" + string(_client._filename); // here to append filename for post
-        _fileNamePaths.push_back(_client._filenamePath);
-        _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-        if (_fd == -1)
-        {
-            if (errno == EACCES)
-                throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
-            else
-                throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
-        }
-        FileDescriptor::setFD(_fd);
+        if (errno == EACCES)
+            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+        else
+            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
-    else
-        _client._filenamePath.clear();
+    FileDescriptor::setFD(_fd);
     _searchContentDisposition = false;
     return true;
 }

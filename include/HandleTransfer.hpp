@@ -38,7 +38,6 @@ class HandleTransfer
         string  _fileBuffer;
         size_t  _fileSize;
 
-		map<string, string> _arguments; // for post transfer
         vector<string> _fileNamePaths; // for post transfer
 
         size_t  _offset; // Offset for the data transfer
