@@ -1,8 +1,5 @@
 #include <ConfigServer.hpp>
 
-// Aconfig::~Aconfig()
-// {}
-
 ConfigServer::ConfigServer()
 {
     

@@ -14,12 +14,6 @@
 
 using namespace std;
 
-// struct longestStrCmp {
-//     bool operator()(const string &a, const string &b) const {
-// 		return a.length() > b.length();
-//     }
-// };
-
 class AconfigServ : public Aconfig
 {
     public:

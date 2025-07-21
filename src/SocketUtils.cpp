@@ -73,7 +73,7 @@ void RunServers::acceptConnection(const int listener)
         FileDescriptor::setFD(infd);
         // insertClientFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
-		_clients[infd]->setDisconnectTime(disconnectDelaySeconds);
+		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
 }
 

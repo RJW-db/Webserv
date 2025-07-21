@@ -40,7 +40,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 {
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
     size_t headerEnd = client._header.find("\r\n\r\n");
-    if (findDelimiter(client, headerEnd, receivedBytes) == false)
+    if (headerEnd == string::npos)
         return false;
 
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
@@ -84,7 +84,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         }
         client._headerParseState = BODY_AWAITING;
         client._bodyEnd = client._body.find("\r\n\r\n");
-        if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
+        if (client._bodyEnd == string::npos)
             return false;
         client._headerParseState = REQUEST_READY;
         return true;
@@ -97,21 +97,10 @@ bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receive
 {
     client._body.append(buff, receivedBytes);
     client._bodyEnd = client._body.find("\r\n\r\n");
-    if (findDelimiter(client, client._bodyEnd, receivedBytes) == false)
+    if (client._bodyEnd == string::npos)
         return false;
     client._headerParseState = REQUEST_READY;
     return true;
-}
-
-
-void HttpRequest::getInfoPost(Client &client, string &content, size_t &totalWriteSize)
-{
-    HttpRequest::getContentLength(client);
-    HttpRequest::getBodyInfo(client);
-    content = client._body.substr(client._bodyEnd + 4);
-    size_t headerOverhead = client._bodyEnd + 4;                       // \r\n\r\n
-    size_t boundaryOverhead = client._bodyBoundary.size() + 8; // --boundary-- + \r\n\r\n
-    totalWriteSize = client._contentLength - headerOverhead - boundaryOverhead;
 }
 
 static string_view trimWhiteSpace(string_view sv)
@@ -266,56 +255,14 @@ void HttpRequest::GET(Client &client)
 
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
-    {
         throw RunServers::ClientException("open failed");
-    }
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
-    auto handle = make_unique<HandleTransfer>(client, fd, responseStr, fileSize);
+    auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
     RunServers::insertHandleTransfer(move(handle));
 }
-
-// void HttpRequest::getContentLength(Client &client)
-// {
-//     auto contentLength = client._headerFields.find("Content-Length");
-//     if (contentLength == client._headerFields.end())
-//         throw RunServers::ClientException("Broken POST request");
-//     const string_view content = contentLength->second;
-//     if (content.empty())
-//     {
-//         throw RunServers::LengthRequiredException("Content-Length header is empty.");
-//     }
-//     for (size_t i = 0; i < content.size(); ++i)
-//     {
-//         if (!isdigit(static_cast<unsigned char>(content[i])))
-//             throw RunServers::ClientException("Content-Length contains non-digit characters.");
-//     }
-//     long long value;
-//     try
-//     {
-//         value = stoll(content.data());
-//     }
-//     catch (const invalid_argument &)
-//     {
-//         throw RunServers::ClientException("Content-Length is invalid (not a number).");
-//     }
-//     catch (const out_of_range &)
-//     {
-//         throw RunServers::ClientException("Content-Length value is out of range.");
-//     }
-
-//     if (value < 0)
-//         throw RunServers::ClientException("Content-Length cannot be negative.");
-
-//     if (static_cast<size_t>(value) > client._location.getClientBodySize())
-//         throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value)); // (413, "Payload Too Large");
-
-//     if (value == 0)
-//         throw RunServers::ClientException("Content-Length cannot be zero.");
-//     client._contentLength = static_cast<size_t>(value);
-// }
 
 void HttpRequest::getContentLength(Client &client)
 {
@@ -343,10 +290,7 @@ void HttpRequest::handleRequest(Client &client)
 {
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
-    // if (client._headerFields.find("Host") == client._headerFields.end())
-    //     throw ErrorCodeClientException(client, 400, "Host header is missing in request: " + client._header);
-    // else if (it->second != "127.0.1.1:8080")
-    //     throw Server::ClientException("Invalid Host header: expected 127.0.1.1:8080, got " + string(it->second));
+
     switch (client._useMethod)
     {
     case 1: // HEAD
@@ -377,21 +321,18 @@ void HttpRequest::handleRequest(Client &client)
                 client._contentLength = client._location.getClientBodySize();
                 unique_ptr<HandleTransfer> handle;
                 handle = make_unique<HandleTransfer>(client);
-                // handle->_client.setDisconnectTime(disconnectDelaySeconds);
+                // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
                 if (handle->handleChunkTransfer() == true)
                 {
-                    // if (client._keepAlive == false)
-                    //     RunServers::cleanupClient(client);
-                    // else
-                    // {
-                    //     RunServers::clientHttpCleanup(client);
-                    // }
-                    // return false;
+                    if (client._keepAlive == false)
+                        RunServers::cleanupClient(client);
+                    else
+                    {
+                        RunServers::clientHttpCleanup(client);
+                    }
+                    return;
 
                 }
-                std::cout << "check" << std::endl; //testcout
-                // handle->setBoolToChunk();
-                // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
                 RunServers::insertHandleTransfer(move(handle));
             }
         }
@@ -449,6 +390,7 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
 {
     static const map<uint16_t, string> responseCodes = {
         {200, "OK"},
+        {201, "Created"},
         {400, "Bad Request"},
         {403, "Forbidden"},
         {404, "Not Found"},

@@ -1,14 +1,6 @@
 #include <ConfigServer.hpp>
 #include <utils.hpp>
 
-
-
-// Location::Location(string &path)
-// {
-// 	_path = path;
-//     std::cout << "Path:" << path << std::endl;
-// }
-
 Location::Location(const Location &other) : Alocation(other)
 {
 	*this = other;
@@ -94,38 +86,6 @@ bool Location::methods(string &line)
 	line = line.substr(len);
 	return false;
 }
-
-// bool Location::methods(string &line)
-// {
-// 	bool findColon = false;
-// 	if (checkMethodEnd(findColon, line) == true)
-// 	{
-// 		if (findColon == true)
-// 		{
-// 			findColon = false;
-// 			return true;
-// 		}
-// 		return false;
-// 	}
-// 	size_t len = line.find_first_of(" \t\f\v\r{");
-// 	if (len == string::npos)
-// 		len = line.length();
-// 	size_t index = (!_methods[0].empty() + !_methods[1].empty() + !_methods[2].empty());
-// 	if (index > 2)
-// 		throw runtime_error(to_string(_lineNbr) + ": limit_except: too many methods given to limit_except");
-// 	_methods[index] = line.substr(0, len);
-// 	if (strncmp(_methods[index].c_str(), "GET", 3) != 0 && 
-// 	strncmp(_methods[index].c_str(), "POST", 4) != 0 &&
-// 	strncmp(_methods[index].c_str(), "DELETE", 6) != 0)
-// 		throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid methods given after limit_exept");
-// 	for (ssize_t i = index - 1; i >= 0; --i)
-// 	{
-// 		if (strncmp(_methods[i].c_str(), _methods[index].c_str(), _methods[i].size()) == 0)
-// 			throw runtime_error(to_string(_lineNbr) + ": limit_except: Method given already entered before");
-// 	}
-// 	line = line.substr(len);
-// 	return false;
-// }
 
 bool Location::indexPage(string &line)
 {

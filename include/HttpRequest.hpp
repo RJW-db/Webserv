@@ -67,9 +67,6 @@ class HttpRequest
             client._body.append(buff, receivedBytes);
             return (true);
         }
-        static inline bool findDelimiter(Client &client, size_t delimiter, size_t receivedBytes) {
-            return (delimiter == string::npos ? false : true);
-        }
 
         static void validateHEAD(Client &client);
         static void	handleRequest(Client &client);

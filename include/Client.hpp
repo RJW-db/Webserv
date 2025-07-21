@@ -8,8 +8,6 @@
 #include <Location.hpp>
 #include <chrono>
 
-#define disconnectDelaySeconds 15
-
 enum HeaderParseState
 {
     HEADER_AWAITING = 0,
@@ -62,6 +60,7 @@ class Client
         // bool   _foundBoundary;
 
         string_view _filename;
+        string _name;
         string_view _fileContent;
 
   

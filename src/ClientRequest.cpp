@@ -58,7 +58,7 @@ void RunServers::processClientRequest(Client &client)
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
     // buff[_clientBufferSize] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
-    client.setDisconnectTime(disconnectDelaySeconds);
+    client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, _clientBufferSize, 0);
     if (bytesReceived > 0)
@@ -176,7 +176,8 @@ void RunServers::clientHttpCleanup(Client &client)
     client._headerFields.clear();
     client._rootPath.clear();
 	client._filenamePath.clear();
-    client.setDisconnectTime(disconnectDelaySeconds);
+    client._name = "";
+    client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     std::cout << "http cleaning client: " << client._fd << std::endl; //testcout
 }
 

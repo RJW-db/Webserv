@@ -5,21 +5,9 @@
 
 bool HttpRequest::processHttpBody(Client &client)
 {
-    size_t totalWriteSize;
-    string content = client._body.substr(client._bodyEnd + 4);
-    getInfoPost(client, content, totalWriteSize);
-    client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-    int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-        else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
-    }
-    FileDescriptor::setFD(fd);
+    HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
-    handle = make_unique<HandleTransfer>(client, fd, client._body.size(), content);
+    handle = make_unique<HandleTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
     {
         if (client._keepAlive == false)
@@ -37,7 +25,6 @@ bool HttpRequest::processHttpBody(Client &client)
 
 bool HttpRequest::processHttpChunkBody(Client &client, int targetFilePathFD)
 {
-    size_t totalWriteSize;
     HttpRequest::getBodyInfo(client);
     client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
     int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
@@ -114,21 +101,10 @@ void HttpRequest::getBodyInfo(Client &client)
             throw RunServers::ClientException("Filename is empty in Content-Disposition header");
     }
     else
-    {
         throw RunServers::ClientException("Filename not found in Content-Disposition header");
-    }
-
     const string contentType = "Content-Type: ";
     size_t position = client._body.find(contentType);
 
-    if (position == string::npos)
+    if (position == string::npos && !client._filename.empty())
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
-
-    size_t fileStart = client._body.find("\r\n\r\n", position) + 4;
-    // size_t fileEnd = client._body.find("\r\n--" + string(client._bodyBoundary) /* + "--\r\n" */, fileStart);
-
-    // if (position == string::npos)
-    //     throw RunServers::ClientException("Malformed or missing Content-Type header in multipart/form-data body part");
-
-    // client._fileContent = string_view(client._body).substr(fileStart, fileEnd - fileStart);
 }

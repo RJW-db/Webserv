@@ -157,14 +157,14 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
         {
             HandleTransfer &handle = **it;
             Client &client = handle._client;
-            _clients[(*it)->_client._fd]->setDisconnectTime(disconnectDelaySeconds);
+            _clients[(*it)->_client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
                 finished = handle.handleGetTransfer();
             else if (currentEvent.events & EPOLLIN)
             {
                 if ((*it)->getIsChunk() == false)
-                    finished = handle.handlePostTransfer();
+                    finished = handle.handlePostTransfer(true);
                 else
                 {
                     handle.appendToBody();

@@ -41,8 +41,8 @@ class HandleTransfer : protected ChunkState
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, int fd, size_t bytesWritten, string buffer); //post
-        HandleTransfer(Client &client); // POST
+		HandleTransfer(Client &client, size_t bytesRead, string buffer); //POST
+        HandleTransfer(Client &client); // POST chunked
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -50,9 +50,10 @@ class HandleTransfer : protected ChunkState
         void readToBuf();
         bool handleGetTransfer();
 
-        static void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg, int fd);
-        bool handlePostTransfer(bool ReadData = true);
-        bool validateFinalCRLF();
+        // static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
+        bool handlePostTransfer(bool ReadData);
+        int validateFinalCRLF();
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
         bool    searchContentDisposition();
 
@@ -62,7 +63,7 @@ class HandleTransfer : protected ChunkState
         string  _fileBuffer;
         size_t  _fileSize;
 
-		
+        vector<string> _fileNamePaths; // for post transfer
 
         size_t  _offset = 0; // Offset for the data transfer
         size_t  _bytesReadTotal = 0;
@@ -92,7 +93,6 @@ class HandleTransfer : protected ChunkState
         }
         void appendToBody();
         bool handleChunkTransfer();
-        bool processBodyHeader(size_t crlf2Pos);
         bool decodeChunk();
         bool FinalCrlfCheck();
 
