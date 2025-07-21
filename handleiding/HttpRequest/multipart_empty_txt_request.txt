@@ -1,0 +1,11 @@
+POST /upload HTTP/1.1\r\n
+Host: localhost:8080\r\n
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Content-Length: 196\r\n
+\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Content-Disposition: form-data; name="file"; filename="empty.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n

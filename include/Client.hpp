@@ -50,7 +50,7 @@ class Client
         size_t _contentLength;
         size_t _bodyEnd;
         string_view _contentType;
-        string_view _bodyBoundary;
+        string_view _bodyBoundary;  // shorten to just _boundary
 
         // string _bodyHeader;
         // size_t _bodyPos;

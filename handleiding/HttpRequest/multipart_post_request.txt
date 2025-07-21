@@ -1,0 +1,12 @@
+POST /upload HTTP/1.1\r\n
+Host: localhost:8080\r\n
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Content-Length: 12345\r\n
+\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+Content-Disposition: form-data; name="file"; filename="example.jpg"\r\n
+Content-Type: image/jpeg\r\n
+\r\n
+[BINARY JPG DATA GOES HERE - This would be the actual binary content of the JPG file]
+\r\n
+------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n

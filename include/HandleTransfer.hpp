@@ -2,6 +2,7 @@
 #define HANDLETRANSFER_HPP
 
 #include <Client.hpp>
+#include "Constants.hpp"
 #include <string>
 
 using namespace std;
@@ -11,10 +12,14 @@ struct ChunkState
     // string _body;
     string _bodyHeader;
     size_t _bodyPos = 0;
+    size_t _boundaryPos = 0;
     size_t _chunkDataStart = 0;
     size_t _chunkTargetSize = 0;
     size_t _chunkReceivedSize = 0;
-    string _unchunkedBody;
+    string _unchunkedBody;        // Contains full unchunked data including boundaries
+    string _fileContent;          // Contains only the actual file data (clean)
+
+    size_t _searchStartPos = 0;
 
     bool   _foundBoundary = false;
 
@@ -22,10 +27,12 @@ struct ChunkState
     {
         _bodyHeader.clear();
         _bodyPos = 0;
+        _boundaryPos = 0;
         _chunkDataStart = 0;
         _chunkTargetSize = 0;
         _chunkReceivedSize = 0;
         _unchunkedBody.clear();
+        _fileContent.clear();
         _foundBoundary = false;
     }
 };
@@ -73,14 +80,20 @@ class HandleTransfer : protected ChunkState
         inline void setBoolToChunk() {
             _isChunked = true;
         }
-        inline bool getIsChunk() const{
+        inline bool getIsChunk() const {
             return _isChunked;
         }
-        
+        inline bool hasBoundaryAt(const string &_unchunkedBody, size_t pos, string_view boundary) {
+            return pos + BOUNDARY_PREFIX_LEN + boundary.size() <= _unchunkedBody.size() &&
+                   _unchunkedBody[pos] == '-' &&
+                   _unchunkedBody[pos + 1] == '-' &&
+                   (_unchunkedBody.compare(pos + BOUNDARY_PREFIX_LEN, boundary.size(),
+                                 boundary.data(), boundary.size()) == 0);
+        }
         void appendToBody();
         bool handleChunkTransfer();
-        bool processChunkBodyHeader();
-        bool unchunkedBody();
+        bool processBodyHeader(size_t crlf2Pos);
+        bool decodeChunk();
         bool FinalCrlfCheck();
 
         bool extractChunkSize();
