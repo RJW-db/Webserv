@@ -300,8 +300,14 @@ bool    HandleTransfer::decodeChunk()
         body[chunkDataEnd] == '\r' &&
         body[chunkDataEnd + 1] == '\n')
     {
-        _unchunkedBody.append(body.substr(_chunkDataStart, chunkDataEnd - _chunkDataStart));
+        // _unchunkedBody.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
         _bodyPos = chunkDataEnd + CRLF_LEN;
+        _fileBuffer.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
+        // std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
+    }
+    else
+    {
+        ErrorCodeClientException(_client, 400, "Chunk data missing CRLF");
     }
     return true;
 }
@@ -329,23 +335,26 @@ bool HandleTransfer::FinalCrlfCheck()
 
 bool HandleTransfer::handleChunkTransfer()
 {
-    decodeChunk();
-    if (_foundBoundary == false)
-    {
-        size_t crlf2Pos = _unchunkedBody.find(CRLF2, _searchStartPos);
-        if (crlf2Pos == string::npos)
-        {
-            _searchStartPos = (_unchunkedBody.size() < CRLF2_LEN) ? 0 : _unchunkedBody.size() - CRLF2_LEN;
-            std::cout << "CRLF2 not found" << std::endl; //testcout
-            return false;
-        }
-        // Line below should be done after finishing writing to a file and check for the possibility for the next boundary
-        // _boundaryPos = crlf2Pos + CRLF2_LEN;
-        std::cout << "CRLF2 found" << std::endl; //testcout
-        // std::cout << escape_special_chars(_unchunkedBody) << endl << std::endl; //testcout
-        processBodyHeader(crlf2Pos);
 
-    }
+    std::cout << "count" << std::endl; //testcout
+    decodeChunk();
+    handlePostTransfer();
+    // if (_foundBoundary == false)
+    // {
+    //     size_t crlf2Pos = _unchunkedBody.find(CRLF2, _searchStartPos);
+    //     if (crlf2Pos == string::npos)
+    //     {
+    //         _searchStartPos = (_unchunkedBody.size() < CRLF2_LEN) ? 0 : _unchunkedBody.size() - CRLF2_LEN;
+    //         std::cout << "CRLF2 not found" << std::endl; //testcout
+    //         return false;
+    //     }
+    //     // Line below should be done after finishing writing to a file and check for the possibility for the next boundary
+    //     // _boundaryPos = crlf2Pos + CRLF2_LEN;
+    //     std::cout << "CRLF2 found" << std::endl; //testcout
+    //     // std::cout << escape_special_chars(_unchunkedBody) << endl << std::endl; //testcout
+    //     processBodyHeader(crlf2Pos);
+
+    // }
     // if (_foundBoundary == false)
     // {
     //     if (processBodyHeader() == false)
@@ -358,7 +367,7 @@ bool HandleTransfer::handleChunkTransfer()
     //     // return false;
     // }
     // return FinalCrlfCheck();
-    return true;
+    return false;
 }
 
 void HandleTransfer::validateChunkSizeLine(const string &input)

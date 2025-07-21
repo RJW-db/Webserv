@@ -56,7 +56,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         else
             throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
     }
-
+    std::cout << "only once\n" << std::endl; //testcout
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
     // Check if there is a null character in buff
@@ -374,8 +374,9 @@ void HttpRequest::handleRequest(Client &client)
             case BODY_CHUNKED:
             {
                 // handleChunks(client);
+                client._contentLength = client._location.getClientBodySize();
                 unique_ptr<HandleTransfer> handle;
-                handle = make_unique<HandleTransfer>(client/* , client._body */);
+                handle = make_unique<HandleTransfer>(client);
                 // handle->_client.setDisconnectTime(disconnectDelaySeconds);
                 if (handle->handleChunkTransfer() == true)
                 {
@@ -388,6 +389,7 @@ void HttpRequest::handleRequest(Client &client)
                     // return false;
 
                 }
+                std::cout << "check" << std::endl; //testcout
                 // handle->setBoolToChunk();
                 // handle = make_unique<HandleTransfer>(client, fd, client._body.size(), client._unchunkedBody);
                 RunServers::insertHandleTransfer(move(handle));

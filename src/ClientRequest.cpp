@@ -177,6 +177,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._rootPath.clear();
 	client._filenamePath.clear();
     client.setDisconnectTime(disconnectDelaySeconds);
+    std::cout << "http cleaning client: " << client._fd << std::endl; //testcout
 }
 
 void RunServers::cleanupFD(int fd)
