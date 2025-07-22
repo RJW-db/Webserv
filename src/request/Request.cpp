@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <netdb.h>
+#include <dirent.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <stdio.h>
@@ -56,7 +57,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         else
             throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
     }
-    std::cout << "only once\n" << std::endl; //testcout
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
     // Check if there is a null character in buff
@@ -157,6 +157,36 @@ void HttpRequest::decodeSafeFilenameChars(Client &client)
         throw ErrorCodeClientException(client, 400, "bad filename given by client:" + client._rootPath);
 }
 
+void HttpRequest::SendAutoIndex(Client &client)
+{
+    struct dirent *en;
+    DIR *dr = opendir(client._rootPath.data());
+    string filenames;
+    if (dr)
+    {
+        while ((en = readdir(dr)) != NULL)
+        {
+            filenames += "<a href=\"";
+            filenames += client._requestPath;
+            if (!client._requestPath.empty() && client._requestPath.back() != '/')
+                filenames += "/";
+            filenames += en->d_name;
+            filenames += "\">";
+            filenames += en->d_name;
+            filenames += "</a><br>";
+        }
+    }
+    else
+        throw ErrorCodeClientException(client, 500, "Failed to open directory: " + client._rootPath + ", because: " + string(strerror(errno)));
+    string htmlResponse = "<html><body><h1>Index of " + client._rootPath + "</h1><pre>" + filenames + "</pre></body></html>";
+    string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
+    client._filenamePath.clear();
+    closedir(dr);
+    int sent = send(client._fd, response.data(), response.size(), 0);
+    if (sent == -1)
+        throw ErrorCodeClientException(client, 500, "Failed to send autoindex response: " + string(strerror(errno)));
+}
+
 void HttpRequest::findIndexFile(Client &client, struct stat &status)
 {
     // searching for indexpage in directory
@@ -184,7 +214,8 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
 
     if (client._location.getAutoIndex() == true)
     {
-        // use cgi using opendir,readdir to create a dynamic html page
+        SendAutoIndex(client);
+        return;
     }
     else
     {
@@ -252,10 +283,14 @@ string HttpRequest::getMimeType(string &path)
 void HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
-
+    if (client._filenamePath.empty())
+    {
+        RunServers::clientHttpCleanup(client);
+        return ;
+    }
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
-        throw RunServers::ClientException("open failed");
+        throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
 
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._filenamePath);

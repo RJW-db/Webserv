@@ -95,7 +95,6 @@ void HandleTransfer::errorPostTransfer(Client &client, uint16_t errorCode, strin
     FileDescriptor::closeFD(_fd);
     for (const auto &filePath : _fileNamePaths)
     {
-        // std::cout << "removing file: " << filePath << std::endl; //testcout
         if (remove(filePath.data()) != 0)
             std::cout << "remove failed on file: " << filePath << std::endl;
     }
@@ -273,7 +272,6 @@ bool    HandleTransfer::decodeChunk()
         // _unchunkedBody.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
         _bodyPos = chunkDataEnd + CRLF_LEN;
         _fileBuffer.append(body.data() + _chunkDataStart, chunkDataEnd - _chunkDataStart);
-        // std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
     }
     else
     {
@@ -295,18 +293,15 @@ bool HandleTransfer::FinalCrlfCheck()
 
     if (crlfPos == string::npos)
     {
-        std::cout << "not found" << std::endl; //testcout
         return false;
     }
 
-    std::cout << "found" << std::endl; //testcout
     return true;
 }
 
 bool HandleTransfer::handleChunkTransfer()
 {
 
-    std::cout << "count" << std::endl; //testcout
     decodeChunk();
     handlePostTransfer(false);
     return false;
