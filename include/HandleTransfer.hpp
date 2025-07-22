@@ -60,11 +60,8 @@ class HandleTransfer
         bool decodeChunk(size_t &chunkTargetSize);
 
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
-        static void validateChunkSizeLine(const string &input);
-        static uint64_t parseChunkSize(const string &input);
-        static void ParseChunkStr(const string &input, uint64_t chunkTargetSize);
-
-
+        void validateChunkSizeLine(const string &input);
+        uint64_t parseChunkSize(const string &input);
 
     protected:
         // Helper function to send data over a socket

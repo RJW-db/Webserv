@@ -29,7 +29,7 @@ CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g
 CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS		+=	-fsanitize=address
+CCPFLAGS		+=	-g -fsanitize=address
 
 #		Directories
 BUILD_DIR		:=	.build/
