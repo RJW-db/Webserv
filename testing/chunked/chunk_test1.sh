@@ -36,7 +36,7 @@
     sleep 1
 
     # # Final zero-length chunk
-    # echo -ne "0\r\n\r\n"
+    echo -ne "0\r\n\r\n"
 
 } | nc localhost 8080
 
