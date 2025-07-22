@@ -13,10 +13,10 @@ void HandleTransfer::appendToBody()
 
 bool HandleTransfer::handleChunkTransfer()
 {
-    size_t chunkTargetSize = 0;
+    size_t targetSize = 0;
     try
     {
-        if (decodeChunk(chunkTargetSize) == false)
+        if (decodeChunk(targetSize) == false)
             return false;
     }
     catch(const exception& e)
@@ -30,82 +30,90 @@ bool HandleTransfer::handleChunkTransfer()
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     
-    if (chunkTargetSize == 0)
+    if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
+    {
+        handlePostTransfer(false);
         return true;
-    handlePostTransfer(false);
+    }
+    // or
+    // if (_completedRequest == true)
+    //     return true;
+    // handlePostTransfer(false);
+
     return false;
 }
 
-bool    HandleTransfer::decodeChunk(size_t &chunkTargetSize)
+bool    HandleTransfer::decodeChunk(size_t &targetSize)
 {
-    size_t chunkDataStart;
-
-    if (extractChunkSize(chunkTargetSize, chunkDataStart) == false)
+    while (true)
     {
-        return false;
-    }
-    string &body = _client._body;
-    size_t chunkDataEnd = chunkDataStart + chunkTargetSize;
+        size_t dataStart;
 
-    if (body.size() >= chunkDataEnd + CRLF_LEN)
-    {
-        if (body[chunkDataEnd] == '\r' &&
-            body[chunkDataEnd + 1] == '\n')
+        if (extractChunkSize(targetSize, dataStart) == false)
+            return false;
+
+        string &body = _client._body;
+        size_t dataEnd = dataStart + targetSize;
+        
+        if (body.size() >= dataEnd + CRLF_LEN)
         {
-            _bodyPos = chunkDataEnd + CRLF_LEN;
-            _fileBuffer.append(body.data() + chunkDataStart, chunkDataEnd - chunkDataStart);
+            if (body[dataEnd] == '\r' &&
+                body[dataEnd + 1] == '\n')
+            {
+                if (targetSize == 0 &&
+                    body[dataEnd - 1] == '\n' && body[dataEnd - 2] == '\r')
+                {
+                    _completedRequest = true;
+                    return true;
+                }
+                _bodyPos = dataEnd + CRLF_LEN;
+                _fileBuffer.append(body.data() + dataStart, dataEnd - dataStart);
+            }
+            else
+            {
+                throw ErrorCodeClientException(_client, 400, "Chunk data missing CRLF ");
+            }
         }
         else
-        {
-            throw ErrorCodeClientException(_client, 400, "Chunk data missing CRLF ");
-        }
+            return false;
     }
     return true;
 }
 
-bool HandleTransfer::extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart)
+bool HandleTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)
 {
     size_t crlfPos = _client._body.find(CRLF, _bodyPos);
 
     if (crlfPos == string::npos)
         return false;
 
-    string chunkSizeLine = _client._body.substr(_bodyPos, crlfPos);
+    string_view chunkSizeLine(_client._body.data() + _bodyPos, crlfPos - _bodyPos);
+
     validateChunkSizeLine(chunkSizeLine);
-    chunkTargetSize = parseChunkSize(chunkSizeLine);
-    _bytesReadTotal += chunkTargetSize;
-    _client._contentLength += chunkTargetSize;
-    chunkDataStart = crlfPos + CRLF_LEN;
+    targetSize = parseChunkSize(chunkSizeLine);
+    _bytesReadTotal += targetSize;
+    _client._contentLength += targetSize;
+    dataStart = crlfPos + CRLF_LEN;
     return true;
 }
 
-
-void HandleTransfer::validateChunkSizeLine(const string &input)
+void HandleTransfer::validateChunkSizeLine(string_view chunkSizeLine)
 {
-    if (input.size() < 1)
-    {
-        throw ErrorCodeClientException(_client, 400, "Invalid chunk size given: " + input);
-    }
+    if (chunkSizeLine.empty())
+        throw ErrorCodeClientException(_client, 400, "Chunk size line is empty: " + string(chunkSizeLine));
 
-    if (all_of(input.begin(), input.end(), ::isxdigit) == false)
-    {
-        throw ErrorCodeClientException(_client, 400, "Invalid chunk size given: " + input);
-    }
-
-    if (input[input.size() - 2] != '\r' && input[input.size() - 1] != '\n')
-    {
-        throw ErrorCodeClientException(_client, 400, "Invalid chunk size given: " + input);
-    }
+    if (all_of(chunkSizeLine.begin(), chunkSizeLine.end(), ::isxdigit) == false)
+        throw ErrorCodeClientException(_client, 400, "Chunk size line contains non-hex characters: " + string(chunkSizeLine));
 }
 
-uint64_t HandleTransfer::parseChunkSize(const string &input)
+uint64_t HandleTransfer::parseChunkSize(string_view chunkSizeLine)
 {
-    uint64_t chunkTargetSize;
+    uint64_t targetSize;
     stringstream ss;
-    ss << hex << input;
-    ss >> chunkTargetSize;
+    ss << hex << chunkSizeLine;
+    ss >> targetSize;
 
-    if (static_cast<size_t>(chunkTargetSize) <= _client._location.getClientBodySize())
-        return chunkTargetSize;
-    throw ErrorCodeClientException(_client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize));
+    if (static_cast<size_t>(targetSize) <= _client._location.getClientBodySize())
+        return targetSize;
+    throw ErrorCodeClientException(_client, 413, "Content-Length exceeds maximum allowed: " + to_string(targetSize));
 }

@@ -27,7 +27,6 @@ class HandleTransfer
         size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
         bool    searchContentDisposition();
 
-
         Client  &_client;
         int     _fd; // targetFilePathFD, rename this for merging
         string  _fileBuffer;
@@ -48,6 +47,7 @@ class HandleTransfer
         // chunked
         bool   _isChunked = false;
         size_t _bodyPos = 0;
+        bool   _completedRequest = false;
 
         inline void setBoolToChunk() {
             _isChunked = true;
@@ -60,8 +60,8 @@ class HandleTransfer
         bool decodeChunk(size_t &chunkTargetSize);
 
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
-        void validateChunkSizeLine(const string &input);
-        uint64_t parseChunkSize(const string &input);
+        void validateChunkSizeLine(string_view chunkSizeLine);
+        uint64_t parseChunkSize(string_view chunkSizeLine);
 
     protected:
         // Helper function to send data over a socket
