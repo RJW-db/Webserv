@@ -3,4 +3,4 @@ Content-Type: text/plain
 Content-Length: 41
 Connection: close
 
-./testing/results/post/upload1/ëöWÕ.Il’
+./testing/results/post/upload2/test2.png

@@ -80,6 +80,7 @@ class HttpRequest
         static void	GET(Client &client);
         static void    findIndexFile(Client &client, struct stat &status);
         static void    locateRequestedFile(Client &client);
+        static void    SendAutoIndex(Client &client);
 
         static string getMimeType(string &path);
         static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
