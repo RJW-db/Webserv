@@ -105,7 +105,7 @@ uint64_t HandleTransfer::parseChunkSize(const string &input)
     ss << hex << input;
     ss >> chunkTargetSize;
 
-    if (static_cast<size_t>(chunkTargetSize) <= _client._location.getClientBodySize())
+    if (static_cast<size_t>(chunkTargetSize) <= _client._location.getClientMaxBodySize())
         return chunkTargetSize;
     throw ErrorCodeClientException(_client, 413, "Content-Length exceeds maximum allowed: " + to_string(chunkTargetSize));
 }

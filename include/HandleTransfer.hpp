@@ -49,6 +49,11 @@ class HandleTransfer
         bool   _isChunked = false;
         size_t _bodyPos = 0;
 
+        //cgi
+        bool _iscgi = false;
+        bool _cgiTransfer = false;
+        
+
         inline void setBoolToChunk() {
             _isChunked = true;
         }

@@ -164,8 +164,8 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _locationPath = _root + _locationPath;
 	else
         _locationPath = "." + _locationPath;
-    if (_clientBodySize == 0)
-        _clientBodySize = curConf.getClientBodySize();
+    if (_clientMaxBodySize == 0)
+        _clientMaxBodySize = curConf.getClientMaxBodySize();
     if (_returnRedirect.first == 0)
         _returnRedirect = curConf.getReturnRedirect();
     for (pair<uint16_t, string> errorCodePages : curConf.getErrorCodesWithPage())

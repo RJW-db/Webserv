@@ -266,7 +266,7 @@ void Parsing::printAll() const
 			cout << "  Port: " << portHost.first << endl << ", Host: " << portHost.second << endl;
 		}
 			cout << "  Root: " << config.getRoot() << endl;
-			cout << "  Client Max Body Size: " << config.getClientBodySize() << endl;
+			cout << "  Client Max Body Size: " << config.getClientMaxBodySize() << endl;
 			cout << "  Auto Index: " << (config.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
 			
 			// cout << "  Error Pages: ";
@@ -288,7 +288,7 @@ void Parsing::printAll() const
 			Alocation &location = pair.second;
 			cout << "location: " << "Path: " << pair.first << endl;
 			cout << "  Root: " << location.getRoot() << endl;
-			cout << "  Client Max Body Size: " << location.getClientBodySize() << endl;
+			cout << "  Client Max Body Size: " << location.getClientMaxBodySize() << endl;
 			cout << "  Auto Index: " << (location.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
 			
 			// cout << "  Error Pages: ";

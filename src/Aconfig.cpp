@@ -1,7 +1,7 @@
 #include <Aconfig.hpp>
 #include <cstring>
 
-Aconfig::Aconfig() : _autoIndex(autoIndexNotFound),  _clientBodySize(0) {}
+Aconfig::Aconfig() : _autoIndex(autoIndexNotFound),  _clientMaxBodySize(0) {}
 
 Aconfig::Aconfig(const Aconfig &other)
 {
@@ -14,7 +14,7 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 	if (this != &other)
 	{
 		ErrorCodesWithPage = other.ErrorCodesWithPage;
-		_clientBodySize = other._clientBodySize;
+		_clientMaxBodySize = other._clientMaxBodySize;
 		_autoIndex = other._autoIndex;
 		_root = other._root;
 		_returnRedirect = other._returnRedirect;
@@ -97,20 +97,20 @@ bool Aconfig::ClientMaxBodysize(string &line)
 
 	if (isdigit(line[0]) == false)
 		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: first character must be digit: " + line[0]);
-	_clientBodySize = static_cast<size_t>(stoi(line, &len, 10));
-	if (_clientBodySize == 0)
-		_clientBodySize = SIZE_MAX;
+	_clientMaxBodySize = static_cast<size_t>(stoi(line, &len, 10));
+	if (_clientMaxBodySize == 0)
+		_clientMaxBodySize = SIZE_MAX;
 	line = line.substr(len);
 	if (string("kKmMgG;").find(line[0]) != string::npos)
 	{
 		if (isupper(line[0]) != 0)
 			line[0] += 32;
 		if (line[0] == 'g')
-			_clientBodySize *= 1024;
+			_clientMaxBodySize *= 1024;
 		if (line[0] == 'g' || line[0] == 'm')
-			_clientBodySize *= 1024;
+			_clientMaxBodySize *= 1024;
 		if (line[0] == 'g' || line[0] == 'm' || line[0] == 'k')
-			_clientBodySize *= 1024;
+			_clientMaxBodySize *= 1024;
 	}
 	else if (string(" \t\f\v\r;").find(line[0]) == string::npos)
 		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: invalid character found after value: " + line[0]);
@@ -240,9 +240,9 @@ void Aconfig::setDefaultErrorPages()
     }
 }
 
-size_t Aconfig::getClientBodySize() const
+size_t Aconfig::getClientMaxBodySize() const
 {
-	return _clientBodySize;
+	return _clientMaxBodySize;
 }
 string Aconfig::getRoot() const
 {

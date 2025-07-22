@@ -74,12 +74,12 @@ void ConfigServer::setDefaultConf()
 {
     // what to do with no error pages? do we create our own or just have one
     if (_root.empty())
-        _root = "/var/www"; // what default root should we use?
+        _root = "/"; // what default root should we use?
     if (_root[_root.size() - 1] == '/')
         _root = _root.substr(0, _root.size() - 1);
     _root.insert(0, ".");
-    if (_clientBodySize == 0)
-        _clientBodySize = 1024 * 1024;
+    if (_clientMaxBodySize == 0)
+        _clientMaxBodySize = 1024 * 1024;
     if (_autoIndex == autoIndexNotFound)
         _autoIndex = autoIndexFalse;
     if (_portHost.empty())

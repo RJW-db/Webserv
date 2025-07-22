@@ -32,7 +32,7 @@ class Aconfig
 		void setLineNbr(int num);
 		void setDefaultErrorPages();
 
-		size_t getClientBodySize() const;
+		size_t getClientMaxBodySize() const;
 		string getRoot() const;
 		int8_t getAutoIndex() const;
 		pair<uint16_t, string> getReturnRedirect() const;
@@ -42,7 +42,7 @@ class Aconfig
 
 	protected:
 		int8_t _autoIndex;
-		size_t _clientBodySize; // for nginx could be zero but is impractical
+		size_t _clientMaxBodySize; // for nginx could be zero but is impractical
 		string _root;
 		pair<uint16_t, string> _returnRedirect;
 		map<uint16_t, string> ErrorCodesWithPage;
