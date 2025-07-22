@@ -12,7 +12,7 @@
 
     # sleep 1
     # Part 1: multipart header
-    CHUNK1=$'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="upload.txt"\r\nContent-Type: text/plain\r\n\r\n'
+    CHUNK1=$'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"; filename="chunk_test1.txt"\r\nContent-Type: text/plain\r\n\r\n'
     printf "%X\r\n" $(printf "%s" "$CHUNK1" | wc -c)    #size of chunk, HEX = 89, DEC = 137
     printf "%s\r\n" "$CHUNK1"                           #data of chunk
     sleep 1

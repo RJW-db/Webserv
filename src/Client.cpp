@@ -16,7 +16,7 @@ void Client::resetRequestState()
     _contentLength = 0;
     _contentType = string_view();
     _bodyBoundary = string_view();
-    _filename = string_view();
+    _filename.clear();
     _filenamePath.clear();
     _fileContent = string_view();
     _headerFields.clear();

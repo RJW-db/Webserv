@@ -7,37 +7,7 @@
 
 using namespace std;
 
-struct ChunkState
-{
-    // string _body;
-    string _bodyHeader;
-    size_t _bodyPos = 0;
-    size_t _boundaryPos = 0;
-    size_t _chunkDataStart = 0;
-    size_t _chunkTargetSize = 0;
-    size_t _chunkReceivedSize = 0;
-    string _unchunkedBody;        // Contains full unchunked data including boundaries
-    string _fileContent;          // Contains only the actual file data (clean)
-
-    size_t _searchStartPos = 0;
-
-    bool   _foundBoundary = false;
-
-    void reset()
-    {
-        _bodyHeader.clear();
-        _bodyPos = 0;
-        _boundaryPos = 0;
-        _chunkDataStart = 0;
-        _chunkTargetSize = 0;
-        _chunkReceivedSize = 0;
-        _unchunkedBody.clear();
-        _fileContent.clear();
-        _foundBoundary = false;
-    }
-};
-
-class HandleTransfer : protected ChunkState
+class HandleTransfer
 {
     public:
         HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
@@ -77,6 +47,7 @@ class HandleTransfer : protected ChunkState
 
         // chunked
         bool   _isChunked = false;
+        size_t _bodyPos = 0;
 
         inline void setBoolToChunk() {
             _isChunked = true;
@@ -84,24 +55,13 @@ class HandleTransfer : protected ChunkState
         inline bool getIsChunk() const {
             return _isChunked;
         }
-        inline bool hasBoundaryAt(const string &_unchunkedBody, size_t pos, string_view boundary) {
-            return pos + BOUNDARY_PREFIX_LEN + boundary.size() <= _unchunkedBody.size() &&
-                   _unchunkedBody[pos] == '-' &&
-                   _unchunkedBody[pos + 1] == '-' &&
-                   (_unchunkedBody.compare(pos + BOUNDARY_PREFIX_LEN, boundary.size(),
-                                 boundary.data(), boundary.size()) == 0);
-        }
         void appendToBody();
         bool handleChunkTransfer();
-        bool decodeChunk();
-        bool FinalCrlfCheck();
+        bool decodeChunk(size_t &chunkTargetSize);
 
-        bool extractChunkSize();
-        static void validateChunkSizeLine(const string &input);
-        static uint64_t parseChunkSize(const string &input);
-        static void ParseChunkStr(const string &input, uint64_t chunkTargetSize);
-
-
+        bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
+        void validateChunkSizeLine(const string &input);
+        uint64_t parseChunkSize(const string &input);
 
     protected:
         // Helper function to send data over a socket

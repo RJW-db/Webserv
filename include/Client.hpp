@@ -50,16 +50,7 @@ class Client
         string_view _contentType;
         string_view _bodyBoundary;  // shorten to just _boundary
 
-        // string _bodyHeader;
-        // size_t _bodyPos;
-        // size_t _chunkBodyPos;   
-        // // size_t _chunkPos;
-        // size_t _chunkTargetSize;
-        // size_t _chunkReceivedSize;
-        // string _unchunkedBody;
-        // bool   _foundBoundary;
-
-        string_view _filename;
+        string _filename;
         string _name;
         string_view _fileContent;
 

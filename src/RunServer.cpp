@@ -111,21 +111,21 @@ int RunServers::runServers()
     while (g_signal_status == 0)
     {
         int eventCount;
-        for (auto it = _clients.begin(); it != _clients.end();)
-		{
-			unique_ptr<Client> &client = it->second;
-			++it;
-			if (client->_disconnectTime <= chrono::steady_clock::now())
-            {
-                std::cout << "disconnectTime: "
-                        << std::chrono::duration_cast<std::chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
-                        << " ms" << std::endl;
-                std::cout << "now: "
-                        << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
-                        << " ms" << std::endl;
-				cleanupClient(*client);
-            }
-		}
+        // for (auto it = _clients.begin(); it != _clients.end();)
+		// {
+		// 	unique_ptr<Client> &client = it->second;
+		// 	++it;
+		// 	if (client->_disconnectTime <= chrono::steady_clock::now())
+        //     {
+        //         std::cout << "disconnectTime: "
+        //                 << std::chrono::duration_cast<std::chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
+        //                 << " ms" << std::endl;
+        //         std::cout << "now: "
+        //                 << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
+        //                 << " ms" << std::endl;
+		// 		cleanupClient(*client);
+        //     }
+		// }
         // std::cout << "Blocking and waiting for epoll event..." << std::endl;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
         if (eventCount == -1) // only goes wrong with EINTR(signals)

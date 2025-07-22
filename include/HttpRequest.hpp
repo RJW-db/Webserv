@@ -72,7 +72,7 @@ class HttpRequest
         static void	handleRequest(Client &client);
 
         static void	parseHeaders(Client &client);
-        static void	getBodyInfo(Client &client);
+        static void	getBodyInfo(Client &client, const string buff);
 
 
         static void	POST(Client &client);

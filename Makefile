@@ -29,7 +29,7 @@ CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g
 CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS		+=	-fsanitize=address
+CCPFLAGS		+=	-g -fsanitize=address
 
 #		Directories
 BUILD_DIR		:=	.build/
@@ -43,7 +43,8 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp	ErrorCodeClientException.cpp \
+					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp  HandleTransferChunks.cpp \
+					ErrorCodeClientException.cpp \
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 

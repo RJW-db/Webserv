@@ -353,7 +353,8 @@ void HttpRequest::handleRequest(Client &client)
             case BODY_CHUNKED:
             {
                 // handleChunks(client);
-                client._contentLength = client._location.getClientBodySize();
+                // client._contentLength = client._location.getClientBodySize();
+                client._contentLength = 0;
                 unique_ptr<HandleTransfer> handle;
                 handle = make_unique<HandleTransfer>(client);
                 // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
