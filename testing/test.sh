@@ -9,15 +9,14 @@ make
 mkdir -p testing/results
 rm -rf testing/results/*
 
-
-read -p "Do you want to start the web server? (y/n): " start_server
-if [[ "$start_server" == "y" || "$start_server" == "Y" ]]; then
+# run with ./test.sh -y if you want to start the server
+if [[ "$1" == "y" || "$1" == "Y" || "$1" == "-y" || "$1" == "-Y" ]]; then
     # Start the web server in the background
 # disable if you don't want server to start
 ./Webserv testing/test1.conf > testing/results/webservOut.txt &
 SERVER_PID=$!
-sleep 2  # Wait a moment for the server to start
 fi
+
 
 
 

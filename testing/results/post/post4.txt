@@ -1,6 +1,0 @@
-HTTP/1.1 201 Created
-Content-Type: text/plain
-Content-Length: 38
-Connection: close
-
-./testing/results/post/upload1/949486
