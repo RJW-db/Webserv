@@ -43,7 +43,7 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp  HandleTransferChunks.cpp \
+					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp  HandleTransferChunks.cpp handleCgi.cpp \
 					ErrorCodeClientException.cpp \
 					examples/poll_usage.cpp			examples/getaddrinfo_usage.cpp 		examples/server.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp

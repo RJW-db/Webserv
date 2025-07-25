@@ -3,6 +3,7 @@
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
 #include <Client.hpp>
+void handleCgi(Client &client);
 
 void HandleTransfer::appendToBody()
 {
@@ -32,6 +33,9 @@ bool HandleTransfer::handleChunkTransfer()
     
     if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
     {
+        std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
+        handleCgi(_client);
+        return true;
         handlePostTransfer(false);
         return true;
     }

@@ -120,6 +120,12 @@ class RunServers
                     : ClientException(message) {}
         };
 
+
+        static int getEpollFD()
+        {
+            return _epfd;
+        }
+
     private:
         // string _serverName;
         // int _listener; // moet weg
