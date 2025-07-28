@@ -23,6 +23,33 @@ void    HttpRequest::validateHEAD(Client &client)
     {
         throw ErrorCodeClientException(client, 400, "Malformed request line");
     }
+
+    size_t queryPos = client._requestPath.find('?');
+    if (queryPos != string::npos)
+    {
+        // std::cout << client._requestPath << std::endl; //testcout
+        client._queryString = client._requestPath.substr(queryPos + 1);
+        client._requestPath = client._requestPath.substr(0, queryPos);
+        // std::cout << client._requestPath << std::endl; //testcout
+        // std::cout << client._queryString << std::endl; //testcout
+        // exit(0);
+    }
+
+    // locateRequestedFile(client);
+    struct stat status;
+
+    string reqPath = '.' + client._requestPath;
+    if (stat(reqPath.data(), &status) == -1)
+    {
+        throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
+    }
+    if (S_ISDIR(status.st_mode) == false &&
+       (S_ISREG(status.st_mode) == false ||
+        access(reqPath.data(), R_OK) != 0))
+    {
+        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
+    }
+
     RunServers::setServer(client);
     RunServers::setLocation(client);
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());

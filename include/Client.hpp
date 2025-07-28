@@ -42,6 +42,7 @@ class Client
         string _method;
         uint8_t _useMethod;
         string _requestPath;
+        string _queryString;
         string _rootPath; // root + requestpath
 		string _filenamePath; // rootpath + filename
         string _version;

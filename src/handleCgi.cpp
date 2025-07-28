@@ -17,35 +17,6 @@
 #define PARENT 1
 #define CHILD 0
 
-void child(Client &client, int in_pipe[2], int out_pipe[2])
-{
-    if (dup2(in_pipe[0], STDIN_FILENO) == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
-    if (dup2(out_pipe[1], STDOUT_FILENO) == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
-
-    closing_pipes(in_pipe, out_pipe);
-
-    // Set up args + env
-    // char* argv[] = {"/usr/bin/python3", "script.py", NULL};
-    // char* envp[] = {/* CGI env vars */};
-
-    char* argv[] = {"./cgi", NULL};
-    char* envp[] = {
-        (char*)"REQUEST_METHOD=GET",
-        (char*)"CONTENT_LENGTH=0",
-        (char*)"QUERY_STRING=name=ChatGPT&lang=cpp",
-        (char*)"SCRIPT_NAME=/cgi-bin/cgi",
-        (char*)"SERVER_PROTOCOL=HTTP/1.1",
-        (char*)"CONTENT_TYPE=text/plain",
-        (char*)"GATEWAY_INTERFACE=CGI/1.1",
-        NULL
-    };
-
-    execve(argv[0], argv, envp);
-    perror("execve failed");
-    exit(1);
-}
 
 bool    safeCloseFD(int &fd)
 {
@@ -76,6 +47,56 @@ void closing_pipes(int in_pipe[2], int out_pipe[2])
     safeCloseFD(out_pipe[1]);
 }
 
+void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
+{
+    if (dup2(in_pipe[0], STDIN_FILENO) == -1) {
+        closing_pipes(in_pipe, out_pipe);
+        throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
+    }
+    if (dup2(out_pipe[1], STDOUT_FILENO) == -1)
+    {
+        closing_pipes(in_pipe, out_pipe);
+        close(STDIN_FILENO);
+        throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
+    }
+}
+
+void child(Client &client, int in_pipe[2], int out_pipe[2])
+{
+    setupChildPipes(client, in_pipe, out_pipe);
+    closing_pipes(in_pipe, out_pipe);
+
+    // Set up args + env
+    // char* argv[] = {"/usr/bin/python3", "script.py", NULL};
+    // char* envp[] = {/* CGI env vars */};
+
+    char* argv[] = {(char*)"./cgi", NULL};
+    char* envp[] = {
+        (char*)"REQUEST_METHOD=GET",
+        (char*)"CONTENT_LENGTH=0",
+        (char*)"QUERY_STRING=name=ChatGPT&lang=cpp",
+        (char*)"SCRIPT_NAME=/cgi-bin/cgi",
+        (char*)"SERVER_PROTOCOL=HTTP/1.1",
+        (char*)"CONTENT_TYPE=text/plain",
+        (char*)"GATEWAY_INTERFACE=CGI/1.1",
+        NULL
+    };
+
+    // vector[asdsadsadadasdsa]
+    // char *str[len(vector)]
+    // for x in vector:
+    //     str[x] = vector[x].data()
+
+    // char **str = malloc(5);
+    // str[0] = requestPath.data();
+
+    execve(argv[0], argv, envp);
+    perror("execve failed");
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    exit(EXIT_FAILURE);
+}
+
 void handleCgi(Client &client)
 {
     int in_pipe[2] = { -1, -1 };   // Server → CGI (stdin)
@@ -93,37 +114,13 @@ void handleCgi(Client &client)
     }
 
     pid_t pid = fork();
-    if (pid == -1)
+    if (pid == -1) {
+        closing_pipes(in_pipe, out_pipe);
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
+    }
 
     if (pid == CHILD) {
-
-        if (dup2(in_pipe[0], STDIN_FILENO) == -1)
-            throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
-        if (dup2(out_pipe[1], STDOUT_FILENO) == -1)
-            throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
-
-        closing_pipes(in_pipe, out_pipe);
-
-        // Set up args + env
-        // char* argv[] = {"/usr/bin/python3", "script.py", NULL};
-        // char* envp[] = {/* CGI env vars */};
-
-        char* argv[] = {"./cgi", NULL};
-        char* envp[] = {
-            (char*)"REQUEST_METHOD=GET",
-            (char*)"CONTENT_LENGTH=0",
-            (char*)"QUERY_STRING=name=ChatGPT&lang=cpp",
-            (char*)"SCRIPT_NAME=/cgi-bin/cgi",
-            (char*)"SERVER_PROTOCOL=HTTP/1.1",
-            (char*)"CONTENT_TYPE=text/plain",
-            (char*)"GATEWAY_INTERFACE=CGI/1.1",
-            NULL
-        };
-
-        execve(argv[0], argv, envp);
-        perror("execve failed");
-        exit(1);
+        child(client, in_pipe, out_pipe);
     }
 
     if (pid >= PARENT)

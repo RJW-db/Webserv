@@ -11,6 +11,7 @@ void Client::resetRequestState()
     _body.clear();
     _method.clear();
     _requestPath.clear();
+    _queryString.clear();
     _rootPath.clear();
     _version.clear();
     _contentLength = 0;
