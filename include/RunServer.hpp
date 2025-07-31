@@ -58,7 +58,7 @@ class RunServers
 		static void setServer(Client &client);
         static void setLocation(Client &state);
 
-        static int make_socket_non_blocking(int sfd);
+        static bool make_socket_non_blocking(int sfd);
 
         static void setEpollEvents(int fd, int option, uint32_t events);
 

@@ -49,7 +49,7 @@ int ServerListenFD::create_listener_socket()
 	{
 		return -1;
 	}
-	if (RunServers::make_socket_non_blocking(_listener) == -1)
+	if (RunServers::make_socket_non_blocking(_listener) == false)
 	{
 		return -1;
 	}

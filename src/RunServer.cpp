@@ -82,7 +82,7 @@ void RunServers::addStdinToEpoll()
     int stdin_fd = 0; // stdin is always fd 0
 
     // Set stdin to non-blocking
-    if (make_socket_non_blocking(stdin_fd) == -1)
+    if (make_socket_non_blocking(stdin_fd) == false)
     {
         std::cerr << "Failed to set stdin non-blocking" << std::endl;
         return;

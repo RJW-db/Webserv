@@ -77,13 +77,13 @@ void RunServers::acceptConnection(const int listener)
     }
 }
 
-int RunServers::make_socket_non_blocking(int sfd)
+bool RunServers::make_socket_non_blocking(int sfd)
 {
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
         cerr << "fcntl: " << strerror(errno);
-        return -1;
+        return false;
     }
 
     currentFlags |= O_NONBLOCK;
@@ -91,9 +91,9 @@ int RunServers::make_socket_non_blocking(int sfd)
     if (fcntlResult == -1)
     {
         cerr << "fcntl: " << strerror(errno);
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
 void RunServers::setEpollEvents(int fd, int option, uint32_t events)

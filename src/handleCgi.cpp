@@ -63,34 +63,41 @@ void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
 
 void child(Client &client, int in_pipe[2], int out_pipe[2])
 {
-    setupChildPipes(client, in_pipe, out_pipe);
-    closing_pipes(in_pipe, out_pipe);
+    // setupChildPipes(client, in_pipe, out_pipe);
+    // closing_pipes(in_pipe, out_pipe);
 
     // Set up args + env
     // char* argv[] = {"/usr/bin/python3", "script.py", NULL};
     // char* envp[] = {/* CGI env vars */};
 
-    char* argv[] = {(char*)"./cgi", NULL};
-    char* envp[] = {
-        (char*)"REQUEST_METHOD=GET",
-        (char*)"CONTENT_LENGTH=0",
-        (char*)"QUERY_STRING=name=ChatGPT&lang=cpp",
-        (char*)"SCRIPT_NAME=/cgi-bin/cgi",
-        (char*)"SERVER_PROTOCOL=HTTP/1.1",
-        (char*)"CONTENT_TYPE=text/plain",
-        (char*)"GATEWAY_INTERFACE=CGI/1.1",
-        NULL
+    vector<string> args = {"python3", "script.py", "foo", "bar"};
+
+    vector<char *> argv;
+    for (auto it : args)
+    {
+        argv.push_back(const_cast<char *>(it.c_str()));
+        std::cout << it.c_str() << std::endl; //testcout
+    }
+
+    vector<string> envpString = {
+        "REQUEST_METHOD=GET",
+        "CONTENT_LENGTH=0",
+        "QUERY_STRING=name=ChatGPT&lang=cpp",
+        "SCRIPT_NAME=/cgi-bin/cgi",
+        "SERVER_PROTOCOL=HTTP/1.1",
+        "CONTENT_TYPE=text/plain",
+        "GATEWAY_INTERFACE=CGI/1.1"
     };
 
-    // vector[asdsadsadadasdsa]
-    // char *str[len(vector)]
-    // for x in vector:
-    //     str[x] = vector[x].data()
+    vector<char *> envp;
 
-    // char **str = malloc(5);
-    // str[0] = requestPath.data();
-
-    execve(argv[0], argv, envp);
+    for (auto it : envpString)
+    {
+        envp.push_back(const_cast<char *>(it.c_str()));
+        std::cout << it.c_str() << std::endl; //testcout
+    }
+exit(0);
+    execve(argv[0], argv.data(), envp.data());
     perror("execve failed");
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -125,6 +132,8 @@ void handleCgi(Client &client)
 
     if (pid >= PARENT)
     {
+        sleep(3);
+        exit(0);
         close(in_pipe[0]);    // parent doesn't read from stdin
         close(out_pipe[1]);   // parent doesn't write to stdout
         
