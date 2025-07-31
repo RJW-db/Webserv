@@ -111,7 +111,7 @@ void ConfigServer::setDefaultConf()
     setDefaultErrorPages();
 }
 
-void ConfigServer::addLocation(const Location &location, string &path)
+void ConfigServer::addLocation(const Location &location, string path)
 {
     for (auto it = _locations.begin(); it != _locations.end(); ++it)
     {

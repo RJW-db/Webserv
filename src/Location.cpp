@@ -1,6 +1,19 @@
 #include <ConfigServer.hpp>
 #include <utils.hpp>
 
+// Constants for better readability
+namespace {
+    const char* WHITESPACE_CHARS = " \t\f\v\r";
+    const char* WHITESPACE_OPEN_BRACKET = " \t\f\v\r{";
+    
+    // HTTP method bit flags
+    const uint8_t HEAD_METHOD_BIT = 1;
+    const uint8_t GET_METHOD_BIT = 2;
+    const uint8_t POST_METHOD_BIT = 4;
+    const uint8_t DELETE_METHOD_BIT = 8;
+    const uint8_t ALL_METHODS = HEAD_METHOD_BIT | GET_METHOD_BIT | POST_METHOD_BIT | DELETE_METHOD_BIT;
+}
+
 Location::Location(const Location &other) : Alocation(other)
 {
 	*this = other;
@@ -15,41 +28,45 @@ Location &Location::operator=(const Location &other)
 	return (*this);
 }
 
-string Location::getLocationPath(string &line)
+void Location::getLocationPath(string &line)
 {
-	size_t len = line.find_first_of(" \t\f\v\r{");
+	size_t len = line.find_first_of(WHITESPACE_OPEN_BRACKET);
 	if (len == string::npos)
 		len = line.length();
-	string path = line.substr(0, len);
-	if (path[0] != '/')
-		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path given for location block: " + path);	
-	// string pathCheck = path.substr(1);
-	// if (path.length() != 1 && directoryCheck(pathCheck) == false)
-	// 	throw runtime_error(to_string(_lineNbr) + ": location path: invalid directory path given for location block:" + path);
-	line = line.substr(len);
-	_locationPath = path;
-	return path;
+	_locationPath = line.substr(0, len);
+    line = line.substr(len);
+    
+    // Location paths must start with '/'
+	if (_locationPath[0] != '/')
+		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path '" + 
+                           _locationPath + "' - must start with '/'");	
 }
 
 bool Location::checkMethodEnd(bool &findColon, string &line)
 {
-	static int index = 0;
-	const string search[5] = {"{", "deny", "all", ";", "}"};
-	if (strncmp(line.c_str(), search[index].c_str(), search[index].length()) == 0)
+	static int expectedTokenIndex = 0;
+	const string expectedTokens[5] = {"{", "deny", "all", ";", "}"};
+    
+	if (strncmp(line.c_str(), expectedTokens[expectedTokenIndex].c_str(), 
+                expectedTokens[expectedTokenIndex].length()) == 0)
 	{
 		if (_allowedMethods == 0)
-			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods given for limit_except");
-		line = line.substr(search[index].length());
-		++index;
-		if (index == 5)
+			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods specified for limit_except directive");
+            
+		line = line.substr(expectedTokens[expectedTokenIndex].length());
+		++expectedTokenIndex;
+        
+        // Check if we've found all expected tokens
+		if (expectedTokenIndex == 5)
 		{
 			findColon = true;
-			index = 0;
+			expectedTokenIndex = 0;
 		}
 		return true;
 	}
-	else if (index != 0)
-		throw runtime_error(to_string(_lineNbr) + ": limit_except: couldn't find: " + search[index] + ". after limit_except");
+	else if (expectedTokenIndex != 0)
+		throw runtime_error(to_string(_lineNbr) + ": limit_except: expected '" + 
+                           expectedTokens[expectedTokenIndex] + "' after limit_except directive");
 	return false;
 }
 
@@ -65,24 +82,24 @@ bool Location::methods(string &line)
 		}
 		return false;
 	}
-	size_t len = line.find_first_of(" \t\f\v\r{");
+	size_t len = line.find_first_of(WHITESPACE_OPEN_BRACKET);
 	if (len == string::npos)
 		len = line.length();
     string method = line.substr(0, len);
-    uint8_t binary_bit;
+    uint8_t method_bit;
     if (method == "HEAD")
-        binary_bit = 1;
+        method_bit = HEAD_METHOD_BIT;
     else if (method == "GET")
-        binary_bit = 2;
+        method_bit = GET_METHOD_BIT;
     else if (method == "POST")
-        binary_bit = 4;
+        method_bit = POST_METHOD_BIT;
     else if (method == "DELETE")
-        binary_bit = 8;
+        method_bit = DELETE_METHOD_BIT;
     else
-        throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid methods given after limit_exept");
-    if (_allowedMethods & binary_bit)
-        throw runtime_error(to_string(_lineNbr) + ": limit_except: Method given already entered before");
-    _allowedMethods += binary_bit;
+        throw runtime_error(to_string(_lineNbr) + ": limit_except: Invalid method given after limit_except: " + method);
+    if (_allowedMethods & method_bit)
+        throw runtime_error(to_string(_lineNbr) + ": limit_except: Method '" + method + "' already specified");
+    _allowedMethods |= method_bit;
 	line = line.substr(len);
 	return false;
 }
@@ -119,7 +136,7 @@ bool Location::uploadStore(string &line)
 	return (handleNearEndOfLine(line, len, "upload_store"));
 }
 
-bool Location::extension(string &line)
+bool Location::cgiExtension(string &line)
 {
 	if (!_cgiExtension.empty())
 		throw runtime_error(to_string(_lineNbr) + "extension: tried creating second extension");
@@ -177,7 +194,7 @@ void Location::SetDefaultLocation(Aconfig &curConf)
     }
     if (_allowedMethods == 0)
     {
-        _allowedMethods = 1 + 2 + 4 + 8;
+        _allowedMethods = ALL_METHODS; // Allow all HTTP methods by default
     }
 	for (string &indexPage : _indexPage)
 	{
@@ -186,14 +203,11 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 		else
 			indexPage = _root + "/" + indexPage;
 	}
-    // if (_locationPath.size() > 2 && directoryCheck(_locationPath) == false)
-    //     throw runtime_error("invalid root + path given: " + _locationPath);
+    
+    // Set default upload store to root if not specified
 	if (_upload_store.empty())
 	    _upload_store = _root;
-    else
-    {
-        
-    }
+    
     setDefaultErrorPages();
 }
 

@@ -1,0 +1,17 @@
+POST /upload HTTP/1.1\r\n
+Host: localhost:8080\r\n
+User-Agent: Manual-Client/1.0\r\n
+Accept: */*\r\n
+Content-Type: multipart/form-data; boundary=----ManualFormBoundary123456789\r\n
+Content-Length: 245\r\n
+Connection: keep-alive\r\n
+\r\n
+------ManualFormBoundary123456789\r\n
+Content-Disposition: form-data; name="myfile"; filename="manual_text.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+This is my manual text content that I want to send to the webserver.\r\n
+It can contain multiple lines.\r\n
+And any text content I want to upload.\r\n
+\r\n
+------ManualFormBoundary123456789--\r\n

@@ -7,9 +7,23 @@
 
 using namespace std;
 
-bool    emptyLine(string &line, size_t &skipSpace)
+// Constants for better readability
+namespace {
+    const char* WHITESPACE_CHARS = " \t\f\v\r";
+    const char* WHITESPACE_WITH_NEWLINE = " \t\f\v\r\n";
+    const size_t SERVER_KEYWORD_LENGTH = 6;
+    const size_t LOCATION_KEYWORD_LENGTH = 8;
+}
+
+/**
+ * Checks if a line is empty or contains only whitespace/comments
+ * @param line The line to check
+ * @param skipSpace Output parameter for the position of first non-whitespace character
+ * @return true if line is empty or comment-only, false otherwise
+ */
+bool isEmptyOrCommentLine(string &line, size_t &skipSpace)
 {
-    skipSpace = line.find_first_not_of(" \t\f\v\r");
+    skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (string::npos == skipSpace || line[skipSpace] == '#')
     {
         return true;
@@ -17,33 +31,68 @@ bool    emptyLine(string &line, size_t &skipSpace)
     return false;
 }
 
-void ftSkipspace(string &line)
+/**
+ * Removes leading whitespace from a string
+ * @param line The string to trim (modified in place)
+ */
+void trimLeadingWhitespace(string &line)
 {
-    size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
+    size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (skipSpace != 0 && skipSpace != string::npos)
         line = line.substr(skipSpace);
-    // return line;
 }
 
+/**
+ * Validates that there is whitespace after a command
+ * @param line The line to check
+ * @param whitespaceChars The whitespace characters to check for
+ * @param lineNumber The line number for error reporting
+ * @throws runtime_error if no whitespace found
+ */
+void validateWhitespaceAfterCommand(const string& line, const char* whitespaceChars, int lineNumber = 0)
+{
+    if (line.empty() || string(whitespaceChars).find(line[0]) == std::string::npos)
+    {
+        string errorMsg = "no space found after command";
+        if (lineNumber > 0)
+            errorMsg = to_string(lineNumber) + ": " + errorMsg;
+        throw runtime_error(errorMsg);
+    }
+}
+
+/**
+ * Checks if line contains a closing bracket and handles it
+ * @return false if closing bracket found, true otherwise
+ */
 bool    Parsing::runReadblock()
 {
     size_t  skipSpace;
 	if (validSyntax == false)
 		throw runtime_error(to_string(_lines.begin()->first) + ": invalid syntax: " + _lines.begin()->second);
+    
     if (_lines.begin()->second[0] == '}')
     {
         _lines.begin()->second =  _lines.begin()->second.substr(1);
-        if (emptyLine(_lines.begin()->second, skipSpace) == true)
+        if (isEmptyOrCommentLine(_lines.begin()->second, skipSpace) == true)
             _lines.erase(_lines.begin());
         return false;
     }
     return true;
 }
 
+
+/**
+ * checks if line should be removed and set to next line
+ * @param line output paramater to set to newline if should be skipped
+ * @param forceSkip for forcing rest of current line to be skipped and removed
+ * @param curConf Config to set new lineNbr
+ * @param shouldSkipSpace for setting if trimleadingWhiteSpace should be run
+ * 
+ */
 template <typename T>
 void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkipSpace)
 {
-	size_t skipSpace = line.find_first_not_of(" \t\f\v\r");
+	size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (string::npos == skipSpace || forceSkip)
     {
         if (_lines.size() <= 1)
@@ -53,23 +102,26 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
         curConf.setLineNbr(_lines.begin()->first);
     }
     if (shouldSkipSpace == true)
-        ftSkipspace(line);
+        trimLeadingWhitespace(line);
 }
 
+/**
+ * adds location block to configServer
+ * @param line current line being used for cmd
+ * @param block current ConfigServerblock used to add new location block to
+ * @param cmd Function to run using line
+ */
 template <typename T>
 void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 {
-    if constexpr (std::is_same<T, ConfigServer>::value) // checks i block == Configserver
+    if constexpr (std::is_same<T, ConfigServer>::value) // checks if block == Configserver
     {
         Location location;
         location.setLineNbr(_lines.begin()->first);
-        line = line.substr(8);
-        if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-		{
-            throw runtime_error (to_string(_lines.begin()->first) + ": no space found after command");
-		}
+        line = line.substr(LOCATION_KEYWORD_LENGTH);
+        validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
         skipLine(line, false, block, true);
-        string path = location.getLocationPath(line);
+        location.getLocationPath(line);
         skipLine(line, false, block, true);
         if (line[0] != '{')
             throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
@@ -88,50 +140,57 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 		_lines.begin()->second = line;
 		readBlock(location, cmds, whileCmds);
 		line = _lines.begin()->second;
-        block.addLocation(location, path);
+        block.addLocation(location, location.getPath());
         validSyntax = true;
     }
     else
         throw runtime_error(to_string(_lines.begin()->first) + ": location block can only be used in server block");
 }
 
+/**
+ * runs cmd to store for configserver or location
+ * @param line current line being used for cmd
+ * @param block current ConfigServer Or location block used to run and store cmd
+ * @param cmd Function to run using line
+ */
 template <typename T>
 void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
-	bool findColon;
+	bool foundSemicolon;
 	line = line.substr(cmd.first.size());
-	if (string(" \t\f\v\r\n").find(line[0]) == std::string::npos)
-    {
-		throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
-    }
-	size_t run = 0;
-	while (++run)
+	validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
+	
+	size_t argumentCount = 0;
+	while (++argumentCount)
 	{
 		skipLine(line, false, block, true);
-		findColon = (block.*(cmd.second))(line);
+		foundSemicolon = (block.*(cmd.second))(line);
 		skipLine(line, false, block, true);
-		if (findColon == true)
+		if (foundSemicolon == true)
 		{
-			if (run == 1)
-				throw runtime_error(string("no arguments after") + cmd.first);
+			if (argumentCount == 1)
+				throw runtime_error(string("no arguments after ") + cmd.first);
 			break;
 		}
 	}
 }
 
+/**
+ * runs cmd to store for configserver or location
+ * @param line current line being used for cmd
+ * @param block current ConfigServer Or location block used to run and store cmd
+ * @param cmd Function to run using line
+ */
 template <typename T>
 void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
-	bool findColon;
+	bool foundSemicolon;
     line = line.substr(cmd.first.size());
     skipLine(line, false, block, false);
-    if (string(" \t\f\v\r").find(line[0]) == std::string::npos)
-    {
-        throw runtime_error(to_string(_lines.begin()->first) + ": no space found after command");
-    }
-    ftSkipspace(line);
-    findColon = (block.*(cmd.second))(line);
-    if (!findColon)
+    validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
+    trimLeadingWhitespace(line);
+    foundSemicolon = (block.*(cmd.second))(line);
+    if (!foundSemicolon)
     {
         skipLine(line, true, block, false);
         if (line[0] != ';')
@@ -141,6 +200,9 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
     skipLine(line, false, block, false);
 }
 
+/**
+ * stores commands for location and configServer
+ */
 template <typename T>
 void Parsing::readBlock(T &block, 
     const map<string, bool (T::*)(string &)> &cmds, 
@@ -150,7 +212,7 @@ void Parsing::readBlock(T &block,
     do
     {
 		validSyntax = false;
-        ftSkipspace(line);
+        trimLeadingWhitespace(line);
         for (const auto& cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
@@ -170,7 +232,7 @@ void Parsing::readBlock(T &block,
 				}
 			}
 		}
-        if (strncmp(line.c_str(), "location", 8) == 0 && validSyntax == false)
+        if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && validSyntax == false)
             LocationCheck(line, block, validSyntax);
 		if (validSyntax == false)
 			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
@@ -178,12 +240,15 @@ void Parsing::readBlock(T &block,
 	while (runReadblock() == true);
 }
 
+/**
+ * sets configserver and starts readblock for server
+ */
 void Parsing::ServerCheck()
 {
     ConfigServer curConf;
     curConf.setLineNbr(_lines.begin()->first);
 	string line = _lines.begin()->second;
-    line = line.substr(6);
+    line = line.substr(SERVER_KEYWORD_LENGTH);
     skipLine(line, false, curConf, true);
     if (line[0] == '{')
     {
@@ -210,7 +275,11 @@ void Parsing::ServerCheck()
     }
 }
 
-Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
+/**
+ * Reads and and stores lines in config file while removing the comments and leading whitespace
+ * @param input Path to the configuration file
+ */
+void Parsing::readConfigFile(const char *input)
 {
     fstream fs;
     fs.open(input, fstream::in);
@@ -220,34 +289,42 @@ Parsing::Parsing(const char *input) /* :  _confServers(NULL), _countServ(0)  */
 		std::cout << "Current directory: " << getcwd(NULL, 0) << std::endl;
 		throw runtime_error("inputfile couldn't be opened: " + string(input));
 	}
+    
     string line;
     size_t skipSpace;
     size_t lineNbr = 0;
     while (getline(fs, line))
     {
         ++lineNbr;
-        if (emptyLine(line, skipSpace) == true)
+        if (isEmptyOrCommentLine(line, skipSpace) == true)
             continue; // Empty line, or #(comment)
         line = line.substr(skipSpace);
-        size_t commentindex = line.find('#');
-        if (commentindex != string::npos)
-            line = line.substr(0, commentindex); // remove comments after text
+        size_t commentIndex = line.find('#');
+        if (commentIndex != string::npos)
+            line = line.substr(0, commentIndex); // remove comments after text
         _lines.insert({lineNbr, line});
     }
     fs.close();
-	// for (const auto &pair : _lines)
-	// {
-	// 	std::cout << pair.second << std::endl;
-	// }
-    while (1)
+}
+
+/**
+ * Processes all server blocks in the configuration
+ */
+void Parsing::processServerBlocks()
+{
+    while (!_lines.empty())
     {
-        if (_lines.empty())
-            break ; 
-        if (strncmp(_lines.begin()->second.c_str(), "server", 6) == 0)
+        if (strncmp(_lines.begin()->second.c_str(), "server", SERVER_KEYWORD_LENGTH) == 0)
             ServerCheck();
         else
-            throw runtime_error("Invalid line found expecting server" + _lines[0]);
+            throw runtime_error(to_string(_lines.begin()->first) + "Invalid line found expecting server");
     }
+}
+
+Parsing::Parsing(const char *input)
+{
+    readConfigFile(input);
+    processServerBlocks();
 }
 
 Parsing::~Parsing()
@@ -255,6 +332,9 @@ Parsing::~Parsing()
     
 }
 
+/**
+ * prints all values stored in servers and locations
+ */
 void Parsing::printAll() const
 {
 	for (ConfigServer config : _configs)

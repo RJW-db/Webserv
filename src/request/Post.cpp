@@ -3,9 +3,24 @@
 #include <ErrorCodeClientException.hpp>
 #include <HandleTransfer.hpp>
 
+bool correctPostSyntax(Client &client, string &buffer);
+
 bool HttpRequest::processHttpBody(Client &client)
 {
     HttpRequest::getContentLength(client);
+    if (true) // check if cgi request
+    {
+        std::cout << "request received with buffer being: " << client._body << std::endl; //testcout
+        if (client._body.find(string(client._bodyBoundary) + "--" + CRLF) == string::npos)
+            return false;
+        if (correctPostSyntax(client, client._body) == false)
+        {
+            RunServers::logMessage(5, "POST request syntax error, clientFD: ", client._fd);
+            throw ErrorCodeClientException(client, 400, "Malformed POST request syntax");
+        }
+        // send to cgi process
+        return true;
+    }
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandleTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
@@ -79,6 +94,7 @@ ContentType HttpRequest::getContentType(Client &client)
     }
     return UNSUPPORTED;
 }
+    
 
 void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
@@ -108,4 +124,58 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
 
     if (position == string::npos && !client._filename.empty())
         throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
+}
+
+static void searchContentDisposition(Client &client, string_view &buffer)
+{
+    size_t bodyEnd = buffer.find(CRLF2);
+    string buf = string(buffer.substr(0, bodyEnd));
+    HttpRequest::getBodyInfo(client, buf);
+    buffer.remove_prefix(bodyEnd + CRLF2_LEN);
+    // return true;
+}
+
+static bool validateFinalCRLF(Client &client, string_view &buffer, bool &searchContentDisposition)
+{
+    size_t foundReturn = buffer.find(CRLF);
+    if (foundReturn == 0)
+    {
+        buffer.remove_prefix(CRLF_LEN);
+        searchContentDisposition = true;
+        // _foundBoundary = false;
+        return false;
+    }
+    if (foundReturn == 2 && strncmp(buffer.data(), "--\r\n", 4) == 0 && buffer.size() <= 4)
+    {
+        return true;
+    }
+    throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
+}
+
+bool correctPostSyntax(Client &client, string &input)
+{
+    if (input.size() != client._contentLength)
+        throw ErrorCodeClientException(client, 400, "Content-Length does not match body size");
+    string_view buffer = string_view(input);
+    bool foundBoundary = false;
+    bool searchDisposition = false;
+    while (!buffer.empty())
+    {
+        if (foundBoundary == true)
+        {
+            if (validateFinalCRLF(client, buffer, searchDisposition) == true)
+                return true;
+            foundBoundary = false;
+            continue;
+        }
+        if (searchDisposition == true)
+        {
+            searchContentDisposition(client, buffer);
+            searchDisposition = false;
+        }
+        size_t boundaryFound = buffer.find(client._bodyBoundary);
+        buffer.remove_prefix(boundaryFound + client._bodyBoundary.size());
+        foundBoundary = true;
+    }
+    return false;
 }
