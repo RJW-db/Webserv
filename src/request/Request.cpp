@@ -323,21 +323,27 @@ void HttpRequest::getContentLength(Client &client)
     }
 }
 
-// void HttpRequest::redirectRequest(Client &client)
-// {
-//     pair<uint16_t, string> redirectPair = client._location.getReturnRedirect();
-//     string response = HttpResponse(client, redirectPair.first, "", 0);
-//     size_t index = response.find_first_of(CRLF);
-//     string locationHeader = "Location: " + redirectPair.second + CRLF;
-//     response.insert(index + CRLF_LEN, locationHeader);
-//     std::cout << "response: " << escape_special_chars(response) << std::endl; //testcout
-//     int sent = send(client._fd, response.data(), response.size(), 0);
-// }
+void HttpRequest::redirectRequest(Client &client)
+{
+    pair<uint16_t, string> redirectPair = client._location.getReturnRedirect();
+    string response = HttpResponse(client, redirectPair.first, "", 0);
+    size_t index = response.find_first_of(CRLF);
+    string locationHeader = "Location: " + redirectPair.second + CRLF;
+    response.insert(index + CRLF_LEN, locationHeader);
+    int sent = send(client._fd, response.data(), response.size(), 0);
+}
 
 void HttpRequest::handleRequest(Client &client)
 {
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
+    std::cout << client._location.getReturnRedirect().first << std::endl; //testcout
+    if (client._location.getReturnRedirect().first > 0)
+    {
+        redirectRequest(client);
+        RunServers::clientHttpCleanup(client);
+        return ;
+    }
     switch (client._useMethod)
     {
     case 1: // HEAD
