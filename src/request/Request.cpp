@@ -280,6 +280,7 @@ string HttpRequest::getMimeType(string &path)
     return "application/octet-stream";
 }
 
+void handleCgi(Client &client);
 void HttpRequest::GET(Client &client)
 {
     locateRequestedFile(client);
@@ -293,6 +294,10 @@ void HttpRequest::GET(Client &client)
         throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
 
     FileDescriptor::setFD(fd);
+    if (true)
+    {
+        handleCgi(client);
+    }
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));

@@ -14,12 +14,12 @@ void sigint_handler(int signum)
     g_signal_status = signum;
 }
 #include <fcntl.h>
-void handleCgi(Client &client);
+// void handleCgi(Client &client);
 int main(int argc, char *argv[])
 {
-    Client client(1);
-    handleCgi(client);
-    exit(0);
+    // Client client(1);
+    // handleCgi(client);
+    // exit(0);
     FileDescriptor::initializeAtexit();
     if (signal(SIGINT, &sigint_handler))
     {

@@ -61,41 +61,93 @@ void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
     }
 }
 
+bool hasExtension(string_view filename, const string& ext)
+{
+    if (filename.size() < ext.size())
+        return false;
+
+    string fileExt(filename.substr(filename.size() - ext.size()));
+    std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), ::tolower);
+    return (fileExt == ext);
+}
+
+vector<string> createArgv(Client &client)
+{
+    size_t lastSlashIndex = client._requestPath.find_last_of('/');
+    // if ("should not need this if check because already been check")
+
+    string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
+    vector<string> argvString;
+    if (hasExtension(cgiFilename, ".py"))
+    {
+        argvString.push_back("python3");
+        argvString.push_back(cgiFilename);
+    }
+    else if (hasExtension(cgiFilename, ".php"))
+    {
+        argvString.push_back("php");
+        argvString.push_back(cgiFilename);
+    }
+    else
+        argvString.push_back(cgiFilename);
+    
+    return argvString;
+}
+
+vector<string> createEnvp(Client &client)
+{
+    // vector<string> envpString = {
+    //     "REQUEST_METHOD=GET",
+    //     "CONTENT_LENGTH=0",
+    //     "QUERY_STRING=name=ChatGPT&lang=cpp",
+    //     "SCRIPT_NAME=/cgi-bin/cgi",
+    //     "SERVER_PROTOCOL=HTTP/1.1",
+    //     "CONTENT_TYPE=text/plain",
+    //     "GATEWAY_INTERFACE=CGI/1.1"
+    vector<string> envpString;
+    envpString.push_back("REQUEST_METHOD=" + client._method);
+    envpString.push_back("CONTENT_LENGTH=" + to_string(client._body.size()));
+    if (!client._queryString.empty())
+        envpString.push_back("QUERY_STRING=" + client._queryString);    // test http://localhost:8080/cgi-bin/cgi.py?WORK=YUR
+    envpString.push_back("SCRIPT_NAME=" + client._requestPath);
+    envpString.push_back("SERVER_PROTOCOL=" + client._version);
+    // envpString.push_back("CONTENT_TYPE=" + client._version);
+    
+    return envpString;
+}
+
+vector<char *> convertToCharArray(const vector<string> &argvString)
+{
+    vector<char *> argv;
+    for (const auto &it : argvString)
+    {
+        argv.push_back(const_cast<char *>(it.c_str()));
+    }
+    argv.push_back(NULL); // null-terminate for execve
+    return argv;
+}
+
+void printVecArray(vector<char *> &args)
+{
+    for (auto it = args.begin(); it != args.end() && *it != NULL; ++it)
+    {
+        cout << *it << endl; // optional debug output
+    }
+}
+
 void child(Client &client, int in_pipe[2], int out_pipe[2])
 {
     // setupChildPipes(client, in_pipe, out_pipe);
     // closing_pipes(in_pipe, out_pipe);
 
-    // Set up args + env
-    // char* argv[] = {"/usr/bin/python3", "script.py", NULL};
-    // char* envp[] = {/* CGI env vars */};
+    vector<string> argvString = createArgv(client);
+    vector<char *> argv = convertToCharArray(argvString);
+    printVecArray(argv);
 
-    vector<string> args = {"python3", "script.py", "foo", "bar"};
+    vector<string> envpString = createEnvp(client);
+    vector<char *> envp= convertToCharArray(envpString);
+    printVecArray(envp);
 
-    vector<char *> argv;
-    for (auto it : args)
-    {
-        argv.push_back(const_cast<char *>(it.c_str()));
-        std::cout << it.c_str() << std::endl; //testcout
-    }
-
-    vector<string> envpString = {
-        "REQUEST_METHOD=GET",
-        "CONTENT_LENGTH=0",
-        "QUERY_STRING=name=ChatGPT&lang=cpp",
-        "SCRIPT_NAME=/cgi-bin/cgi",
-        "SERVER_PROTOCOL=HTTP/1.1",
-        "CONTENT_TYPE=text/plain",
-        "GATEWAY_INTERFACE=CGI/1.1"
-    };
-
-    vector<char *> envp;
-
-    for (auto it : envpString)
-    {
-        envp.push_back(const_cast<char *>(it.c_str()));
-        std::cout << it.c_str() << std::endl; //testcout
-    }
 exit(0);
     execve(argv[0], argv.data(), envp.data());
     perror("execve failed");
