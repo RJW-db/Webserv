@@ -91,6 +91,10 @@ class RunServers
         {
             return _clientBufferSize;
         }
+        static inline uint64_t getRamBufferLimit()
+        {
+            return _ramBufferLimit;
+        }
 
         template<typename... Args>
         static void logMessage(int arg, Args&&... args)
@@ -145,6 +149,7 @@ class RunServers
 
         static int _level;
         static uint64_t _clientBufferSize;
+        static uint64_t _ramBufferLimit;
 };
 
 void	poll_usages(void);

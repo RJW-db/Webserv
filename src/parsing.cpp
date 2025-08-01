@@ -399,7 +399,7 @@ void Parsing::printAll() const
                 
 			cout << endl;
 			cout << "  Upload Store: " << location.getUploadStore() << endl;
-			cout << "  CGI Extension: " << location.getExtension() << endl;
+			cout << "  CGI Extension: " << location.getCgiExtension() << endl;
 			cout << "  CGI Path: " << location.getCgiPath() << endl;
 		}
 	}

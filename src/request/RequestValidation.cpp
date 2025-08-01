@@ -49,7 +49,7 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
     }
     if (S_ISDIR(status.st_mode) == false &&
-       (S_ISREG(status.st_mode) == false ||
+       (S_ISREG(status.st_mode) == false || //  a boolean for dir or file, because a filename like cgi.py could also be a dir
         access(reqPath.data(), R_OK) != 0))
     {
         throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
@@ -70,6 +70,20 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     }
 
+    size_t lastSlashIndex = client._requestPath.find_last_of('/');
+    if (lastSlashIndex != string::npos)
+    {
+        string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
+        size_t hasExt = cgiFilename.find_last_of('.');
+
+        if (hasExt == string::npos)
+        {
+            if (string_view(cgiFilename.data() + hasExt) == client._location.getCgiExtension());
+                client._isCgi = true;
+        }
+        else if (cgiFilename == client._location.getCgiExtension())
+            client._isCgi = true;
+    }
 }
 
 static string percentDecode(const string& input)

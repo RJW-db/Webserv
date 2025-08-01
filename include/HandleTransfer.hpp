@@ -49,11 +49,6 @@ class HandleTransfer
         size_t _bodyPos = 0;
         bool   _completedRequest = false;
 
-        //cgi
-        bool _iscgi = false;
-        bool _cgiTransfer = false;
-        
-
         inline void setBoolToChunk() {
             _isChunked = true;
         }
@@ -67,6 +62,14 @@ class HandleTransfer
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
         void validateChunkSizeLine(string_view chunkSizeLine);
         uint64_t parseChunkSize(string_view chunkSizeLine);
+
+        bool validateMultipartPostSyntax(Client &client, string &input);
+        bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
+        static void parseContentDisposition(Client &client, string_view &buffer);
+
+
+
+
 
     protected:
         // Helper function to send data over a socket

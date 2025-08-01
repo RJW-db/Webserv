@@ -191,7 +191,7 @@ bool HandleTransfer::handlePostTransfer(bool readData)
         while (true)
         {
             if (_bytesReadTotal > _client._contentLength)
-                throw ErrorCodeClientException(_client, 413, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
+                throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
             if (_searchContentDisposition == true && searchContentDisposition() == false)
                 return false;
             if (_foundBoundary == true)
@@ -225,4 +225,67 @@ bool HandleTransfer::handlePostTransfer(bool readData)
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     return true;
+}
+
+void HandleTransfer::parseContentDisposition(Client &client, string_view &buffer)
+{
+    size_t bodyEnd = buffer.find(CRLF2);
+    if (bodyEnd == string_view::npos)
+        throw ErrorCodeClientException(client, 400, "Missing double CRLF after Content-Disposition");
+    
+    string buf = string(buffer.substr(0, bodyEnd));
+    HttpRequest::getBodyInfo(client, buf);
+    buffer.remove_prefix(bodyEnd + CRLF2_LEN);
+}
+
+bool HandleTransfer::validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
+{
+    size_t crlfPos = buffer.find(CRLF);
+    
+    // Empty line - signals start of content disposition
+    if (crlfPos == 0)
+    {
+        buffer.remove_prefix(CRLF_LEN);
+        needsContentDisposition = true;
+        return false;
+    }
+    
+    // Check for boundary terminator "--\r\n"
+    const string terminator = string("--") + CRLF;
+    if (crlfPos == 2 && buffer.size() >= terminator.size() && 
+        strncmp(buffer.data(), terminator.data(), terminator.size()) == 0)
+        return true;
+    throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
+}
+
+bool HandleTransfer::validateMultipartPostSyntax(Client &client, string &input)
+{
+    if (input.size() != client._contentLength)
+        throw ErrorCodeClientException(client, 400, "Content-Length does not match body size");
+    string_view buffer = string_view(input);
+    bool foundBoundary = false;
+    bool needsContentDisposition = false;
+    
+    while (!buffer.empty())
+    {
+        if (foundBoundary)
+        {
+            if (validateBoundaryTerminator(client, buffer, needsContentDisposition))
+                return true; // Found end of multipart data
+            foundBoundary = false;
+            continue;
+        }
+        if (needsContentDisposition)
+        {
+            parseContentDisposition(client, buffer);
+            needsContentDisposition = false;
+            continue;
+        }
+        size_t boundaryPos = buffer.find(client._bodyBoundary);
+        if (boundaryPos == string_view::npos)
+            throw ErrorCodeClientException(client, 400, "Expected boundary not found in multipart data");
+        buffer.remove_prefix(boundaryPos + client._bodyBoundary.size());
+        foundBoundary = true;
+    }
+    throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }

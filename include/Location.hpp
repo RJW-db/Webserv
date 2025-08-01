@@ -18,7 +18,7 @@ class Alocation : public Aconfig
 
         uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
-		string getExtension() const;
+		string getCgiExtension() const;
 		string getCgiPath() const;
 		string getPath() const;
 

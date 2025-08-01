@@ -19,6 +19,7 @@ bool HandleTransfer::handleChunkTransfer()
     {
         if (decodeChunk(targetSize) == false)
             return false;
+        std::cout << "ga voorbij"  << std::endl; //testcout
     }
     catch(const exception& e)
     {
@@ -34,16 +35,16 @@ bool HandleTransfer::handleChunkTransfer()
     if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
     {
         std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
-        handleCgi(_client);
-        return true;
-        handlePostTransfer(false);
+
+        if (_client._isCgi == false)
+            handlePostTransfer(false);
+        else
+        {
+            validateMultipartPostSyntax(_client, _fileBuffer);
+            handleCgi(_client);
+        }
         return true;
     }
-    // or
-    // if (_completedRequest == true)
-    //     return true;
-    // handlePostTransfer(false);
-
     return false;
 }
 
@@ -61,6 +62,7 @@ bool    HandleTransfer::decodeChunk(size_t &targetSize)
         
         if (body.size() >= dataEnd + CRLF_LEN)
         {
+            std::cout << "check meerdere keren"   << std::endl; //testcout
             if (body[dataEnd] == '\r' &&
                 body[dataEnd + 1] == '\n')
             {
@@ -77,11 +79,16 @@ bool    HandleTransfer::decodeChunk(size_t &targetSize)
             {
                 throw ErrorCodeClientException(_client, 400, "Chunk data missing CRLF ");
             }
+            bool exceedsMaxSize = (_fileBuffer.size() > RunServers::getRamBufferLimit());
+            if (_client._isCgi == true && exceedsMaxSize == true)
+                throw ErrorCodeClientException(_client, 413, "Chunk data missing CRLF ");
+            else if (exceedsMaxSize == true)
+                handlePostTransfer(false);
         }
         else
             return false;
     }
-    return true;
+    return false; // shouldn't never get here
 }
 
 bool HandleTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)

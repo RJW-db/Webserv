@@ -232,7 +232,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 }
 
 string Alocation::getUploadStore() const { return _upload_store; }
-string Alocation::getExtension() const { return _cgiExtension; }
+string Alocation::getCgiExtension() const { return _cgiExtension; }
 string Alocation::getCgiPath() const { return _cgiPath; }
 string Alocation::getPath() const { return _locationPath; }
 uint8_t Alocation::getAllowedMethods() const { return _allowedMethods; }

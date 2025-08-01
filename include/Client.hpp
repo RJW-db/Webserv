@@ -35,6 +35,7 @@ class Client
         unique_ptr<Server> _usedServer;
         Location _location;
         string_view _uploadPath;
+        bool _isCgi = false;
 
         int8_t _headerParseState;
         string _header;
