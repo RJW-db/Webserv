@@ -3,7 +3,6 @@
 
 // Constants for better readability
 namespace {
-    const char* WHITESPACE_CHARS = " \t\f\v\r";
     const char* WHITESPACE_OPEN_BRACKET = " \t\f\v\r{";
     
     // HTTP method bit flags
@@ -232,25 +231,8 @@ Alocation &Alocation::operator=(const Alocation &other)
 	return (*this);
 }
 
-string Alocation::getUploadStore() const
-{
-	return _upload_store;
-}
-string Alocation::getExtension() const
-{
-	return _cgiExtension;
-}
-string Alocation::getCgiPath() const
-{
-	return _cgiPath;
-}
-
-string Alocation::getPath() const
-{
-	return _locationPath;
-}
-
-uint8_t Alocation::getAllowedMethods() const
-{
-    return _allowedMethods;
-}
+string Alocation::getUploadStore() const { return _upload_store; }
+string Alocation::getExtension() const { return _cgiExtension; }
+string Alocation::getCgiPath() const { return _cgiPath; }
+string Alocation::getPath() const { return _locationPath; }
+uint8_t Alocation::getAllowedMethods() const { return _allowedMethods; }

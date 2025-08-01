@@ -331,15 +331,19 @@ void HttpRequest::redirectRequest(Client &client)
     string locationHeader = "Location: " + redirectPair.second + CRLF;
     response.insert(index + CRLF_LEN, locationHeader);
     int sent = send(client._fd, response.data(), response.size(), 0);
+    if (sent == -1)
+        throw ErrorCodeClientException(client, 500, "Failed to send redirect response: " + string(strerror(errno)));
+    
 }
 
 void HttpRequest::handleRequest(Client &client)
 {
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
-    std::cout << client._location.getReturnRedirect().first << std::endl; //testcout
     if (client._location.getReturnRedirect().first > 0)
     {
+        std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
+
         redirectRequest(client);
         RunServers::clientHttpCleanup(client);
         return ;

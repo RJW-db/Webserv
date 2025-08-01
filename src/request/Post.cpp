@@ -3,24 +3,29 @@
 #include <ErrorCodeClientException.hpp>
 #include <HandleTransfer.hpp>
 
-bool correctPostSyntax(Client &client, string &buffer);
+bool validateMultipartPostSyntax(Client &client, string &buffer);
 
 bool HttpRequest::processHttpBody(Client &client)
 {
     HttpRequest::getContentLength(client);
-    if (true) // check if cgi request
-    {
-        std::cout << "request received with buffer being: " << client._body << std::endl; //testcout
-        if (client._body.find(string(client._bodyBoundary) + "--" + CRLF) == string::npos)
-            return false;
-        if (correctPostSyntax(client, client._body) == false)
-        {
-            RunServers::logMessage(5, "POST request syntax error, clientFD: ", client._fd);
-            throw ErrorCodeClientException(client, 400, "Malformed POST request syntax");
-        }
-        // send to cgi process
-        return true;
-    }
+    // if (true) // check if cgi request
+    // {
+    //     std::cout << "body is: "  <<  escape_special_chars(client._body) << std::endl; //testcout
+    //     std::cout << "body size: " << client._body.size() << std::endl; //testcout
+    //     if (client._body.find(string(client._bodyBoundary) + "--" + CRLF) == string::npos)
+    //     {
+    //         std::cout << "returning false"  << std::endl; //testcout
+    //         return false;
+    //     }
+    //     if (validateMultipartPostSyntax(client, client._body) == false)
+    //     {
+    //         RunServers::logMessage(5, "POST request syntax error, clientFD: ", client._fd);
+    //         throw ErrorCodeClientException(client, 400, "Malformed POST request syntax");
+    //     }
+    //     std::cout << "correct post request for cgi"  << std::endl; //testcout
+    //     // send to cgi process
+    //     return true;
+    // }
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandleTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
@@ -98,14 +103,24 @@ ContentType HttpRequest::getContentType(Client &client)
 
 void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
-    size_t cdPos = buff.find("Content-Disposition:");
+    string contentDisposition = "Content-Disposition:";
+    size_t cdPos = buff.find(contentDisposition);
     if (cdPos == string::npos)
         throw RunServers::ClientException("Content-Disposition header not found in multipart body");
-
+    size_t formDataPos = buff.find("form-data", cdPos);
+    
+    // Find the amount of whitespace between "Content-Disposition:" and the next character
+    size_t wsStart = cdPos + contentDisposition.size();
+    size_t wsEnd = buff.find_first_not_of(" \t", wsStart);
+    if (wsEnd == string::npos)
+        throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: only whitespace found");
+    if (formDataPos != wsEnd)
+        throw ErrorCodeClientException(client, 400, "Content-Disposition is not form-data");
     // Extract the Content-Disposition line
     size_t cdEnd = buff.find("\r\n", cdPos);
     // string_view cdLine = string_view(buff).substr(cdPos, cdEnd - cdPos);
-    string_view cdLine(buff.data(), cdEnd - cdPos);
+    // string_view cdLine(buff.data(), cdEnd - cdPos);
+    string cdLine = buff.substr(cdPos, cdEnd - cdPos);
 
     string filenameKey = "filename=\"";
     size_t fnPos = cdLine.find(filenameKey);
@@ -115,67 +130,75 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
         size_t fnEnd = cdLine.find("\"", fnStart);
         client._filename = string(cdLine).substr(fnStart, fnEnd - fnStart);
         if (client._filename.empty())
-            throw RunServers::ClientException("Filename is empty in Content-Disposition header");
+            throw ErrorCodeClientException(client, 400, "Filename is empty in Content-Disposition header");
     }
     else
-        throw RunServers::ClientException("Filename not found in Content-Disposition header");
+        throw ErrorCodeClientException(client, 400, "Filename not found in Content-Disposition header");
     const string contentType = "Content-Type: ";
-    size_t position = buff.find(contentType);
-
+    size_t position = buff.find(contentType); //TODO should we do something with contentType here?
     if (position == string::npos && !client._filename.empty())
-        throw RunServers::ClientException("Content-Type header not found in multipart/form-data body part");
+        throw ErrorCodeClientException(client, 400, "Content-Type header not found in multipart body");
 }
 
-static void searchContentDisposition(Client &client, string_view &buffer)
+static void parseContentDisposition(Client &client, string_view &buffer)
 {
     size_t bodyEnd = buffer.find(CRLF2);
+    if (bodyEnd == string_view::npos)
+        throw ErrorCodeClientException(client, 400, "Missing double CRLF after Content-Disposition");
+    
     string buf = string(buffer.substr(0, bodyEnd));
     HttpRequest::getBodyInfo(client, buf);
     buffer.remove_prefix(bodyEnd + CRLF2_LEN);
-    // return true;
 }
 
-static bool validateFinalCRLF(Client &client, string_view &buffer, bool &searchContentDisposition)
+static bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
 {
-    size_t foundReturn = buffer.find(CRLF);
-    if (foundReturn == 0)
+    size_t crlfPos = buffer.find(CRLF);
+    
+    // Empty line - signals start of content disposition
+    if (crlfPos == 0)
     {
         buffer.remove_prefix(CRLF_LEN);
-        searchContentDisposition = true;
-        // _foundBoundary = false;
+        needsContentDisposition = true;
         return false;
     }
-    if (foundReturn == 2 && strncmp(buffer.data(), "--\r\n", 4) == 0 && buffer.size() <= 4)
-    {
+    
+    // Check for boundary terminator "--\r\n"
+    const string terminator = string("--") + CRLF;
+    if (crlfPos == 2 && buffer.size() >= terminator.size() && 
+        strncmp(buffer.data(), terminator.data(), terminator.size()) == 0)
         return true;
-    }
     throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
 }
 
-bool correctPostSyntax(Client &client, string &input)
+bool validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
         throw ErrorCodeClientException(client, 400, "Content-Length does not match body size");
     string_view buffer = string_view(input);
     bool foundBoundary = false;
-    bool searchDisposition = false;
+    bool needsContentDisposition = false;
+    
     while (!buffer.empty())
     {
-        if (foundBoundary == true)
+        if (foundBoundary)
         {
-            if (validateFinalCRLF(client, buffer, searchDisposition) == true)
-                return true;
+            if (validateBoundaryTerminator(client, buffer, needsContentDisposition))
+                return true; // Found end of multipart data
             foundBoundary = false;
             continue;
         }
-        if (searchDisposition == true)
+        if (needsContentDisposition)
         {
-            searchContentDisposition(client, buffer);
-            searchDisposition = false;
+            parseContentDisposition(client, buffer);
+            needsContentDisposition = false;
+            continue;
         }
-        size_t boundaryFound = buffer.find(client._bodyBoundary);
-        buffer.remove_prefix(boundaryFound + client._bodyBoundary.size());
+        size_t boundaryPos = buffer.find(client._bodyBoundary);
+        if (boundaryPos == string_view::npos)
+            throw ErrorCodeClientException(client, 400, "Expected boundary not found in multipart data");
+        buffer.remove_prefix(boundaryPos + client._bodyBoundary.size());
         foundBoundary = true;
     }
-    return false;
+    throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }

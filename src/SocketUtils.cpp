@@ -4,7 +4,7 @@
 #include <RunServer.hpp>
 #include <fcntl.h>
 
-int RunServers::epollInit(/* ServerList &servers */)
+int RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
@@ -13,25 +13,45 @@ int RunServers::epollInit(/* ServerList &servers */)
         return -1;
     }
     FileDescriptor::setFD(_epfd);
-    vector<int> seenInts;
-    for (const unique_ptr<Server> &server : _servers)
+    
+	map<pair<const string, string>, int> listenersMade;
+    int fd;
+    for (auto &server : servers)
     {
-        struct epoll_event current_event;
-        current_event.events = EPOLLIN | EPOLLET;
-        for (int listener : server->getListeners())
+        for (pair<const string, string> &hostPort : server->getPortHost())
         {
-            current_event.data.fd = listener;
-            if (find(seenInts.begin(), seenInts.end(), listener) != seenInts.end())
-                continue ;
-            if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listener, &current_event) == -1)
+            auto it = listenersMade.find(hostPort);
+            if (it == listenersMade.end())
             {
-                cerr << "Server epoll_ctl: " << strerror(errno) << endl;
-                close(_epfd);
-                return -1;
+                std::cout << "porthost: " << hostPort.first << ", port: " << hostPort.second << std::endl; //testcout
+                ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
+                fd = listenerFD.getFD();
+                FileDescriptor::setFD(fd);
+                listenersMade.insert({hostPort, fd});
+                _listenFDS.push_back(fd);
+                RunServers::setEpollEvents(fd, EPOLL_CTL_ADD, EPOLLIN | EPOLLET);
             }
-            seenInts.push_back(listener);
         }
     }
+    // vector<int> seenInts;
+    // for (const unique_ptr<Server> &server : _servers)
+    // {
+    //     struct epoll_event current_event;
+    //     current_event.events = EPOLLIN | EPOLLET;
+    //     for (int listener : server->getListeners())
+    //     {
+    //         current_event.data.fd = listener;
+    //         if (find(seenInts.begin(), seenInts.end(), listener) != seenInts.end())
+    //             continue ;
+    //         if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listener, &current_event) == -1)
+    //         {
+    //             cerr << "Server epoll_ctl: " << strerror(errno) << endl;
+    //             close(_epfd);
+    //             return -1;
+    //         }
+    //         seenInts.push_back(listener);
+    //     }
+    // }
     return 0;
 }
 

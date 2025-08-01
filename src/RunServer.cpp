@@ -36,6 +36,7 @@ int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
+vector<int> RunServers::_listenFDS;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
@@ -57,7 +58,7 @@ void RunServers::createServers(vector<ConfigServer> &configs)
     {
         _servers.push_back(make_unique<Server>(Server(config)));
     }
-    Server::createListeners(_servers);
+    // Server::createListeners(_servers);
 }
 
 #include <chrono>
@@ -105,7 +106,7 @@ void RunServers::addStdinToEpoll()
 
 int RunServers::runServers()
 {
-    epollInit();
+    epollInit(_servers);
     addStdinToEpoll();
     clocking();
     while (g_signal_status == 0)
@@ -196,6 +197,7 @@ void RunServers::handleEvents(size_t eventCount)
         {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
+            std::cout << "event with fd: " << eventFD << std::endl; //testcout
 
             if (eventFD == 0 && (currentEvent.events & EPOLLIN)) {
                 char buffer[1024];
@@ -221,17 +223,21 @@ void RunServers::handleEvents(size_t eventCount)
                 cleanupClient(*_clients[currentEvent.data.fd].get());
                 continue;
             }
-            for (const unique_ptr<Server> &server : _servers)
+            if (find(_listenFDS.begin(), _listenFDS.end(), eventFD) != _listenFDS.end())
             {
-                vector<int> &listeners = server->getListeners();
-                auto it = find(listeners.begin(), listeners.end(), eventFD);
-                if (it != listeners.end() && currentEvent.events == EPOLLIN)
-                {
-                    // handltransfers = false;
-                    acceptConnection(eventFD);
-                    break;
-                }
+                acceptConnection(eventFD);
             }
+            // for (const unique_ptr<Server> &server : _servers)
+            // {
+            //     vector<int> &listeners = server->getListeners();
+            //     auto it = find(listeners.begin(), listeners.end(), eventFD);
+            //     if (it != listeners.end() && currentEvent.events == EPOLLIN)
+            //     {
+            //         // handltransfers = false;
+            //         acceptConnection(eventFD);
+            //         break;
+            //     }
+            // }
             // std::cout << '4' << std::endl;
             if (runHandleTransfer(currentEvent) == true)
                 continue;

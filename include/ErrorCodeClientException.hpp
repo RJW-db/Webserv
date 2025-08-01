@@ -17,6 +17,10 @@ class ErrorCodeClientException
         string _message;
         map<uint16_t, string> _errorPages;
 
+    void handleDefaultErrorPage() const;
+    void handleCustomErrorPage(const string &errorPagePath, int errorCode) const;
+
+
 public:
     void handleErrorClient() const;
     explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
