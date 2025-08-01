@@ -61,16 +61,6 @@ void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
     }
 }
 
-bool hasExtension(string_view filename, const string& ext)
-{
-    if (filename.size() < ext.size())
-        return false;
-
-    string fileExt(filename.substr(filename.size() - ext.size()));
-    std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), ::tolower);
-    return (fileExt == ext);
-}
-
 vector<string> createArgv(Client &client)
 {
     size_t lastSlashIndex = client._requestPath.find_last_of('/');
@@ -78,18 +68,9 @@ vector<string> createArgv(Client &client)
 
     string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
     vector<string> argvString;
-    if (hasExtension(cgiFilename, ".py"))
-    {
-        argvString.push_back("python3");
-        argvString.push_back(cgiFilename);
-    }
-    else if (hasExtension(cgiFilename, ".php"))
-    {
-        argvString.push_back("php");
-        argvString.push_back(cgiFilename);
-    }
-    else
-        argvString.push_back(cgiFilename);
+    if (!client._location.getCgiPath().empty())
+        argvString.push_back(client._location.getCgiPath());
+    argvString.push_back(cgiFilename);
     
     return argvString;
 }
@@ -112,6 +93,7 @@ vector<string> createEnvp(Client &client)
     envpString.push_back("SCRIPT_NAME=" + client._requestPath);
     envpString.push_back("SERVER_PROTOCOL=" + client._version);
     // envpString.push_back("CONTENT_TYPE=" + client._version);
+    
     
     return envpString;
 }
