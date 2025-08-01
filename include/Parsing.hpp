@@ -46,7 +46,10 @@ class Parsing
 		bool    runReadblock(void);
 		template <typename T>
 		void skipLine(string &line, bool forceSkip, T &curConf, bool skipSpace);
-		// void foundServer(std::fstream &fs, std::string line);
+		
+		// Helper methods for better organization
+		void readConfigFile(const char *input);
+		void processServerBlocks();
 
 		// ConfigServer	*_confServers;
 		// uint8_t 		_countServ;

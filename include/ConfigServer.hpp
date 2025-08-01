@@ -44,7 +44,7 @@ class ConfigServer : public AconfigServ
         bool serverName(string &line);
         int getLineNbr(void) const;
 
-        void addLocation(const Location &location, string &path);
+        void addLocation(const Location &location, string path);
 
         void setDefaultConf(void);
 

@@ -32,59 +32,61 @@ const char *ErrorCodeClientException::what() const throw()
     return _message.c_str();
 }
 
+
+void ErrorCodeClientException::handleDefaultErrorPage() const
+{
+    string message;
+    string body;
+    _client._keepAlive = false;
+    if (_errorCode == 400)
+    {
+        body = ERR400;
+        message = HttpRequest::HttpResponse(_client, 400, ".html", body.size());
+    }
+    else if (_errorCode == 500)
+    {
+        body = ERR500;
+        message = HttpRequest::HttpResponse(_client, 500, ".html", body.size());
+    }
+    else
+        throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
+    message += body;
+    send(_client._fd, message.data(), message.size(), MSG_NOSIGNAL);
+    RunServers::cleanupClient(_client);
+}
+
+void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPagePath, int errorCode) const
+{
+    int fd = open(errorPagePath.c_str(), O_RDONLY);
+    if (fd == -1)
+    {
+        RunServers::cleanupClient(_client);
+        throw runtime_error("Couldn't open errorpage: " + errorPagePath);
+    }
+    size_t fileSize = getFileLength(errorPagePath.c_str());
+    _client._filenamePath = errorPagePath;
+    FileDescriptor::setFD(fd);
+    string response = HttpRequest::HttpResponse(_client, errorCode, errorPagePath, fileSize);
+    auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
+    RunServers::insertHandleTransfer(move(transfer));
+}
+
 void ErrorCodeClientException::handleErrorClient() const
 {
     std::cerr << "errorCodeClient: " << _message << std::endl;
     if (_errorCode == 0)
     {
-        // RunServers::clientHttpCleanup(_client);
         RunServers::cleanupClient(_client);
-        return ;
+        return;
     }
     auto it = _errorPages.find(_errorCode);
     if (it == _errorPages.end())
     {
-        string message;
-        string body;
-        _client._keepAlive = false;
-        if (_errorCode == 400)
-        {
-            body = ERR400;
-            message = HttpRequest::HttpResponse(_client, 400, ".html", body.size());
-        }
-        else if (_errorCode == 500)
-        {
-            body = ERR500;
-            message = HttpRequest::HttpResponse(_client, 500, ".html", body.size());
-        }
-        else
-            throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
-        message += body;
-        send(_client._fd, message.data(), message.size(), MSG_NOSIGNAL);
-        RunServers::cleanupClient(_client);
+        handleDefaultErrorPage();
         return;
     }
-    int fd = open(it->second.c_str(), O_RDONLY);
-    if (fd == -1)
-    {
-    RunServers::cleanupClient(_client);
-        throw runtime_error("Couldn't open errorpage: " + it->second);
-    }
-    size_t fileSize = getFileLength(it->second.c_str());
-    _client._filenamePath = it->second;  // test
-    FileDescriptor::setFD(fd);
-    string response = HttpRequest::HttpResponse(_client, it->first, it->second, fileSize);
-    auto transfer = make_unique<HandleTransfer>(_client, fd, response, fileSize);
-    // _client._keepAlive = false; // TODO: check if this is needed
-    RunServers::insertHandleTransfer(move(transfer));
+    handleCustomErrorPage(it->second, it->first);
 }
 
-uint16_t ErrorCodeClientException::getErrorCode() const
-{
-    return _errorCode;
-}
-
-string ErrorCodeClientException::getMessage() const
-{
-    return _message;
-}
+uint16_t ErrorCodeClientException::getErrorCode() const { return _errorCode; }
+string ErrorCodeClientException::getMessage() const { return _message; }

@@ -1,0 +1,3 @@
+This is my manual text content that I want to send to the webserver.
+It can contain multiple lines.
+And any text content I want to upload.

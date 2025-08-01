@@ -42,7 +42,7 @@ class RunServers
         // RunServers(tmp_t *serverConf);
         ~RunServers();
 
-        static int epollInit(/* ServerList &servers */);
+        static int epollInit(ServerList &servers);
         static void addStdinToEpoll();
 
 		static void createServers(vector<ConfigServer> &configs);
@@ -140,7 +140,7 @@ class RunServers
         // static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleTransfer>> _handle;
-
+        static vector<int> _listenFDS;
         static unordered_map<int, unique_ptr<Client>> _clients;
 
         static int _level;

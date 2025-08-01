@@ -16,8 +16,6 @@ class Alocation : public Aconfig
 	public:
 		Alocation &operator=(const Alocation &other);
 
-		array<string, 3> getMethods() const;
-        // bool containsMethod(const char *method);
         uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
 		string getExtension() const;
@@ -44,12 +42,12 @@ class Location : public Alocation
 		Location &operator=(const Location &other);
 		~Location() = default;
 
-		string getLocationPath(string &line);
+		void getLocationPath(string &line);
 
 		bool methods(string &line);
 		bool indexPage(string &line);
 		bool uploadStore(string &line);
-		bool extension(string &line);
+		bool cgiExtension(string &line);
 		bool cgiPath(string &line);
 
 		void SetDefaultLocation(Aconfig &curConf);

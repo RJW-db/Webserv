@@ -35,10 +35,15 @@ void    HttpRequest::validateHEAD(Client &client)
         // exit(0);
     }
 
-    // locateRequestedFile(client);
+
+
+    RunServers::setServer(client);
+    RunServers::setLocation(client);
+        // locateRequestedFile(client);
     struct stat status;
 
-    string reqPath = '.' + client._requestPath;
+    string reqPath = client._location.getRoot() + client._requestPath;
+
     if (stat(reqPath.data(), &status) == -1)
     {
         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
@@ -50,8 +55,6 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
     }
 
-    RunServers::setServer(client);
-    RunServers::setLocation(client);
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == 0)
     {

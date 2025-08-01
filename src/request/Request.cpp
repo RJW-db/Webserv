@@ -185,6 +185,8 @@ void HttpRequest::SendAutoIndex(Client &client)
     int sent = send(client._fd, response.data(), response.size(), 0);
     if (sent == -1)
         throw ErrorCodeClientException(client, 500, "Failed to send autoindex response: " + string(strerror(errno)));
+    if (client._keepAlive == false)
+        RunServers::cleanupClient(client);
 }
 
 void HttpRequest::findIndexFile(Client &client, struct stat &status)
@@ -294,10 +296,10 @@ void HttpRequest::GET(Client &client)
         throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
 
     FileDescriptor::setFD(fd);
-    if (true)
-    {
-        handleCgi(client);
-    }
+    // if (true)
+    // {
+    //     handleCgi(client);
+    // }
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
@@ -314,7 +316,7 @@ void HttpRequest::getContentLength(Client &client)
     try
     {
         uint64_t value = stoullSafe(content);
-        if (static_cast<size_t>(value) > client._location.getClientBodySize())
+        if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
             throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
         if (value == 0)
             throw RunServers::ClientException("Content-Length cannot be zero.");
@@ -326,11 +328,31 @@ void HttpRequest::getContentLength(Client &client)
     }
 }
 
+void HttpRequest::redirectRequest(Client &client)
+{
+    pair<uint16_t, string> redirectPair = client._location.getReturnRedirect();
+    string response = HttpResponse(client, redirectPair.first, "", 0);
+    size_t index = response.find_first_of(CRLF);
+    string locationHeader = "Location: " + redirectPair.second + CRLF;
+    response.insert(index + CRLF_LEN, locationHeader);
+    int sent = send(client._fd, response.data(), response.size(), 0);
+    if (sent == -1)
+        throw ErrorCodeClientException(client, 500, "Failed to send redirect response: " + string(strerror(errno)));
+    
+}
+
 void HttpRequest::handleRequest(Client &client)
 {
     if (client._rootPath.find("/favicon.ico") != string::npos)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
+    if (client._location.getReturnRedirect().first > 0)
+    {
+        std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
 
+        redirectRequest(client);
+        RunServers::clientHttpCleanup(client);
+        return ;
+    }
     switch (client._useMethod)
     {
     case 1: // HEAD
@@ -358,7 +380,7 @@ void HttpRequest::handleRequest(Client &client)
             case BODY_CHUNKED:
             {
                 // handleChunks(client);
-                // client._contentLength = client._location.getClientBodySize();
+                // client._contentLength = client._location.getClientMaxBodySize();
                 client._contentLength = 0;
                 unique_ptr<HandleTransfer> handle;
                 handle = make_unique<HandleTransfer>(client);
@@ -432,6 +454,11 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
     static const map<uint16_t, string> responseCodes = {
         {200, "OK"},
         {201, "Created"},
+        {301, "Moved Permanently"},
+        {302, "Found"},
+        {303, "See Other"},
+        {307, "Temporary Redirect"},
+        {308, "Permanent Redirect"},
         {400, "Bad Request"},
         {403, "Forbidden"},
         {404, "Not Found"},

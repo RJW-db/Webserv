@@ -1,5 +1,6 @@
 
 dingen die nog moeten worden geimplementeerd: upload_store, autoindex, return (redirect)
+zorgen dat voor chunked max_body_size wordt gechecked
 
 voor upload store implementeren voor post
 

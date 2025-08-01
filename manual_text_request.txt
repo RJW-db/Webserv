@@ -1,0 +1,33 @@
+POST /upload HTTP/1.1
+Host: localhost:8080
+User-Agent: Manual-Client/1.0
+Accept: */*
+Content-Type: multipart/form-data; boundary=----ManualFormBoundary123456789
+Content-Length: 604
+Connection: keep-alive
+
+
+------ManualFormBoundary123456789
+Content-Disposition: form-data; name="myfile"; filename="manual_text.txt"
+Content-Type: text/plain
+
+This is my manual text content that I want to send to the webserver.
+It can contain multiple lines.
+And any text content I want to upload.
+
+------ManualFormBoundary123456789
+Content-Disposition: form-data; name="secondfile"; filename="config.json"
+Content-Type: application/json
+
+{
+  "server": {
+    "port": 8080,
+    "host": "localhost"
+  },
+  "upload": {
+    "enabled": true,
+    "max_size": "10MB"
+  }
+}
+
+------ManualFormBoundary123456789--

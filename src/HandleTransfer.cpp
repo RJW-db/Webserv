@@ -114,20 +114,8 @@ int HandleTransfer::validateFinalCRLF()
         _foundBoundary = false;
         return 2;
     }
-    if (foundReturn != 2 && foundReturn != string::npos)
-        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
-    for (size_t i = 0; i < _fileBuffer.size(); ++i)
+    if (foundReturn == 2 && strncmp(_fileBuffer.data(), "--\r\n", 4) == 0 && _fileBuffer.size() <= 4)
     {
-        char c = _fileBuffer[i];
-        if (c != '-' && c != '\r' && c != '\n')
-        {
-            errorPostTransfer(_client, 400, "post request has invalid characters after boundary");
-        }
-    }
-    if (foundReturn == 2 && foundReturn + 2 == _fileBuffer.size())
-    {
-        // if (_bytesReadTotal != _client._contentLength)
-        //     throw ErrorCodeClientException(_client, 400, "post request has wrong content length: " + to_string(_bytesReadTotal) + ", expected: " + to_string(_client._contentLength));
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
