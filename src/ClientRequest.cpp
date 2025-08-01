@@ -11,7 +11,7 @@ void    RunServers::setLocation(Client &client)
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
-            std::cout << "location used: " << locationPair.first << std::endl; //testcout
+            // std::cout << "location used: " << locationPair.first << std::endl; //testcout
             return;
         }
     }

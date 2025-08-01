@@ -4,86 +4,65 @@
 #include <RunServer.hpp>
 
 // Static Functions
-static string percentDecode(const string& input);
-static bool isValidAndNormalizeRequestPath(Client &client);
-static bool pathContainsInvalidCharacters(const string &path);
-static vector<string_view> splitPathSegments(const string &path);
-static vector<string_view> normalizeSegments(const vector<string_view> &segments);
-static void    joinSegmentsToPath(string &path, const vector<string_view> &segments);
-static void    validatePathAndSegmentLengths(Client &client, const vector<string_view> &segments);
-static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods);
+static uint8_t              checkAllowedMethod(string &method, uint8_t allowedMethods);
+static void                 parseRequestPath(Client &client);
+static string               percentDecode(const string& input);
+static bool                 isValidAndNormalizeRequestPath(Client &client);
+static bool                 pathContainsInvalidCharacters(const string &path);
+static vector<string_view>  splitPathSegments(const string &path);
+static vector<string_view>  normalizeSegments(const vector<string_view> &segments);
+static void                 joinSegmentsToPath(string &path, const vector<string_view> &segments);
+static void                 validatePathAndSegmentLengths(Client &client, const vector<string_view> &segments);
+static void                 validateResourceAccess(Client &client);
+static void                 detectCgiRequest(Client &client);
 
 void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
     headStream >> client._method >> client._requestPath >> client._version;
 
-    client._requestPath = percentDecode(client._requestPath);
-    if (client._method.empty() || client._requestPath.empty() || client._version.empty())
-    {
+    if (client._method.empty() || client._version.empty())
         throw ErrorCodeClientException(client, 400, "Malformed request line");
-    }
 
-    size_t queryPos = client._requestPath.find('?');
-    if (queryPos != string::npos)
-    {
-        // std::cout << client._requestPath << std::endl; //testcout
-        client._queryString = client._requestPath.substr(queryPos + 1);
-        client._requestPath = client._requestPath.substr(0, queryPos);
-        // std::cout << client._requestPath << std::endl; //testcout
-        // std::cout << client._queryString << std::endl; //testcout
-        // exit(0);
-    }
-
-
-
+    parseRequestPath(client);
     RunServers::setServer(client);
     RunServers::setLocation(client);
-        // locateRequestedFile(client);
-    struct stat status;
-
-    string reqPath = client._location.getRoot() + client._requestPath;
-
-    if (stat(reqPath.data(), &status) == -1)
-    {
-        throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
-    }
-    if (S_ISDIR(status.st_mode) == false &&
-       (S_ISREG(status.st_mode) == false || //  a boolean for dir or file, because a filename like cgi.py could also be a dir
-        access(reqPath.data(), R_OK) != 0))
-    {
-        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
-    }
+    validateResourceAccess(client);
 
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == 0)
-    {
         throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
-    }
 
-    if (isValidAndNormalizeRequestPath(client) == false)
-    {
-        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
-    }
     if (client._version != "HTTP/1.1")
-    {
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
-    }
+}
 
-    size_t lastSlashIndex = client._requestPath.find_last_of('/');
-    if (lastSlashIndex != string::npos)
+static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
+{
+    if (method == "HEAD" && allowedMethods & 1)
+        return 1;
+    if (method == "GET" && allowedMethods & 2)
+        return 2;
+    if (method == "POST" && allowedMethods & 4)
+        return 4;
+    if (method == "DELETE" && allowedMethods & 8)
+        return 8;
+    return 0;
+}
+
+static void parseRequestPath(Client &client)
+{
+    size_t queryPos = client._requestPath.find('?');
+    if (queryPos != string::npos)
     {
-        string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
-        size_t hasExt = cgiFilename.find_last_of('.');
-
-        if (hasExt == string::npos)
-        {
-            if (string_view(cgiFilename.data() + hasExt) == client._location.getCgiExtension());
-                client._isCgi = true;
-        }
-        else if (cgiFilename == client._location.getCgiExtension())
-            client._isCgi = true;
+        client._queryString = client._requestPath.substr(queryPos + 1);
+        client._requestPath = client._requestPath.substr(0, queryPos);
     }
+    
+    client._requestPath = percentDecode(client._requestPath);
+    
+    if (isValidAndNormalizeRequestPath(client) == false)
+        throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
 }
 
 static string percentDecode(const string& input)
@@ -193,15 +172,41 @@ static void    validatePathAndSegmentLengths(Client &client, const vector<string
     }
 }
 
-static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
+static void validateResourceAccess(Client &client)
 {
-    if (method == "HEAD" && allowedMethods & 1)
-        return 1;
-    if (method == "GET" && allowedMethods & 2)
-        return 2;
-    if (method == "POST" && allowedMethods & 4)
-        return 4;
-    if (method == "DELETE" && allowedMethods & 8)
-        return 8;
-    return 0;
+    struct stat status;
+    string reqPath = client._location.getRoot() + client._requestPath;
+    if (stat(reqPath.data(), &status) == -1)
+        throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
+
+    if (S_ISDIR(status.st_mode) == true)    
+    {
+        if (access(reqPath.data(), R_OK | X_OK) != 0)
+            throw ErrorCodeClientException(client, 403, "Forbidden: No permission to access directory");
+    }
+    else if (S_ISREG(status.st_mode) == true)
+    {
+        if (access(reqPath.data(), R_OK) != 0)
+            throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
+        detectCgiRequest(client);
+    }
+    else
+        throw ErrorCodeClientException(client, 404, "Not a regular file or directory");
+}
+
+static void detectCgiRequest(Client &client)
+{
+    size_t lastSlashIndex = client._requestPath.find_last_of('/');
+    if (lastSlashIndex != string::npos && lastSlashIndex > 1)
+    {
+        string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
+        size_t hasExt = cgiFilename.find_last_of('.');
+        if (hasExt != string::npos)
+        {
+            if (string_view(cgiFilename.data() + hasExt) == client._location.getCgiExtension())
+                client._isCgi = true;
+        }
+        else if (cgiFilename == client._location.getCgiExtension())
+            client._isCgi = true;
+    }
 }

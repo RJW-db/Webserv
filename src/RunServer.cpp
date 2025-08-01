@@ -199,7 +199,6 @@ void RunServers::handleEvents(size_t eventCount)
         {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
-            std::cout << "event with fd: " << eventFD << std::endl; //testcout
 
             if (eventFD == 0 && (currentEvent.events & EPOLLIN)) {
                 char buffer[1024];
