@@ -3,8 +3,10 @@
 
 // Constants for better readability
 namespace {
+	const char *WHITESPACE_SEMICOLON = " \t\f\v\r;";
     const char* WHITESPACE_OPEN_BRACKET = " \t\f\v\r{";
-    
+	// const char *INVALID_CHARACTERS =
+
     // HTTP method bit flags
     const uint8_t HEAD_METHOD_BIT = 1;
     const uint8_t GET_METHOD_BIT = 2;
@@ -34,27 +36,27 @@ void Location::getLocationPath(string &line)
 		len = line.length();
 	_locationPath = line.substr(0, len);
     line = line.substr(len);
-    
+
     // Location paths must start with '/'
 	if (_locationPath[0] != '/')
-		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path '" + 
-                           _locationPath + "' - must start with '/'");	
+		throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path '" +
+                           _locationPath + "' - must start with '/'");
 }
 
 bool Location::checkMethodEnd(bool &findColon, string &line)
 {
 	static int expectedTokenIndex = 0;
 	const string expectedTokens[5] = {"{", "deny", "all", ";", "}"};
-    
-	if (strncmp(line.c_str(), expectedTokens[expectedTokenIndex].c_str(), 
+
+	if (strncmp(line.c_str(), expectedTokens[expectedTokenIndex].c_str(),
                 expectedTokens[expectedTokenIndex].length()) == 0)
 	{
 		if (_allowedMethods == 0)
 			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods specified for limit_except directive");
-            
+
 		line = line.substr(expectedTokens[expectedTokenIndex].length());
 		++expectedTokenIndex;
-        
+
         // Check if we've found all expected tokens
 		if (expectedTokenIndex == 5)
 		{
@@ -64,7 +66,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 		return true;
 	}
 	else if (expectedTokenIndex != 0)
-		throw runtime_error(to_string(_lineNbr) + ": limit_except: expected '" + 
+		throw runtime_error(to_string(_lineNbr) + ": limit_except: expected '" +
                            expectedTokens[expectedTokenIndex] + "' after limit_except directive");
 	return false;
 }
@@ -135,19 +137,35 @@ bool Location::uploadStore(string &line)
 	return (handleNearEndOfLine(line, len, "upload_store"));
 }
 
-bool Location::cgiExtension(string &line)
+bool Location::cgiExtensions(string &line)
 {
-	if (!_cgiExtension.empty())
-		throw runtime_error(to_string(_lineNbr) + "extension: tried creating second extension");
-	size_t len = line.find_first_of(" \t\f\v\r;");
-	if (len == string::npos)
+	if (line[0] == ';')
 	{
-		_cgiExtension = line;
-		return false;
+		line.erase(0, 1);
+		return true;
 	}
-	_cgiExtension = line.substr(0, len);
-	return (handleNearEndOfLine(line, len, "extension"));
+	size_t len = line.find_first_of(WHITESPACE_SEMICOLON);
+	if (len == string::npos)
+		len = line.length();
+	string extension = line.substr(0, len);
+	_cgiExtension.push_back(extension);
+	line = line.substr(len);
+	return false;
 }
+
+// bool Location::cgiExtension(string &line)
+// {
+// 	if (!_cgiExtension.empty())
+// 		throw runtime_error(to_string(_lineNbr) + "extension: tried creating second extension");
+// 	size_t len = line.find_first_of(" \t\f\v\r;");
+// 	if (len == string::npos)
+// 	{
+// 		_cgiExtension = line;
+// 		return false;
+// 	}
+// 	_cgiExtension = line.substr(0, len);
+// 	return (handleNearEndOfLine(line, len, "extension"));
+// }
 
 bool Location::cgiPath(string &line)
 {
@@ -170,7 +188,7 @@ void Location::SetDefaultLocation(Aconfig &curConf)
         _autoIndex = curConf.getAutoIndex();
     if (_root.empty())
         _root = curConf.getRoot();
-	else 
+	else
 		_root.insert(0, ".");
 	if (_root[_root.size() - 1] == '/' && _root.size() > 2)
 		_root = _root.substr(0, _root.size() - 1);
@@ -202,11 +220,11 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 		else
 			indexPage = _root + "/" + indexPage;
 	}
-    
+
     // Set default upload store to root if not specified
 	if (_upload_store.empty())
 	    _upload_store = _root;
-    
+
     setDefaultErrorPages();
 }
 
@@ -232,7 +250,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 }
 
 string Alocation::getUploadStore() const { return _upload_store; }
-string Alocation::getExtension() const { return _cgiExtension; }
+vector<string> Alocation::getExtension() const { return _cgiExtension; }
 string Alocation::getCgiPath() const { return _cgiPath; }
 string Alocation::getPath() const { return _locationPath; }
 uint8_t Alocation::getAllowedMethods() const { return _allowedMethods; }
