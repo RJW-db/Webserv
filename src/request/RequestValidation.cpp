@@ -194,7 +194,9 @@ static void validateResourceAccess(Client &client)
             throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
         detectCgiRequest(client);
         if (client._useMethod & (METHOD_HEAD | METHOD_GET))
-		    client._filenamePath = reqPath;
+        {
+            client._filenamePath = reqPath;
+        }
     }
     else
         throw ErrorCodeClientException(client, 404, "Not a regular file or directory");

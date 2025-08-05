@@ -285,12 +285,6 @@ string HttpRequest::getMimeType(string &path)
 
 void HttpRequest::GET(Client &client)
 {
-    if (client._isCgi)
-    {
-        handleCgi(client);
-        return;
-    }
-
     // locateRequestedFile(client);
     if (client._isAutoIndex == true)   // TODO check, is this check every possible at all
     {
@@ -356,6 +350,13 @@ void HttpRequest::handleRequest(Client &client)
         RunServers::clientHttpCleanup(client);
         return ;
     }
+
+    if (client._isCgi)
+    {
+        handleCgi(client);
+        return;
+    }
+
     switch (client._useMethod)
     {
     case 1: // HEAD

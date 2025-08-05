@@ -57,11 +57,9 @@ int main() {
     std::cout << "<h3>Environment Info:</h3><ul>";
     std::cout << "<li>REQUEST_METHOD: " << method << "</li>";
     std::cout << "<li>QUERY_STRING: " << (getenv("QUERY_STRING") ? getenv("QUERY_STRING") : "") << "</li>";
-    std::cout << "</ul>";
+    std::cout << "</ul>\n";
 
     // HTML end
     std::cout << "</body></html>\n";
-
-    std::cout << "\nwe were hererererere" << std::endl; //testcout
     return 0;
 }

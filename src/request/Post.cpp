@@ -27,7 +27,8 @@ bool HttpRequest::processHttpBody(Client &client)
         HandleTransfer handle(client);
         if (/* handle.validateMultipartPostSyntax(client, client._body) ==  */true)
         {
-            HttpRequest::handleCgi(client);
+            client._isCgi = true;
+            // HttpRequest::handleCgi(client);
             // send body to pipe for stdin of cgi
         }
         return true;

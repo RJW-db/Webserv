@@ -78,14 +78,6 @@ vector<string> createArgv(Client &client)
 
 vector<string> createEnvp(Client &client)
 {
-    // vector<string> envpString = {
-    //     "REQUEST_METHOD=GET",
-    //     "CONTENT_LENGTH=0",
-    //     "QUERY_STRING=name=ChatGPT&lang=cpp",
-    //     "SCRIPT_NAME=/cgi-bin/cgi",
-    //     "SERVER_PROTOCOL=HTTP/1.1",
-    //     "CONTENT_TYPE=text/plain",
-    //     "GATEWAY_INTERFACE=CGI/1.1"
     vector<string> envpString;
     envpString.push_back("REQUEST_METHOD=" + client._method);
     envpString.push_back("CONTENT_LENGTH=" + to_string(client._body.size()));
@@ -94,9 +86,20 @@ vector<string> createEnvp(Client &client)
     envpString.push_back("SCRIPT_NAME=" + client._requestPath);
     envpString.push_back("SERVER_PROTOCOL=" + client._version);
     if (client._useMethod & METHOD_POST)
-        envpString.push_back("CONTENT_TYPE=" + string(client._contentType));
+    {
+        string contentType = string(client._contentType);
+        envpString.push_back("CONTENT_TYPE=" + string(contentType));
+        if (contentType == "multipart/form-data")
+            envpString.push_back("HTTP_CONTENT_BOUNDARY=" + contentType);
+    }
     
-    
+    envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
+    envpString.push_back("SERVER_NAME=" + client._usedServer->getServerName());
+    // envpString.push_back("SERVER_PORT=" + client._usedServer->getPortHost());
+
+    envpString.push_back("DOCUMENT_ROOT=" + client._location.getRoot());
+
+        
     return envpString;
 }
 
@@ -121,18 +124,18 @@ void printVecArray(vector<char *> &args)
 
 void child(Client &client, int in_pipe[2], int out_pipe[2])
 {
-    // setupChildPipes(client, in_pipe, out_pipe);
-    // closing_pipes(in_pipe, out_pipe);
+    setupChildPipes(client, in_pipe, out_pipe);
+    closing_pipes(in_pipe, out_pipe);
 
     vector<string> argvString = createArgv(client);
     vector<char *> argv = convertToCharArray(argvString);
-    printVecArray(argv);
+    // printVecArray(argv);
 
     vector<string> envpString = createEnvp(client);
     vector<char *> envp= convertToCharArray(envpString);
-    printVecArray(envp);
+    // printVecArray(envp);
 
-exit(0);
+// exit(0);
     execve(argv[0], argv.data(), envp.data());
     perror("execve failed");
     close(STDIN_FILENO);
@@ -163,20 +166,24 @@ void HttpRequest::handleCgi(Client &client)
     }
 
     if (pid == CHILD) {
+        size_t pos = client._rootPath.find_last_of('/');
+        string dirPath = client._rootPath.substr(0, pos);
+        std::cout << "dirpath: " << dirPath << std::endl; //testcout
+        chdir(dirPath.data());
         child(client, in_pipe, out_pipe);
     }
 
     if (pid >= PARENT)
     {
         sleep(3);
-        exit(0);
+        // exit(0);
         close(in_pipe[0]);    // parent doesn't read from stdin
         close(out_pipe[1]);   // parent doesn't write to stdout
         
         RunServers::setEpollEvents(out_pipe[0], EPOLL_CTL_ADD, EPOLLIN);
         RunServers::setEpollEvents(in_pipe[1], EPOLL_CTL_ADD, EPOLLOUT);
 
-        write(in_pipe[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
+        // write(in_pipe[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
         sleep(5);
         int ret;
         do
