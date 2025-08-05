@@ -27,14 +27,15 @@ void    HttpRequest::validateHEAD(Client &client)
     parseRequestPath(client);
     RunServers::setServer(client);
     RunServers::setLocation(client);
-    validateResourceAccess(client);
-
+    
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == 0)
         throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
-
+    
     if (client._version != "HTTP/1.1")
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
+    
+    validateResourceAccess(client);
 }
 
 static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
@@ -183,12 +184,17 @@ static void validateResourceAccess(Client &client)
     {
         if (access(reqPath.data(), R_OK | X_OK) != 0)
             throw ErrorCodeClientException(client, 403, "Forbidden: No permission to access directory");
+        
+        if (client._useMethod & 1 /* HEAD */ + 2 /* GET */)
+            HttpRequest::findIndexFile(client, status);
     }
     else if (S_ISREG(status.st_mode) == true)
     {
         if (access(reqPath.data(), R_OK) != 0)
             throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
         detectCgiRequest(client);
+        if (client._useMethod & 1 /* HEAD */ + 2 /* GET */)
+		    client._filenamePath = reqPath;
     }
     else
         throw ErrorCodeClientException(client, 404, "Not a regular file or directory");

@@ -172,13 +172,19 @@ void RunServers::clientHttpCleanup(Client &client)
     client._header.clear();
     client._body.clear();
     client._requestPath.clear();
+    client._queryString.clear();
     client._method.clear();
+    client._useMethod = 0;
     client._contentLength = 0;
     client._headerFields.clear();
     client._rootPath.clear();
 	client._filenamePath.clear();
-    client._name = "";
+    client._name.clear();
+    client._version.clear();
+    client._bodyEnd = 0;
+    client._filename.clear();
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+    client._isAutoIndex = false;
 }
 
 void RunServers::cleanupFD(int fd)

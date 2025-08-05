@@ -56,6 +56,7 @@ class Client
         string _name;
         string_view _fileContent;
 
+        bool _isAutoIndex = false;
   
 
         chrono::steady_clock::time_point _disconnectTime;

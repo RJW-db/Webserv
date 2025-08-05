@@ -216,7 +216,8 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
 
     if (client._location.getAutoIndex() == true)
     {
-        SendAutoIndex(client);
+        client._isAutoIndex = true;
+        // SendAutoIndex(client);
         return;
     }
     else
@@ -225,31 +226,31 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
     }
 }
 
-void HttpRequest::locateRequestedFile(Client &client)
-{
-    struct stat status;
+// void HttpRequest::locateRequestedFile(Client &client)
+// {
+//     struct stat status;
 
-    if (stat(client._rootPath.data(), &status) == -1)
-    {
-        throw ErrorCodeClientException(client, 404, "Couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
-    }
-    if (S_ISDIR(status.st_mode))
-    {
-        findIndexFile(client, status);
-    }
-    else if (S_ISREG(status.st_mode))
-    {
-        if (access(client._rootPath.data(), R_OK) == -1)
-        {
-            cerr << "locateRequestedFile: " << strerror(errno) << endl;
-        }
-		client._filenamePath = client._rootPath;
-    }
-    else
-    {
-        throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
-    }
-}
+//     if (stat(client._rootPath.data(), &status) == -1)
+//     {
+//         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + client._rootPath + ", because: " + string(strerror(errno)));
+//     }
+//     if (S_ISDIR(status.st_mode))
+//     {
+//         findIndexFile(client, status);
+//     }
+//     else if (S_ISREG(status.st_mode))
+//     {
+//         if (access(client._rootPath.data(), R_OK) == -1)
+//         {
+//             cerr << "locateRequestedFile: " << strerror(errno) << endl;
+//         }
+// 		client._filenamePath = client._rootPath;
+//     }
+//     else
+//     {
+//         throw ErrorCodeClientException(client, 404, "Forbidden: Not a regular file or directory");
+//     }
+// }
 
 string HttpRequest::getMimeType(string &path)
 {
@@ -285,9 +286,11 @@ string HttpRequest::getMimeType(string &path)
 void handleCgi(Client &client);
 void HttpRequest::GET(Client &client)
 {
-    locateRequestedFile(client);
-    if (client._filenamePath.empty())
+
+    // locateRequestedFile(client);
+    if (client._isAutoIndex == true)   // TODO check, is this check every possible at all
     {
+        SendAutoIndex(client);
         RunServers::clientHttpCleanup(client);
         return ;
     }
@@ -296,10 +299,11 @@ void HttpRequest::GET(Client &client)
         throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
 
     FileDescriptor::setFD(fd);
-    // if (true)
-    // {
-    //     handleCgi(client);
-    // }
+    if (client._isCgi)
+    {
+        handleCgi(client);
+        return;
+    }
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
@@ -357,7 +361,7 @@ void HttpRequest::handleRequest(Client &client)
     {
     case 1: // HEAD
     {
-        locateRequestedFile(client);
+        // locateRequestedFile(client);
         string response = HttpRequest::HttpResponse(client, 200, "txt", 0);
         send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
         break;

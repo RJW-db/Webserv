@@ -79,7 +79,7 @@ class HttpRequest
 
         static void	GET(Client &client);
         static void    findIndexFile(Client &client, struct stat &status);
-        static void    locateRequestedFile(Client &client);
+        // static void    locateRequestedFile(Client &client);
         static void    SendAutoIndex(Client &client);
 
         static string getMimeType(string &path);
