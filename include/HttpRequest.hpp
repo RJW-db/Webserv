@@ -91,6 +91,7 @@ class HttpRequest
         static void decodeSafeFilenameChars(Client &client);
         static ContentType getContentType(Client &client);
 
+        static void handleCgi(Client &client);
         // static void handleChunks(Client &client);
 
 

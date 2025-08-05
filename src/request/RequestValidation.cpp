@@ -40,13 +40,13 @@ void    HttpRequest::validateHEAD(Client &client)
 
 static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
 {
-    if (method == "HEAD" && allowedMethods & 1)
+    if (method == "HEAD" && allowedMethods & METHOD_HEAD)
         return 1;
-    if (method == "GET" && allowedMethods & 2)
+    if (method == "GET" && allowedMethods & METHOD_GET)
         return 2;
-    if (method == "POST" && allowedMethods & 4)
+    if (method == "POST" && allowedMethods & METHOD_POST)
         return 4;
-    if (method == "DELETE" && allowedMethods & 8)
+    if (method == "DELETE" && allowedMethods & METHOD_DELETE)
         return 8;
     return 0;
 }
@@ -188,7 +188,7 @@ static void validateResourceAccess(Client &client)
         if (access(reqPath.data(), R_OK | X_OK) != 0)
             throw ErrorCodeClientException(client, 403, "Forbidden: No permission to access directory");
         
-        if (client._useMethod & 1 /* HEAD */ + 2 /* GET */)
+        if (client._useMethod & (METHOD_HEAD | METHOD_GET))
             HttpRequest::findIndexFile(client, status);
     }
     else if (S_ISREG(status.st_mode) == true)
@@ -196,7 +196,7 @@ static void validateResourceAccess(Client &client)
         if (access(reqPath.data(), R_OK) != 0)
             throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
         detectCgiRequest(client);
-        if (client._useMethod & 1 /* HEAD */ + 2 /* GET */)
+        if (client._useMethod & (METHOD_HEAD | METHOD_GET))
 		    client._filenamePath = reqPath;
     }
     else

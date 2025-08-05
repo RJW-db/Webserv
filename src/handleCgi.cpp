@@ -4,6 +4,7 @@
 #include <RunServer.hpp>
 #include <Client.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <HttpRequest.hpp>
 
 #define PASS_TO_CGI "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" \
     "Content-Disposition: form-data; name=\"file\"; filename=\"chunk_test1.txt\"\r\n" \
@@ -92,7 +93,8 @@ vector<string> createEnvp(Client &client)
         envpString.push_back("QUERY_STRING=" + client._queryString);    // test http://localhost:8080/cgi-bin/cgi.py?WORK=YUR
     envpString.push_back("SCRIPT_NAME=" + client._requestPath);
     envpString.push_back("SERVER_PROTOCOL=" + client._version);
-    // envpString.push_back("CONTENT_TYPE=" + client._version);
+    if (client._useMethod & METHOD_POST)
+        envpString.push_back("CONTENT_TYPE=" + string(client._contentType));
     
     
     return envpString;
@@ -138,7 +140,7 @@ exit(0);
     exit(EXIT_FAILURE);
 }
 
-void handleCgi(Client &client)
+void HttpRequest::handleCgi(Client &client)
 {
     int in_pipe[2] = { -1, -1 };   // Server → CGI (stdin)
     int out_pipe[2] = { -1, -1 };  // CGI → Server (stdout)

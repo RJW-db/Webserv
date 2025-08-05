@@ -14,7 +14,6 @@ void sigint_handler(int signum)
     g_signal_status = signum;
 }
 #include <fcntl.h>
-// void handleCgi(Client &client);
 int main(int argc, char *argv[])
 {
     // Client client(1);

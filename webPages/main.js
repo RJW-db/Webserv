@@ -77,6 +77,47 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('fileInput').value = '';
   });
 
+  // Handle CGI file upload
+  document.getElementById('cgiUploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const files = document.getElementById('cgiFileInput').files;
+    const gallery = document.getElementById('gallery');
+    const status = document.getElementById('cgiStatus');
+    status.textContent = '';
+
+    // Upload each file individually to CGI
+    Array.from(files).forEach(file => {
+      const formData = new FormData();
+      formData.append('myfile', file);
+
+      fetch('/cgi-bin/cgi.py', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => {
+        if (result && result !== 'Upload failed.') {
+          status.textContent = 'CGI Upload successful!';
+          status.style.color = 'green';
+          
+          // You can add image display logic here if your CGI returns a filename
+          // Similar to the regular upload handler
+        } else {
+          status.textContent = 'CGI Upload failed.';
+          status.style.color = '#b00';
+        }
+      })
+      .catch(error => {
+        status.textContent = 'CGI Error: ' + error;
+        status.style.color = '#b00';
+      });
+    });
+
+    // Clear the file input
+    document.getElementById('cgiFileInput').value = '';
+  });
+
   // Handle delete by filename
   document.getElementById('deletePathBtn').addEventListener('click', function() {
     const filename = document.getElementById('deleteFileInput').value.trim();
