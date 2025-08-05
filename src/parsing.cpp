@@ -69,7 +69,7 @@ bool    Parsing::runReadblock()
     size_t  skipSpace;
 	if (validSyntax == false)
 		throw runtime_error(to_string(_lines.begin()->first) + ": invalid syntax: " + _lines.begin()->second);
-    
+
     if (_lines.begin()->second[0] == '}')
     {
         _lines.begin()->second =  _lines.begin()->second.substr(1);
@@ -87,7 +87,7 @@ bool    Parsing::runReadblock()
  * @param forceSkip for forcing rest of current line to be skipped and removed
  * @param curConf Config to set new lineNbr
  * @param shouldSkipSpace for setting if trimleadingWhiteSpace should be run
- * 
+ *
  */
 template <typename T>
 void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkipSpace)
@@ -125,7 +125,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         skipLine(line, false, block, true);
         if (line[0] != '{')
             throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
-        line = line.substr(1);
+        line = line.erase(0, 1);
         skipLine(line, false, block, false);
         const map<string, bool (Location::*)(string &)> cmds = {
             {"root", &Location::root},
@@ -138,7 +138,8 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
             {"error_page", &Location::error_page},
             {"limit_except", &Location::methods},
             {"return", &Location::returnRedirect},
-            {"index", &Location::indexPage}};
+            {"index", &Location::indexPage},
+			{"cgi_extension", &Location::cgiExtensions}};
 		_lines.begin()->second = line;
 		readBlock(location, cmds, whileCmds);
 		line = _lines.begin()->second;
@@ -161,7 +162,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 	bool foundSemicolon;
 	line = line.substr(cmd.first.size());
 	validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
-	
+
 	size_t argumentCount = 0;
 	while (++argumentCount)
 	{
@@ -206,8 +207,8 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
  * stores commands for location and configServer
  */
 template <typename T>
-void Parsing::readBlock(T &block, 
-    const map<string, bool (T::*)(string &)> &cmds, 
+void Parsing::readBlock(T &block,
+    const map<string, bool (T::*)(string &)> &cmds,
     const map<string, bool (T::*)(string &)> &whileCmds)
 {
     string line = _lines.begin()->second;
@@ -238,7 +239,7 @@ void Parsing::readBlock(T &block,
             LocationCheck(line, block, validSyntax);
 		if (validSyntax == false)
 			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
-    } 
+    }
 	while (runReadblock() == true);
 }
 
@@ -272,7 +273,7 @@ void Parsing::ServerCheck()
     }
     else
     {
-        
+
         throw runtime_error(to_string(curConf.getLineNbr()) + ": Couldn't find opening curly bracket server block");
     }
 }
@@ -291,7 +292,7 @@ void Parsing::readConfigFile(const char *input)
 		std::cout << "Current directory: " << getcwd(NULL, 0) << std::endl;
 		throw runtime_error("inputfile couldn't be opened: " + string(input));
 	}
-    
+
     string line;
     size_t skipSpace;
     size_t lineNbr = 0;
@@ -331,7 +332,7 @@ Parsing::Parsing(const char *input)
 
 Parsing::~Parsing()
 {
-    
+
 }
 
 /**
@@ -350,14 +351,14 @@ void Parsing::printAll() const
 			cout << "  Root: " << config.getRoot() << endl;
 			cout << "  Client Max Body Size: " << config.getClientMaxBodySize() << endl;
 			cout << "  Auto Index: " << (config.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-			
+
 			// cout << "  Error Pages: ";
 			// for (const auto &errorPage : config.getErrorCodesWithPage())
 			// {
 			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
 			// }
 			// cout << endl;
-			
+
 			cout << "  Return Redirect: " << config.getReturnRedirect().first << " -> " << config.getReturnRedirect().second << endl;
 			cout << "  Index Pages: ";
 			for (const string &index : config.getIndexPage())
@@ -372,14 +373,14 @@ void Parsing::printAll() const
 			cout << "  Root: " << location.getRoot() << endl;
 			cout << "  Client Max Body Size: " << location.getClientMaxBodySize() << endl;
 			cout << "  Auto Index: " << (location.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-			
+
 			// cout << "  Error Pages: ";
 			// for (const auto &errorPage : location.getErrorCodesWithPage())
 			// {
 			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
 			// }
 			// cout << endl;
-			
+
 			cout << "  Return Redirect: " << location.getReturnRedirect().first << " -> " << location.getReturnRedirect().second << endl;
 			cout << "  Index Pages: ";
 			for (const string &index : location.getIndexPage())
@@ -396,11 +397,13 @@ void Parsing::printAll() const
                 cout << "POST ";
             if (location.getAllowedMethods() & 8)
                 cout << "DELETE ";
-                
+
 			cout << endl;
 			cout << "  Upload Store: " << location.getUploadStore() << endl;
-			cout << "  CGI Extension: " << location.getCgiExtension() << endl;
-			cout << "  CGI Path: " << location.getCgiPath() << endl;
+			std::cout << "cgi extensions: ";
+			for (string extension : location.getExtension())
+				std::cout << extension;
+			cout << endl << "  CGI Path: " << location.getCgiPath() << endl;
 		}
 	}
 }

@@ -352,7 +352,6 @@ void HttpRequest::handleRequest(Client &client)
     if (client._location.getReturnRedirect().first > 0)
     {
         std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
-
         redirectRequest(client);
         RunServers::clientHttpCleanup(client);
         return ;
