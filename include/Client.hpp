@@ -16,6 +16,14 @@ enum HeaderParseState
     REQUEST_READY = 3
 };
 
+enum HttpMethod : uint8_t
+{
+    METHOD_HEAD   = 1,
+    METHOD_GET    = 2,
+    METHOD_POST   = 4,
+    METHOD_DELETE = 8
+};
+
 class Client
 {
     public:
