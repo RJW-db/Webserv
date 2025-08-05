@@ -249,15 +249,16 @@ Alocation &Alocation::operator=(const Alocation &other)
 	return (*this);
 }
 
-bool Alocation::isCgiFile(string &fileName)
+bool Alocation::isCgiFile(string_view &filename)
 {
-    size_t extensionPos = fileName.find_last_of('.');
-    string fileExtension = fileName.substr(extensionPos);
+    size_t extensionPos = filename.find_last_of('.');
+    string_view fileExtension = filename.data() + extensionPos;
     for(string &cgiExtension : _cgiExtension)
     {
-        if (fileName == cgiExtension || fileExtension == cgiExtension)
+        if (filename == cgiExtension || fileExtension == cgiExtension)
             return true;
     }
+    return false;
 }
 
 string Alocation::getUploadStore() const { return _upload_store; }

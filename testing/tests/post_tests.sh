@@ -2,30 +2,34 @@ cd /home/saleunin/Desktop/Webserv/testing
 
 mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
-# test 1: POST request to upload a file
-echo "1. Testing POST request to upload test1.jpg to localhost:15000/upload"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: notexistinghost" -F "myfile=@expectedResults/post/upload1/test1.jpg" http://localhost:15000/upload1 > results/post/post1.txt &
+# # test 1: POST request to upload a file
+# echo "1. Testing POST request to upload test1.jpg to localhost:15000/upload"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: notexistinghost" -F "myfile=@expectedResults/post/upload1/test1.jpg" http://localhost:15000/upload1 > results/post/post1.txt &
 
-# Test 2: POST request to upload PNG file to server2
-echo "2. Testing POST request to upload test2.png to localhost:15000/upload with Host header 'server2'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -F "myfile=@expectedResults/post/upload1/test2.png" http://localhost:15000/upload1  > results/post/post2.txt & 
+# # Test 2: POST request to upload PNG file to server2
+# echo "2. Testing POST request to upload test2.png to localhost:15000/upload with Host header 'server2'"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -F "myfile=@expectedResults/post/upload1/test2.png" http://localhost:15000/upload1  > results/post/post2.txt & 
 
-# Test 3: POST request to upload small text file to server3
-echo "3. Testing POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload1/small.txt" http://localhost:15000/upload1 > results/post/post3.txt &
+# # Test 3: POST request to upload small text file to server3
+# echo "3. Testing POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload1/small.txt" http://localhost:15000/upload1 > results/post/post3.txt &
 
-# Test 4: POST request to upload large text file to server1
-echo "4. Testing POST request to upload 1M.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload1/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
+# # Test 4: POST request to upload large text file to server1
+# echo "4. Testing POST request to upload 1M.txt to localhost:15000/upload with Host header 'server1'"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -F "myfile=@expectedResults/post/upload1/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
 
-# Test 5: POST request to upload multiple files to server1
-echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15001/upload3 with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
--F "file1=@expectedResults/post/upload1/small.txt" -F "file2=@expectedResults/post/upload1/small2.txt" \
--F "file3=@expectedResults/post/upload1/small3.txt" -F "file4=@expectedResults/post/upload1/test1.jpg" \
--F "file5=@expectedResults/post/upload1/test2.png" \
- http://localhost:15001/upload2 > results/post/post5.txt &
+# # Test 5: POST request to upload multiple files to server1
+# echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15001/upload3 with Host header 'server1'"
+# curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
+# -F "file1=@expectedResults/post/upload1/small.txt" -F "file2=@expectedResults/post/upload1/small2.txt" \
+# -F "file3=@expectedResults/post/upload1/small3.txt" -F "file4=@expectedResults/post/upload1/test1.jpg" \
+# -F "file5=@expectedResults/post/upload1/test2.png" \
+#  http://localhost:15001/upload2 > results/post/post5.txt &
 
+# test 6 : chunked post request to upload small.txt to server1
+echo "6. Testing chunked POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
+curl -i -X POST -H "Transfer-Encoding: chunked" -H "Expect:" -H "Connection: close" -H "Host: server1" \
+--data-binary @expectedResults/post/upload1/small.txt http://localhost:15000/upload3 > results/post/post6.txt &
 
 sleep 2
 

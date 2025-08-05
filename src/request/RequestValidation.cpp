@@ -176,7 +176,10 @@ static void    validatePathAndSegmentLengths(Client &client, const vector<string
 static void validateResourceAccess(Client &client)
 {
     struct stat status;
-    string reqPath = client._location.getRoot() + client._requestPath;
+    string root = client._location.getRoot();
+    if (!root.empty() && root.back() == '/')
+        root.pop_back();
+    string reqPath = root + client._requestPath;
     if (stat(reqPath.data(), &status) == -1)
         throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
 
@@ -202,7 +205,9 @@ static void validateResourceAccess(Client &client)
 
 static void detectCgiRequest(Client &client)
 {
-    if (client._location.isCgiFile(client._requestPath) == true)
+    size_t filenamePos = client._requestPath.find_last_of('/');
+    string_view filename(client._requestPath.data() + filenamePos + 1);
+    if (client._location.isCgiFile(filename) == true)
     {
         client._isCgi = true;
         std::cout << "request is cgi request" << std::endl; //testcout

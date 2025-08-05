@@ -169,6 +169,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                     finished = handle.handlePostTransfer(true);
                 else
                 {
+                    std::cout << "using chunked transfer" << std::endl; //testcout
                     handle.appendToBody();
                     finished = handle.handleChunkTransfer();
                 }
