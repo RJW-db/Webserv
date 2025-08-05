@@ -132,7 +132,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
             {"client_max_body_size", &Location::ClientMaxBodysize},
             {"autoindex", &Location::autoIndex},
             {"upload_store", &Location::uploadStore},
-            {"cgi_extension", &Location::cgiExtension},
+            {"cgi_extension", &Location::cgiExtensions},
             {"cgi_path", &Location::cgiPath}};
         const map<string, bool (Location::*)(string &)> whileCmds = {
             {"error_page", &Location::error_page},

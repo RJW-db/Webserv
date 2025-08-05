@@ -202,17 +202,9 @@ static void validateResourceAccess(Client &client)
 
 static void detectCgiRequest(Client &client)
 {
-    size_t lastSlashIndex = client._requestPath.find_last_of('/');
-    if (lastSlashIndex != string::npos && lastSlashIndex > 1)
+    if (client._location.isCgiFile(client._requestPath) == true)
     {
-        string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
-        size_t hasExt = cgiFilename.find_last_of('.');
-        if (hasExt != string::npos)
-        {
-            if (string_view(cgiFilename.data() + hasExt) == client._location.getCgiExtension())
-                client._isCgi = true;
-        }
-        else if (cgiFilename == client._location.getCgiExtension())
-            client._isCgi = true;
+        client._isCgi = true;
+        std::cout << "request is cgi request" << std::endl; //testcout
     }
 }
