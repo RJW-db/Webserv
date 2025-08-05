@@ -66,7 +66,7 @@ class HandleTransfer
         bool validateMultipartPostSyntax(Client &client, string &input);
         bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
         static void parseContentDisposition(Client &client, string_view &buffer);
-
+        bool handlePostCgi();
 
 
 

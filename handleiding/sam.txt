@@ -4,7 +4,7 @@ zorgen dat voor chunked max_body_size wordt gechecked
 
 voor upload store implementeren voor post
 
-
+make server names have default values
 
 
 tests te maken

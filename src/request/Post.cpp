@@ -8,30 +8,6 @@ bool validateMultipartPostSyntax(Client &client, string &buffer);
 bool HttpRequest::processHttpBody(Client &client)
 {
     HttpRequest::getContentLength(client);
-    if (client._isCgi)
-    {
-        // std::cout << "body is: "  <<  escape_special_chars(client._body) << std::endl; //testcout
-        // std::cout << "body size: " << client._body.size() << std::endl; //testcout
-        // if (client._body.find(string(client._bodyBoundary) + "--" + CRLF) == string::npos)
-        // {
-        //     std::cout << "returning false"  << std::endl; //testcout
-        //     return false;
-        // }
-        // if (validateMultipartPostSyntax(client, client._body) == false)
-        // {
-        //     RunServers::logMessage(5, "POST request syntax error, clientFD: ", client._fd);
-        //     throw ErrorCodeClientException(client, 400, "Malformed POST request syntax");
-        // }
-        // std::cout << "correct post request for cgi"  << std::endl; //testcout
-        // send to cgi process
-        HandleTransfer handle(client);
-        if (/* handle.validateMultipartPostSyntax(client, client._body) ==  */true)
-        {
-            HttpRequest::handleCgi(client);
-            // send body to pipe for stdin of cgi
-        }
-        return true;
-    }
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandleTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
@@ -47,24 +23,6 @@ bool HttpRequest::processHttpBody(Client &client)
     RunServers::insertHandleTransfer(move(handle));
     return true;
 }
-
-
-// bool HttpRequest::processHttpChunkBody(Client &client, int targetFilePathFD)
-// {
-//     HttpRequest::getBodyInfo(client);
-//     client._filenamePath = client._rootPath + "/" + string(client._filename); // here to append filename for post
-//     int fd = open(client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-//     if (fd == -1)
-//     {
-//         if (errno == EACCES)
-//             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
-//         else
-//             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
-//     }
-//     FileDescriptor::setFD(fd);
-//     targetFilePathFD = fd;
-//     return true;
-// }
 
 ContentType HttpRequest::getContentType(Client &client)
 {

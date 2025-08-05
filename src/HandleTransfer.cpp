@@ -176,6 +176,8 @@ bool HandleTransfer::searchContentDisposition()
     return true;
 }
 
+
+
 bool HandleTransfer::handlePostTransfer(bool readData)
 {
     try
@@ -187,6 +189,8 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             _bytesReadTotal += bytesReceived;
             _fileBuffer.append(buff, bytesReceived);
         }
+        if (_client._isCgi)
+            return handlePostCgi();
         while (true)
         {
             if (_bytesReadTotal > _client._contentLength)
@@ -287,4 +291,21 @@ bool HandleTransfer::validateMultipartPostSyntax(Client &client, string &input)
         foundBoundary = true;
     }
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
+}
+
+bool HandleTransfer::handlePostCgi()
+{
+    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
+    {
+        return false;
+    }
+    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    {
+        std::cout << "correct cgi syntax for post request" << std::endl; //testcout
+        // send body to pipe for stdin of cgi
+        return true;
+    }
+    else
+        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    return false;
 }

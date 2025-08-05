@@ -82,6 +82,11 @@ void ConfigServer::setDefaultConf()
         _clientMaxBodySize = 1024 * 1024;
     if (_autoIndex == autoIndexNotFound)
         _autoIndex = autoIndexFalse;
+    if (_serverName.empty())
+    {
+        static size_t serverIndex = 0;
+        _serverName = "server" + to_string(++serverIndex);
+    }
     if (_portHost.empty())
     {
         string tmp = "80;";
