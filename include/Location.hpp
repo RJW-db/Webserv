@@ -19,7 +19,7 @@ class Alocation : public Aconfig
         uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
 		vector<string> getExtension() const;
-        bool isCgiFile(string &fileName);
+        bool isCgiFile(string_view &filename);
 		string getCgiPath() const;
 		string getPath() const;
 
