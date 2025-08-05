@@ -249,6 +249,17 @@ Alocation &Alocation::operator=(const Alocation &other)
 	return (*this);
 }
 
+bool Alocation::isCgiFile(string &fileName)
+{
+    size_t extensionPos = fileName.find_last_of('.');
+    string fileExtension = fileName.substr(extensionPos);
+    for(string &cgiExtension : _cgiExtension)
+    {
+        if (fileName == cgiExtension || fileExtension == cgiExtension)
+            return true;
+    }
+}
+
 string Alocation::getUploadStore() const { return _upload_store; }
 vector<string> Alocation::getExtension() const { return _cgiExtension; }
 string Alocation::getCgiPath() const { return _cgiPath; }

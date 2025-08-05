@@ -23,7 +23,6 @@ int RunServers::epollInit(ServerList &servers)
             auto it = listenersMade.find(hostPort);
             if (it == listenersMade.end())
             {
-                std::cout << "porthost: " << hostPort.first << ", port: " << hostPort.second << std::endl; //testcout
                 ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
                 fd = listenerFD.getFD();
                 FileDescriptor::setFD(fd);
