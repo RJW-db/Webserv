@@ -214,4 +214,8 @@ static void detectCgiRequest(Client &client)
         client._isCgi = true;
         std::cout << "request is cgi request" << std::endl; //testcout
     }
+    else if (!client._location.getExtension().empty())
+    {
+        throw ErrorCodeClientException(client, 400, "request without correct cgi extension");
+    }
 }

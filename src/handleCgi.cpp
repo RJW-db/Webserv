@@ -175,16 +175,23 @@ void HttpRequest::handleCgi(Client &client)
 
     if (pid >= PARENT)
     {
-        sleep(3);
         // exit(0);
         close(in_pipe[0]);    // parent doesn't read from stdin
         close(out_pipe[1]);   // parent doesn't write to stdout
         
         RunServers::setEpollEvents(out_pipe[0], EPOLL_CTL_ADD, EPOLLIN);
-        RunServers::setEpollEvents(in_pipe[1], EPOLL_CTL_ADD, EPOLLOUT);
-
+        // RunServers::setEpollEvents(in_pipe[1], EPOLL_CTL_ADD, EPOLLOUT);
+        
+        
+        // send(in_pipe[1], client._body.data(), client._body.size(), 0);
+        int sent = write(in_pipe[1], "test", 4);
+        if (sent == -1)
+            perror("obo: ");
+        
+        std::cout << "sent: " << sent << std::endl; //testcout
+        sleep(2);
         // write(in_pipe[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
-        sleep(5);
+        // sleep(5);
         int ret;
         do
         {

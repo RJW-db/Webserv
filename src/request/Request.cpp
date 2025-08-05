@@ -354,6 +354,7 @@ void HttpRequest::handleRequest(Client &client)
     if (client._isCgi)
     {
         handleCgi(client);
+        RunServers::clientHttpCleanup(client);
         return;
     }
 
