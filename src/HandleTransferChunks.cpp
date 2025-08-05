@@ -3,7 +3,6 @@
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
 #include <Client.hpp>
-void handleCgi(Client &client);
 
 void HandleTransfer::appendToBody()
 {
@@ -41,7 +40,7 @@ bool HandleTransfer::handleChunkTransfer()
         else
         {
             validateMultipartPostSyntax(_client, _fileBuffer);
-            handleCgi(_client);
+            HttpRequest::handleCgi(_client);
         }
         return true;
     }

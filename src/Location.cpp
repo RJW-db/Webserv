@@ -258,6 +258,7 @@ bool Alocation::isCgiFile(string &fileName)
         if (fileName == cgiExtension || fileExtension == cgiExtension)
             return true;
     }
+	return false;
 }
 
 string Alocation::getUploadStore() const { return _upload_store; }

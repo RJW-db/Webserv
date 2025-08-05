@@ -70,6 +70,16 @@
         <button id="deletePathBtn" style="margin-top: 5px;">Delete by Filename</button>
         <div id="deletePathStatus" style="color: #b00; margin-top: 5px;"></div>
       </div>
+
+      <h2>Upload Files via CGI</h2>
+      <form id="cgiUploadForm" enctype="multipart/form-data">
+        <input type="file" id="cgiFileInput" name="myfile" accept="image/*" multiple required />
+        <br /><br />
+        <button type="submit">Upload via CGI</button>
+      </form>
+
+      <div id="cgiStatus"></div>
+      <br />
     </div>
     <div class="main-content">
       <div class="gallery" id="gallery"></div>

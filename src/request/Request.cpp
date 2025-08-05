@@ -283,9 +283,13 @@ string HttpRequest::getMimeType(string &path)
     return "application/octet-stream";
 }
 
-void handleCgi(Client &client);
 void HttpRequest::GET(Client &client)
 {
+    if (client._isCgi)
+    {
+        handleCgi(client);
+        return;
+    }
 
     // locateRequestedFile(client);
     if (client._isAutoIndex == true)   // TODO check, is this check every possible at all
@@ -294,16 +298,12 @@ void HttpRequest::GET(Client &client)
         RunServers::clientHttpCleanup(client);
         return ;
     }
+
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
 
     FileDescriptor::setFD(fd);
-    if (client._isCgi)
-    {
-        handleCgi(client);
-        return;
-    }
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
