@@ -18,7 +18,8 @@ class Alocation : public Aconfig
 
         uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
-		string getCgiExtension() const;
+		vector<string> getExtension() const;
+        bool isCgiFile(string &fileName);
 		string getCgiPath() const;
 		string getPath() const;
 
@@ -27,7 +28,7 @@ class Alocation : public Aconfig
 		Alocation(const Alocation &other);
         uint8_t _allowedMethods = 0;
 		string _upload_store;
-		string _cgiExtension;
+		vector<string> _cgiExtension;
 		string _cgiPath;
 		string _locationPath; // includes root + path;
 };
@@ -47,12 +48,13 @@ class Location : public Alocation
 		bool methods(string &line);
 		bool indexPage(string &line);
 		bool uploadStore(string &line);
-		bool cgiExtension(string &line);
+		// bool cgiExtension(string &line);
+		bool cgiExtensions(string &line);
 		bool cgiPath(string &line);
 
 		void SetDefaultLocation(Aconfig &curConf);
-		
-		
+
+
 	private:
 		bool checkMethodEnd(bool &findColon, string &line);
 };
