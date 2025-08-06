@@ -1,20 +1,7 @@
 NAME			:=	Webserv
 
-#	Get the number of logical processors (threads)
-OS				:=	$(shell uname -s)
-ifeq ($(OS), Linux)
-	N_JOBS		:=	$(shell find ./src -name '*.cpp' | wc -l)
-else ifeq ($(OS), Darwin)
-	N_JOBS		:=	$(shell sysctl -n hw.logicalcpu)
-else
-	N_JOBS		:=	1
-endif
-
-#	(-j) Specify the number of jobs (commands) to run simultaneously
-MULTI_THREADED	:=	-j$(N_JOBS)
-
 #	MAKEFLAGS will automatically apply the specified options (e.g., parallel execution) when 'make' is invoked
-MAKEFLAGS		+=	$(MULTI_THREADED)
+MAKEFLAGS		+=	-j
 
 RM				:=	rm -rf
 PRINT_NO_DIR	:=	--no-print-directory
@@ -27,7 +14,7 @@ CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 

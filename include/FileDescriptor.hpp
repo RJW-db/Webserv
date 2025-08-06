@@ -21,7 +21,8 @@ class FileDescriptor
         static void cleanupFD();
 
 		static void	setFD(int fd);
-		static void	closeFD(int fd);
+		static void	closeFD(int &fd);
+		static bool safeCloseFD(int fd);
 		static void addClientFD(int clientFD);
 		static void removeClientFD(int clientFD);
 		static bool containsClient(int ClientFD);

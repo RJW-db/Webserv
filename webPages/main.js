@@ -86,12 +86,11 @@ window.addEventListener('DOMContentLoaded', function() {
     const status = document.getElementById('cgiStatus');
     status.textContent = '';
 
-    // Upload each file individually to CGI
     Array.from(files).forEach(file => {
       const formData = new FormData();
       formData.append('myfile', file);
 
-      fetch('/cgi-bin/cgi.py', {
+      fetch('/cgi-bin/upload.py?upload_dir=upload&public_url_base=/upload', {
         method: 'POST',
         body: formData
       })
@@ -100,9 +99,49 @@ window.addEventListener('DOMContentLoaded', function() {
         if (result && result !== 'Upload failed.') {
           status.textContent = 'CGI Upload successful!';
           status.style.color = 'green';
-          
-          // You can add image display logic here if your CGI returns a filename
-          // Similar to the regular upload handler
+
+          const filename = result.trim();
+          const cleanFilename = filename.split('/').pop();
+
+          const wrapper = document.createElement('div');
+          wrapper.style.position = 'relative';
+          wrapper.style.display = 'inline-block';
+          wrapper.style.margin = '10px';
+
+          const label = document.createElement('div');
+          label.textContent = cleanFilename;
+          label.style.textAlign = 'center';
+          label.style.marginBottom = '5px';
+          label.style.fontSize = '16px';
+
+          const img = document.createElement('img');
+          img.src = filename;
+          img.alt = cleanFilename;
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.style.position = 'absolute';
+          delBtn.style.top = '10px';
+          delBtn.style.right = '10px';
+          delBtn.onclick = function() {
+            fetch('/upload/' + encodeURIComponent(cleanFilename), {
+              method: 'DELETE'
+            })
+            .then(res => {
+              if (res.ok) {
+                wrapper.remove();
+              } else {
+                alert('Failed to delete image.');
+              }
+            })
+            .catch(() => alert('Error deleting image.'));
+          };
+
+          wrapper.appendChild(label);
+          wrapper.appendChild(img);
+          wrapper.appendChild(delBtn);
+          gallery.appendChild(wrapper);
+
         } else {
           status.textContent = 'CGI Upload failed.';
           status.style.color = '#b00';
@@ -117,6 +156,7 @@ window.addEventListener('DOMContentLoaded', function() {
     // Clear the file input
     document.getElementById('cgiFileInput').value = '';
   });
+
 
   // Handle delete by filename
   document.getElementById('deletePathBtn').addEventListener('click', function() {

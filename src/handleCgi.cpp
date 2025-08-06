@@ -19,33 +19,14 @@
 #define CHILD 0
 
 
-bool    safeCloseFD(int &fd)
-{
-    if (fd == -1)
-        return true;
-    
-    int ret;
-    do
-    {
-        ret = close(fd);
-    } while (ret == -1 && errno == EINTR);
 
-    if (ret == -1 && errno == EIO)
-    {
-        std::cerr << "No more new connenctions and finish up current connections and then restart webserver" << std::endl; //testcout
-        return false;
-    }
-
-    fd = -1;
-    return true;
-}
 
 void closing_pipes(int in_pipe[2], int out_pipe[2])
 {
-    safeCloseFD(in_pipe[0]);
-    safeCloseFD(in_pipe[1]);
-    safeCloseFD(out_pipe[0]);
-    safeCloseFD(out_pipe[1]);
+    FileDescriptor::closeFD(in_pipe[0]);
+    FileDescriptor::closeFD(in_pipe[1]);
+    FileDescriptor::closeFD(out_pipe[0]);
+    FileDescriptor::closeFD(out_pipe[1]);
 }
 
 void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
@@ -62,17 +43,32 @@ void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
     }
 }
 
+bool endsWith(const string &str, const string &suffix)
+{
+    return (str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
+}
+
 vector<string> createArgv(Client &client)
 {
-    size_t lastSlashIndex = client._requestPath.find_last_of('/');
-    // if ("should not need this if check because already been check")
+    // argv[0] = "/usr/bin/python3" or "python3"
+    // argv[1] = "./cgi-bin/upload.py"
 
-    string cgiFilename = client._requestPath.substr(lastSlashIndex + 1);
     vector<string> argvString;
     if (!client._location.getCgiPath().empty())
+    {
+        std::cout << "client._location.getCgiPath() " << client._location.getCgiPath() << std::endl; //testcout
         argvString.push_back(client._location.getCgiPath());
-    argvString.push_back(cgiFilename);
-    
+    }
+    else if (endsWith(client._requestPath, ".py"))
+    {
+        argvString.push_back("python3");
+    } else if (endsWith(client._requestPath, ".php"))
+    {
+        argvString.push_back("php");
+    }
+
+    argvString.push_back('.' + client._requestPath);
+    std::cout << "client._requestPath " << '.' + client._requestPath << std::endl; //testcout
     return argvString;
 }
 
@@ -85,12 +81,31 @@ vector<string> createEnvp(Client &client)
         envpString.push_back("QUERY_STRING=" + client._queryString);    // test http://localhost:8080/cgi-bin/cgi.py?WORK=YUR
     envpString.push_back("SCRIPT_NAME=" + client._requestPath);
     envpString.push_back("SERVER_PROTOCOL=" + client._version);
-    if (client._useMethod & METHOD_POST)
+    if (client._useMethod & METHOD_POST)    /// cgi expects "Content-Type: multipart/form-data; boundary=------someboundary"
     {
         string contentType = string(client._contentType);
-        envpString.push_back("CONTENT_TYPE=" + string(contentType));
-        if (contentType == "multipart/form-data")
-            envpString.push_back("HTTP_CONTENT_BOUNDARY=" + contentType);
+        // envpString.push_back("CONTENT_TYPE=" + string(contentType));
+        // if (contentType == "multipart/form-data")
+        //     envpString.push_back("HTTP_CONTENT_BOUNDARY=" + contentType);
+        // if (contentType == "multipart/form-data")
+        // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary));
+        envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._bodyBoundary));
+
+        if (!client._location.getUploadStore().empty())
+        {
+            envpString.push_back("UPLOAD_STORE=" + client._location.getUploadStore());
+        }
+        else
+        {
+            envpString.push_back(string("UPLOAD_STORE=") + "./");
+        }
+        
+
+        // std::cout << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
+
+        // envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._bodyBoundary));
+        // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=...");
+        // exit(0);
     }
     
     envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
@@ -98,8 +113,6 @@ vector<string> createEnvp(Client &client)
     // envpString.push_back("SERVER_PORT=" + client._usedServer->getPortHost());
 
     envpString.push_back("DOCUMENT_ROOT=" + client._location.getRoot());
-
-        
     return envpString;
 }
 
@@ -136,7 +149,8 @@ void child(Client &client, int in_pipe[2], int out_pipe[2])
     // printVecArray(envp);
 
 // exit(0);
-    execve(argv[0], argv.data(), envp.data());
+    char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
+    execve(filePath, argv.data(), envp.data());
     perror("execve failed");
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -153,11 +167,27 @@ void HttpRequest::handleCgi(Client &client)
         throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
     }
 
+    FileDescriptor::setFD(in_pipe[0]);   
+    FileDescriptor::setFD(in_pipe[1]);   
+    FileDescriptor::setFD(out_pipe[0]);  
+    FileDescriptor::setFD(out_pipe[1]); 
+
     if (RunServers::make_socket_non_blocking(in_pipe[1]) == false || // Server writes to CGI
         RunServers::make_socket_non_blocking(out_pipe[0]) == false) { // Server reads from CGI
         closing_pipes(in_pipe, out_pipe);
         throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
     }
+
+
+    // int fd = open(client._filenamePath.data(), R_OK);
+    // if (fd == -1)
+    //     throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
+
+    // // FileDescriptor::setFD(fd);
+    // size_t fileSize = getFileLength(client._filenamePath);
+    // string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
+    // auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
+    // RunServers::insertHandleTransfer(move(handle));
 
     pid_t pid = fork();
     if (pid == -1) {
@@ -166,11 +196,17 @@ void HttpRequest::handleCgi(Client &client)
     }
 
     if (pid == CHILD) {
-        size_t pos = client._rootPath.find_last_of('/');
-        string dirPath = client._rootPath.substr(0, pos);
-        std::cout << "dirpath: " << dirPath << std::endl; //testcout
-        chdir(dirPath.data());
+        // size_t pos = client._rootPath.find_last_of('/');
+        // string dirPath = client._rootPath.substr(0, pos);
+        // std::cout << "dirpath: " << dirPath << std::endl; //testcout
+        // std::cout << "client._uploadPath: " << client._location.getUploadStore() << std::endl; //testcout
+
+        // std::cout << "cgi_path: " << client._location.getCgiPath() << std::endl; //testcout
+        // // chdir(dirPath.data());
+        // chdir(client._location.getUploadStore().c_str());
         child(client, in_pipe, out_pipe);
+
+
     }
 
     if (pid >= PARENT)
@@ -183,12 +219,22 @@ void HttpRequest::handleCgi(Client &client)
         // RunServers::setEpollEvents(in_pipe[1], EPOLL_CTL_ADD, EPOLLOUT);
         
         
-        // send(in_pipe[1], client._body.data(), client._body.size(), 0);
-        int sent = write(in_pipe[1], "test", 4);
-        if (sent == -1)
-            perror("obo: ");
-        
-        std::cout << "sent: " << sent << std::endl; //testcout
+
+        // int total_sent = write(in_pipe[1], client._body.data(), client._body.size());
+        size_t total_sent = 0;
+        while (total_sent < client._body.size()) {
+            ssize_t sent = write(in_pipe[1], client._body.data() + total_sent, client._body.size() - total_sent);
+            // ssize_t sent = write(in_pipe[1], client._body.data() + total_sent, 15000);
+            if (sent == -1) {
+                perror("write to CGI failed");
+                break;
+            }
+            total_sent += sent;
+        }
+
+        FileDescriptor::closeFD(in_pipe[1]);
+
+        std::cout << "sent: " << total_sent << std::endl; //testcout
         sleep(2);
         // write(in_pipe[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
         // sleep(5);

@@ -351,12 +351,12 @@ void HttpRequest::handleRequest(Client &client)
         return ;
     }
 
-    if (client._isCgi)
-    {
-        handleCgi(client);
-        RunServers::clientHttpCleanup(client);
-        return;
-    }
+    // if (client._isCgi)
+    // {
+    //     handleCgi(client);
+    //     RunServers::clientHttpCleanup(client);
+    //     return;
+    // }
 
     switch (client._useMethod)
     {
@@ -369,6 +369,12 @@ void HttpRequest::handleRequest(Client &client)
     }
     case 2: // GET
     {
+        if (client._isCgi)
+        {
+            handleCgi(client);
+            RunServers::clientHttpCleanup(client);
+            return;
+        }
         GET(client);
         break;
     }

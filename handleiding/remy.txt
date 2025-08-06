@@ -55,3 +55,12 @@ od -tx1 -c filename
 
 problem with overwriting the file, if 2 or 3 people trying to create the same file
 
+
+
+
+kill() send TERM signal
+in child we need to setup to catch the signal and handle it, cleaning up propperly off open fd (pipes)
+
+problematic
+cgi_extension .py .php .pl;  # Multiple extensions
+cgi_path python3;            # But only ONE interpreter path

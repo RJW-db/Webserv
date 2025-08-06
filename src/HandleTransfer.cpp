@@ -176,8 +176,6 @@ bool HandleTransfer::searchContentDisposition()
     return true;
 }
 
-
-
 bool HandleTransfer::handlePostTransfer(bool readData)
 {
     try
@@ -297,12 +295,17 @@ bool HandleTransfer::handlePostCgi()
 {
     if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
     {
+        std::cout << "count" << std::endl; //testcout
         return false;
     }
     if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
     {
         std::cout << "correct cgi syntax for post request" << std::endl; //testcout
         // send body to pipe for stdin of cgi
+        std::cout << _fileBuffer << std::endl; //testcout
+        std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
+        std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
+        HttpRequest::handleCgi(_client);
         return true;
     }
     else
