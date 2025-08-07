@@ -107,7 +107,7 @@ void RunServers::addStdinToEpoll()
 
 int RunServers::runServers()
 {
-    epollInit(_servers);
+    epollInit(_servers); // need throw protection
     addStdinToEpoll();
     clocking();
     while (g_signal_status == 0)

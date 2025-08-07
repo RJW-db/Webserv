@@ -15,10 +15,7 @@ void FileDescriptor::cleanupFD()
 {
     for (int fd : _fds)
 	{
-		if (fd != -1)
-		{
-			close(fd);
-		}
+        closeFD(fd);
 	}
 }
 

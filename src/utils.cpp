@@ -1,7 +1,45 @@
 #include <utils.hpp>
 #include <RunServer.hpp>
 
+#include <filesystem> // canonical()
 #include <dirent.h>
+
+string getExecutableDirectory()
+{
+    try {
+        return filesystem::canonical("/proc/self/exe").parent_path().string();
+    } catch (const exception& e) {
+        throw runtime_error("Cannot determine executable directory: " + string(e.what()));
+    }
+}
+
+void initRandomSeed()
+{
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    if (seed <= 0)
+        throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
+    srand(static_cast<unsigned int>(seed));
+}
+
+void generateUuid(char uuid[UUID_SIZE])
+{
+    insertUuidSegment(8, uuid);       // uuid[0-7]   = random, uuid[8]  = '-'
+    insertUuidSegment(4, uuid + 9);   // uuid[9-12]  = random, uuid[13] = '-'  
+    insertUuidSegment(4, uuid + 14);  // uuid[14-17] = random, uuid[18] = '-'
+    insertUuidSegment(4, uuid + 19);  // uuid[19-22] = random, uuid[23] = '-'
+    insertUuidSegment(12, uuid + 24); // uuid[24-35] = random, uuid[36] = '-'
+    uuid[UUID_SIZE - 1] = '\0';
+}
+
+static inline void insertUuidSegment(int8_t amount, char *uuidIndex)
+{
+    const char *hexCharacters = "0123456789abcdef";
+    int8_t i;
+    for (i = 0; i < amount; ++i) {
+        uuidIndex[i] = hexCharacters[rand() % 16];
+    }
+    uuidIndex[i] = '-';
+}
 
 bool directoryCheck(string &path)
 {
@@ -66,3 +104,4 @@ uint64_t stoullSafe(string_view stringValue)
     }
     return static_cast<uint64_t>(value);
 }
+

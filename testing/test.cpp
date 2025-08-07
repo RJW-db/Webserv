@@ -2,6 +2,7 @@
 #include <string_view>
 #include <iostream>
 
+using namespace std;
 // int main()
 // {
 // 	std::string str = "Hello, World!";
@@ -64,9 +65,29 @@
 // }
 
 
+#include <chrono>
+#include <cstdlib>
+static constexpr size_t UUID_SIZE = 37;
 
+// Static Function
+static inline void insertUuidSegment(int8_t amount, char *buffIndex);
 
-static inline void insertRandomValeOnIndex(int8_t amount, char *buffIndex)
+/**
+ * Universally Unique Identifier
+ * 3fb17ebc-bc38-4939-bc8b-74f2443281d4
+ * 8 dash 4 dash 4 dash 4 dash 12
+ */
+void generateUuid(char buff[UUID_SIZE])
+{
+    insertUuidSegment(8, buff);       // buff[0-7]   = random, buff[8]  = '-'
+    insertUuidSegment(4, buff + 9);   // buff[9-12]  = random, buff[13] = '-'  
+    insertUuidSegment(4, buff + 14);  // buff[14-17] = random, buff[18] = '-'
+    insertUuidSegment(4, buff + 19);  // buff[19-22] = random, buff[23] = '-'
+    insertUuidSegment(12, buff + 24); // buff[24-35] = random, buff[36] = '-'
+    buff[UUID_SIZE - 1] = '\0';
+}
+
+static inline void insertUuidSegment(int8_t amount, char *buffIndex)
 {
     const char *hexCharacters = "0123456789abcdef";
     int8_t i;
@@ -76,25 +97,31 @@ static inline void insertRandomValeOnIndex(int8_t amount, char *buffIndex)
     buffIndex[i] = '-';
 }
 
-char* gen_uuid() {
-    // 3fb17ebc-bc38-4939-bc8b-74f2443281d4
-    // 8 dash 4 dash 4 dash 4 dash 12
-    static char buff[37];
+void initRandomSeed()
+{
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    if (seed <= 0)
+    srand(static_cast<unsigned int>(seed));
+}
 
-    insertRandomValeOnIndex(8, buff);       // buff[0-7] = random, buff[8] = '-'
-    insertRandomValeOnIndex(4, buff + 9);   // buff[9-12] = random, buff[13] = '-'  
-    insertRandomValeOnIndex(4, buff + 14);  // buff[14-17] = random, buff[18] = '-'
-    insertRandomValeOnIndex(4, buff + 19);  // buff[19-22] = random, buff[23] = '-'
-    insertRandomValeOnIndex(12, buff + 24); // buff[24-35] = random, buff[36] = '-'
+#include <filesystem> // canonical()
+// #include <stdexcept>
 
-    buff[36] = '\0';
-
-
-    return buff;
+string getExecutableDirectory()
+{
+    try {
+        return filesystem::canonical("/proc/self/exe").parent_path().string();
+    } catch (const exception& e) {
+        throw runtime_error("Cannot determine executable directory: " + string(e.what()));
+    }
 }
 
 int main(void)
 {
-    printf("%s\n", gen_uuid());
+    char uuid[UUID_SIZE];
+    generateUuid(uuid);
+    printf("%s\n", uuid);
+
+    std::cout << getExecutableDirectory() << std::endl; //testcout
     return 0;
 }
