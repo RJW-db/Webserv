@@ -405,7 +405,6 @@ void HttpRequest::handleRequest(Client &client)
                         RunServers::clientHttpCleanup(client);
                     }
                     return;
-
                 }
                 RunServers::insertHandleTransfer(move(handle));
             }

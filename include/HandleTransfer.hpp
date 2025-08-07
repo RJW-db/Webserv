@@ -7,12 +7,20 @@
 
 using namespace std;
 
+enum cgiState : int8_t
+{
+    isNotCgi = -1,
+    writeToCgi = 0,
+    readFromCgi = 1
+};
+
 class HandleTransfer
 {
     public:
-        HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-		HandleTransfer(Client &client, size_t bytesRead, string buffer); //POST
-        HandleTransfer(Client &client); // POST chunked
+        HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // GET
+		HandleTransfer(Client &client, size_t bytesRead, string buffer); // POST
+        HandleTransfer(Client &client); // Chunked
+        HandleTransfer(Client &client, string &body, int fdWriteToCgi, int fdReadfromCgi); // CGI
         HandleTransfer(const HandleTransfer &other) = default;
         HandleTransfer &operator=(const HandleTransfer &other);
         ~HandleTransfer() = default;
@@ -55,6 +63,7 @@ class HandleTransfer
         inline bool getIsChunk() const {
             return _isChunked;
         }
+
         void appendToBody();
         bool handleChunkTransfer();
         bool decodeChunk(size_t &chunkTargetSize);
@@ -66,9 +75,19 @@ class HandleTransfer
         bool validateMultipartPostSyntax(Client &client, string &input);
         bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
         static void parseContentDisposition(Client &client, string_view &buffer);
+
+        // CGI
+        bool handleCgiTransfer();
         bool handlePostCgi();
 
+        int8_t _isCgi = isNotCgi;
 
+        int _fdWriteToCgi = -1;
+        int _fdReadfromCgi = -1;
+
+        inline int8_t getIsCgi() const {
+            return _isCgi;
+        }
 
 
     protected:

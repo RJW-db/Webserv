@@ -189,10 +189,7 @@ void RunServers::clientHttpCleanup(Client &client)
 
 void RunServers::cleanupFD(int fd)
 {
-    if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
-    {
-        cerr << "epoll_ctl: " << strerror(errno) << endl;
-    }
+    setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
     FileDescriptor::closeFD(fd);
 }
 

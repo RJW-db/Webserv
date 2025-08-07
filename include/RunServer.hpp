@@ -9,6 +9,7 @@
 
 #define PORT "8080"
 
+#define EPOLL_DEL_EVENTS 0
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
 #include <iostream>
 #include <sstream> // logMessage

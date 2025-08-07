@@ -21,23 +21,23 @@
 
 
 
-void closing_pipes(int in_pipe[2], int out_pipe[2])
+void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    FileDescriptor::closeFD(in_pipe[0]);
-    FileDescriptor::closeFD(in_pipe[1]);
-    FileDescriptor::closeFD(out_pipe[0]);
-    FileDescriptor::closeFD(out_pipe[1]);
+    FileDescriptor::closeFD(fdWriteToCgi[0]);
+    FileDescriptor::closeFD(fdWriteToCgi[1]);
+    FileDescriptor::closeFD(fdReadfromCgi[0]);
+    FileDescriptor::closeFD(fdReadfromCgi[1]);
 }
 
-void setupChildPipes(Client &client, int in_pipe[2], int out_pipe[2])
+void setupChildPipes(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    if (dup2(in_pipe[0], STDIN_FILENO) == -1) {
-        closing_pipes(in_pipe, out_pipe);
+    if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1) {
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
     }
-    if (dup2(out_pipe[1], STDOUT_FILENO) == -1)
+    if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1)
     {
-        closing_pipes(in_pipe, out_pipe);
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
         close(STDIN_FILENO);
         throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
     }
@@ -135,10 +135,10 @@ void printVecArray(vector<char *> &args)
     }
 }
 
-void child(Client &client, int in_pipe[2], int out_pipe[2])
+void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    setupChildPipes(client, in_pipe, out_pipe);
-    closing_pipes(in_pipe, out_pipe);
+    setupChildPipes(client, fdWriteToCgi, fdReadfromCgi);
+    closing_pipes(fdWriteToCgi, fdReadfromCgi);
 
     vector<string> argvString = createArgv(client);
     vector<char *> argv = convertToCharArray(argvString);
@@ -157,24 +157,24 @@ void child(Client &client, int in_pipe[2], int out_pipe[2])
     exit(EXIT_FAILURE);
 }
 
-void HttpRequest::handleCgi(Client &client)
+bool HttpRequest::handleCgi(Client &client)
 {
-    int in_pipe[2] = { -1, -1 };   // Server → CGI (stdin)
-    int out_pipe[2] = { -1, -1 };  // CGI → Server (stdout)
+    int fdWriteToCgi[2] = { -1, -1 };   // Server → CGI (stdin)
+    int fdReadfromCgi[2] = { -1, -1 };  // CGI → Server (stdout)
 
-    if (pipe(in_pipe) == -1 || pipe(out_pipe) == -1) {
-        closing_pipes(in_pipe, out_pipe);
+    if (pipe(fdWriteToCgi) == -1 || pipe(fdReadfromCgi) == -1) {
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
     }
 
-    FileDescriptor::setFD(in_pipe[0]);   
-    FileDescriptor::setFD(in_pipe[1]);   
-    FileDescriptor::setFD(out_pipe[0]);  
-    FileDescriptor::setFD(out_pipe[1]); 
+    FileDescriptor::setFD(fdWriteToCgi[0]);   // CGI reads from this (CGI's stdin)
+    FileDescriptor::setFD(fdWriteToCgi[1]);   // Server writes to CGI's stdin
+    FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
+    FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
 
-    if (RunServers::make_socket_non_blocking(in_pipe[1]) == false || // Server writes to CGI
-        RunServers::make_socket_non_blocking(out_pipe[0]) == false) { // Server reads from CGI
-        closing_pipes(in_pipe, out_pipe);
+    if (RunServers::make_socket_non_blocking(fdWriteToCgi[1]) == false || // Server writes to CGI
+        RunServers::make_socket_non_blocking(fdReadfromCgi[0]) == false) { // Server reads from CGI
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
     }
 
@@ -191,7 +191,7 @@ void HttpRequest::handleCgi(Client &client)
 
     pid_t pid = fork();
     if (pid == -1) {
-        closing_pipes(in_pipe, out_pipe);
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
     }
 
@@ -204,7 +204,7 @@ void HttpRequest::handleCgi(Client &client)
         // std::cout << "cgi_path: " << client._location.getCgiPath() << std::endl; //testcout
         // // chdir(dirPath.data());
         // chdir(client._location.getUploadStore().c_str());
-        child(client, in_pipe, out_pipe);
+        child(client, fdWriteToCgi, fdReadfromCgi);
 
 
     }
@@ -212,48 +212,66 @@ void HttpRequest::handleCgi(Client &client)
     if (pid >= PARENT)
     {
         // exit(0);
-        close(in_pipe[0]);    // parent doesn't read from stdin
-        close(out_pipe[1]);   // parent doesn't write to stdout
+        FileDescriptor::closeFD(fdWriteToCgi[0]);
+        FileDescriptor::closeFD(fdReadfromCgi[1]);
         
-        RunServers::setEpollEvents(out_pipe[0], EPOLL_CTL_ADD, EPOLLIN);
-        // RunServers::setEpollEvents(in_pipe[1], EPOLL_CTL_ADD, EPOLLOUT);
-        
-        
+        RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
+        RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
 
-        // int total_sent = write(in_pipe[1], client._body.data(), client._body.size());
-        size_t total_sent = 0;
-        while (total_sent < client._body.size()) {
-            ssize_t sent = write(in_pipe[1], client._body.data() + total_sent, client._body.size() - total_sent);
-            // ssize_t sent = write(in_pipe[1], client._body.data() + total_sent, 15000);
-            if (sent == -1) {
-                perror("write to CGI failed");
-                break;
-            }
-            total_sent += sent;
-        }
-
-        FileDescriptor::closeFD(in_pipe[1]);
-
-        std::cout << "sent: " << total_sent << std::endl; //testcout
-        sleep(2);
-        // write(in_pipe[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
-        // sleep(5);
-        int ret;
-        do
+        unique_ptr<HandleTransfer> handle;
+        handle = make_unique<HandleTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
+        // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+        if (handle->handleCgiTransfer() == true)
         {
-            char buff[10];
-            ret = read(out_pipe[0], buff, 10);
-            write(1, buff, ret);
-        } while (ret > 0);
-        write(1, "\n", 1);
+            if (client._keepAlive == false)
+                RunServers::cleanupClient(client);
+            else
+            {
+                RunServers::clientHttpCleanup(client);
+            }
+            return true;
+        }
+        RunServers::insertHandleTransfer(move(handle));
+
+
+        // std::cout << client._body.size() << std::endl; //testcout
+        // // int total_sent = write(fdWriteToCgi[1], client._body.data(), client._body.size());
+        // size_t total_sent = 0;
+        // /**
+        //  * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
+        //  * check the maximum size: cat /proc/sys/fs/pipe-max-size
+        //  */
+        // while (total_sent < client._body.size()) { 
+        //     ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, client._body.size() - total_sent);
+        //     // ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, 15000);
+        //     if (sent == -1) {
+        //         perror("write to CGI failed");
+        //         break;
+        //     }
+        //     std::cout << "sent: " << sent << std::endl; //testcout
+        //     sleep(1);
+        //     total_sent += sent;
+        // }
+
+        // FileDescriptor::closeFD(fdWriteToCgi[1]);
+
+        // std::cout << "sent: " << total_sent << std::endl; //testcout
+        // sleep(2);
+        // // write(fdWriteToCgi[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
+        // // sleep(5);
+        // int ret;
+        // do
+        // {
+        //     char buff[10];
+        //     ret = read(fdReadfromCgi[0], buff, 10);
+        //     write(1, buff, ret);
+        // } while (ret > 0);
+        // write(1, "\n", 1);
         
-        // char buff[11];
-        // if (read(pipefd[0], buff, 11) == -1)
-        //     throw ErrorCodeClientException(client, 500, "Failed to read for CGI handling");
-        // close in_pipe[1] when sending to cgi is done.
-        // close out_pipe[0] when receiving from cgi is done.
+
         std::cout << "end of parent" << std::endl; //testcout
     }
+    return false;
 }
 
 // void handleCgi(Client &client)

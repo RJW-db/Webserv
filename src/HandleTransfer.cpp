@@ -6,6 +6,7 @@
 
 #include <sys/epoll.h>
 
+// GET
 HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
 : _client(client), _fd(fd), _fileBuffer(responseHeader), _fileSize(fileSize)
 {
@@ -13,16 +14,25 @@ HandleTransfer::HandleTransfer(Client &client, int fd, string &responseHeader, s
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
+// POST
 HandleTransfer::HandleTransfer(Client &client, size_t bytesRead, string buffer)
 : _client(client), _fd(-1), _fileBuffer(buffer), _bytesReadTotal(bytesRead), _foundBoundary(false), _searchContentDisposition(false)
 {
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
+// Chunked
 HandleTransfer::HandleTransfer(Client &client)
 : _client(client), _fd(-1), _bytesReadTotal(0), _isChunked(true)
 {
-    // _body = body;
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+}
+
+// CGI
+HandleTransfer::HandleTransfer(Client &client, string &body, int fdWriteToCgi, int fdReadfromCgi)
+: _client(client), _fd(-1), _fileBuffer(body), _bytesWrittenTotal(0), _fdWriteToCgi(fdWriteToCgi), _fdReadfromCgi(fdReadfromCgi)
+{
+    _isCgi = writeToCgi;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
@@ -161,17 +171,17 @@ bool HandleTransfer::searchContentDisposition()
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
     _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
-    _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    if (_fd == -1)
-    {
-        if (errno == EACCES)
-            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
-        else
-            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
-    }
-    _fileNamePaths.push_back(_client._filenamePath);
-    FileDescriptor::setFD(_fd);
-    _fileNamePaths.push_back(_client._filenamePath);
+    // _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    // if (_fd == -1)
+    // {
+    //     if (errno == EACCES)
+    //         throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+    //     else
+    //         throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+    // }
+    // _fileNamePaths.push_back(_client._filenamePath);
+    // FileDescriptor::setFD(_fd);
+    // _fileNamePaths.push_back(_client._filenamePath);
     _searchContentDisposition = false;
     return true;
 }
@@ -186,9 +196,12 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             size_t bytesReceived = RunServers::receiveClientData(_client, buff);
             _bytesReadTotal += bytesReceived;
             _fileBuffer.append(buff, bytesReceived);
+            if (_client._isCgi)
+            {
+                _client._body.append(buff, bytesReceived);
+                return handlePostCgi();
+            }
         }
-        if (_client._isCgi)
-            return handlePostCgi();
         while (true)
         {
             if (_bytesReadTotal > _client._contentLength)
@@ -295,20 +308,52 @@ bool HandleTransfer::handlePostCgi()
 {
     if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
     {
-        std::cout << "count" << std::endl; //testcout
+        // std::cout << "count" << std::endl; //testcout
         return false;
     }
-    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+
+    //                                  remove after testing
+    std::cout << "passed" << std::endl; //testcout
+    return HttpRequest::handleCgi(_client);
+    //                                  remove after testing
+
+    // if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    // {
+    //     std::cout << "correct cgi syntax for post request" << std::endl; //testcout
+    //     // send body to pipe for stdin of cgi
+    //     std::cout << _fileBuffer << std::endl; //testcout
+    //     std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
+    //     std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
+    //     HttpRequest::handleCgi(_client);
+    //     return true;
+    // }
+    // else
+    //     throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    return false;
+}
+
+bool HandleTransfer::handleCgiTransfer()
+{
+    /**
+     * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
+     * check the maximum size: cat /proc/sys/fs/pipe-max-size
+     */
+    ssize_t sent = write(_fdWriteToCgi, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
+    if (sent == -1)
     {
-        std::cout << "correct cgi syntax for post request" << std::endl; //testcout
-        // send body to pipe for stdin of cgi
-        std::cout << _fileBuffer << std::endl; //testcout
-        std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
-        std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
-        HttpRequest::handleCgi(_client);
-        return true;
+        throw ErrorCodeClientException(_client, 500, "Writing to CGI failed");
     }
-    else
-        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    else if (sent > 0)
+    {
+        std::cout << "sent " << sent << std::endl; //testcout
+        _bytesWrittenTotal += static_cast<size_t>(sent);
+        if (_fileBuffer.size() == _bytesWrittenTotal)
+        {
+            RunServers::cleanupFD(_fdWriteToCgi);
+            _isCgi = readFromCgi;
+            std::cout << "finished sending" << std::endl; //testcout
+            return true;
+        }
+    }
     return false;
 }

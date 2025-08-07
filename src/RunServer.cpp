@@ -162,7 +162,13 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             _clients[(*it)->_client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
-                finished = handle.handleGetTransfer();
+            {
+                std::cout << "counting here" << std::endl; //testcout
+                if ((*it)->getIsCgi() != writeToCgi)
+                    finished = handle.handleGetTransfer();
+                else
+                    finished = handle.handleCgiTransfer();
+            }
             else if (currentEvent.events & EPOLLIN)
             {
                 if ((*it)->getIsChunk() == false)
@@ -176,6 +182,12 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
+                if ((*it)->getIsCgi() != readFromCgi) {
+                    _handle.erase(it);
+                    std::cout << "never cleans up atm" << std::endl; //testcout
+                    return true;
+                }
+
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 else

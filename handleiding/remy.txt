@@ -64,3 +64,8 @@ in child we need to setup to catch the signal and handle it, cleaning up propper
 problematic
 cgi_extension .py .php .pl;  # Multiple extensions
 cgi_path python3;            # But only ONE interpreter path
+
+
+CGI
+the problem now is we are in a handlePOSTtransfer and when handleCgiTransfer made a transfer (move),
+the (it) in runserver for POST should remove this handle. and cgi handle should get triggered
