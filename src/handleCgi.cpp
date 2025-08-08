@@ -223,12 +223,7 @@ bool HttpRequest::handleCgi(Client &client)
         // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         if (handle->handleCgiTransfer() == true)
         {
-            if (client._keepAlive == false)
-                RunServers::cleanupClient(client);
-            else
-            {
-                RunServers::clientHttpCleanup(client);
-            }
+            RunServers::clientHttpCleanup(client);
             return true;
         }
         RunServers::insertHandleTransfer(move(handle));

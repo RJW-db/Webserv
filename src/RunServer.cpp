@@ -171,8 +171,14 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             else if (currentEvent.events & EPOLLIN)
             {
+                if ((*it)->getIsCgi() == readFromCgi)
+
                 if ((*it)->getIsChunk() == false)
                     finished = handle.handlePostTransfer(true);
+                // else if ((*it)->getIsCgi() == readFromCgi)
+                // {
+
+                // }
                 else
                 {
                     std::cout << "using chunked transfer" << std::endl; //testcout
@@ -182,11 +188,11 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
-                if ((*it)->getIsCgi() != readFromCgi) {
-                    _handle.erase(it);
-                    std::cout << "never cleans up atm" << std::endl; //testcout
-                    return true;
-                }
+                // if ((*it)->getIsCgi() != readFromCgi) {
+                //     _handle.erase(it);
+                //     std::cout << "never cleans up atm" << std::endl; //testcout
+                //     return true;
+                // }
 
                 if (_clients[(*it)->_client._fd]->_keepAlive == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);

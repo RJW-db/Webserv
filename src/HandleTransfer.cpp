@@ -171,17 +171,17 @@ bool HandleTransfer::searchContentDisposition()
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
     _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
-    // _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
-    // if (_fd == -1)
-    // {
-    //     if (errno == EACCES)
-    //         throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
-    //     else
-    //         throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
-    // }
-    // _fileNamePaths.push_back(_client._filenamePath);
-    // FileDescriptor::setFD(_fd);
-    // _fileNamePaths.push_back(_client._filenamePath);
+    _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if (_fd == -1)
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+        else
+            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+    }
+    _fileNamePaths.push_back(_client._filenamePath);
+    FileDescriptor::setFD(_fd);
+    _fileNamePaths.push_back(_client._filenamePath);
     _searchContentDisposition = false;
     return true;
 }
@@ -196,11 +196,10 @@ bool HandleTransfer::handlePostTransfer(bool readData)
             size_t bytesReceived = RunServers::receiveClientData(_client, buff);
             _bytesReadTotal += bytesReceived;
             _fileBuffer.append(buff, bytesReceived);
-            if (_client._isCgi)
-            {
-                _client._body.append(buff, bytesReceived);
-                return handlePostCgi();
-            }
+        }
+        if (_client._isCgi)
+        {
+            return handlePostCgi();
         }
         while (true)
         {
@@ -312,23 +311,18 @@ bool HandleTransfer::handlePostCgi()
         return false;
     }
 
-    //                                  remove after testing
-    std::cout << "passed" << std::endl; //testcout
-    return HttpRequest::handleCgi(_client);
-    //                                  remove after testing
-
-    // if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
-    // {
-    //     std::cout << "correct cgi syntax for post request" << std::endl; //testcout
-    //     // send body to pipe for stdin of cgi
-    //     std::cout << _fileBuffer << std::endl; //testcout
-    //     std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
-    //     std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
-    //     HttpRequest::handleCgi(_client);
-    //     return true;
-    // }
-    // else
-    //     throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    {
+        std::cout << "correct cgi syntax for post request" << std::endl; //testcout
+        // send body to pipe for stdin of cgi
+        std::cout << _fileBuffer << std::endl; //testcout
+        std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
+        std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
+        HttpRequest::handleCgi(_client);
+        return true;
+    }
+    else
+        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
     return false;
 }
 
@@ -352,6 +346,7 @@ bool HandleTransfer::handleCgiTransfer()
             RunServers::cleanupFD(_fdWriteToCgi);
             _isCgi = readFromCgi;
             std::cout << "finished sending" << std::endl; //testcout
+            
             return true;
         }
     }
