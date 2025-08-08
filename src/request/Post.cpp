@@ -2,8 +2,7 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <HandleTransfer.hpp>
-
-bool validateMultipartPostSyntax(Client &client, string &buffer);
+#include <utils.hpp>
 
 bool HttpRequest::processHttpBody(Client &client)
 {
@@ -63,7 +62,6 @@ ContentType HttpRequest::getContentType(Client &client)
     }
     return UNSUPPORTED;
 }
-    
 
 void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
@@ -95,6 +93,7 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
         client._filename = string(cdLine).substr(fnStart, fnEnd - fnStart);
         if (client._filename.empty())
             throw ErrorCodeClientException(client, 400, "Filename is empty in Content-Disposition header");
+        appendUuidToFilename(client, client._filename);
     }
     else
         throw ErrorCodeClientException(client, 400, "Filename not found in Content-Disposition header");
@@ -104,3 +103,34 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in multipart body");
 }
 
+void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
+{
+    char uuid[UUID_SIZE];
+    generateUuid(uuid);
+
+    size_t totalLength = filename.size() + UUID_SIZE;
+    if (totalLength > NAME_MAX)
+    {
+        size_t leftOvers = totalLength - NAME_MAX;
+        if (filename.size() > leftOvers)
+            filename = filename.substr(0, filename.size() - leftOvers);
+        else
+            throw ErrorCodeClientException(client, 413, "Filename too long to accommodate unique identifier");
+    }
+
+    size_t lastDotIndex = filename.find_last_of('.');
+    if (lastDotIndex != string::npos && lastDotIndex > 0)
+    {
+        filename.insert(lastDotIndex, uuid);
+    }
+    else
+    {
+        filename += uuid;
+    }
+
+    client._filenamePath = client._rootPath + "/" + client._filename; // here to append filename for post
+    if (client._filenamePath.size() > PATH_MAX)
+    {
+        throw ErrorCodeClientException(client, 413, "Full path to create file is too long");
+    }
+}

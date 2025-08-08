@@ -1,3 +1,4 @@
+#include <RunServer.hpp>
 #include <HandleTransfer.hpp>
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
@@ -128,9 +129,11 @@ int HandleTransfer::validateFinalCRLF()
     {
         FileDescriptor::closeFD(_fd);
         _fd = -1;
+        
         RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
-        string body = _client._filenamePath + '\n';
-        string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
+        size_t absolutePathSize = RunServers::getServerRootDir().size();
+        string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
+        string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
         send(_client._fd, headers.data(), headers.size(), 0);
         return true;
     }
@@ -346,7 +349,7 @@ bool HandleTransfer::handleCgiTransfer()
             RunServers::cleanupFD(_fdWriteToCgi);
             _isCgi = readFromCgi;
             std::cout << "finished sending" << std::endl; //testcout
-            
+
             return true;
         }
     }

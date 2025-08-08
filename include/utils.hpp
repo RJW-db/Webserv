@@ -8,12 +8,11 @@
 #include <cstdlib>
 using namespace std;
 
-static constexpr size_t UUID_SIZE = 37;
+static constexpr size_t UUID_SIZE = 38;
 
 // Static Function
 static inline void insertUuidSegment(int8_t amount, char *buffIndex);
 
-string 	 getExecutableDirectory();
 void	 initRandomSeed();
 
 /**

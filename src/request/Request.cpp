@@ -357,7 +357,6 @@ void HttpRequest::handleRequest(Client &client)
     //     RunServers::clientHttpCleanup(client);
     //     return;
     // }
-
     switch (client._useMethod)
     {
     case 1: // HEAD

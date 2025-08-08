@@ -67,7 +67,7 @@ using namespace std;
 
 #include <chrono>
 #include <cstdlib>
-static constexpr size_t UUID_SIZE = 37;
+static constexpr size_t UUID_SIZE = 38;
 
 // Static Function
 static inline void insertUuidSegment(int8_t amount, char *buffIndex);
@@ -77,14 +77,15 @@ static inline void insertUuidSegment(int8_t amount, char *buffIndex);
  * 3fb17ebc-bc38-4939-bc8b-74f2443281d4
  * 8 dash 4 dash 4 dash 4 dash 12
  */
-void generateUuid(char buff[UUID_SIZE])
+void generateUuid(char uuid[UUID_SIZE])
 {
-    insertUuidSegment(8, buff);       // buff[0-7]   = random, buff[8]  = '-'
-    insertUuidSegment(4, buff + 9);   // buff[9-12]  = random, buff[13] = '-'  
-    insertUuidSegment(4, buff + 14);  // buff[14-17] = random, buff[18] = '-'
-    insertUuidSegment(4, buff + 19);  // buff[19-22] = random, buff[23] = '-'
-    insertUuidSegment(12, buff + 24); // buff[24-35] = random, buff[36] = '-'
-    buff[UUID_SIZE - 1] = '\0';
+    uuid[0] = '-';
+    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
+    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
+    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
+    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
+    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
+    uuid[UUID_SIZE - 1] = '\0';
 }
 
 static inline void insertUuidSegment(int8_t amount, char *buffIndex)

@@ -1,4 +1,5 @@
 #include <ConfigServer.hpp>
+#include <RunServer.hpp>
 
 ConfigServer::ConfigServer()
 {
@@ -69,15 +70,14 @@ bool ConfigServer::serverName(string &line)
     _serverName = line.substr(0, len);
     return (handleNearEndOfLine(line, len, "server_name"));
 }
-
+// /sgoinfre/rde-brui/sandbox/Webserv
 void ConfigServer::setDefaultConf()
 {
     // what to do with no error pages? do we create our own or just have one
-    if (_root.empty())
-        _root = "/"; // what default root should we use?
-    if (_root.back() == '/' && _root.size() > 1)
+    _root.insert(0, RunServers::getServerRootDir());
+    if (_root.back() == '/')
         _root = _root.substr(0, _root.size() - 1);
-    _root.insert(0, ".");
+    
     if (_clientMaxBodySize == 0)
         _clientMaxBodySize = 1024 * 1024;
     if (_autoIndex == autoIndexNotFound)

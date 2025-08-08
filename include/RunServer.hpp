@@ -43,6 +43,8 @@ class RunServers
         // RunServers(tmp_t *serverConf);
         ~RunServers();
 
+        static void getExecutableDirectory();
+
         static int epollInit(ServerList &servers);
         static void addStdinToEpoll();
 
@@ -83,6 +85,10 @@ class RunServers
 
         static bool runHandleTransfer(struct epoll_event &currentEvent);
 
+        static inline string &getServerRootDir()
+        {
+            return _serverRootDir;
+        }
         static void setClientBufferSize(uint64_t value)
         {
             _clientBufferSize = value;
@@ -96,6 +102,7 @@ class RunServers
         {
             return _ramBufferLimit;
         }
+
 
         template<typename... Args>
         static void logMessage(int arg, Args&&... args)
@@ -136,6 +143,8 @@ class RunServers
         // int _listener; // moet weg
 
 		// static FileDescriptor _fds;
+        static string _serverRootDir;
+
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 

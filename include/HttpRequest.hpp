@@ -73,7 +73,7 @@ class HttpRequest
 
         static void	parseHeaders(Client &client);
         static void	getBodyInfo(Client &client, const string buff);
-
+        static void appendUuidToFilename(Client &client, string &filename);
 
         static void	POST(Client &client);
 

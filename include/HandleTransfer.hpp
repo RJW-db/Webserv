@@ -29,7 +29,14 @@ class HandleTransfer
         bool handleGetTransfer();
 
         // static bool foundBoundaryPost(Client &client, string &boundaryBuffer, int fd);
-        void errorPostTransfer(Client &client, uintnt     _fd; // targetFilePathFD, rename this for merging
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
+        bool handlePostTransfer(bool ReadData);
+        int validateFinalCRLF();
+        size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
+        bool    searchContentDisposition();
+
+        Client  &_client;
+        int     _fd; // targetFilePathFD, rename this for merging
         string  _fileBuffer;
         size_t  _fileSize;
 
@@ -44,14 +51,7 @@ class HandleTransfer
         bool    _searchContentDisposition = false;
         
 		size_t	_bytesWrittenTotal;
-16_t errorCode, string errMsg);
-        bool handlePostTransfer(bool ReadData);
-        int validateFinalCRLF();
-        size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
-        bool    searchContentDisposition();
 
-        Client  &_client;
-        i
         // chunked
         bool   _isChunked = false;
         size_t _bodyPos = 0;

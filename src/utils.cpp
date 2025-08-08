@@ -1,17 +1,8 @@
 #include <utils.hpp>
 #include <RunServer.hpp>
 
-#include <filesystem> // canonical()
 #include <dirent.h>
 
-string getExecutableDirectory()
-{
-    try {
-        return filesystem::canonical("/proc/self/exe").parent_path().string();
-    } catch (const exception& e) {
-        throw runtime_error("Cannot determine executable directory: " + string(e.what()));
-    }
-}
 
 void initRandomSeed()
 {
@@ -23,11 +14,12 @@ void initRandomSeed()
 
 void generateUuid(char uuid[UUID_SIZE])
 {
-    insertUuidSegment(8, uuid);       // uuid[0-7]   = random, uuid[8]  = '-'
-    insertUuidSegment(4, uuid + 9);   // uuid[9-12]  = random, uuid[13] = '-'  
-    insertUuidSegment(4, uuid + 14);  // uuid[14-17] = random, uuid[18] = '-'
-    insertUuidSegment(4, uuid + 19);  // uuid[19-22] = random, uuid[23] = '-'
-    insertUuidSegment(12, uuid + 24); // uuid[24-35] = random, uuid[36] = '-'
+    uuid[0] = '-';
+    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
+    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
+    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
+    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
+    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
     uuid[UUID_SIZE - 1] = '\0';
 }
 

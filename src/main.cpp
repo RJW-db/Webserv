@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     // handleCgi(client);
     // exit(0);
     FileDescriptor::initializeAtexit();
+    RunServers::getExecutableDirectory();
     if (signal(SIGINT, &sigint_handler))
     {
         std::cerr << "Error setting up signal handler: " << strerror(errno) << std::endl;

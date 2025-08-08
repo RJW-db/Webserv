@@ -23,6 +23,7 @@
 # include <sys/epoll.h>
 #endif
 #include <sys/socket.h>
+#include <filesystem> // canonical()
 
 #include <ctime>
 	
@@ -32,6 +33,7 @@
 
 // Static member variables
 // FileDescriptor RunServers::_fds;
+string RunServers::_serverRootDir;
 int RunServers::_epfd = -1;
 array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
@@ -163,7 +165,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
             {
-                std::cout << "counting here" << std::endl; //testcout
                 if ((*it)->getIsCgi() != writeToCgi)
                     finished = handle.handleGetTransfer();
                 else
@@ -171,10 +172,12 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             else if (currentEvent.events & EPOLLIN)
             {
-                if ((*it)->getIsCgi() == readFromCgi)
+                // if ((*it)->getIsCgi() == readFromCgi)
 
                 if ((*it)->getIsChunk() == false)
+                {
                     finished = handle.handlePostTransfer(true);
+                }
                 // else if ((*it)->getIsCgi() == readFromCgi)
                 // {
 
@@ -289,3 +292,12 @@ void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
 // {
 
 // }
+
+void RunServers::getExecutableDirectory()
+{
+    try {
+        _serverRootDir = filesystem::canonical("/proc/self/exe").parent_path().string();
+    } catch (const exception& e) {
+        throw runtime_error("Cannot determine executable directory: " + string(e.what()));
+    }
+}

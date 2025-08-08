@@ -1,3 +1,4 @@
+#include <RunServer.hpp>
 #include <ConfigServer.hpp>
 #include <utils.hpp>
 
@@ -186,12 +187,9 @@ void Location::SetDefaultLocation(Aconfig &curConf)
 {
     if (_autoIndex == autoIndexNotFound)
         _autoIndex = curConf.getAutoIndex();
-    if (_root.empty())
-        _root = curConf.getRoot();
-	else
-		_root.insert(0, ".");
-	if (_root[_root.size() - 1] == '/' && _root.size() > 2)
-		_root = _root.substr(0, _root.size() - 1);
+    _root.insert(0, RunServers::getServerRootDir());
+    if (_root.back() == '/')
+        _root = _root.substr(0, _root.size() - 1);
     if (_locationPath[_locationPath.size() - 1] == '/' && _locationPath.size() > 1)
         _locationPath = _locationPath.substr(0, _locationPath.size() - 1);
     if (_root.size() > 2)
