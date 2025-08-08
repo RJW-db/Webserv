@@ -78,6 +78,7 @@ class RunServers
         static void cleanupClient(Client &client);
 
         static bool runHandleTransfer(struct epoll_event &currentEvent);
+        static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
 
         static void setClientBufferSize(uint64_t value)
         {
@@ -141,6 +142,7 @@ class RunServers
         // static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
         static vector<unique_ptr<HandleShort>> _handle;
+        static vector<unique_ptr<HandleShort>> _handleCgi;
         static vector<int> _listenFDS;
         static unordered_map<int, unique_ptr<Client>> _clients;
 

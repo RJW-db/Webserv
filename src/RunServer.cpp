@@ -38,6 +38,7 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
 vector<unique_ptr<HandleShort>> RunServers::_handle;
+vector<unique_ptr<HandleShort>> RunServers::_handleCgi;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 int RunServers::_level = -1;
@@ -188,6 +189,23 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     }
     return false;
 }
+
+// bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
+// {
+//     for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
+//     {
+//         if (currentEvent.events & EPOLLIN)
+//         {
+//             // Handle incoming data for CGI
+//             (*it)->readFromCgi();
+//         }
+//         else if (currentEvent.events & EPOLLOUT)
+//         {
+//             // Handle outgoing data for CGI
+//             (*it)->writeToCgi();
+//         }
+//     }
+// }
 
 void RunServers::handleEvents(size_t eventCount)
 {
