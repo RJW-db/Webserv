@@ -4,14 +4,21 @@
 #include <HttpRequest.hpp>
 #include <Client.hpp>
 
-void HandleTransfer::appendToBody()
+HandleChunkPost::HandleChunkPost(Client &client)
+: HandlePost(client, -1), _isChunked(true)
+{
+    _bytesReadTotal = 0;
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+}
+
+void HandleChunkPost::appendToBody()
 {
     char   buff[RunServers::getClientBufferSize()];
     size_t bytesReceived = RunServers::receiveClientData(_client, buff);
     _client._body.append(buff, bytesReceived);
 }
 
-bool HandleTransfer::handleChunkTransfer()
+bool HandleChunkPost::handleChunkTransfer()
 {
     size_t targetSize = 0;
     try
@@ -47,7 +54,7 @@ bool HandleTransfer::handleChunkTransfer()
     return false;
 }
 
-bool    HandleTransfer::decodeChunk(size_t &targetSize)
+bool    HandleChunkPost::decodeChunk(size_t &targetSize)
 {
     while (true)
     {
@@ -90,7 +97,7 @@ bool    HandleTransfer::decodeChunk(size_t &targetSize)
     return false; // shouldn't never get here
 }
 
-bool HandleTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)
+bool HandleChunkPost::extractChunkSize(size_t &targetSize, size_t &dataStart)
 {
     size_t crlfPos = _client._body.find(CRLF, _bodyPos);
 
@@ -107,7 +114,7 @@ bool HandleTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)
     return true;
 }
 
-void HandleTransfer::validateChunkSizeLine(string_view chunkSizeLine)
+void HandleChunkPost::validateChunkSizeLine(string_view chunkSizeLine)
 {
     if (chunkSizeLine.empty())
         throw ErrorCodeClientException(_client, 400, "Chunk size line is empty: " + string(chunkSizeLine));
@@ -116,7 +123,7 @@ void HandleTransfer::validateChunkSizeLine(string_view chunkSizeLine)
         throw ErrorCodeClientException(_client, 400, "Chunk size line contains non-hex characters: " + string(chunkSizeLine));
 }
 
-uint64_t HandleTransfer::parseChunkSize(string_view chunkSizeLine)
+uint64_t HandleChunkPost::parseChunkSize(string_view chunkSizeLine)
 {
     uint64_t targetSize;
     stringstream ss;
