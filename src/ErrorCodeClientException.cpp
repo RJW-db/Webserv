@@ -67,7 +67,7 @@ void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPag
     _client._filenamePath = errorPagePath;
     FileDescriptor::setFD(fd);
     string response = HttpRequest::HttpResponse(_client, errorCode, errorPagePath, fileSize);
-    auto transfer = make_unique<HandleGet>(_client, fd, response, fileSize);
+    auto transfer = make_unique<HandleGetTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
 }
 

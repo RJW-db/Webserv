@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class HandleShort
+class HandleTransfer
 {
     public :
         Client &_client;
@@ -23,27 +23,50 @@ class HandleShort
         virtual bool handleChunkTransfer() = 0;
         virtual bool getIsChunk() const = 0;
         virtual void appendToBody() = 0;
-        virtual ~HandleShort() = default;
+        virtual ~HandleTransfer() = default;
 
     protected :
-        HandleShort(Client &client, int fd) : _client(client), _fd(fd) {};
+        HandleTransfer(Client &client, int fd) : _client(client), _fd(fd) {};
 };
 
-class HandlePost : public HandleShort
+
+class HandleGetTransfer : public HandleTransfer
+{
+    public :
+        HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
+        HandleGetTransfer(const HandleGetTransfer &other) = default;
+        HandleGetTransfer &operator=(const HandleGetTransfer &other);
+        ~HandleGetTransfer() = default;
+
+        void readToBuf();
+        bool handleGetTransfer();
+
+        size_t  _fileSize;
+        size_t _offset;
+        size_t  _headerSize;
+
+        // Pure virtual function implementations - throw errors for unsupported operations
+        virtual bool handlePostTransfer(bool readData) {(void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleGetTransfer");}
+        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleGetTransfer");}
+        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not supported for HandleGetTransfer");}
+        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleGetTransfer");}
+};
+
+class HandlePostTransfer : public HandleTransfer
 {
 public:
-    HandlePost(Client &client, size_t bytesRead, string buffer); // POST
-    HandlePost(const HandlePost &other) = default;
-    HandlePost &operator=(const HandlePost &other);
-    ~HandlePost() = default;
+    HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
+    HandlePostTransfer(const HandlePostTransfer &other) = default;
+    HandlePostTransfer &operator=(const HandlePostTransfer &other);
+    ~HandlePostTransfer() = default;
 
-    // HandlePost specific members
+    // HandlePostTransfer specific members
     size_t _bytesWrittenTotal;
 
     bool _foundBoundary = false;
     bool _searchContentDisposition = false;
 
-    vector<string> _fileNamePaths; // for post transfer - shared between HandlePost and HandleChunkPost
+    vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
     bool handlePostTransfer(bool ReadData);
 
@@ -53,13 +76,13 @@ public:
     bool handlePostCgi();
 
     // Pure virtual function implementations - throw errors for unsupported operations
-    virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandlePost");}
-    virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandlePost");}
+    virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandlePostTransfer");}
+    virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandlePostTransfer");}
     virtual bool getIsChunk() const { return false;}
-    virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandlePost");}
+    virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandlePostTransfer");}
 
 protected:
-    HandlePost(Client &client, int fd) : HandleShort(client, fd) {};
+    HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd) {};
 
 private:
     int validateFinalCRLF();
@@ -70,33 +93,10 @@ private:
     static void parseContentDisposition(Client &client, string_view &buffer);
 };
 
-class HandleGet : public HandleShort
+class HandleChunkTransfer : public HandlePostTransfer
 {
     public :
-        HandleGet(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        HandleGet(const HandleGet &other) = default;
-        HandleGet &operator=(const HandleGet &other);
-        ~HandleGet() = default;
-
-        void readToBuf();
-        bool handleGetTransfer();
-
-        size_t  _fileSize;
-        size_t _offset;
-        size_t  _headerSize;
-
-        // Pure virtual function implementations - throw errors for unsupported operations
-        virtual bool handlePostTransfer(bool readData) {(void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleGet");}
-        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleGet");}
-        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not supported for HandleGet");}
-        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleGet");}
-};
-
-
-class HandleChunkPost : public HandlePost
-{
-    public :
-        HandleChunkPost(Client &client); // chunked
+        HandleChunkTransfer(Client &client); // chunked
 
         bool _isChunked = false;
         size_t _bodyPos = 0;
@@ -123,12 +123,12 @@ class HandleChunkPost : public HandlePost
 
 };
 
-class HandleWriteToCgi : public HandleShort
+class HandleWriteToCgiTransfer : public HandleTransfer
 {
     bool handleCgiTransfer();
 };
 
-class ReadFromCgi : public HandleShort
+class HandleReadFromCgiTransfer : public HandleTransfer
 {
     bool readFromCgi();
 

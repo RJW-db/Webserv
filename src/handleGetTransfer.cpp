@@ -2,15 +2,15 @@
 #include <RunServer.hpp>
 #include <sys/epoll.h>
 
-HandleGet::HandleGet(Client &client, int fd, string &responseHeader, size_t fileSize)
-: HandleShort(client, fd),  _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
+HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
+: HandleTransfer(client, fd),  _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
 {
     _bytesReadTotal = 0;
     _fileBuffer = responseHeader;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleGet &HandleGet::operator=(const HandleGet &other)
+HandleGetTransfer &HandleGetTransfer::operator=(const HandleGetTransfer &other)
 {
     if (this != &other) {
         // _client is a reference and cannot be assigned
@@ -23,7 +23,7 @@ HandleGet &HandleGet::operator=(const HandleGet &other)
     }
     return *this;
 }
-void HandleGet::readToBuf()
+void HandleGetTransfer::readToBuf()
 {
     if (_fd != -1)
     {
@@ -45,7 +45,7 @@ void HandleGet::readToBuf()
     }
 }
 
-bool HandleGet::handleGetTransfer()
+bool HandleGetTransfer::handleGetTransfer()
 {
     readToBuf();
     ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), MSG_NOSIGNAL);

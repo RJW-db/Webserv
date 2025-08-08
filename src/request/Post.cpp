@@ -7,8 +7,8 @@
 bool HttpRequest::processHttpBody(Client &client)
 {
     HttpRequest::getContentLength(client);
-    unique_ptr<HandleShort> handle;
-    handle = make_unique<HandlePost>(client, client._body.size(), client._body);
+    unique_ptr<HandleTransfer> handle;
+    handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
     {
         if (client._keepAlive == false)

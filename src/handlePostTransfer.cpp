@@ -5,15 +5,15 @@
 #include <sys/epoll.h>
 
 // POST
-HandlePost::HandlePost(Client &client, size_t bytesRead, string buffer)
-: HandleShort(client, -1), _foundBoundary(false), _searchContentDisposition(false)
+HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
+: HandleTransfer(client, -1), _foundBoundary(false), _searchContentDisposition(false)
 {
     _bytesReadTotal = bytesRead;
     _fileBuffer = buffer;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
-HandlePost &HandlePost::operator=(const HandlePost &other)
+HandlePostTransfer &HandlePostTransfer::operator=(const HandlePostTransfer &other)
 {
     if (this != &other) {
         // _client is a reference and cannot be assigned
@@ -28,7 +28,7 @@ HandlePost &HandlePost::operator=(const HandlePost &other)
 }
 
 // return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
-int HandlePost::validateFinalCRLF()
+int HandlePostTransfer::validateFinalCRLF()
 {
     size_t foundReturn = _fileBuffer.find(CRLF);
     if (foundReturn == 0)
@@ -45,8 +45,9 @@ int HandlePost::validateFinalCRLF()
         FileDescriptor::closeFD(_fd);
         _fd = -1;
         RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
-        string body = _client._filenamePath + '\n';
-        string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", body.size()) + body;
+        size_t absolutePathSize = RunServers::getServerRootDir().size();
+        string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
+        string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
         send(_client._fd, headers.data(), headers.size(), 0);
         return true;
     }
@@ -55,7 +56,7 @@ int HandlePost::validateFinalCRLF()
     return false;
 }
 
-size_t HandlePost::FindBoundaryAndWrite(ssize_t &bytesWritten)
+size_t HandlePostTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
 {
     size_t boundaryBufferSize = _client._bodyBoundary.size() + 4; // \r\n--boundary
     size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
@@ -79,14 +80,14 @@ size_t HandlePost::FindBoundaryAndWrite(ssize_t &bytesWritten)
     return boundaryFound;
 }
 
-bool HandlePost::searchContentDisposition()
+bool HandlePostTransfer::searchContentDisposition()
 {
     size_t bodyEnd = _fileBuffer.find(CRLF2);
     if (bodyEnd == string::npos)
         return false;
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
-    _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
+    // _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (_fd == -1)
     {
@@ -102,7 +103,7 @@ bool HandlePost::searchContentDisposition()
     return true;
 }
 
-bool HandlePost::handlePostTransfer(bool readData)
+bool HandlePostTransfer::handlePostTransfer(bool readData)
 {
     try
     {
@@ -157,7 +158,7 @@ bool HandlePost::handlePostTransfer(bool readData)
 }
 
 
-void HandlePost::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
+void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
     FileDescriptor::closeFD(_fd);
     for (const auto &filePath : _fileNamePaths)
@@ -168,7 +169,7 @@ void HandlePost::errorPostTransfer(Client &client, uint16_t errorCode, string er
     throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on file with fileDescriptor: " + to_string(_fd));
 }
 
-void HandlePost::parseContentDisposition(Client &client, string_view &buffer)
+void HandlePostTransfer::parseContentDisposition(Client &client, string_view &buffer)
 {
     size_t bodyEnd = buffer.find(CRLF2);
     if (bodyEnd == string_view::npos)
@@ -179,7 +180,7 @@ void HandlePost::parseContentDisposition(Client &client, string_view &buffer)
     buffer.remove_prefix(bodyEnd + CRLF2_LEN);
 }
 
-bool HandlePost::validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
+bool HandlePostTransfer::validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
 {
     size_t crlfPos = buffer.find(CRLF);
     
@@ -199,7 +200,7 @@ bool HandlePost::validateBoundaryTerminator(Client &client, string_view &buffer,
     throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
 }
 
-bool HandlePost::validateMultipartPostSyntax(Client &client, string &input)
+bool HandlePostTransfer::validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
         throw ErrorCodeClientException(client, 400, "Content-Length does not match body size");
@@ -231,7 +232,7 @@ bool HandlePost::validateMultipartPostSyntax(Client &client, string &input)
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }
 
-bool HandlePost::handlePostCgi()
+bool HandlePostTransfer::handlePostCgi()
 {
     if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
     {

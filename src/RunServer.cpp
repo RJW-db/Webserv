@@ -39,8 +39,8 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
-vector<unique_ptr<HandleShort>> RunServers::_handle;
-vector<unique_ptr<HandleShort>> RunServers::_handleCgi;
+vector<unique_ptr<HandleTransfer>> RunServers::_handle;
+vector<unique_ptr<HandleTransfer>> RunServers::_handleCgi;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 int RunServers::_level = -1;
@@ -160,7 +160,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     {
         if ((*it)->_client._fd == eventFD)
         {
-            HandleShort &handle = **it;
+            HandleTransfer &handle = **it;
             Client &client = handle._client;
             _clients[client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
@@ -279,7 +279,7 @@ void RunServers::handleEvents(size_t eventCount)
     }
 }
 
-void RunServers::insertHandleTransfer(unique_ptr<HandleShort> handle)
+void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
 {
     _handle.push_back(move(handle));
 }

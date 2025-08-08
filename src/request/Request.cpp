@@ -300,7 +300,7 @@ void HttpRequest::GET(Client &client)
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
-    auto handle = make_unique<HandleGet>(client, fd, responseStr, static_cast<size_t>(fileSize));
+    auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
     RunServers::insertHandleTransfer(move(handle));
 }
 
@@ -392,8 +392,8 @@ void HttpRequest::handleRequest(Client &client)
                 // handleChunks(client);
                 // client._contentLength = client._location.getClientMaxBodySize();
                 client._contentLength = 0;
-                unique_ptr<HandleShort> handle;
-                handle = make_unique<HandleChunkPost>(client);
+                unique_ptr<HandleTransfer> handle;
+                handle = make_unique<HandleChunkTransfer>(client);
                 // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
                 if (handle->handleChunkTransfer() == true)
                 {
