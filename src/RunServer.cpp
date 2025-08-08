@@ -189,25 +189,28 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             return true;
         }
     }
+
     return false;
 }
 
-// bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
-// {
-//     for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
-//     {
-//         if (currentEvent.events & EPOLLIN)
-//         {
-//             // Handle incoming data for CGI
-//             (*it)->readFromCgi();
-//         }
-//         else if (currentEvent.events & EPOLLOUT)
-//         {
-//             // Handle outgoing data for CGI
-//             (*it)->writeToCgi();
-//         }
-//     }
-// }
+bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
+{
+    (void)currentEvent;
+    for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
+    {
+        // if (currentEvent.events & EPOLLIN)
+        // {
+        //     // Handle incoming data for CGI
+        //     // (*it)->readFromCgi();
+        // }
+        // else if (currentEvent.events & EPOLLOUT)
+        // {
+        //     // Handle outgoing data for CGI
+        //     // (*it)->writeToCgi();
+        // }
+    }
+    return false;
+}
 
 void RunServers::handleEvents(size_t eventCount)
 {
@@ -259,7 +262,8 @@ void RunServers::handleEvents(size_t eventCount)
             //     }
             // }
             // std::cout << '4' << std::endl;
-            if (runHandleTransfer(currentEvent) == true)
+            if (runHandleTransfer(currentEvent) == true || \
+                runCgiHandleTransfer(currentEvent) == true)
                 continue;
             // std::cout << '5' << std::endl;
 

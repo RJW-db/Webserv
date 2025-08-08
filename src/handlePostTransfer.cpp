@@ -87,7 +87,6 @@ bool HandlePostTransfer::searchContentDisposition()
         return false;
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer = _fileBuffer.erase(0, bodyEnd + 4);
-    // _client._filenamePath = _client._rootPath + "/" + _client._filename; // here to append filename for post
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
     if (_fd == -1)
     {

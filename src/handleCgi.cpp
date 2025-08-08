@@ -19,6 +19,14 @@
 #define CHILD 0
 
 
+// CGI
+HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi, int fdReadfromCgi)
+: HandleTransfer(client, -1), _fdWriteToCgi(fdWriteToCgi), _fdReadfromCgi(fdReadfromCgi), _bytesWrittenTotal(0)
+{
+    _fileBuffer = fileBuffer;
+    // _isCgi = writeToCgi;
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+}
 
 
 void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
@@ -218,15 +226,15 @@ bool HttpRequest::handleCgi(Client &client)
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
 
-        // unique_ptr<HandleTransfer> handle;
-        // handle = make_unique<HandleTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
-        // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-        // if (handle->handleCgiTransfer() == true)
-        // {
-        //     RunServers::clientHttpCleanup(client);
-        //     return true;
-        // }
-        // RunServers::insertHandleTransfer(move(handle));
+        unique_ptr<HandleWriteToCgiTransfer> handle;
+        handle = make_unique<HandleWriteToCgiTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
+        handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+        if (handle->handleCgiTransfer() == true)
+        {
+            RunServers::clientHttpCleanup(client);
+            return true;
+        }
+        RunServers::insertHandleTransfer(move(handle));
 
 
         // std::cout << client._body.size() << std::endl; //testcout

@@ -3,7 +3,7 @@
 #include <sys/epoll.h>
 
 HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
-: HandleTransfer(client, fd),  _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
+: HandleTransfer(client, fd), _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
 {
     _bytesReadTotal = 0;
     _fileBuffer = responseHeader;

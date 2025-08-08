@@ -29,7 +29,6 @@ class HandleTransfer
         HandleTransfer(Client &client, int fd) : _client(client), _fd(fd) {};
 };
 
-
 class HandleGetTransfer : public HandleTransfer
 {
     public :
@@ -125,7 +124,20 @@ class HandleChunkTransfer : public HandlePostTransfer
 
 class HandleWriteToCgiTransfer : public HandleTransfer
 {
-    bool handleCgiTransfer();
+    public:
+        HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi, int fdReadfromCgi);
+
+        int _fdWriteToCgi = -1;
+        int _fdReadfromCgi = -1;
+        size_t _bytesWrittenTotal;
+        bool handleCgiTransfer();
+
+        virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool getIsChunk() const { return false; }
+        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleWriteToCgiTransfer"); }
+
 };
 
 class HandleReadFromCgiTransfer : public HandleTransfer
@@ -141,8 +153,7 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 
         int8_t _isCgi = isNotCgi;
 
-        int _fdWriteToCgi = -1;
-        int _fdReadfromCgi = -1;
+
 
         inline int8_t getIsCgi() const {
             return _isCgi;
