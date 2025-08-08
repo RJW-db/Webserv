@@ -65,16 +65,12 @@ class RunServers
 
         static void setEpollEvents(int fd, int option, uint32_t events);
 
-        static bool handleGetTransfer(HandleTransfer &client);
-		static bool handlePostTransfer(HandleTransfer &handle);
-        // static bool handlingSend(HandleTransfer &ht);
-
 		static unique_ptr<Client> &getClient(int fd);
 
         static void parseHeaders(Client &client);
         unordered_map<string, string_view> _headerFields;
 
-        static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
+        static void insertHandleTransfer(unique_ptr<HandleShort> handle);
         static void insertClientFD(int fd);
 
         static void clientHttpCleanup(Client &client);
@@ -84,6 +80,7 @@ class RunServers
         static void cleanupClient(Client &client);
 
         static bool runHandleTransfer(struct epoll_event &currentEvent);
+        static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
 
         static inline string &getServerRootDir()
         {
@@ -153,7 +150,8 @@ class RunServers
         // static unordered_map<int, ClientRequestState> _clientStates;
         // static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
-        static vector<unique_ptr<HandleTransfer>> _handle;
+        static vector<unique_ptr<HandleShort>> _handle;
+        static vector<unique_ptr<HandleShort>> _handleCgi;
         static vector<int> _listenFDS;
         static unordered_map<int, unique_ptr<Client>> _clients;
 

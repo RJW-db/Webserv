@@ -218,15 +218,15 @@ bool HttpRequest::handleCgi(Client &client)
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
 
-        unique_ptr<HandleTransfer> handle;
-        handle = make_unique<HandleTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
+        // unique_ptr<HandleTransfer> handle;
+        // handle = make_unique<HandleTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
         // handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-        if (handle->handleCgiTransfer() == true)
-        {
-            RunServers::clientHttpCleanup(client);
-            return true;
-        }
-        RunServers::insertHandleTransfer(move(handle));
+        // if (handle->handleCgiTransfer() == true)
+        // {
+        //     RunServers::clientHttpCleanup(client);
+        //     return true;
+        // }
+        // RunServers::insertHandleTransfer(move(handle));
 
 
         // std::cout << client._body.size() << std::endl; //testcout

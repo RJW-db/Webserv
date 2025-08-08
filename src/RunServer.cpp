@@ -39,7 +39,8 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
-vector<unique_ptr<HandleTransfer>> RunServers::_handle;
+vector<unique_ptr<HandleShort>> RunServers::_handle;
+vector<unique_ptr<HandleShort>> RunServers::_handleCgi;
 // vector<int> RunServers::_connectedClients;
 unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 int RunServers::_level = -1;
@@ -159,50 +160,29 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     {
         if ((*it)->_client._fd == eventFD)
         {
-            HandleTransfer &handle = **it;
+            HandleShort &handle = **it;
             Client &client = handle._client;
-            _clients[(*it)->_client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+            _clients[client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
-            {
-                if ((*it)->getIsCgi() != writeToCgi)
-                    finished = handle.handleGetTransfer();
-                else
-                    finished = handle.handleCgiTransfer();
-            }
+                finished = handle.handleGetTransfer();
             else if (currentEvent.events & EPOLLIN)
             {
-                // if ((*it)->getIsCgi() == readFromCgi)
-
                 if ((*it)->getIsChunk() == false)
-                {
                     finished = handle.handlePostTransfer(true);
-                }
-                // else if ((*it)->getIsCgi() == readFromCgi)
-                // {
-
-                // }
                 else
                 {
-                    std::cout << "using chunked transfer" << std::endl; //testcout
                     handle.appendToBody();
                     finished = handle.handleChunkTransfer();
                 }
             }
             if (finished == true)
             {
-                // if ((*it)->getIsCgi() != readFromCgi) {
-                //     _handle.erase(it);
-                //     std::cout << "never cleans up atm" << std::endl; //testcout
-                //     return true;
-                // }
-
-                if (_clients[(*it)->_client._fd]->_keepAlive == false)
+                if (_clients[(*it)->_client._fd]->_keepAlive == false && client._isCgi == false)
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 else
                 {
                     _handle.erase(it);
-                    std::cout << "cleaning client: " << client._fd << std::endl; //testcout
                     clientHttpCleanup(client);
                 }
             }
@@ -211,6 +191,23 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     }
     return false;
 }
+
+// bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
+// {
+//     for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
+//     {
+//         if (currentEvent.events & EPOLLIN)
+//         {
+//             // Handle incoming data for CGI
+//             (*it)->readFromCgi();
+//         }
+//         else if (currentEvent.events & EPOLLOUT)
+//         {
+//             // Handle outgoing data for CGI
+//             (*it)->writeToCgi();
+//         }
+//     }
+// }
 
 void RunServers::handleEvents(size_t eventCount)
 {
@@ -282,7 +279,7 @@ void RunServers::handleEvents(size_t eventCount)
     }
 }
 
-void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
+void RunServers::insertHandleTransfer(unique_ptr<HandleShort> handle)
 {
     _handle.push_back(move(handle));
 }
