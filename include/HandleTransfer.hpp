@@ -18,12 +18,14 @@ class HandleShort
 
 
         // Pure virtual functions for polymorphic behavior
-        virtual bool handleGetTransfer() = 0;
-        virtual bool handlePostTransfer(bool readData) = 0;
-        virtual bool handleChunkTransfer() = 0;
-        virtual bool getIsChunk() const = 0;
-        virtual void appendToBody() = 0;
-        virtual ~HandleShort() = default;
+		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented"); }
+		virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented"); }
+		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented"); }
+		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented"); }
+		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented"); }
+        virtual void readFromCgi() { throw std::runtime_error("readFromCgi not implemented"); }
+		virtual bool writeToCgi() { throw std::runtime_error("writeToCgi not implemented"); }
+		virtual ~HandleShort() = default;
 
     protected :
         HandleShort(Client &client, int fd) : _client(client), _fd(fd) {};
@@ -51,12 +53,6 @@ public:
 
     bool validateMultipartPostSyntax(Client &client, string &input);
     bool handlePostCgi();
-
-    // Pure virtual function implementations - throw errors for unsupported operations
-    virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandlePost");}
-    virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandlePost");}
-    virtual bool getIsChunk() const { return false;}
-    virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandlePost");}
 
 protected:
     HandlePost(Client &client, int fd) : HandleShort(client, fd) {};
@@ -86,10 +82,6 @@ class HandleGet : public HandleShort
         size_t  _headerSize;
 
         // Pure virtual function implementations - throw errors for unsupported operations
-        virtual bool handlePostTransfer(bool readData) {(void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleGet");}
-        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleGet");}
-        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not supported for HandleGet");}
-        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleGet");}
 };
 
 
@@ -123,17 +115,32 @@ class HandleChunkPost : public HandlePost
 
 };
 
-class HandleWriteToCgi : public HandleShort
+// class HandleTransferCgi :
+// {
+//     bool writeToCgi();
+//     void readFromCgi();
+
+// 	int _fd;
+
+// };
+
+class HandleTransferWriteCgi : public HandleShort
 {
-    bool handleCgiTransfer();
+	public:
+		HandleTransferWriteCgi(Client &client, int fdWriteToCgi, string &body);
+		HandleTransferWriteCgi(const HandleTransferWriteCgi &other) = default;
+		HandleTransferWriteCgi &operator=(const HandleTransferWriteCgi &other) = default;
+		bool writeToCgi();
 };
 
-class ReadFromCgi : public HandleShort
+class HandleTransferRecvCgi : public HandleShort
 {
-    bool readFromCgi();
-
+	public:
+		HandleTransferRecvCgi(Client &client, int fdReadFromCgi);
+		HandleTransferRecvCgi(const HandleTransferRecvCgi &other) = default;
+		HandleTransferRecvCgi &operator=(const HandleTransferRecvCgi &other) = default;
+		void readFromCgi();
 };
-
 /*
         // CGI
         bool handleCgiTransfer();

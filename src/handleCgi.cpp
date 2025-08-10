@@ -99,7 +99,7 @@ vector<string> createEnvp(Client &client)
         {
             envpString.push_back(string("UPLOAD_STORE=") + "./");
         }
-        
+
 
         // std::cout << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
 
@@ -107,7 +107,7 @@ vector<string> createEnvp(Client &client)
         // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=...");
         // exit(0);
     }
-    
+
     envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
     envpString.push_back("SERVER_NAME=" + client._usedServer->getServerName());
     // envpString.push_back("SERVER_PORT=" + client._usedServer->getPortHost());
@@ -214,7 +214,7 @@ bool HttpRequest::handleCgi(Client &client)
         // exit(0);
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
-        
+
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
 
@@ -236,7 +236,7 @@ bool HttpRequest::handleCgi(Client &client)
         //  * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
         //  * check the maximum size: cat /proc/sys/fs/pipe-max-size
         //  */
-        // while (total_sent < client._body.size()) { 
+        // while (total_sent < client._body.size()) {
         //     ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, client._body.size() - total_sent);
         //     // ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, 15000);
         //     if (sent == -1) {
@@ -262,12 +262,14 @@ bool HttpRequest::handleCgi(Client &client)
         //     write(1, buff, ret);
         // } while (ret > 0);
         // write(1, "\n", 1);
-        
+
 
         std::cout << "end of parent" << std::endl; //testcout
     }
     return false;
 }
+
+
 
 // void handleCgi(Client &client)
 // {
@@ -276,16 +278,16 @@ bool HttpRequest::handleCgi(Client &client)
 
 //     if (pipe(pipefd) == -1)
 //         throw ErrorCodeClientException(client, 500, "Failed to create pipe for CGI handling");
-        
+
 //     pid = fork();
 //     if (pid == -1)
 //         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
-    
+
 //     // if (dup2(STDOUT_FILENO, pipefd[1]) == -1)
 //     if (dup2(pipefd[1], STDOUT_FILENO) == -1)
 //         throw ErrorCodeClientException(client, 500, "Failed to dup2 for CGI handling");
-        
-    
+
+
 //     if (pid >= PARENT)
 //     {
 //         close(pipefd[0]);

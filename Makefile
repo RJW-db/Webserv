@@ -14,7 +14,7 @@ CCPFLAGS		+=	-Wall -Wextra
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 
@@ -31,11 +31,11 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
 					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp \
-					ErrorCodeClientException.cpp 
+					ErrorCodeClientException.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
 #		Find all .c files in the specified directories
-SRCP			:=	$(addprefix $(SRC_DIR), $(MAIN))															
+SRCP			:=	$(addprefix $(SRC_DIR), $(MAIN))
 # $(addprefix $(SRC_DIR)parsing/, $(PARSE))
 
 #		Generate object file names

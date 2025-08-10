@@ -26,7 +26,7 @@
 #include <filesystem> // canonical()
 
 #include <ctime>
-	
+
 #include <dirent.h>
 
 #include <signal.h>
@@ -67,16 +67,16 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 
 #include <chrono>
 #include <thread>
-#include <ctime> 
+#include <ctime>
 void clocking()
 {
     auto start = chrono::system_clock::now();
     // Some computation here
     auto end = chrono::system_clock::now();
- 
+
     chrono::duration<double> elapsed_seconds = end-start;
     time_t end_time = chrono::system_clock::to_time_t(end);
- 
+
     cout << "finished computation at " << ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s"
               << endl;
@@ -189,6 +189,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             return true;
         }
     }
+	// return runCgiHandleTransfer(currentEvent);
     return false;
 }
 

@@ -3,6 +3,7 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
+#include <unistd.h>
 #include <Client.hpp>
 
 #include <sys/epoll.h>
@@ -35,9 +36,44 @@
 //     return *this;
 // }
 
+HandleTransferWriteCgi::HandleTransferWriteCgi(Client &client, int fdWriteToCgi, string &body)
+: HandleShort(client, fdWriteToCgi)
+{
+	_fileBuffer = body;
+}
+
+bool HandleTransferWriteCgi::writeToCgi()
+{
+	ssize_t written = write(_fd, _fileBuffer.data(), _fileBuffer.size());
+	if (written == -1)
+		throw ErrorCodeClientException(_client, 500, "Couldn't Write to cgi process");
+	_fileBuffer.erase(0, written);
+	return (_fileBuffer.empty());
+}
+
+HandleTransferRecvCgi::HandleTransferRecvCgi(Client &client, int fdReadFromCgi)
+: HandleShort(client, fdReadFromCgi)
+{
+}
+
+void HandleTransferRecvCgi::readFromCgi()
+{
+	char buff[RunServers::getClientBufferSize()];
+	ssize_t bytesRead = read(_fd, buff, RunServers::getClientBufferSize());
+	if (bytesRead == -1)
+		throw ErrorCodeClientException(_client, 500, "couldn't read from cgi process");
+	ssize_t bytesSent = send(_client._fd, buff, bytesRead, 0);
+	if (bytesSent != bytesRead)
+	{
+		std::cout << "bytes sent lower then bytes read from cgi process" << std::endl; // testcout
+	}
+}
 
 
+// void HandleTransferCgi::writeToCgi()
+// {
 
+// }
 
 
 // bool HandleTransfer::handleCgiTransfer()
@@ -60,7 +96,7 @@
 //             RunServers::cleanupFD(_fdWriteToCgi);
 //             _isCgi = readFromCgi;
 //             std::cout << "finished sending" << std::endl; //testcout
-            
+
 //             return true;
 //         }
 //     }
