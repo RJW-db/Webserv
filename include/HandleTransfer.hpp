@@ -129,7 +129,7 @@ class HandleTransferWriteCgi : public HandleShort
 	public:
 		HandleTransferWriteCgi(Client &client, int fdWriteToCgi, string &body);
 		HandleTransferWriteCgi(const HandleTransferWriteCgi &other) = default;
-		HandleTransferWriteCgi &operator=(const HandleTransferWriteCgi &other) = default;
+		// HandleTransferWriteCgi &operator=(const HandleTransferWriteCgi &other) = default;
 		bool writeToCgi();
 };
 
@@ -138,7 +138,7 @@ class HandleTransferRecvCgi : public HandleShort
 	public:
 		HandleTransferRecvCgi(Client &client, int fdReadFromCgi);
 		HandleTransferRecvCgi(const HandleTransferRecvCgi &other) = default;
-		HandleTransferRecvCgi &operator=(const HandleTransferRecvCgi &other) = default;
+		// HandleTransferRecvCgi &operator=(const HandleTransferRecvCgi &other) = default;
 		void readFromCgi();
 };
 /*

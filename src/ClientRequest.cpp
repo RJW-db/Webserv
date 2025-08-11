@@ -62,6 +62,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, _clientBufferSize, 0);
+    std::cout << "received data: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
@@ -103,7 +104,7 @@ static bool pickServer(Client &client, pair<const string, string> &porthost, uin
     {
         if (to_string(port) == porthost.first)
         {
-            uint find = client._header.find("Host:") + 5; // TODO uint sam?
+            size_t find = client._header.find("Host:") + 5;
             string_view hostname = string_view(client._header).substr(find);
             hostname.remove_prefix(hostname.find_first_not_of(" \t"));
             size_t len = hostname.find_first_of(" \t\n\r");

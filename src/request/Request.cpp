@@ -47,18 +47,28 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
-    size_t ConnectionIndex = client._header.find("Connection:");
-    if (ConnectionIndex != string::npos)
-    {
-        if (client._header.find("close\r\n", ConnectionIndex) != string::npos)
-            client._keepAlive = false;
-        else if (client._header.find("keep-alive\r\n", ConnectionIndex) != string::npos)
-            client._keepAlive = true;
-        else
-            throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + client._header.substr(ConnectionIndex));
-    }
     HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
+    
+    // Validate Host header (required in HTTP/1.1)
+    auto hostHeader = client._headerFields.find("Host");
+    if (hostHeader == client._headerFields.end()) {
+        throw ErrorCodeClientException(client, 400, "Missing required Host header");
+    }
+    
+    // Handle Connection header properly
+    auto connectionHeader = client._headerFields.find("Connection");
+    if (connectionHeader != client._headerFields.end()) {
+        string_view connValue = connectionHeader->second;
+        if (connValue == "close") {
+            client._keepAlive = false;
+        } else if (connValue == "keep-alive") {
+            client._keepAlive = true;
+        } else {
+            throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + string(connValue));
+        }
+    }
+    
     // Check if there is a null character in buff
     if (client._header.find('\0') != string::npos)
        throw ErrorCodeClientException(client, 400, "Null bytes not allowed in HTTP request");
@@ -67,17 +77,13 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     else
         client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
-
-    auto it = client._headerFields.find("Connection");
-    if (it != client._headerFields.end() && it->second == "close")
-        client._keepAlive = false;
     if (client._method == "POST")
     {
         
         // HttpRequest::getContentLength(client);
         HttpRequest::getContentType(client); // TODO return isn't used at all
-        it = client._headerFields.find("Transfer-Encoding");
-        if (it != client._headerFields.end() && it->second == "chunked")
+        auto transferEncodingHeader = client._headerFields.find("Transfer-Encoding");
+        if (transferEncodingHeader != client._headerFields.end() && transferEncodingHeader->second == "chunked")
         {
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);

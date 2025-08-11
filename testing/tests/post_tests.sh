@@ -29,9 +29,10 @@ curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
 # test 6 : chunked post request to upload small.txt to server1
 echo "6. Testing chunked POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
 curl -i -X POST -H "Transfer-Encoding: chunked" -H "Expect:" -H "Connection: close" -H "Host: server1" \
---data-binary @expectedResults/post/upload1/small.txt http://localhost:15000/upload3 > results/post/post6.txt &
+--data-binary @expectedResults/post/upload1/small.txt http://localhost:15000/chunked > results/post/post6.txt &
 
 sleep 2
+
 
 {
 

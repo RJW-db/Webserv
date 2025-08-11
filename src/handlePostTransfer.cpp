@@ -51,7 +51,10 @@ int HandlePost::validateFinalCRLF()
         return true;
     }
     if (_fileBuffer.size() > 4)
+    {
+        std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
+    }
     return false;
 }
 
@@ -67,7 +70,12 @@ size_t HandlePost::FindBoundaryAndWrite(ssize_t &bytesWritten)
         else if (strncmp(_fileBuffer.data() + boundaryFound - 2, "--",2 ) == 0)
             writeSize = boundaryFound - 2;
         else
+        {
+            std::cout << "bodyboundary is" << _client._bodyBoundary << std::endl; //testcout
+            std::cout << "boundaryfound:" << boundaryFound << std::endl; //testcout
+            std::cout << "filebuffer is here: " << escape_special_chars(_fileBuffer) << std::endl; //testcout
             throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
+        }
     }
     if (writeSize > 0)
     {
@@ -160,6 +168,7 @@ bool HandlePost::handlePostTransfer(bool readData)
 void HandlePost::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
     FileDescriptor::closeFD(_fd);
+    _fd = -1;
     for (const auto &filePath : _fileNamePaths)
     {
         if (remove(filePath.data()) != 0)
@@ -173,7 +182,6 @@ void HandlePost::parseContentDisposition(Client &client, string_view &buffer)
     size_t bodyEnd = buffer.find(CRLF2);
     if (bodyEnd == string_view::npos)
         throw ErrorCodeClientException(client, 400, "Missing double CRLF after Content-Disposition");
-    
     string buf = string(buffer.substr(0, bodyEnd));
     HttpRequest::getBodyInfo(client, buf);
     buffer.remove_prefix(bodyEnd + CRLF2_LEN);

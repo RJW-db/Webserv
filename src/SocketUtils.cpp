@@ -61,7 +61,7 @@ void RunServers::acceptConnection(const int listener)
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
         errno = 0;
-        int infd = accept(listener, &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
+        int infd = accept(listener, &in_addr, &in_len);
         if(infd == -1)
         {
             if(errno != EAGAIN)
