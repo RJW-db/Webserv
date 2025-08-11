@@ -30,7 +30,7 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp \
+					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp \
 					ErrorCodeClientException.cpp 
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 

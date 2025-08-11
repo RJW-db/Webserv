@@ -243,10 +243,10 @@ bool HandlePostTransfer::handlePostCgi()
     {
         std::cout << "correct cgi syntax for post request" << std::endl; //testcout
         // send body to pipe for stdin of cgi
-        std::cout << _fileBuffer << std::endl; //testcout
-        std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
-        std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
-        HttpRequest::handleCgi(_client);
+        // std::cout << _fileBuffer << std::endl; //testcout
+        // std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
+        // std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
+        HttpRequest::handleCgi(_client, _fileBuffer);
         return true;
     }
     else

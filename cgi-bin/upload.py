@@ -15,7 +15,7 @@ def main():
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
     upload_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
     
-    print(f"DEBUG: CONTENT_TYPE = {content_type}", file=sys.stderr)
+    # print(f"DEBUG: CONTENT_TYPE = {content_type}", file=sys.stderr)
     if content_type and 'boundary=' in content_type:
         boundary = content_type.split('boundary=')[1]
     else:
@@ -24,6 +24,7 @@ def main():
     print(f"DEBUG: QUERY_STRING = {query_string}", file=sys.stderr)
     print(f"DEBUG: UPLOAD_STORE = {upload_dir}", file=sys.stderr)
     print(f"DEBUG: PUBLIC_URL_BASE = {upload_url_base}", file=sys.stderr)
+    print(f"DEBUG: contentlength = {os.environ.get('CONTENT_LENGTH')}", file=sys.stderr)
 
     # === ACTUAL LOGIC ===
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
@@ -56,8 +57,13 @@ def main():
             shutil.copyfileobj(fileitem.file, f)
 
         print("Status: 200 OK")
-        print("Content-Type: text/plain\n")
-        print(f"{public_url_base}/{filename}")
+        print("Content-Type: text/plain")
+        print("Connection: keep-alive")
+        response_body = f"{public_url_base}/{filename}"
+        content_length = len(response_body.encode('utf-8'))
+        print(f"Content-Length: {content_length}\n")
+
+        print(response_body)
 
     except Exception as e:
         print("Status: 500 Internal Server Error")

@@ -212,7 +212,6 @@ static void detectCgiRequest(Client &client)
     if (client._location.isCgiFile(filename) == true)
     {
         client._isCgi = true;
-        std::cout << "request is cgi request" << std::endl; //testcout
     }
     else if (!client._location.getExtension().empty())
     {

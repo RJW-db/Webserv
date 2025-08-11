@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <sys/epoll.h>
+#include <sys/wait.h>
 
 #include <RunServer.hpp>
 #include <Client.hpp>
@@ -17,16 +18,6 @@
 
 #define PARENT 1
 #define CHILD 0
-
-
-// CGI
-HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi, int fdReadfromCgi)
-: HandleTransfer(client, -1), _fdWriteToCgi(fdWriteToCgi), _fdReadfromCgi(fdReadfromCgi), _bytesWrittenTotal(0)
-{
-    _fileBuffer = fileBuffer;
-    // _isCgi = writeToCgi;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-}
 
 
 void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
@@ -84,7 +75,7 @@ vector<string> createEnvp(Client &client)
 {
     vector<string> envpString;
     envpString.push_back("REQUEST_METHOD=" + client._method);
-    envpString.push_back("CONTENT_LENGTH=" + to_string(client._body.size()));
+    envpString.push_back("CONTENT_LENGTH=" + to_string(client._contentLength));
     if (!client._queryString.empty())
         envpString.push_back("QUERY_STRING=" + client._queryString);    // test http://localhost:8080/cgi-bin/cgi.py?WORK=YUR
     envpString.push_back("SCRIPT_NAME=" + client._requestPath);
@@ -150,12 +141,12 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 
     vector<string> argvString = createArgv(client);
     vector<char *> argv = convertToCharArray(argvString);
-    // printVecArray(argv);
+    printVecArray(argv);
 
     vector<string> envpString = createEnvp(client);
     vector<char *> envp= convertToCharArray(envpString);
-    // printVecArray(envp);
-
+    printVecArray(envp);
+    // std::cout << "neeeee\n\n\n\n" << std::endl; //testcout
 // exit(0);
     char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
     execve(filePath, argv.data(), envp.data());
@@ -165,7 +156,19 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     exit(EXIT_FAILURE);
 }
 
-bool HttpRequest::handleCgi(Client &client)
+bool setPipeBufferSize(int pipeFd)
+{
+    const size_t pipeSize = 500 * 1024; // 500 KB
+
+    if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
+    {
+        cerr << "fcntl (set pipe size): " << strerror(errno) << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool HttpRequest::handleCgi(Client &client, string &body)
 {
     int fdWriteToCgi[2] = { -1, -1 };   // Server → CGI (stdin)
     int fdReadfromCgi[2] = { -1, -1 };  // CGI → Server (stdout)
@@ -180,8 +183,13 @@ bool HttpRequest::handleCgi(Client &client)
     FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
     FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
 
-    if (RunServers::make_socket_non_blocking(fdWriteToCgi[1]) == false || // Server writes to CGI
-        RunServers::make_socket_non_blocking(fdReadfromCgi[0]) == false) { // Server reads from CGI
+    if (RunServers::make_socket_non_blocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
+        RunServers::make_socket_non_blocking(fdReadfromCgi[0]) == false || // Server reads from CGI
+        setPipeBufferSize(fdWriteToCgi[1]) == false ||
+        setPipeBufferSize(fdReadfromCgi[0]) == false/*  ||
+        setPipeBufferSize(fdWriteToCgi[1]) == false ||
+        setPipeBufferSize(fdReadfromCgi[0]) == false */)
+    {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
     }
@@ -213,66 +221,33 @@ bool HttpRequest::handleCgi(Client &client)
         // // chdir(dirPath.data());
         // chdir(client._location.getUploadStore().c_str());
         child(client, fdWriteToCgi, fdReadfromCgi);
-
-
     }
 
     if (pid >= PARENT)
     {
+
+        // wait for child to finish
         // exit(0);
+        std::cout << "client content length: " << client._contentLength << std::endl; //testcout
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-
-        unique_ptr<HandleWriteToCgiTransfer> handle;
-        handle = make_unique<HandleWriteToCgiTransfer>(client, client._body, fdWriteToCgi[1], fdReadfromCgi[0]);
-        handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-        if (handle->handleCgiTransfer() == true)
+        std::cout << "Added CGI pipes to epoll write: " << fdWriteToCgi[1] << std::endl; //testcout
+        std::cout << "Added CGI pipes to epoll read: " << fdReadfromCgi[0] << std::endl; //testcout
+        unique_ptr<HandleTransfer> handle;
+        if (client._useMethod & METHOD_POST)
         {
-            RunServers::clientHttpCleanup(client);
-            return true;
+            handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
+            handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+            RunServers::insertHandleTransferCgi(move(handle));
         }
-        RunServers::insertHandleTransfer(move(handle));
+        handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
+        handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+        RunServers::insertHandleTransferCgi(move(handle));
 
-
-        // std::cout << client._body.size() << std::endl; //testcout
-        // // int total_sent = write(fdWriteToCgi[1], client._body.data(), client._body.size());
-        // size_t total_sent = 0;
-        // /**
-        //  * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
-        //  * check the maximum size: cat /proc/sys/fs/pipe-max-size
-        //  */
-        // while (total_sent < client._body.size()) { 
-        //     ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, client._body.size() - total_sent);
-        //     // ssize_t sent = write(fdWriteToCgi[1], client._body.data() + total_sent, 15000);
-        //     if (sent == -1) {
-        //         perror("write to CGI failed");
-        //         break;
-        //     }
-        //     std::cout << "sent: " << sent << std::endl; //testcout
-        //     sleep(1);
-        //     total_sent += sent;
-        // }
-
-        // FileDescriptor::closeFD(fdWriteToCgi[1]);
-
-        // std::cout << "sent: " << total_sent << std::endl; //testcout
-        // sleep(2);
-        // // write(fdWriteToCgi[1], PASS_TO_CGI, sizeof(PASS_TO_CGI) - 1);
-        // // sleep(5);
-        // int ret;
-        // do
-        // {
-        //     char buff[10];
-        //     ret = read(fdReadfromCgi[0], buff, 10);
-        //     write(1, buff, ret);
-        // } while (ret > 0);
-        // write(1, "\n", 1);
-        
-
-        std::cout << "end of parent" << std::endl; //testcout
+        return true;
     }
     return false;
 }

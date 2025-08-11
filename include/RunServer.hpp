@@ -71,6 +71,8 @@ class RunServers
         unordered_map<string, string_view> _headerFields;
 
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
+        static void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle);
+
         static void insertClientFD(int fd);
 
         static void clientHttpCleanup(Client &client);

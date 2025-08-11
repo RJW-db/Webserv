@@ -23,6 +23,8 @@ class HandleTransfer
         virtual bool handleChunkTransfer() = 0;
         virtual bool getIsChunk() const = 0;
         virtual void appendToBody() = 0;
+        virtual bool writeToCgiTransfer() {throw std::runtime_error("HandleCgitransfer not supported");}
+        virtual bool readFromCgiTransfer() {throw std::runtime_error("HandleCgitransfer not supported");}
         virtual ~HandleTransfer() = default;
 
     protected :
@@ -125,12 +127,11 @@ class HandleChunkTransfer : public HandlePostTransfer
 class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
-        HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi, int fdReadfromCgi);
+        HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
 
-        int _fdWriteToCgi = -1;
-        int _fdReadfromCgi = -1;
         size_t _bytesWrittenTotal;
-        bool handleCgiTransfer();
+
+        bool writeToCgiTransfer();
 
         virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandleWriteToCgiTransfer"); }
         virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleWriteToCgiTransfer"); }
@@ -142,13 +143,23 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 
 class HandleReadFromCgiTransfer : public HandleTransfer
 {
-    bool readFromCgi();
+    public:
+        HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
+
+
+        bool readFromCgiTransfer();
+
+        virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleWriteToCgiTransfer"); }
+        virtual bool getIsChunk() const { return false; }
+        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleWriteToCgiTransfer"); }
 
 };
 
 /*
         // CGI
-        bool handleCgiTransfer();
+        bool writeToCgiTransfer();
         bool handlePostCgi();
 
         int8_t _isCgi = isNotCgi;

@@ -25,7 +25,6 @@ bool HandleChunkTransfer::handleChunkTransfer()
     {
         if (decodeChunk(targetSize) == false)
             return false;
-        std::cout << "ga voorbij"  << std::endl; //testcout
     }
     catch(const exception& e)
     {
@@ -40,14 +39,12 @@ bool HandleChunkTransfer::handleChunkTransfer()
     
     if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
     {
-        std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
-
         if (_client._isCgi == false)
             handlePostTransfer(false);
         else
         {
             validateMultipartPostSyntax(_client, _fileBuffer);
-            HttpRequest::handleCgi(_client);
+            HttpRequest::handleCgi(_client, _fileBuffer);
         }
         return true;
     }
@@ -68,7 +65,6 @@ bool    HandleChunkTransfer::decodeChunk(size_t &targetSize)
         
         if (body.size() >= dataEnd + CRLF_LEN)
         {
-            std::cout << "check meerdere keren"   << std::endl; //testcout
             if (body[dataEnd] == '\r' &&
                 body[dataEnd + 1] == '\n')
             {

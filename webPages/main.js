@@ -91,6 +91,7 @@ window.addEventListener('DOMContentLoaded', function() {
       formData.append('myfile', file);
 
       fetch('/cgi-bin/upload.py?upload_dir=upload&public_url_base=/upload', {
+      // fetch('/cgi-bin/cgi?upload_dir=upload&public_url_base=/upload', {
         method: 'POST',
         body: formData
       })

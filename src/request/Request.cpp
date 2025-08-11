@@ -345,7 +345,7 @@ void HttpRequest::handleRequest(Client &client)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._location.getReturnRedirect().first > 0)
     {
-        std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
+        // std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
         redirectRequest(client);
         RunServers::clientHttpCleanup(client);
         return ;
@@ -370,7 +370,7 @@ void HttpRequest::handleRequest(Client &client)
     {
         if (client._isCgi)
         {
-            handleCgi(client);
+            handleCgi(client, client._body); // for GET second parameter will be unused
             RunServers::clientHttpCleanup(client);
             return;
         }

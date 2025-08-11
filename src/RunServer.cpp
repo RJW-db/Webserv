@@ -178,8 +178,12 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
-                if (_clients[(*it)->_client._fd]->_keepAlive == false && client._isCgi == false)
-                    cleanupClient(*_clients[(*it)->_client._fd]);
+                if (client._keepAlive == false)
+                {
+                    // cleanupClient(*_clients[(*it)->_client._fd]);
+                    if (_clients[(*it)->_client._fd]->_isCgi == false)
+                        cleanupClient(*_clients[(*it)->_client._fd]);
+                }
                 else
                 {
                     _handle.erase(it);
@@ -195,19 +199,26 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
 
 bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
 {
-    (void)currentEvent;
+    int eventFD = currentEvent.data.fd;
     for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
     {
-        // if (currentEvent.events & EPOLLIN)
-        // {
-        //     // Handle incoming data for CGI
-        //     // (*it)->readFromCgi();
-        // }
-        // else if (currentEvent.events & EPOLLOUT)
-        // {
-        //     // Handle outgoing data for CGI
-        //     // (*it)->writeToCgi();
-        // }
+        // std::cout << 1 << std::endl; //testcout
+        // std::cout << "handlecgi fd: " << (*it)->_fd << std::endl; //testcout
+        if ((*it)->_fd == eventFD)
+        {
+            std::cout << 2 << std::endl; //testcout
+
+            if (currentEvent.events & EPOLLOUT)
+            {
+                if ((*it)->writeToCgiTransfer() == true)
+                    _handleCgi.erase(it);
+            }
+            else if (currentEvent.events & EPOLLIN)
+            {
+                (*it)->readFromCgiTransfer();
+            }
+            return true;
+        }
     }
     return false;
 }
@@ -243,24 +254,24 @@ void RunServers::handleEvents(size_t eventCount)
                 std::cerr << "epoll fault on fd " << currentEvent.data.fd
                           << " (events: " << currentEvent.events << ")" << std::endl;
                 // std::cout << errno << std::endl;
-                cleanupClient(*_clients[currentEvent.data.fd].get());
+                // cleanupClient(*_clients[currentEvent.data.fd].get());
+                std::cout << "epoll fault on fd " << currentEvent.data.fd << " (events: " << currentEvent.events << ")" << std::endl; //testcout
+                auto clientIt = _clients.find(currentEvent.data.fd);
+                if (clientIt != _clients.end() && clientIt->second)
+                {
+                    cleanupClient(*clientIt->second);
+                }
+                else
+                {
+                    // Just cleanup the FD if no client exists
+                    cleanupFD(currentEvent.data.fd);
+                }
                 continue;
             }
             if (find(_listenFDS.begin(), _listenFDS.end(), eventFD) != _listenFDS.end())
             {
                 acceptConnection(eventFD);
             }
-            // for (const unique_ptr<Server> &server : _servers)
-            // {
-            //     vector<int> &listeners = server->getListeners();
-            //     auto it = find(listeners.begin(), listeners.end(), eventFD);
-            //     if (it != listeners.end() && currentEvent.events == EPOLLIN)
-            //     {
-            //         // handltransfers = false;
-            //         acceptConnection(eventFD);
-            //         break;
-            //     }
-            // }
             // std::cout << '4' << std::endl;
             if (runHandleTransfer(currentEvent) == true || \
                 runCgiHandleTransfer(currentEvent) == true)
@@ -286,6 +297,11 @@ void RunServers::handleEvents(size_t eventCount)
 void RunServers::insertHandleTransfer(unique_ptr<HandleTransfer> handle)
 {
     _handle.push_back(move(handle));
+}
+
+void RunServers::insertHandleTransferCgi(unique_ptr<HandleTransfer> handle)
+{
+    _handleCgi.push_back(move(handle));
 }
 
 
