@@ -11,7 +11,6 @@ void    RunServers::setLocation(Client &client)
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
 		{
             client._location = locationPair.second;
-            // std::cout << "location used: " << locationPair.first << std::endl; //testcout
             return;
         }
     }
@@ -62,7 +61,6 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     errno = 0;
     ssize_t bytesReceived = recv(client._fd, buff, _clientBufferSize, 0);
-    std::cout << "received data: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)

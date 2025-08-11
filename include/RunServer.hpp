@@ -70,7 +70,9 @@ class RunServers
         static void parseHeaders(Client &client);
         unordered_map<string, string_view> _headerFields;
 
-        static void insertHandleTransfer(unique_ptr<HandleShort> handle);
+        static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
+        static void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle);
+
         static void insertClientFD(int fd);
 
         static void clientHttpCleanup(Client &client);
@@ -150,8 +152,8 @@ class RunServers
         // static unordered_map<int, ClientRequestState> _clientStates;
         // static vector<int> _connectedClients;
         // static vector<HandleTransfer> _handle;
-        static vector<unique_ptr<HandleShort>> _handle;
-        static vector<unique_ptr<HandleShort>> _handleCgi;
+        static vector<unique_ptr<HandleTransfer>> _handle;
+        static vector<unique_ptr<HandleTransfer>> _handleCgi;
         static vector<int> _listenFDS;
         static unordered_map<int, unique_ptr<Client>> _clients;
 

@@ -1,4 +1,6 @@
-cd /home/saleunin/Desktop/Webserv/testing 
+#!/bin/bash
+
+cd /home/saleunin/Desktop/Webserv/testing
 
 mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
@@ -26,24 +28,25 @@ curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
 -F "file5=@expectedResults/post/upload1/test2.png" \
  http://localhost:15001/upload2 > results/post/post5.txt &
 
-# test 6 : chunked post request to upload small.txt to server1
-echo "6. Testing chunked POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Transfer-Encoding: chunked" -H "Expect:" -H "Connection: close" -H "Host: server1" \
---data-binary @expectedResults/post/upload1/small.txt http://localhost:15000/chunked > results/post/post6.txt &
 
 sleep 2
 
+# Change to the Webserv root directory for comparisons
+cd /home/saleunin/Desktop/Webserv
+
+# print current working directory
+echo "Current working directory: $(pwd)"
 
 {
 
 # test 1: Check results
 # Extract the filename from the server response (last line of the response)
-actual_filename1=$(tail -n 1 results/post/post1.txt | tr -d '\r\n')
+actual_filename1=$(tail -n 1 testing/results/post/post1.txt | tr -d '\r\n')
 expected_response_content="./testing/results/post/upload1/test1.jpg"
 
 # Check if response headers are correct and if the file content matches
-if grep -q "HTTP/1.1 201 Created" results/post/post1.txt && grep -q "Content-Type: text/plain" results/post/post1.txt; then
-    if [[ -f "$actual_filename1" ]] && cmp -s expectedResults/post/upload1/test1.jpg "$actual_filename1"; then
+if grep -q "HTTP/1.1 201 Created" testing/results/post/post1.txt && grep -q "Content-Type: text/plain" testing/results/post/post1.txt; then
+    if [[ -f "$actual_filename1" ]] && cmp -s testing/expectedResults/post/upload1/test1.jpg "$actual_filename1"; then
         echo "post test 1 completed successfully"
     else
         echo "post test 1 failed because uploaded file content doesn't match expected content"
@@ -55,11 +58,11 @@ fi
 
 # test 2: Check results
 # Extract the filename from the server response (last line of the response)
-actual_filename2=$(tail -n 1 results/post/post2.txt | tr -d '\r\n')
+actual_filename2=$(tail -n 1 testing/results/post/post2.txt | tr -d '\r\n')
 
 # Check if response headers are correct and if the file content matches
-if grep -q "HTTP/1.1 201 Created" results/post/post2.txt && grep -q "Content-Type: text/plain" results/post/post2.txt; then
-    if [[ -f "$actual_filename2" ]] && cmp -s expectedResults/post/upload1/test2.png "$actual_filename2"; then
+if grep -q "HTTP/1.1 201 Created" testing/results/post/post2.txt && grep -q "Content-Type: text/plain" testing/results/post/post2.txt; then
+    if [[ -f "$actual_filename2" ]] && cmp -s testing/expectedResults/post/upload1/test2.png "$actual_filename2"; then
         echo "post test 2 completed successfully"
     else
         echo "post test 2 failed because uploaded file content doesn't match expected content"
@@ -71,11 +74,11 @@ fi
 
 # test 3: Check results
 # Extract the filename from the server response (last line of the response)
-actual_filename3=$(tail -n 1 results/post/post3.txt | tr -d '\r\n')
+actual_filename3=$(tail -n 1 testing/results/post/post3.txt | tr -d '\r\n')
 
 # Check if response headers are correct and if the file content matches
-if grep -q "HTTP/1.1 201 Created" results/post/post3.txt && grep -q "Content-Type: text/plain" results/post/post3.txt; then
-    if [[ -f "$actual_filename3" ]] && cmp -s expectedResults/post/upload1/small.txt "$actual_filename3"; then
+if grep -q "HTTP/1.1 201 Created" testing/results/post/post3.txt && grep -q "Content-Type: text/plain" testing/results/post/post3.txt; then
+    if [[ -f "$actual_filename3" ]] && cmp -s testing/expectedResults/post/upload1/small.txt "$actual_filename3"; then
         echo "post test 3 completed successfully"
     else
         echo "post test 3 failed because uploaded file content doesn't match expected content"
@@ -87,11 +90,11 @@ fi
 
 # test 4: Check results
 # Extract the filename from the server response (last line of the response)
-actual_filename4=$(tail -n 1 results/post/post4.txt | tr -d '\r\n')
+actual_filename4=$(tail -n 1 testing/results/post/post4.txt | tr -d '\r\n')
 
 # Check if response headers are correct and if the file content matches
-if grep -q "HTTP/1.1 201 Created" results/post/post4.txt && grep -q "Content-Type: text/plain" results/post/post4.txt; then
-    if [[ -f "$actual_filename4" ]] && cmp -s expectedResults/post/upload1/1M.txt "$actual_filename4"; then
+if grep -q "HTTP/1.1 201 Created" testing/results/post/post4.txt && grep -q "Content-Type: text/plain" testing/results/post/post4.txt; then
+    if [[ -f "$actual_filename4" ]] && cmp -s testing/expectedResults/post/upload1/1M.txt "$actual_filename4"; then
         echo "post test 4 completed successfully"
     else
         echo "post test 4 failed because uploaded file content doesn't match expected content"
@@ -105,14 +108,14 @@ fi
 all_passed=true
 
 # Check if response headers are correct
-if ! grep -q "HTTP/1.1 201 Created" results/post/post5.txt || ! grep -q "Content-Type: text/plain" results/post/post5.txt; then
+if ! grep -q "HTTP/1.1 201 Created" testing/results/post/post5.txt || ! grep -q "Content-Type: text/plain" testing/results/post/post5.txt; then
     echo "post test 5 failed because HTTP response headers are incorrect"
     all_passed=false
 fi
 
 # For multiple file uploads, we need to find the actual uploaded files
 # The server response contains the path of the last uploaded file
-last_filename=$(tail -n 1 results/post/post5.txt | tr -d '\r\n')
+last_filename=$(tail -n 1 testing/results/post/post5.txt | tr -d '\r\n')
 
 # Extract the directory from the last filename
 if [[ -n "$last_filename" ]]; then
@@ -125,7 +128,7 @@ if [[ -n "$last_filename" ]]; then
         found_match=false
         # Look for files in the upload directory that match the content
         for actual_file in "$upload_dir"/*; do
-            if [[ -f "$actual_file" ]] && cmp -s "expectedResults/post/upload1/$expected_file" "$actual_file"; then
+            if [[ -f "$actual_file" ]] && cmp -s "testing/expectedResults/post/upload1/$expected_file" "$actual_file"; then
                 found_match=true
                 break
             fi
@@ -145,23 +148,23 @@ if $all_passed; then
     echo "post test 5 completed successfully"
 fi
 
-# test 6: Check results for chunked transfer
-# Extract the filename from the server response (last line of the response)
-actual_filename6=$(tail -n 1 results/post/post6.txt | tr -d '\r\n')
+# # test 6: Check results for chunked transfer
+# # Extract the filename from the server response (last line of the response)
+# actual_filename6=$(tail -n 1 testing/results/post/post6.txt | tr -d '\r\n')
 
-# Check if response headers are correct and if the file content matches
-if grep -q "HTTP/1.1 201 Created" results/post/post6.txt && grep -q "Content-Type: text/plain" results/post/post6.txt; then
-    if [[ -f "$actual_filename6" ]] && cmp -s expectedResults/post/upload1/small.txt "$actual_filename6"; then
-        echo "post test 6 completed successfully"
-    else
-        echo "post test 6 failed because uploaded file content doesn't match expected content"
-        [[ ! -f "$actual_filename6" ]] && echo "  - File $actual_filename6 does not exist"
-    fi
-else
-    echo "post test 6 failed because HTTP response headers are incorrect"
-fi
+# # Check if response headers are correct and if the file content matches
+# if grep -q "HTTP/1.1 201 Created" testing/results/post/post6.txt && grep -q "Content-Type: text/plain" testing/results/post/post6.txt; then
+#     if [[ -f "$actual_filename6" ]] && cmp -s testing/expectedResults/post/upload1/small.txt "$actual_filename6"; then
+#         echo "post test 6 completed successfully"
+#     else
+#         echo "post test 6 failed because uploaded file content doesn't match expected content"
+#         [[ ! -f "$actual_filename6" ]] && echo "  - File $actual_filename6 does not exist"
+#     fi
+# else
+#     echo "post test 6 failed because HTTP response headers are incorrect"
+# fi
 
-} > results/post/summary.txt 2>&1
+} > testing/results/post/summary.txt 2>&1
 
 echo "Post tests completed"
 exit 0

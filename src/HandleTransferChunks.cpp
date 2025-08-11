@@ -4,28 +4,28 @@
 #include <HttpRequest.hpp>
 #include <Client.hpp>
 
-HandleChunkPost::HandleChunkPost(Client &client)
-: HandlePost(client, -1), _isChunked(true)
+HandleChunkTransfer::HandleChunkTransfer(Client &client)
+: HandlePostTransfer(client, -1)
 {
+    _isChunked = true;
     _bytesReadTotal = 0;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
-void HandleChunkPost::appendToBody()
+void HandleChunkTransfer::appendToBody()
 {
     char   buff[RunServers::getClientBufferSize()];
     size_t bytesReceived = RunServers::receiveClientData(_client, buff);
     _client._body.append(buff, bytesReceived);
 }
 
-bool HandleChunkPost::handleChunkTransfer()
+bool HandleChunkTransfer::handleChunkTransfer()
 {
     size_t targetSize = 0;
     try
     {
         if (decodeChunk(targetSize) == false)
             return false;
-        std::cout << "ga voorbij"  << std::endl; //testcout
     }
     catch(const exception& e)
     {
@@ -40,21 +40,19 @@ bool HandleChunkPost::handleChunkTransfer()
     
     if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
     {
-        std::cout << escape_special_chars(_fileBuffer) << std::endl; //testcout
-
         if (_client._isCgi == false)
             handlePostTransfer(false);
         else
         {
             validateMultipartPostSyntax(_client, _fileBuffer);
-            HttpRequest::handleCgi(_client);
+            HttpRequest::handleCgi(_client, _fileBuffer);
         }
         return true;
     }
     return false;
 }
 
-bool    HandleChunkPost::decodeChunk(size_t &targetSize)
+bool    HandleChunkTransfer::decodeChunk(size_t &targetSize)
 {
     while (true)
     {
@@ -68,7 +66,6 @@ bool    HandleChunkPost::decodeChunk(size_t &targetSize)
         
         if (body.size() >= dataEnd + CRLF_LEN)
         {
-            std::cout << "check meerdere keren"   << std::endl; //testcout
             if (body[dataEnd] == '\r' &&
                 body[dataEnd + 1] == '\n')
             {
@@ -97,7 +94,7 @@ bool    HandleChunkPost::decodeChunk(size_t &targetSize)
     return false; // shouldn't never get here
 }
 
-bool HandleChunkPost::extractChunkSize(size_t &targetSize, size_t &dataStart)
+bool HandleChunkTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)
 {
     size_t crlfPos = _client._body.find(CRLF, _bodyPos);
 
@@ -114,7 +111,7 @@ bool HandleChunkPost::extractChunkSize(size_t &targetSize, size_t &dataStart)
     return true;
 }
 
-void HandleChunkPost::validateChunkSizeLine(string_view chunkSizeLine)
+void HandleChunkTransfer::validateChunkSizeLine(string_view chunkSizeLine)
 {
     if (chunkSizeLine.empty())
         throw ErrorCodeClientException(_client, 400, "Chunk size line is empty: " + string(chunkSizeLine));
@@ -123,7 +120,7 @@ void HandleChunkPost::validateChunkSizeLine(string_view chunkSizeLine)
         throw ErrorCodeClientException(_client, 400, "Chunk size line contains non-hex characters: " + string(chunkSizeLine));
 }
 
-uint64_t HandleChunkPost::parseChunkSize(string_view chunkSizeLine)
+uint64_t HandleChunkTransfer::parseChunkSize(string_view chunkSizeLine)
 {
     uint64_t targetSize;
     stringstream ss;

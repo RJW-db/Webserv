@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class HandleShort
+class HandleTransfer
 {
     public :
         Client &_client;
@@ -23,29 +23,59 @@ class HandleShort
 		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented"); }
 		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented"); }
 		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented"); }
-        virtual void readFromCgi() { throw std::runtime_error("readFromCgi not implemented"); }
-		virtual bool writeToCgi() { throw std::runtime_error("writeToCgi not implemented"); }
-		virtual ~HandleShort() = default;
+        virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
+        virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
+        virtual ~HandleTransfer() = default;
 
     protected :
-        HandleShort(Client &client, int fd) : _client(client), _fd(fd) {};
+        HandleTransfer(Client &client, int fd) : _client(client), _fd(fd) {};
 };
 
-class HandlePost : public HandleShort
+class HandleGetTransfer : public HandleTransfer
+{
+    public :
+        HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
+        HandleGetTransfer(const HandleGetTransfer &other) = default;
+        HandleGetTransfer &operator=(const HandleGetTransfer &other);
+        ~HandleGetTransfer() = default;
+
+        void readToBuf();
+        bool handleGetTransfer();
+
+        size_t  _fileSize;
+        size_t _offset;
+        size_t  _headerSize;
+
+        // Pure virtual function implementations - throw errors for unsupported operations
+        virtual bool handlePostTransfer(bool readData) {(void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleGetTransfer");}
+        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleGetTransfer");}
+        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not supported for HandleGetTransfer");}
+        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleGetTransfer");}
+};
+
+class HandlePostTransfer : public HandleTransfer
 {
 public:
-    HandlePost(Client &client, size_t bytesRead, string buffer); // POST
-    HandlePost(const HandlePost &other) = default;
-    HandlePost &operator=(const HandlePost &other);
-    ~HandlePost() = default;
+    HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
+    HandlePostTransfer(const HandlePostTransfer &other) = default;
+    HandlePostTransfer &operator=(const HandlePostTransfer &other);
+    ~HandlePostTransfer() = default;
 
-    // HandlePost specific members
+        inline bool getIsChunk() const
+        {
+            return _isChunked;
+        }
+
+    bool _isChunked = false;
+
+
+    // HandlePostTransfer specific members
     size_t _bytesWrittenTotal;
 
     bool _foundBoundary = false;
     bool _searchContentDisposition = false;
 
-    vector<string> _fileNamePaths; // for post transfer - shared between HandlePost and HandleChunkPost
+    vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
     bool handlePostTransfer(bool ReadData);
 
@@ -55,7 +85,7 @@ public:
     bool handlePostCgi();
 
 protected:
-    HandlePost(Client &client, int fd) : HandleShort(client, fd) {};
+    HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd) {};
 
 private:
     int validateFinalCRLF();
@@ -66,31 +96,11 @@ private:
     static void parseContentDisposition(Client &client, string_view &buffer);
 };
 
-class HandleGet : public HandleShort
+class HandleChunkTransfer : public HandlePostTransfer
 {
     public :
-        HandleGet(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        HandleGet(const HandleGet &other) = default;
-        HandleGet &operator=(const HandleGet &other);
-        ~HandleGet() = default;
+        HandleChunkTransfer(Client &client); // chunked
 
-        void readToBuf();
-        bool handleGetTransfer();
-
-        size_t  _fileSize;
-        size_t _offset;
-        size_t  _headerSize;
-
-        // Pure virtual function implementations - throw errors for unsupported operations
-};
-
-
-class HandleChunkPost : public HandlePost
-{
-    public :
-        HandleChunkPost(Client &client); // chunked
-
-        bool _isChunked = false;
         size_t _bodyPos = 0;
         bool _completedRequest = false;
 
@@ -98,12 +108,9 @@ class HandleChunkPost : public HandlePost
         {
             _isChunked = true;
         }
-        inline bool getIsChunk() const
-        {
-            return _isChunked;
-        }
-        void appendToBody();
-        bool handleChunkTransfer();
+
+        virtual void appendToBody();
+        virtual bool handleChunkTransfer();
         bool decodeChunk(size_t &chunkTargetSize);
 
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
@@ -115,41 +122,35 @@ class HandleChunkPost : public HandlePost
 
 };
 
-// class HandleTransferCgi :
-// {
-//     bool writeToCgi();
-//     void readFromCgi();
-
-// 	int _fd;
-
-// };
-
-class HandleTransferWriteCgi : public HandleShort
+class HandleWriteToCgiTransfer : public HandleTransfer
 {
-	public:
-		HandleTransferWriteCgi(Client &client, int fdWriteToCgi, string &body);
-		HandleTransferWriteCgi(const HandleTransferWriteCgi &other) = default;
-		// HandleTransferWriteCgi &operator=(const HandleTransferWriteCgi &other) = default;
-		bool writeToCgi();
+    public:
+        HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
+
+        size_t _bytesWrittenTotal;
+
+        bool writeToCgiTransfer();
+
+
 };
 
-class HandleTransferRecvCgi : public HandleShort
+class HandleReadFromCgiTransfer : public HandleTransfer
 {
-	public:
-		HandleTransferRecvCgi(Client &client, int fdReadFromCgi);
-		HandleTransferRecvCgi(const HandleTransferRecvCgi &other) = default;
-		// HandleTransferRecvCgi &operator=(const HandleTransferRecvCgi &other) = default;
-		void readFromCgi();
+    public:
+        HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
+
+
+        bool readFromCgiTransfer();
+
 };
 /*
         // CGI
-        bool handleCgiTransfer();
+        bool writeToCgiTransfer();
         bool handlePostCgi();
 
         int8_t _isCgi = isNotCgi;
 
-        int _fdWriteToCgi = -1;
-        int _fdReadfromCgi = -1;
+
 
         inline int8_t getIsCgi() const {
             return _isCgi;
