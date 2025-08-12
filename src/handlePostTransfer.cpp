@@ -48,6 +48,7 @@ int HandlePostTransfer::validateFinalCRLF()
         size_t absolutePathSize = RunServers::getServerRootDir().size();
         string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
+        std::cout << escape_special_chars(headers) << std::endl; //testcout
         send(_client._fd, headers.data(), headers.size(), 0);
         return true;
     }

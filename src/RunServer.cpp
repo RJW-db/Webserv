@@ -215,7 +215,20 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             }
             else if (currentEvent.events & EPOLLIN)
             {
-                (*it)->readFromCgiTransfer();
+                if ((*it)->readFromCgiTransfer() == true)
+                {
+                    Client &client = (*it)->_client;
+                    if (client._keepAlive == false)
+                    {
+                        cleanupClient(client);
+                    }
+                    else
+                    {
+                        clientHttpCleanup(client);
+                    }
+                    
+                    _handleCgi.erase(it);
+                }
             }
             return true;
         }

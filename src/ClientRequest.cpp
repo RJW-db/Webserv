@@ -185,6 +185,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._filename.clear();
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     client._isAutoIndex = false;
+    client._isCgi = false;
 }
 
 void RunServers::cleanupFD(int fd)

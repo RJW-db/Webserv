@@ -116,8 +116,8 @@ window.addEventListener('DOMContentLoaded', function() {
           label.style.fontSize = '16px';
 
           const img = document.createElement('img');
-          img.src = filename;
-          img.alt = cleanFilename;
+          img.src = '/' + filename.trim();
+          img.alt = filename.trim();
 
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';

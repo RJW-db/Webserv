@@ -55,7 +55,7 @@ vector<string> createArgv(Client &client)
     vector<string> argvString;
     if (!client._location.getCgiPath().empty())
     {
-        std::cout << "client._location.getCgiPath() " << client._location.getCgiPath() << std::endl; //testcout
+        std::cerr << "client._location.getCgiPath() " << client._location.getCgiPath() << std::endl; //testcout
         argvString.push_back(client._location.getCgiPath());
     }
     else if (endsWith(client._requestPath, ".py"))
@@ -67,7 +67,7 @@ vector<string> createArgv(Client &client)
     }
 
     argvString.push_back('.' + client._requestPath);
-    std::cout << "client._requestPath " << '.' + client._requestPath << std::endl; //testcout
+    std::cerr << "client._requestPath " << '.' + client._requestPath << std::endl; //testcout
     return argvString;
 }
 
@@ -100,7 +100,7 @@ vector<string> createEnvp(Client &client)
         }
         
 
-        // std::cout << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
+        // std::cerr << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
 
         // envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._bodyBoundary));
         // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=...");
@@ -141,12 +141,12 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 
     vector<string> argvString = createArgv(client);
     vector<char *> argv = convertToCharArray(argvString);
-    printVecArray(argv);
+    // printVecArray(argv);
 
     vector<string> envpString = createEnvp(client);
     vector<char *> envp= convertToCharArray(envpString);
-    printVecArray(envp);
-    // std::cout << "neeeee\n\n\n\n" << std::endl; //testcout
+    // printVecArray(envp);
+    // std::cerr << "neeeee\n\n\n\n" << std::endl; //testcout
 // exit(0);
     char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
     execve(filePath, argv.data(), envp.data());
@@ -158,7 +158,7 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 
 bool setPipeBufferSize(int pipeFd)
 {
-    const size_t pipeSize = 500 * 1024; // 500 KB
+    const size_t pipeSize = 1024 * 1024; // 500 KB
 
     if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
     {
@@ -214,10 +214,10 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     if (pid == CHILD) {
         // size_t pos = client._rootPath.find_last_of('/');
         // string dirPath = client._rootPath.substr(0, pos);
-        // std::cout << "dirpath: " << dirPath << std::endl; //testcout
-        // std::cout << "client._uploadPath: " << client._location.getUploadStore() << std::endl; //testcout
+        // std::cerr << "dirpath: " << dirPath << std::endl; //testcout
+        // std::cerr << "client._uploadPath: " << client._location.getUploadStore() << std::endl; //testcout
 
-        // std::cout << "cgi_path: " << client._location.getCgiPath() << std::endl; //testcout
+        // std::cerr << "cgi_path: " << client._location.getCgiPath() << std::endl; //testcout
         // // chdir(dirPath.data());
         // chdir(client._location.getUploadStore().c_str());
         child(client, fdWriteToCgi, fdReadfromCgi);
@@ -228,14 +228,14 @@ bool HttpRequest::handleCgi(Client &client, string &body)
 
         // wait for child to finish
         // exit(0);
-        std::cout << "client content length: " << client._contentLength << std::endl; //testcout
+        std::cerr << "client content length: " << client._contentLength << std::endl; //testcout
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        std::cout << "Added CGI pipes to epoll write: " << fdWriteToCgi[1] << std::endl; //testcout
-        std::cout << "Added CGI pipes to epoll read: " << fdReadfromCgi[0] << std::endl; //testcout
+        std::cerr << "Added CGI pipes to epoll write: " << fdWriteToCgi[1] << std::endl; //testcout
+        std::cerr << "Added CGI pipes to epoll read: " << fdReadfromCgi[0] << std::endl; //testcout
         unique_ptr<HandleTransfer> handle;
         if (client._useMethod & METHOD_POST)
         {

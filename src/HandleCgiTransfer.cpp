@@ -47,7 +47,7 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
-    // std::cout << "double check "<< _fileBuffer.size() << std::endl; //testcout
+    std::cout << "double check "<< _fileBuffer.size() << std::endl; //testcout
     /**
      * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
      * check the maximum size: cat /proc/sys/fs/pipe-max-size
@@ -76,11 +76,34 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
-    std::vector<char> buff(500 * 1024);
+    std::vector<char> buff(1024 * 1024);
     ssize_t rd = read(_fd, buff.data(), buff.size());
+    if (rd <= 0) 
+    {
+        if (rd == 0)
+        {
+            std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
+            RunServers::cleanupFD(_fd);
+            return false;
+        }
+        throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+    }
+    
     write(1, "IT WORKED\n", 10);
     ssize_t sent = send(_client._fd, buff.data(), rd, 0);
+    if (sent == -1)
+    {
+        throw ErrorCodeClientException(_client, 500, "Reading from CGI failed");
+    }
+    else if (sent > 0)
+    {
+        // _client.setDisconnectTime(RunServers::DISCONNECT_DELAY_SECONDS);
+        std::cout << "read " << rd << std::endl; //testcout
+    }
     std::cout << "sent " << sent << std::endl; //testcout
     write(1, buff.data(), rd);
+    std::cout << "_FD = " << _fd << std::endl; //testcout
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+    RunServers::cleanupFD(_fd);
     return true;
 }

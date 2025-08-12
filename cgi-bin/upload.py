@@ -56,14 +56,14 @@ def main():
         with open(save_path, "wb") as f:
             shutil.copyfileobj(fileitem.file, f)
 
-        print("Status: 200 OK")
-        print("Content-Type: text/plain")
-        print("Connection: keep-alive")
-        response_body = f"{public_url_base}/{filename}"
+        response_body = f".{public_url_base}/{filename}\n"
         content_length = len(response_body.encode('utf-8'))
-        print(f"Content-Length: {content_length}\n")
+        http_response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: keep-alive\r\nContent-Length: {content_length}\r\n\r\n{response_body}"
+        sys.stdout.write(http_response)
+        sys.stdout.flush()
 
-        print(response_body)
+        print(f"DEBUG: response_body repr = {repr(response_body)}", file=sys.stderr)
+        print(f"DEBUG: content_length = {content_length}", file=sys.stderr)
 
     except Exception as e:
         print("Status: 500 Internal Server Error")
