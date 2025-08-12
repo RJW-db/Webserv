@@ -40,18 +40,8 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 //     return *this;
 // }
 
-
-
-
-
-
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
-    std::cout << "double check "<< _fileBuffer.size() << std::endl; //testcout
-    /**
-     * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
-     * check the maximum size: cat /proc/sys/fs/pipe-max-size
-     */
     ssize_t sent = write(_fd, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
     if (sent == -1)
     {
@@ -59,15 +49,10 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     }
     else if (sent > 0)
     {
-        std::cout << "sent " << sent << std::endl; //testcout
         _bytesWrittenTotal += static_cast<size_t>(sent);
         if (_fileBuffer.size() == _bytesWrittenTotal)
         {
             RunServers::cleanupFD(_fd);
-            // _isCgi = readFromCgi;
-            std::cout << "finished sending" << std::endl; //testcout
-            // FileDescriptor::closeFD(_fd);
-
             return true;
         }
     }
@@ -80,13 +65,11 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     ssize_t rd = read(_fd, buff.data(), buff.size());
     if (rd <= 0) 
     {
-        if (rd == 0)
-        {
-            std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
-            RunServers::cleanupFD(_fd);
-            return false;
-        }
-        throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+        RunServers::cleanupFD(_fd);
+        if (rd == -1)
+            throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+        std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
+        return true;
     }
     
     write(1, "IT WORKED\n", 10);

@@ -22,11 +22,11 @@ void FileDescriptor::cleanupFD()
 
 void	FileDescriptor::setFD(int fd)
 {
-	if (_fds.size() >= FD_LIMIT)
-	{
-		cerr << "File descriptor limit reached" << endl;
-		return;
-	}
+	// if (_fds.size() >= FD_LIMIT)
+	// {
+	// 	cerr << "File descriptor limit reached" << endl;
+	// 	return;
+	// }
 	_fds.push_back(fd);
 }
 

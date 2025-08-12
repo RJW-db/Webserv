@@ -168,7 +168,7 @@ int		getaddrinfo_usage(void);
 int		server(void);
 
 void parseHttpRequest(string &request);
-std::string escape_special_chars(const std::string& input);
+std::string escapeSpecialChars(const std::string& input);
 
 void httpRequestLogger(string str);
 

@@ -31,7 +31,7 @@ MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
 					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp \
-					ErrorCodeClientException.cpp 
+					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
 #		Find all .c files in the specified directories
@@ -44,7 +44,7 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp ServerListenFD.hpp 	ErrorCodeClientException.hpp
+INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp ServerListenFD.hpp 	ErrorCodeClientException.hpp Logger.hpp
 HEADERS			:=	$(addprefix $(INCD), $(INCS))
 INCLUDE_WEB		:=	-I $(INCD)
 

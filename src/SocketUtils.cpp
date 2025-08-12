@@ -101,7 +101,7 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
-        cerr << "fcntl: " << strerror(errno);
+        // cerr << "fcntl: " << strerror(errno);
         return false;
     }
 
@@ -109,7 +109,7 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
     if (fcntlResult == -1)
     {
-        cerr << "fcntl: " << strerror(errno);
+        // cerr << "fcntl: " << strerror(errno);
         return false;
     }
     return true;

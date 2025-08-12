@@ -1,6 +1,7 @@
 #include <RunServer.hpp>
 #include <Parsing.hpp>
 #include <FileDescriptor.hpp>
+#include <Logger.hpp>
 
 volatile sig_atomic_t g_signal_status = 0;
 
@@ -16,9 +17,13 @@ void sigint_handler(int signum)
 #include <fcntl.h>
 int main(int argc, char *argv[])
 {
-    // Client client(1);
-    // handleCgi(client);
-    // exit(0);
+    atexit([]() {
+        FileDescriptor::cleanupFD();
+        Logger::cleanup();
+    });
+
+    Logger::initialize("logs/webserv.log");
+    Logger::log(DEBUG, "it is working\r\n");
     FileDescriptor::initializeAtexit();
     RunServers::getExecutableDirectory();
     if (signal(SIGINT, &sigint_handler))

@@ -211,7 +211,9 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             if (currentEvent.events & EPOLLOUT)
             {
                 if ((*it)->writeToCgiTransfer() == true)
+                {
                     _handleCgi.erase(it);
+                }
             }
             else if (currentEvent.events & EPOLLIN)
             {
@@ -226,7 +228,7 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
                     {
                         clientHttpCleanup(client);
                     }
-                    
+
                     _handleCgi.erase(it);
                 }
             }

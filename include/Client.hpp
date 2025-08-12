@@ -88,6 +88,7 @@ class Client
         string_view _contentType;
         string_view _bodyBoundary;  // shorten to just _boundary
 
+        pid_t _pid = -1;
         string _filename;
         string _name;
         string_view _fileContent;

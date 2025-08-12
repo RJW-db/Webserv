@@ -48,8 +48,8 @@ int HandlePostTransfer::validateFinalCRLF()
         size_t absolutePathSize = RunServers::getServerRootDir().size();
         string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
-        std::cout << escape_special_chars(headers) << std::endl; //testcout
-        send(_client._fd, headers.data(), headers.size(), 0);
+        std::cout << escapeSpecialChars(headers) << std::endl; //testcout
+        send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???
         return true;
     }
     if (_fileBuffer.size() > 4)
@@ -107,9 +107,9 @@ bool HandlePostTransfer::handlePostTransfer(bool readData)
 {
     try
     {
-        char buff[RunServers::getClientBufferSize()];
         if (readData == true)
         {
+            char buff[RunServers::getClientBufferSize()];
             size_t bytesReceived = RunServers::receiveClientData(_client, buff);
             _bytesReadTotal += bytesReceived;
             _fileBuffer.append(buff, bytesReceived);
