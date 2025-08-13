@@ -185,6 +185,7 @@ void HttpRequest::SendAutoIndex(Client &client)
     int sent = send(client._fd, response.data(), response.size(), 0);
     if (sent == -1)
         throw ErrorCodeClientException(client, 500, "Failed to send autoindex response: " + string(strerror(errno)));
+    Logger::log(INFO, client, "GET  ", client._requestPath);
     if (client._keepAlive == false)
         RunServers::cleanupClient(client);
 }
@@ -204,7 +205,7 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
             }
             if (access(indexPage.data(), R_OK) == -1)
             {
-                cerr << "locateRequestedFile: " << strerror(errno) << endl;
+                Logger::log(WARN, "access: ", strerror(errno));
                 continue;
             }
             client._filenamePath = indexPage;

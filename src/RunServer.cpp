@@ -90,7 +90,7 @@ void RunServers::addStdinToEpoll()
     // Set stdin to non-blocking
     if (make_socket_non_blocking(stdin_fd) == false)
     {
-        std::cerr << "Failed to set stdin non-blocking" << std::endl;
+        Logger::log(ERROR, "Failed to set stdin non-blocking");
         return;
     }
 
@@ -100,13 +100,9 @@ void RunServers::addStdinToEpoll()
     current_event.events = EPOLLIN;
     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
     {
-        std::cerr << "epoll_ctl (stdin): " << strerror(errno) << std::endl;
+        Logger::log(ERROR, "epoll_ctl (stdin): ", strerror(errno));
         return;
     }
-
-    // Optionally, treat stdin as a special client
-    // _clients[stdin_fd] = std::make_unique<Client>(stdin_fd);
-    // You may want to skip setDisconnectTime for stdin
 }
 
 int RunServers::runServers()
@@ -117,23 +113,23 @@ int RunServers::runServers()
     while (g_signal_status == 0)
     {
         int eventCount;
-        // for (auto it = _clients.begin(); it != _clients.end();)
-		// {
-		// 	unique_ptr<Client> &client = it->second;
-		// 	++it;
-		// 	if (client->_disconnectTime <= chrono::steady_clock::now())
-        //     {
-        //         std::cout << "disconnectTime: "
-        //                 << std::chrono::duration_cast<std::chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
-        //                 << " ms" << std::endl;
-        //         std::cout << "now: "
-        //                 << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
-        //                 << " ms" << std::endl;
-		// 		cleanupClient(*client);
-        //     }
-		// }
-        // std::cout << "Blocking and waiting for epoll event..." << std::endl;
-        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, -1);
+        for (auto it = _clients.begin(); it != _clients.end();)
+		{
+			unique_ptr<Client> &client = it->second;
+			++it;
+			if (client->_disconnectTime <= chrono::steady_clock::now())
+            {
+                // cout << "disconnectTime: "
+                //         << chrono::duration_cast<chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
+                //         << " ms" << endl;
+                // cout << "now: "
+                //         << chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()
+                //         << " ms" << endl;
+				cleanupClient(*client);
+            }
+		}
+        // cout << "Blocking and waiting for epoll event..." << endl;
+        eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
             if (errno == EINTR)
@@ -142,15 +138,15 @@ int RunServers::runServers()
         }
         try
         {
-            // std::cout << "event count "<<  eventCount << std::endl;
+            // cout << "event count "<<  eventCount << endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch(const std::exception& e)
+        catch(const exception& e)
         {
-            std::cerr << e.what() << '\n';
+            Logger::log(ERROR, "Exception in handleEvents: ", e.what()); //testlog
         }
     }
-    cout << "\rGracefully stopping... (press Ctrl+C again to force)" << endl;
+    Logger::log(INFO, "Server shutting down gracefully...");
     return 0;
 }
 
@@ -263,11 +259,12 @@ void RunServers::handleEvents(size_t eventCount)
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
-                std::cerr << "epoll fault on fd " << currentEvent.data.fd
-                          << " (events: " << currentEvent.events << ")" << std::endl;
-                // std::cout << errno << std::endl;
-                // cleanupClient(*_clients[currentEvent.data.fd].get());
-                std::cout << "epoll fault on fd " << currentEvent.data.fd << " (events: " << currentEvent.events << ")" << std::endl; //testcout
+                if (currentEvent.events & EPOLLERR)
+                    Logger::log(DEBUG, "EPOLLERR detected on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ")");
+                if (currentEvent.events & EPOLLHUP)
+                    Logger::log(DEBUG, "EPOLLHUP detected on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ")");
+                if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
+                    Logger::log(DEBUG, "Unexpected epoll event on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ") - no EPOLLIN or EPOLLOUT");
                 auto clientIt = _clients.find(currentEvent.data.fd);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
@@ -284,24 +281,24 @@ void RunServers::handleEvents(size_t eventCount)
             {
                 acceptConnection(eventFD);
             }
-            // std::cout << '4' << std::endl;
+            // cout << '4' << endl;
             if (runHandleTransfer(currentEvent) == true || \
                 runCgiHandleTransfer(currentEvent) == true)
                 continue;
-            // std::cout << '5' << std::endl;
+            // cout << '5' << endl;
 
             if ((_clients.find(eventFD) != _clients.end()) &&
                 (currentEvent.events == EPOLLIN))
             {
-                // std::cout << "5in" << std::endl;
+                // cout << "5in" << endl;
                 processClientRequest(*_clients[eventFD].get());
                 continue;
             }
-            // std::cout << '6' << std::endl;
+            // cout << '6' << endl;
         }
         catch (const ErrorCodeClientException &e)
         {
-            e.handleErrorClient();
+            e.handleErrorClient();  //TODO anything throwing in here stops the server
         }
     }
 }

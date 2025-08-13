@@ -4,13 +4,14 @@
 #include <RunServer.hpp>
 #include "Logger.hpp"
 #include <fcntl.h>
+#include <ErrorCodeClientException.hpp>
 
 int RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
-{
-        cerr << "Server epoll_create: " << strerror(errno);
+    {
+        Logger::log(ERROR, "Server epoll_create: ", strerror(errno));
         return -1;
     }
     FileDescriptor::setFD(_epfd);
@@ -113,7 +114,7 @@ void RunServers::acceptConnection(const int listener)
         if(infd == -1)
         {
             if(errno != EAGAIN)
-                perror("accept");
+                Logger::log(ERROR, "Server accept: ", strerror(errno));
             break;
         }
         struct epoll_event  current_event;
@@ -121,8 +122,8 @@ void RunServers::acceptConnection(const int listener)
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
         if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
-            cerr << "epoll_ctl: " << strerror(errno) << endl;
-            close(infd);
+            Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+            FileDescriptor::closeFD(infd);
             break;
         }
         FileDescriptor::setFD(infd);
@@ -131,7 +132,7 @@ void RunServers::acceptConnection(const int listener)
 		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         // RunServers::setServer(*_clients[infd]);
         setServerFromListener(*_clients[infd], listener);
-        Logger::log(INFO, *_clients[infd], "Client connected");
+        Logger::log(INFO, *_clients[infd], "Connected");
     }
 }
 
@@ -140,7 +141,7 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
-        // cerr << "fcntl: " << strerror(errno);
+        Logger::log(ERROR, "fcntl: ", strerror(errno));
         return false;
     }
 
@@ -148,18 +149,21 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
     if (fcntlResult == -1)
     {
-        // cerr << "fcntl: " << strerror(errno);
+        Logger::log(ERROR, "fcntl: ", strerror(errno));
         return false;
     }
     return true;
 }
 
+// setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 void RunServers::setEpollEvents(int fd, int option, uint32_t events)
 {
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
     if (epoll_ctl(_epfd, option, fd, &ev) == -1)
-        std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
-    // setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+    {
+        Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+        // throw something
+    }
 }

@@ -7,6 +7,10 @@
 #include <sstream>
 #include "Client.hpp"
 
+#ifndef TERMINAL_DEBUG
+# define TERMINAL_DEBUG true
+#endif
+
 using namespace std;
 constexpr char LOG_ERROR[] = "Logger error occurred\n";
 
@@ -27,16 +31,13 @@ enum LogLevel : uint8_t
 
 class Logger {
 private:
-    static ofstream _logFile;
+    static int _logFd;
 
     static string getTimeStamp();
-    static string logLevelToString(uint8_t level);
-    static string escapeSpecialCharsRaw(const string &input);
-
+    static string logLevelToString(uint8_t level, bool useColors);
 
 public:
     static void initialize(const string& logPath);
-    static void cleanup();
     
     template<typename... Args>
     static void log(int level, Args&&... args);
@@ -56,32 +57,33 @@ void Logger::log(int level, Args&&... args)
         string rawMessage = oss.str();
         
         string timeStamp = getTimeStamp();
-        string levelStr = logLevelToString(level < CHILD_DEBUG ? level : level - 5);
-        
-        if (level < CHILD_DEBUG)
-            cout << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) << endl;
-        
-        if (_logFile.is_open())
+        int lvlStr = level < CHILD_DEBUG ? level : level - 5;
+        string levelStr = logLevelToString(lvlStr, LOGGER);
+
+        ostringstream logMsg;
+        logMsg << timeStamp << levelStr << escapeSpecialChars(rawMessage, LOGGER) << "\n";
+        string logStr = logMsg.str();
+
+        if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
         {
-            _logFile << timeStamp + levelStr + escapeSpecialChars(rawMessage, LOGGER) << endl;
-            _logFile.flush();
+            cerr << "Error writing to log file: " << strerror(errno) << endl;
+            _logFd = -1;  // Mark as closed to prevent future write attempts
         }
+
+        if (TERMINAL_DEBUG && level < CHILD_DEBUG)
+        {
+            levelStr = logLevelToString(lvlStr, TERMINAL);
+            ostream& output = (level >= WARN && level <= FATAL) ? cerr : cout;
+            output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
+        }
+        
     }
     catch (...)
     {
-        try
-        {
-            if (level < CHILD_DEBUG)
-                cerr << LOG_ERROR;
-        
-            if (_logFile.is_open())
-            {
-                _logFile << LOG_ERROR;
-                _logFile.flush();
-            }
-        } catch (...) {
+        if (_logFd != -1)
+            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        if (level < CHILD_DEBUG)
             write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        }
     }
 }
 
@@ -92,26 +94,24 @@ void Logger::log(int level, Client &client, Args&&... args)
     {
         auto portHostMap = client._usedServer->getPortHost().begin();
         string portHostInfo = portHostMap->second + ":" + portHostMap->first;
-        log(level, portHostInfo, "  FD:", client._fd, "  ", args...);
-        log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
+        
+        // max size 255.255.255.255:65535
+        if (portHostInfo.length() < 20) {
+            portHostInfo.append(20 - portHostInfo.length(), ' ');
+        } else if (portHostInfo.length() > 20) {
+            portHostInfo = portHostInfo.substr(0, 20);  // Truncate if too long
+        }
+        portHostInfo += " ";
+        // log(level, portHostInfo, "  FD:", client._fd, "  ", args...);
+        log(level, portHostInfo, "  ClientFD:", client._fd, "  ", args...);
+        // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
     catch(...)
     {
-        try
-        {
-            if (level < CHILD_DEBUG)
-                cerr << LOG_ERROR;
-        
-            if (_logFile.is_open())
-            {
-                _logFile << LOG_ERROR;
-                _logFile.flush();
-            }
-        }
-        catch (...)
-        {
+        if (_logFd != -1)
+            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        if (level < CHILD_DEBUG)
             write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        }
     }
 }
 #endif

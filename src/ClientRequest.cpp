@@ -2,6 +2,7 @@
 #include <HttpRequest.hpp>
 #include <Client.hpp>
 #include <ErrorCodeClientException.hpp>
+#include "Logger.hpp"
 
 void    RunServers::setLocation(Client &client)
 {
@@ -38,8 +39,7 @@ void RunServers::processClientRequest(Client &client)
     }
     catch(const exception& e)   // if catch we don't handle well
     {
-        cerr << e.what() << endl;
-        std::cout << "caught message in processclient request" << std::endl; //test
+        Logger::log(ERROR, client, "Error processing client request: ", e.what());
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
@@ -203,19 +203,15 @@ void RunServers::cleanupFD(int fd)
 
 void RunServers::cleanupClient(Client &client)
 {
-    // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
-    std::cout << "cleaning up client with fd:" << client._fd << std::endl;
-    for (auto it = _handle.begin(); it != _handle.end(); )
+    int clientFD = client._fd;
+    Logger::log(INFO, client, "Disconnected");
+    for (auto it = _handle.begin(); it != _handle.end();)
     {
-        if ((*it)->_client._fd == client._fd)
-        {
+        if ((*it)->_client._fd == clientFD)
             it = _handle.erase(it);
-        }
         else
             ++it;
     }
-    cleanupFD(client._fd);
-    _clients.erase(client._fd);
+    _clients.erase(clientFD);
+    cleanupFD(clientFD);
 }
-
-// unique_ptr<Client> &RunServers::getClient(int clientFd)

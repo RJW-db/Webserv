@@ -57,7 +57,7 @@ vector<string> createArgv(Client &client)
     vector<string> argvString;
     if (!client._location.getCgiPath().empty())
     {
-        std::cerr << "client._location.getCgiPath() " << client._location.getCgiPath() << std::endl; //testcout
+        Logger::log(WARN, client, "client._location.getCgiPath() ", client._location.getCgiPath());
         argvString.push_back(client._location.getCgiPath());
     }
     else if (endsWith(client._requestPath, ".py"))
@@ -167,7 +167,7 @@ bool setPipeBufferSize(int pipeFd)
 
     if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
     {
-        cerr << "fcntl (set pipe size): " << strerror(errno) << "\n";
+        Logger::log(ERROR, "fcntl (set pipe size): ", strerror(errno));
         return false;
     }
     return true;

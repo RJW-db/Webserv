@@ -4,7 +4,7 @@
 
 #include <cstddef>
 
-constexpr size_t DISCONNECT_DELAY_SECONDS = 15;
+constexpr size_t DISCONNECT_DELAY_SECONDS = 8;
 
 constexpr char CRLF[] = "\r\n";
 constexpr size_t CRLF_LEN = sizeof(CRLF) - 1;

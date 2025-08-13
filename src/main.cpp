@@ -11,24 +11,21 @@ volatile sig_atomic_t g_signal_status = 0;
 
 void sigint_handler(int signum)
 {
-    std::cout << "sigint received stopping webserver" << std::endl;
+    Logger::log(INFO, "SIGINT received, stopping webserver");
     g_signal_status = signum;
 }
 #include <fcntl.h>
 int main(int argc, char *argv[])
 {
-    atexit([]() {
-        FileDescriptor::cleanupFD();
-        Logger::cleanup();
-    });
+    // atexit(Logger::cleanup);
+    atexit(FileDescriptor::cleanupFD);
 
     Logger::initialize("logs/webserv.log");
-    FileDescriptor::initializeAtexit();
     RunServers::getExecutableDirectory();
     if (signal(SIGINT, &sigint_handler))
     {
-        std::cerr << "Error setting up signal handler: " << strerror(errno) << std::endl;
-        // return 1;
+        Logger::log(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
+        return 1;
     }
     string confFile = "config/default.conf";
     if (argc >= 2)

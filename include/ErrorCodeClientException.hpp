@@ -2,6 +2,7 @@
 # define ERRORCODECLIENTEXCEPTION_HPP
 
 #include <Client.hpp>
+#include "Logger.hpp"
 
 #include <string>
 #include <map>

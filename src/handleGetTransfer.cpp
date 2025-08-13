@@ -1,4 +1,5 @@
 #include <HandleTransfer.hpp>
+#include "Logger.hpp"
 #include <RunServer.hpp>
 #include <sys/epoll.h>
 
@@ -57,6 +58,7 @@ bool HandleGetTransfer::handleGetTransfer()
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        Logger::log(INFO, _client, "GET  ", _client._filenamePath);
         return true;
     }
     _fileBuffer = _fileBuffer.erase(0, _sent);

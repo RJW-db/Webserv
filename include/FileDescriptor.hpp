@@ -17,7 +17,6 @@ using namespace std;
 class FileDescriptor
 {
 	public:
-        static void initializeAtexit();
         static void cleanupFD();
 
 		static void	setFD(int fd);
@@ -28,6 +27,8 @@ class FileDescriptor
 		static bool containsClient(int ClientFD);
 		static void keepAliveCheck();
 		
+		static void printAllFDs();
+
 	private:
 		static vector<int> _fds;
         FileDescriptor() = delete;

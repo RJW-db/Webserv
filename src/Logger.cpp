@@ -3,46 +3,43 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
-
+#include <fcntl.h>
 // Static member definitions
-ofstream Logger::_logFile;
+int Logger::_logFd = -1;
+
 
 void Logger::initialize(const string& logPath)
 {
     try {
-        // Create directory if it doesn't exist
+        // Create directory if needed
         filesystem::path logDir = filesystem::path(logPath).parent_path();
         if (!logDir.empty()) {
             filesystem::create_directories(logDir);
         }
         
-        // Open file in append mode (creates if doesn't exist, appends if exists)
-        _logFile.open(logPath, ios::app);
-        if (!_logFile.is_open()) {
-            throw runtime_error("Failed to open log file: " + logPath);
+        // Open with C-style - creates if doesn't exist, appends if exists
+        _logFd = open(logPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+        if (_logFd == -1) {
+            throw runtime_error("Failed to open log file: " + logPath + " - " + strerror(errno));
         }
         
-        // Log initialization success
-        log(INFO, "Log file initialized: ", logPath);
+        // Track the FD
+        FileDescriptor::setFD(_logFd);
         
-    } catch (const exception& e) {
-        cerr << "FATAL: Cannot initialize logger: " << e.what() << endl;
-        cerr << "Webserver cannot continue without logging capability." << endl;
-        exit(1); // Stop the webserver
+        log(INFO, "Log file initialized: ", logPath);
     }
-}
-
-void Logger::cleanup()
-{
-    if (_logFile.is_open()) {
-        log(0, "[LOGGER] Shutting down logger");
-        _logFile.close();
+    catch (const exception& e) {
+        cerr << "FATAL: Cannot initialize logger: " << e.what() << endl;
+        exit(1);
     }
 }
 
 string Logger::getTimeStamp()
 {
     time_t now = time(0);
+    if (now == -1)
+        throw runtime_error("std::time failed");
+
     tm *ltm = localtime(&now);
     
     static int lastDay = -1;
@@ -67,14 +64,14 @@ string Logger::getTimeStamp()
     return timeStamp.str();
 }
 
-string Logger::logLevelToString(uint8_t level)
+string Logger::logLevelToString(uint8_t level, bool useColors)
 {
     switch (level) {
-        case DEBUG: return "DEBUG ";
-        case INFO:  return "INFO  ";
-        case WARN:  return "WARN  ";
-        case ERROR: return "ERROR ";
-        case FATAL: return "FATAL ";
+        case DEBUG: return useColors ? "\033[36mDEBUG\033[0m " : "DEBUG ";
+        case INFO:  return useColors ? "\033[32mINFO \033[0m " : "INFO  ";
+        case WARN:  return useColors ? "\033[33mWARN \033[0m " : "WARN  ";
+        case ERROR: return useColors ? "\033[31mERROR\033[0m " : "ERROR ";
+        case FATAL: return useColors ? "\033[91mFATAL\033[0m " : "FATAL ";
         default:    return "????? ";
     }
 }

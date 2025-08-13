@@ -1,268 +1,695 @@
-[15:02:08] [DEBUG] [LOGGER] Shutting down logger
 
 --- 2025-08-13 ---
-[15:02:24] [INFO]  Log file initialized: logs/webserv.log
-[15:02:24] [DEBUG] it is working\r\n
-
-[15:02:30] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7parent ._pid 32011
-[15:02:30] [DEBUG] Server1 clientFD 7parent ._pid 32011
-[15:02:30] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7child ._pid 0
-[15:02:30] [DEBUG] Server1 clientFD 7child ._pid 0
-[15:02:30] [DEBUG] we got into child
-[15:11:08] [DEBUG] [LOGGER] Shutting down logger
+[20:09:20] INFO  Log file initialized: logs/webserv.log
+[20:09:21] INFO   [LOGGER] SIGINT received, stopping webserver
+[20:09:21] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[15:11:09] [INFO]  Log file initialized: logs/webserv.log
-[15:11:09] [DEBUG] it is working\r\n
-
-[15:11:32] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7parent ._pid 34660
-[15:11:32] [DEBUG] Server1 clientFD 7parent ._pid 34660
-[15:11:32] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7child ._pid 0
-[15:11:32] [DEBUG] Server1 clientFD 7child ._pid 0
-[15:11:32] [DEBUG] we got into child
-[15:16:47] [DEBUG] [LOGGER] Shutting down logger
+[20:09:59] INFO  Log file initialized: logs/webserv.log
+[20:10:00] INFO  SIGINT received, stopping webserver
+[20:10:00] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[15:25:04] [INFO]  Log file initialized: logs/webserv.log
-[15:25:04] [DEBUG] it is working\r\n
-
-[15:26:00] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:26:02] [INFO]  Log file initialized: logs/webserv.log
-[15:26:02] [DEBUG] it is working\r\n
-
-[15:26:41] [DEBUG] [LOGGER] Shutting down logger
+[20:10:46] INFO  Log file initialized: logs/webserv.log
+[20:10:46] INFO  SIGINT received, stopping webserver
+[20:10:46] INFO  Server shutting down gracefully...
+[20:10:46] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:10:46] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[15:26:43] [INFO]  Log file initialized: logs/webserv.log
-[15:26:43] [DEBUG] it is working\r\n
-
-[15:27:25] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:27:26] [INFO]  Log file initialized: logs/webserv.log
-[15:27:26] [DEBUG] it is working\r\n
-
-[15:37:21] [DEBUG] [LOGGER] Shutting down logger
+[20:11:41] INFO  Log file initialized: logs/webserv.log
+[20:11:43] INFO  SIGINT received, stopping webserver
+[20:11:43] INFO  Server shutting down gracefully...
+[20:11:43] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:11:43] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[15:37:27] [INFO]  Log file initialized: logs/webserv.log
-[15:37:27] [DEBUG] it is working\r\n
-
-[15:37:29] [DEBUG] Server assigned: Server1 (0.0.0.0:8080)
-[15:37:29] [INFO]  PortHost: 0.0.0.0:8080 clientFD 7Client connected
-[15:37:29] [INFO]  Server1 clientFD 7Client connected
-[15:39:46] [DEBUG] [LOGGER] Shutting down logger
+[20:19:05] INFO  Log file initialized: logs/webserv.log
+[20:19:07] INFO  SIGINT received, stopping webserver
+[20:19:07] INFO  Server shutting down gracefully...
+[20:19:07] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:19:07] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[15:39:51] [INFO]  Log file initialized: logs/webserv.log
-[15:39:51] [DEBUG] it is working\r\n
-
-[15:39:54] [DEBUG] Server assigned: Server1 (0.0.0.0:8080)
-[15:39:54] [INFO]  PortHost: 0.0.0.0:8080 clientFD 7Client connected
-[15:39:54] [INFO]  Server1 clientFD 7Client connected
-[15:44:18] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:44:21] [INFO]  Log file initialized: logs/webserv.log
-[15:44:21] [DEBUG] it is working\r\n
-
-[15:44:24] [INFO]  [0.0.0.0:8080] [FD:7] Client connected
-[15:44:24] [INFO]  [Server1] [FD:7] Client connected
-[15:47:45] [DEBUG] [LOGGER] Shutting down logger
+[20:23:15] INFO  Log file initialized: logs/webserv.log
+[20:23:16] INFO  SIGINT received, stopping webserver
+[20:23:16] INFO  Server shutting down gracefully...
+[20:23:16] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:23:16] DEBUG Closing tracked FD: 6
+[20:23:16] DEBUG Closing tracked FD: 5
+[20:23:16] DEBUG Closing tracked FD: 4
+[20:23:16] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[15:47:48] [INFO]  Log file initialized: logs/webserv.log
-[15:47:48] [DEBUG] it is working\r\n
-
-[15:47:48] [INFO]  [0.0.0.0:8080] [FD:7] Client connected
-[15:47:48] [INFO]  Server1  FD:7  Client connected
-[15:48:09] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:48:12] [INFO]  Log file initialized: logs/webserv.log
-[15:48:12] [DEBUG] it is working\r\n
-
-[15:48:15] [INFO]  0.0.0.0:8080  FD:7  Client connected
-[15:48:15] [INFO]  Server1  FD:7  Client connected
-[15:48:32] [DEBUG] [LOGGER] Shutting down logger
+[20:25:15] INFO  Log file initialized: logs/webserv.log
+[20:25:16] INFO  SIGINT received, stopping webserver
+[20:25:16] INFO  Server shutting down gracefully...
+[20:25:16] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:25:16] DEBUG Closing tracked FD: 6
+[20:25:16] DEBUG Closing tracked FD: 5
+[20:25:16] DEBUG Closing tracked FD: 4
+[20:25:16] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[15:48:35] [INFO]  Log file initialized: logs/webserv.log
-[15:48:35] [DEBUG] it is working\r\n
-
-[15:48:39] [INFO]  0.0.0.0:8080  FD:7  Client connected
-[15:48:39] [INFO]  Server1  FD:7  Client connected
-[15:48:39] [DEBUG] 0.0.0.0:8080  FD:7  parent ._pid 38453
-[15:48:39] [DEBUG] Server1  FD:7  parent ._pid 38453
-[15:48:39] [DEBUG] 0.0.0.0:8080  FD:7  child ._pid 0
-[15:48:39] [DEBUG] Server1  FD:7  child ._pid 0
-[15:48:39] [DEBUG] we got into child
-[15:49:41] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:49:49] [INFO]  Log file initialized: logs/webserv.log
-[15:49:51] [INFO]  0.0.0.0:8080  FD:7  Client connected
-[15:49:51] [INFO]  Server1  FD:7  Client connected
-[15:50:22] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:53:03] [INFO]  Log file initialized: logs/webserv.log
-[15:53:09] [INFO]  0.0.0.0:8080  FD:7  Client connected
-[15:53:09] [INFO]  Server1  FD:7  Client connected
-[15:53:09] [INFO]  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
-[15:53:09] [INFO]  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
-[15:59:40] [DEBUG] [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[15:59:42] INFO  Log file initialized: logs/webserv.log
-[16:00:25] DEBUG [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[16:00:27] INFO  Log file initialized: logs/webserv.log
-[16:14:19] DEBUG [LOGGER] Shutting down logger
-
---- 2025-08-13 ---
-[16:14:22] INFO  Log file initialized: logs/webserv.log
-[16:14:24] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:14:24] INFO  Server1  FD:7  Client connected
-[16:19:30] DEBUG [LOGGER] Shutting down logger
+[20:25:24] INFO  Log file initialized: logs/webserv.log
+[20:25:27] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:25:27] DEBUG Current tracked FDs (6 total):
+[20:25:27] DEBUG   [0] FD: 3
+[20:25:27] DEBUG   [1] FD: 4
+[20:25:27] DEBUG   [2] FD: 5
+[20:25:27] DEBUG   [3] FD: 6
+[20:25:27] DEBUG   [4] FD: 7
+[20:25:27] DEBUG   [5] FD: 8
+[20:25:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:25:27] DEBUG Current tracked FDs (6 total):
+[20:25:27] DEBUG   [0] FD: 3
+[20:25:27] DEBUG   [1] FD: 4
+[20:25:27] DEBUG   [2] FD: 5
+[20:25:27] DEBUG   [3] FD: 6
+[20:25:27] DEBUG   [4] FD: 7
+[20:25:27] DEBUG   [5] FD: 8
+[20:25:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:25:27] DEBUG Current tracked FDs (6 total):
+[20:25:27] DEBUG   [0] FD: 3
+[20:25:27] DEBUG   [1] FD: 4
+[20:25:27] DEBUG   [2] FD: 5
+[20:25:27] DEBUG   [3] FD: 6
+[20:25:27] DEBUG   [4] FD: 7
+[20:25:27] DEBUG   [5] FD: 8
+[20:25:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:25:31] INFO  SIGINT received, stopping webserver
+[20:25:31] INFO  Server shutting down gracefully...
+[20:25:31] DEBUG Starting cleanup of 5 tracked file descriptors
+[20:25:31] DEBUG Closing tracked FD: 7
+[20:25:31] DEBUG Closing tracked FD: 6
+[20:25:31] DEBUG Closing tracked FD: 5
+[20:25:31] DEBUG Closing tracked FD: 4
+[20:25:31] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:19:33] INFO  Log file initialized: logs/webserv.log
-[16:19:38] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:19:38] INFO  Server1  FD:7  Client connected
-[16:22:10] DEBUG [LOGGER] Shutting down logger
+[20:27:06] INFO  Log file initialized: logs/webserv.log
+[20:27:12] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:12] DEBUG Current tracked FDs (6 total):
+[20:27:12] DEBUG   [0] FD: 3
+[20:27:12] DEBUG   [1] FD: 4
+[20:27:12] DEBUG   [2] FD: 5
+[20:27:12] DEBUG   [3] FD: 6
+[20:27:12] DEBUG   [4] FD: 7
+[20:27:12] DEBUG   [5] FD: 8
+[20:27:12] INFO  0.0.0.0:8080           ClientFD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[20:27:12] DEBUG Current tracked FDs (6 total):
+[20:27:12] DEBUG   [0] FD: 3
+[20:27:12] DEBUG   [1] FD: 4
+[20:27:12] DEBUG   [2] FD: 5
+[20:27:12] DEBUG   [3] FD: 6
+[20:27:12] DEBUG   [4] FD: 7
+[20:27:12] DEBUG   [5] FD: 8
+[20:27:12] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[20:27:16] WARN  0.0.0.0:8080           ClientFD:7  Method not allowed: DELETE
+[20:27:16] DEBUG Current tracked FDs (6 total):
+[20:27:16] DEBUG   [0] FD: 3
+[20:27:16] DEBUG   [1] FD: 4
+[20:27:16] DEBUG   [2] FD: 5
+[20:27:16] DEBUG   [3] FD: 6
+[20:27:16] DEBUG   [4] FD: 7
+[20:27:16] DEBUG   [5] FD: 8
+[20:27:16] INFO  0.0.0.0:8080           ClientFD:7  GET  ./webPages/defaultErrorPages/405.html
+[20:27:24] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:27:24] DEBUG Current tracked FDs (5 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:24] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 69040
+[20:27:24] DEBUG Current tracked FDs (9 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 8
+[20:27:24] DEBUG   [6] FD: 9
+[20:27:24] DEBUG   [7] FD: 10
+[20:27:24] DEBUG   [8] FD: 11
+[20:27:24] DEBUG Current tracked FDs (8 total):
+[20:27:24] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG we got into child
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 9
+[20:27:24] DEBUG   [6] FD: 10
+[20:27:24] DEBUG   [7] FD: 11
+[20:27:24] DEBUG Current tracked FDs (9 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 8
+[20:27:24] DEBUG   [6] FD: 9
+[20:27:24] DEBUG   [7] FD: 10
+[20:27:24] DEBUG   [8] FD: 11
+[20:27:24] DEBUG Current tracked FDs (8 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 9
+[20:27:24] DEBUG   [6] FD: 10
+[20:27:24] DEBUG   [7] FD: 11
+[20:27:24] DEBUG Current tracked FDs (7 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 10
+[20:27:24] DEBUG   [6] FD: 11
+[20:27:24] DEBUG Current tracked FDs (6 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 11
+[20:27:24] DEBUG Current tracked FDs (7 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 9
+[20:27:24] DEBUG   [6] FD: 10
+[20:27:24] DEBUG Current tracked FDs (6 total):
+[20:27:24] DEBUG   [0] FD: 3
+[20:27:24] DEBUG   [1] FD: 4
+[20:27:24] DEBUG   [2] FD: 5
+[20:27:24] DEBUG   [3] FD: 6
+[20:27:24] DEBUG   [4] FD: 7
+[20:27:24] DEBUG   [5] FD: 10
+[20:27:32] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:27:32] DEBUG Current tracked FDs (5 total):
+[20:27:32] DEBUG   [0] FD: 3
+[20:27:32] DEBUG   [1] FD: 4
+[20:27:32] DEBUG   [2] FD: 5
+[20:27:32] DEBUG   [3] FD: 6
+[20:27:32] DEBUG   [4] FD: 7
+[20:27:32] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:32] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:27:32] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:27:40] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:27:40] DEBUG Current tracked FDs (5 total):
+[20:27:40] DEBUG   [0] FD: 3
+[20:27:40] DEBUG   [1] FD: 4
+[20:27:40] DEBUG   [2] FD: 5
+[20:27:40] DEBUG   [3] FD: 6
+[20:27:40] DEBUG   [4] FD: 7
+[20:27:40] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:40] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:27:40] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:27:48] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:27:48] DEBUG Current tracked FDs (5 total):
+[20:27:48] DEBUG   [0] FD: 3
+[20:27:48] DEBUG   [1] FD: 4
+[20:27:48] DEBUG   [2] FD: 5
+[20:27:48] DEBUG   [3] FD: 6
+[20:27:48] DEBUG   [4] FD: 7
+[20:27:48] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:48] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:27:48] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:27:56] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:27:56] DEBUG Current tracked FDs (5 total):
+[20:27:56] DEBUG   [0] FD: 3
+[20:27:56] DEBUG   [1] FD: 4
+[20:27:56] DEBUG   [2] FD: 5
+[20:27:56] DEBUG   [3] FD: 6
+[20:27:56] DEBUG   [4] FD: 7
+[20:27:56] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:27:56] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:27:56] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:27:59] INFO  SIGINT received, stopping webserver
+[20:27:59] INFO  Server shutting down gracefully...
+[20:27:59] DEBUG Starting cleanup of 5 tracked file descriptors
+[20:27:59] DEBUG Closing tracked FD: 7
+[20:27:59] DEBUG Closing tracked FD: 6
+[20:27:59] DEBUG Closing tracked FD: 5
+[20:27:59] DEBUG Closing tracked FD: 4
+[20:27:59] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:22:11] INFO  Log file initialized: logs/webserv.log
-[16:22:11] INFO  finished computation at Wed Aug 13 16:22:11 2025\n
-elapsed time: 1.89e-07s
-[16:23:04] DEBUG [LOGGER] Shutting down logger
+[20:27:59] INFO  Log file initialized: logs/webserv.log
+[20:28:03] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:28:03] DEBUG Current tracked FDs (6 total):
+[20:28:03] DEBUG   [0] FD: 3
+[20:28:03] DEBUG   [1] FD: 4
+[20:28:03] DEBUG   [2] FD: 5
+[20:28:03] DEBUG   [3] FD: 6
+[20:28:03] DEBUG   [4] FD: 7
+[20:28:03] DEBUG   [5] FD: 8
+[20:28:03] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:28:03] DEBUG Current tracked FDs (6 total):
+[20:28:03] DEBUG   [0] FD: 3
+[20:28:03] DEBUG   [1] FD: 4
+[20:28:03] DEBUG   [2] FD: 5
+[20:28:03] DEBUG   [3] FD: 6
+[20:28:03] DEBUG   [4] FD: 7
+[20:28:03] DEBUG   [5] FD: 8
+[20:28:03] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:28:03] DEBUG Current tracked FDs (6 total):
+[20:28:03] DEBUG   [0] FD: 3
+[20:28:03] DEBUG   [1] FD: 4
+[20:28:03] DEBUG   [2] FD: 5
+[20:28:03] DEBUG   [3] FD: 6
+[20:28:03] DEBUG   [4] FD: 7
+[20:28:03] DEBUG   [5] FD: 8
+[20:28:03] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:28:06] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 69312
+[20:28:06] DEBUG Current tracked FDs (9 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 8
+[20:28:06] DEBUG   [6] FD: 9
+[20:28:06] DEBUG   [7] FD: 10
+[20:28:06] DEBUG   [8] FD: 11
+[20:28:06] DEBUG Current tracked FDs (8 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 9
+[20:28:06] DEBUG   [6] FD: 10
+[20:28:06] DEBUG   [7] FD: 11
+[20:28:06] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:28:06] DEBUG we got into child
+[20:28:06] DEBUG Current tracked FDs (9 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 8
+[20:28:06] DEBUG   [6] FD: 9
+[20:28:06] DEBUG   [7] FD: 10
+[20:28:06] DEBUG   [8] FD: 11
+[20:28:06] DEBUG Current tracked FDs (8 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 9
+[20:28:06] DEBUG   [6] FD: 10
+[20:28:06] DEBUG   [7] FD: 11
+[20:28:06] DEBUG Current tracked FDs (7 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 10
+[20:28:06] DEBUG   [6] FD: 11
+[20:28:06] DEBUG Current tracked FDs (6 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 11
+[20:28:06] DEBUG Current tracked FDs (7 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 9
+[20:28:06] DEBUG   [6] FD: 10
+[20:28:06] DEBUG Current tracked FDs (6 total):
+[20:28:06] DEBUG   [0] FD: 3
+[20:28:06] DEBUG   [1] FD: 4
+[20:28:06] DEBUG   [2] FD: 5
+[20:28:06] DEBUG   [3] FD: 6
+[20:28:06] DEBUG   [4] FD: 7
+[20:28:06] DEBUG   [5] FD: 9
+[20:28:14] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:28:14] DEBUG Current tracked FDs (5 total):
+[20:28:14] DEBUG   [0] FD: 3
+[20:28:14] DEBUG   [1] FD: 4
+[20:28:14] DEBUG   [2] FD: 5
+[20:28:14] DEBUG   [3] FD: 6
+[20:28:14] DEBUG   [4] FD: 7
+[20:28:14] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:28:14] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:28:14] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:28:22] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:28:22] DEBUG Current tracked FDs (5 total):
+[20:28:22] DEBUG   [0] FD: 3
+[20:28:22] DEBUG   [1] FD: 4
+[20:28:22] DEBUG   [2] FD: 5
+[20:28:22] DEBUG   [3] FD: 6
+[20:28:22] DEBUG   [4] FD: 7
+[20:28:22] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:28:22] WARN  0.0.0.0:8080           ClientFD:7  URI too long
+[20:28:22] ERROR Exception in handleEvents: invalid error code given in code: 414
+[20:28:25] INFO  SIGINT received, stopping webserver
+[20:28:25] INFO  Server shutting down gracefully...
+[20:28:25] DEBUG Starting cleanup of 5 tracked file descriptors
+[20:28:25] DEBUG Closing tracked FD: 7
+[20:28:25] DEBUG Closing tracked FD: 6
+[20:28:25] DEBUG Closing tracked FD: 5
+[20:28:25] DEBUG Closing tracked FD: 4
+[20:28:25] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:23:05] INFO  Log file initialized: logs/webserv.log
-[16:23:12] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:23:12] INFO  Server1  FD:7  Client connected
-[16:23:20] INFO  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
-[16:23:20] INFO  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
-[16:23:45] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 41445
-[16:23:45] DEBUG Server1  FD:7  parent ._pid 41445
-[16:23:45] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:23:45] DEBUG Server1  FD:7  child ._pid 0
-[16:23:45] DEBUG we got into child
-[16:25:20] DEBUG [LOGGER] Shutting down logger
+[20:28:25] INFO  Log file initialized: logs/webserv.log
+[20:28:27] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:28:27] DEBUG Current tracked FDs (6 total):
+[20:28:27] DEBUG   [0] FD: 3
+[20:28:27] DEBUG   [1] FD: 4
+[20:28:27] DEBUG   [2] FD: 5
+[20:28:27] DEBUG   [3] FD: 6
+[20:28:27] DEBUG   [4] FD: 7
+[20:28:27] DEBUG   [5] FD: 8
+[20:28:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:28:27] DEBUG Current tracked FDs (6 total):
+[20:28:27] DEBUG   [0] FD: 3
+[20:28:27] DEBUG   [1] FD: 4
+[20:28:27] DEBUG   [2] FD: 5
+[20:28:27] DEBUG   [3] FD: 6
+[20:28:27] DEBUG   [4] FD: 7
+[20:28:27] DEBUG   [5] FD: 8
+[20:28:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:28:27] DEBUG Current tracked FDs (6 total):
+[20:28:27] DEBUG   [0] FD: 3
+[20:28:27] DEBUG   [1] FD: 4
+[20:28:27] DEBUG   [2] FD: 5
+[20:28:27] DEBUG   [3] FD: 6
+[20:28:27] DEBUG   [4] FD: 7
+[20:28:27] DEBUG   [5] FD: 8
+[20:28:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:28:30] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 69412
+[20:28:30] DEBUG Current tracked FDs (9 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 8
+[20:28:30] DEBUG   [6] FD: 9
+[20:28:30] DEBUG   [7] FD: 10
+[20:28:30] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:28:30] DEBUG   [8] FD: 11
+[20:28:30] DEBUG we got into child
+[20:28:30] DEBUG Current tracked FDs (8 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 9
+[20:28:30] DEBUG Current tracked FDs (9 total):
+[20:28:30] DEBUG   [6] FD: 10
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [7] FD: 11
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 8
+[20:28:30] DEBUG   [6] FD: 9
+[20:28:30] DEBUG   [7] FD: 10
+[20:28:30] DEBUG   [8] FD: 11
+[20:28:30] DEBUG Current tracked FDs (8 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 9
+[20:28:30] DEBUG   [6] FD: 10
+[20:28:30] DEBUG   [7] FD: 11
+[20:28:30] DEBUG Current tracked FDs (7 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 10
+[20:28:30] DEBUG   [6] FD: 11
+[20:28:30] DEBUG Current tracked FDs (6 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG Current tracked FDs (7 total):
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [5] FD: 11
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 9
+[20:28:30] DEBUG   [6] FD: 10
+[20:28:30] DEBUG Current tracked FDs (6 total):
+[20:28:30] DEBUG   [0] FD: 3
+[20:28:30] DEBUG   [1] FD: 4
+[20:28:30] DEBUG   [2] FD: 5
+[20:28:30] DEBUG   [3] FD: 6
+[20:28:30] DEBUG   [4] FD: 7
+[20:28:30] DEBUG   [5] FD: 10
+[20:28:34] INFO  SIGINT received, stopping webserver
+[20:28:34] INFO  Server shutting down gracefully...
+[20:28:34] DEBUG Starting cleanup of 5 tracked file descriptors
+[20:28:34] DEBUG Closing tracked FD: 7
+[20:28:34] DEBUG Closing tracked FD: 6
+[20:28:34] DEBUG Closing tracked FD: 5
+[20:28:34] DEBUG Closing tracked FD: 4
+[20:28:34] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:25:22] INFO  Log file initialized: logs/webserv.log
-[16:25:23] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:25:23] INFO  Server1  FD:7  Client connected
-[16:25:28] INFO  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
-[16:25:28] INFO  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
-[16:25:33] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 41706
-[16:25:33] DEBUG Server1  FD:7  parent ._pid 41706
-[16:25:33] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:25:33] DEBUG Server1  FD:7  child ._pid 0
-[16:25:33] DEBUG we got into child
-[16:28:49] DEBUG [LOGGER] Shutting down logger
+[20:29:14] INFO  Log file initialized: logs/webserv.log
+[20:29:16] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:29:16] DEBUG Current tracked FDs (6 total):
+[20:29:16] DEBUG   [0] FD: 3
+[20:29:16] DEBUG   [1] FD: 4
+[20:29:16] DEBUG   [2] FD: 5
+[20:29:16] DEBUG   [3] FD: 6
+[20:29:16] DEBUG   [4] FD: 7
+[20:29:16] DEBUG   [5] FD: 8
+[20:29:16] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:29:16] DEBUG Current tracked FDs (6 total):
+[20:29:16] DEBUG   [0] FD: 3
+[20:29:16] DEBUG   [1] FD: 4
+[20:29:16] DEBUG   [2] FD: 5
+[20:29:16] DEBUG   [3] FD: 6
+[20:29:16] DEBUG   [4] FD: 7
+[20:29:16] DEBUG   [5] FD: 8
+[20:29:16] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:29:16] DEBUG Current tracked FDs (6 total):
+[20:29:16] DEBUG   [0] FD: 3
+[20:29:16] DEBUG   [1] FD: 4
+[20:29:16] DEBUG   [2] FD: 5
+[20:29:16] DEBUG   [3] FD: 6
+[20:29:16] DEBUG   [4] FD: 7
+[20:29:16] DEBUG   [5] FD: 8
+[20:29:16] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:29:23] INFO  SIGINT received, stopping webserver
+[20:29:23] INFO  Server shutting down gracefully...
+[20:29:23] DEBUG Starting cleanup of 5 tracked file descriptors
+[20:29:23] DEBUG Closing tracked FD: 7
+[20:29:23] DEBUG Closing tracked FD: 6
+[20:29:23] DEBUG Closing tracked FD: 5
+[20:29:23] DEBUG Closing tracked FD: 4
+[20:29:23] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:28:50] INFO  Log file initialized: logs/webserv.log
-[16:29:02] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:29:02] INFO  Server1  FD:7  Client connected
-[16:29:02] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42013
-[16:29:02] DEBUG Server1  FD:7  parent ._pid 42013
-[16:29:13] DEBUG [LOGGER] Shutting down logger
-[16:29:13] DEBUG [LOGGER] Shutting down logger
+[20:29:24] INFO  Log file initialized: logs/webserv.log
+[20:29:52] INFO  SIGINT received, stopping webserver
+[20:29:52] INFO  Server shutting down gracefully...
+[20:29:52] DEBUG Starting cleanup of 4 tracked file descriptors
+[20:29:52] DEBUG Closing tracked FD: 6
+[20:29:52] DEBUG Closing tracked FD: 5
+[20:29:52] DEBUG Closing tracked FD: 4
+[20:29:52] DEBUG Closing tracked FD: 3
 
 --- 2025-08-13 ---
-[16:29:14] INFO  Log file initialized: logs/webserv.log
-[16:29:17] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:29:17] INFO  Server1  FD:7  Client connected
-[16:29:20] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42107
-[16:29:20] DEBUG Server1  FD:7  parent ._pid 42107
-[16:29:55] DEBUG [LOGGER] Shutting down logger
-[16:29:55] DEBUG [LOGGER] Shutting down logger
+[20:29:53] INFO  Log file initialized: logs/webserv.log
+[20:29:57] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:29:57] DEBUG Current tracked FDs (6 total):
+[20:29:57] DEBUG   [0] FD: 3
+[20:29:57] DEBUG   [1] FD: 4
+[20:29:57] DEBUG   [2] FD: 5
+[20:29:57] DEBUG   [3] FD: 6
+[20:29:57] DEBUG   [4] FD: 7
+[20:29:57] DEBUG   [5] FD: 8
+[20:29:57] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:29:57] DEBUG Current tracked FDs (6 total):
+[20:29:57] DEBUG   [0] FD: 3
+[20:29:57] DEBUG   [1] FD: 4
+[20:29:57] DEBUG   [2] FD: 5
+[20:29:57] DEBUG   [3] FD: 6
+[20:29:57] DEBUG   [4] FD: 7
+[20:29:57] DEBUG   [5] FD: 8
+[20:29:57] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:29:57] DEBUG Current tracked FDs (6 total):
+[20:29:57] DEBUG   [0] FD: 3
+[20:29:57] DEBUG   [1] FD: 4
+[20:29:57] DEBUG   [2] FD: 5
+[20:29:57] DEBUG   [3] FD: 6
+[20:29:57] DEBUG   [4] FD: 7
+[20:29:57] DEBUG   [5] FD: 8
+[20:29:57] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:30:05] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:30:05] DEBUG Current tracked FDs (5 total):
+[20:30:05] DEBUG   [0] FD: 3
+[20:30:05] DEBUG   [1] FD: 4
+[20:30:05] DEBUG   [2] FD: 5
+[20:30:05] DEBUG   [3] FD: 6
+[20:30:05] DEBUG   [4] FD: 7
+[20:30:12] INFO  SIGINT received, stopping webserver
+[20:30:12] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:29:55] INFO  Log file initialized: logs/webserv.log
-[16:30:00] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:30:00] INFO  Server1  FD:7  Client connected
-[16:30:00] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42195
-[16:30:00] DEBUG Server1  FD:7  parent ._pid 42195
-[16:30:11] DEBUG [LOGGER] Shutting down logger
-[16:30:11] DEBUG [LOGGER] Shutting down logger
+[20:30:13] INFO  Log file initialized: logs/webserv.log
+[20:30:17] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:30:17] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:30:17] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:30:17] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:30:25] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:30:27] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:30:27] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 69876
+[20:30:27] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:30:27] DEBUG we got into child
+[20:30:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06.png
+[20:30:35] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:30:47] INFO  SIGINT received, stopping webserver
+[20:30:47] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:30:11] INFO  Log file initialized: logs/webserv.log
-[16:30:19] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:30:19] INFO  Server1  FD:7  Client connected
-[16:30:19] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42295
-[16:30:19] DEBUG Server1  FD:7  parent ._pid 42295
-[16:30:26] DEBUG [LOGGER] Shutting down logger
-[16:30:26] DEBUG [LOGGER] Shutting down logger
+[20:30:47] INFO  Log file initialized: logs/webserv.log
+[20:30:49] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:30:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:30:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:30:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:30:52] INFO  0.0.0.0:8080           ClientFD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[20:30:52] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[20:30:56] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70045
+[20:30:56] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:30:56] DEBUG we got into child
+[20:30:56] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-thatguycraig000-1563356.jpg
+[20:31:04] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:31:40] INFO  SIGINT received, stopping webserver
+[20:31:40] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:30:50] INFO  Log file initialized: logs/webserv.log
-[16:30:52] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:30:52] INFO  Server1  FD:7  Client connected
-[16:30:55] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42419
-[16:30:55] DEBUG Server1  FD:7  parent ._pid 42419
-[16:30:55] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:30:55] DEBUG Server1  FD:7  child ._pid 0
-[16:30:55] DEBUG we got into child
-[16:31:13] DEBUG [LOGGER] Shutting down logger
+[20:31:41] INFO  Log file initialized: logs/webserv.log
+[20:31:48] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:31:48] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70190
+[20:31:48] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:31:48] DEBUG we got into child
+[20:31:56] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:31:56] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:31:56] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:32:04] INFO  SIGINT received, stopping webserver
+[20:32:04] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:31:15] INFO  Log file initialized: logs/webserv.log
-[16:31:17] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:31:17] INFO  Server1  FD:7  Client connected
-[16:31:17] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42512
-[16:31:17] DEBUG Server1  FD:7  parent ._pid 42512
-[16:32:29] DEBUG [LOGGER] Shutting down logger
-[16:32:29] DEBUG [LOGGER] Shutting down logger
+[20:32:05] INFO  Log file initialized: logs/webserv.log
+[20:32:07] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:32:07] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70294
+[20:32:07] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:32:07] DEBUG we got into child
+[20:32:09] WARN  0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
+[20:32:09] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:32:09] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:32:09] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:32:11] INFO  SIGINT received, stopping webserver
+[20:32:11] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:32:30] INFO  Log file initialized: logs/webserv.log
-[16:32:34] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:32:34] INFO  Server1  FD:7  Client connected
-[16:32:34] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42628
-[16:32:34] DEBUG Server1  FD:7  parent ._pid 42628
-[16:32:34] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:32:34] DEBUG Server1  FD:7  child ._pid 0
-[16:32:34] DEBUG we got into child
-[16:33:42] DEBUG [LOGGER] Shutting down logger
+[20:32:12] INFO  Log file initialized: logs/webserv.log
+[20:32:16] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:32:16] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70353
+[20:32:16] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:32:16] DEBUG we got into child
+[20:32:24] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:32:24] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:32:24] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:32:32] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:36:11] INFO  SIGINT received, stopping webserver
+[20:36:11] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:33:43] INFO  Log file initialized: logs/webserv.log
-[16:33:47] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:33:47] INFO  Server1  FD:7  Client connected
-[16:33:47] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42772
-[16:33:47] DEBUG Server1  FD:7  parent ._pid 42772
-[16:33:47] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:33:47] DEBUG Server1  FD:7  child ._pid 0
-[16:33:47] DEBUG we got into child
-[16:35:00] DEBUG [LOGGER] Shutting down logger
+[20:36:13] INFO  Log file initialized: logs/webserv.log
+[20:36:16] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:36:16] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:36:19] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70715
+[20:36:19] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:36:19] DEBUG we got into child
+[20:36:19] DEBUG EPOLLERR detected on fd 9 (events: 12)
+[20:36:27] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:36:27] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:36:27] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:36:35] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:36:40] INFO  SIGINT received, stopping webserver
+[20:36:40] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:35:01] INFO  Log file initialized: logs/webserv.log
-[16:35:04] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:35:04] INFO  Server1  FD:7  Client connected
-[16:35:04] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42907
-[16:35:04] DEBUG Server1  FD:7  parent ._pid 42907
-[16:35:04] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:35:04] DEBUG Server1  FD:7  child ._pid 0
-[16:35:04] DEBUG we got into child
-[16:36:33] DEBUG [LOGGER] Shutting down logger
+[20:36:42] INFO  Log file initialized: logs/webserv.log
+[20:36:44] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:36:44] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:36:45] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 70861
+[20:36:45] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:36:45] DEBUG we got into child
+[20:36:45] DEBUG EPOLLERR detected on fd 9 (events: 12)
+[20:36:53] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:36:53] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:36:53] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:36:55] INFO  SIGINT received, stopping webserver
+[20:36:55] INFO  Server shutting down gracefully...
 
 --- 2025-08-13 ---
-[16:36:36] INFO  Log file initialized: logs/webserv.log
-[16:36:38] INFO  0.0.0.0:8080  FD:7  Client connected
-[16:36:38] INFO  Server1  FD:7  Client connected
-[16:36:38] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 43147
-[16:36:38] DEBUG Server1  FD:7  parent ._pid 43147
-[16:36:38] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
-[16:36:38] DEBUG Server1  FD:7  child ._pid 0
-[16:36:38] DEBUG we got into child
-[16:36:42] DEBUG [LOGGER] Shutting down logger
+[20:48:25] INFO  Log file initialized: logs/webserv.log
+[20:48:25] ERROR Failed to set stdin non-blocking
+[20:48:37] INFO  SIGINT received, stopping webserver
+[20:48:37] INFO  Server shutting down gracefully...
+
+--- 2025-08-13 ---
+[20:48:38] INFO  Log file initialized: logs/webserv.log
+[20:48:41] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:48:41] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:48:42] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:48:42] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:48:42] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:48:46] INFO  SIGINT received, stopping webserver
+[20:48:46] INFO  Server shutting down gracefully...
+
+--- 2025-08-13 ---
+[20:48:47] INFO  Log file initialized: logs/webserv.log
+[20:48:49] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:48:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[20:48:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[20:48:49] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[20:48:57] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:49:00] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:49:00] INFO  0.0.0.0:8080           ClientFD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[20:49:00] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[20:49:08] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:49:09] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[20:49:09] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 72214
+[20:49:09] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
+[20:49:09] DEBUG we got into child
+[20:49:09] INFO  0.0.0.0:8080           ClientFD:7  GET  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06.png
+[20:49:17] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[20:49:18] INFO  SIGINT received, stopping webserver
+[20:49:18] INFO  Server shutting down gracefully...

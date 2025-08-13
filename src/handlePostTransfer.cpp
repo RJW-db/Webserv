@@ -45,11 +45,11 @@ int HandlePostTransfer::validateFinalCRLF()
     {
         FileDescriptor::closeFD(_fd);
         _fd = -1;
-        Logger::log(INFO, _client, "POST  ", _client._filenamePath);
         size_t absolutePathSize = RunServers::getServerRootDir().size();
         string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
         send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???
+        Logger::log(INFO, _client, "POST  ", _client._filenamePath);
         return true;
     }
     if (_fileBuffer.size() > 4)
