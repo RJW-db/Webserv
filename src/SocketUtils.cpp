@@ -2,6 +2,7 @@
 # include <sys/epoll.h>
 #endif
 #include <RunServer.hpp>
+#include "Logger.hpp"
 #include <fcntl.h>
 
 int RunServers::epollInit(ServerList &servers)
@@ -54,6 +55,53 @@ int RunServers::epollInit(ServerList &servers)
     return 0;
 }
 
+static string NumIpToString2(uint32_t addr)
+{
+    uint32_t num;
+    string result;
+    int bitshift = 24;
+    uint32_t rev_addr = htonl(addr);
+
+    for (uint8_t i = 0; i < 4; ++i)
+    {
+        num = rev_addr >> bitshift;
+        result = result + to_string(num);
+        rev_addr &= ~(255 >> bitshift);
+        if (i != 3)
+            result += ".";
+        bitshift -= 8;
+    }
+    return result;
+}
+
+void RunServers::setServerFromListener(Client &client, int listenerFD)
+{
+    // Get the server info from the listener socket
+    sockaddr_in serverAddr;
+    socklen_t addrLen = sizeof(serverAddr);
+    if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0) {
+        // throw ErrorCodeClientException(client, 500, "Failed to get server info");
+    }
+    
+    string serverIP = NumIpToString2(ntohl(serverAddr.sin_addr.s_addr));
+    uint16_t serverPort = ntohs(serverAddr.sin_port);
+    string portStr = to_string(serverPort);
+    
+    // Find the matching server
+    for (unique_ptr<Server> &server : _servers) {
+        for (pair<const string, string> &porthost : server->getPortHost()) {
+            if (porthost.first == portStr && 
+                (porthost.second == serverIP || porthost.second == "0.0.0.0"))
+            {
+                client._usedServer = make_unique<Server>(*server);
+                return;
+            }
+        }
+    }
+    
+    // throw ErrorCodeClientException(client, 500, "No matching server configuration found");
+}
+
 void RunServers::acceptConnection(const int listener)
 {
     while (true)
@@ -68,18 +116,6 @@ void RunServers::acceptConnection(const int listener)
                 perror("accept");
             break;
         }
-        char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-        if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
-            sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
-        {
-            printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", "server->getServerName().c_str()", infd, hbuf, sbuf);
-        }
-        // if(make_socket_non_blocking(infd) == -1)
-        // {
-        //     close(infd);
-        //     break;
-        // }
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
@@ -93,6 +129,9 @@ void RunServers::acceptConnection(const int listener)
         // insertClientFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
 		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+        // RunServers::setServer(*_clients[infd]);
+        setServerFromListener(*_clients[infd], listener);
+        Logger::log(INFO, *_clients[infd], "Client connected");
     }
 }
 

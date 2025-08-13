@@ -77,69 +77,76 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     return (0); // You never get here
 }
 
-static string NumIpToString(uint32_t addr)
-{
-    uint32_t num;
-    string result;
-    int bitshift = 24;
-    uint32_t rev_addr = htonl(addr);
+// static string NumIpToString(uint32_t addr)
+// {
+//     uint32_t num;
+//     string result;
+//     int bitshift = 24;
+//     uint32_t rev_addr = htonl(addr);
 
-    for (uint8_t i = 0; i < 4; ++i)
-    {
-        num = rev_addr >> bitshift;
-        result = result + to_string(num);
-        rev_addr &= ~(255 >> bitshift);
-        if (i != 3)
-            result += ".";
-        bitshift -= 8;
-    }
-    return result;
-}
+//     for (uint8_t i = 0; i < 4; ++i)
+//     {
+//         num = rev_addr >> bitshift;
+//         result = result + to_string(num);
+//         rev_addr &= ~(255 >> bitshift);
+//         if (i != 3)
+//             result += ".";
+//         bitshift -= 8;
+//     }
+//     return result;
+// }
 
-static bool pickServer(Client &client, pair<const string, string> &porthost, uint16_t port, string &ip, unique_ptr<Server> &server)
-{
-    if (porthost.second.find("0.0.0.0") != string::npos ||
-        porthost.second.find(ip) != string::npos)
-    {
-        if (to_string(port) == porthost.first)
-        {
-            uint find = client._header.find("Host:") + 5; // TODO uint sam?
-            string_view hostname = string_view(client._header).substr(find);
-            hostname.remove_prefix(hostname.find_first_not_of(" \t"));
-            size_t len = hostname.find_first_of(" \t\n\r");
-            hostname = hostname.substr(0, len);
-            if (hostname == server->getServerName())
-            {
-                client._usedServer = make_unique<Server>(*server);
-                return true;
-            }
-            if (client._usedServer == nullptr)
-                client._usedServer = make_unique<Server>(*server);
-        }
-    }
-    return false;
-}
+// static bool pickServer(Client &client, pair<const string, string> &porthost, uint16_t port, string &ip, unique_ptr<Server> &server)
+// {
+//     if (porthost.second.find("0.0.0.0") != string::npos ||
+//         porthost.second.find(ip) != string::npos)
+//     {
+//         std::cout << 1 << std::endl; //testcout
+//         if (to_string(port) == porthost.first)
+//         {
+//         std::cout << 2 << std::endl; //testcout
 
-void RunServers::setServer(Client &client)
-{
-    sockaddr_in res;
-    socklen_t resLen = sizeof(res);
-    int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
-    if (err != 0)
-        throw ErrorCodeClientException(client, 500, (string("Getsockname: ") + strerror(errno)));
-    string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
-    uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
-    client._usedServer = nullptr;
+//             uint find = client._header.find("Host:") + 5; // TODO uint sam?
+//             string_view hostname = string_view(client._header).substr(find);
+//             hostname.remove_prefix(hostname.find_first_not_of(" \t"));
+//             size_t len = hostname.find_first_of(" \t\n\r");
+//             hostname = hostname.substr(0, len);
+//             if (hostname == server->getServerName())
+//             {
+//         std::cout << 3<< std::endl; //testcout
 
-    for (unique_ptr<Server> &server : _servers)
-    {
-        for (pair<const string, string> &porthost : server->getPortHost())
-        {
-            if (pickServer(client, porthost, port, ip, server) == true)
-                return;
-        }
-    }
-}
+//                 client._usedServer = make_unique<Server>(*server);
+//                 return true;
+//             }
+//         std::cout << 4 << std::endl; //testcout
+
+//             if (client._usedServer == nullptr)
+//                 client._usedServer = make_unique<Server>(*server);
+//         }
+//     }
+//     return false;
+// }
+
+// void RunServers::setServer(Client &client)
+// {
+//     sockaddr_in res;
+//     socklen_t resLen = sizeof(res);
+//     int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
+//     if (err != 0)
+//         throw ErrorCodeClientException(client, 500, (string("Getsockname: ") + strerror(errno)));
+//     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
+//     uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
+//     client._usedServer = nullptr;
+//     for (unique_ptr<Server> &server : _servers)
+//     {
+//         for (pair<const string, string> &porthost : server->getPortHost())
+//         {
+//             if (pickServer(client, porthost, port, ip, server) == true)
+//                 return;
+//         }
+//     }
+//     std::cout << "there" << std::endl; //testcout
+// }
 
 string extractHeader(const string &header, const string &key)
 {

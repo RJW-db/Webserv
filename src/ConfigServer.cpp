@@ -85,7 +85,7 @@ void ConfigServer::setDefaultConf()
     if (_serverName.empty())
     {
         static size_t serverIndex = 0;
-        _serverName = "server" + to_string(++serverIndex);
+        _serverName = "Server" + to_string(++serverIndex);
     }
     if (_portHost.empty())
     {
@@ -166,4 +166,9 @@ AconfigServ &AconfigServ::operator=(const AconfigServ &other)
 int ConfigServer::getLineNbr(void) const
 {
     return _lineNbr;
+}
+
+string &ConfigServer::getServerName(void)
+{
+    return _serverName;
 }

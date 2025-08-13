@@ -25,15 +25,13 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 400, "Malformed request line");
 
     parseRequestPath(client);
-    RunServers::setServer(client);
+    // RunServers::setServer(client);
     RunServers::setLocation(client);
 
-    std::cout << "Method: " << client._method << std::endl; //testcout
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == 0)
         throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
 
-    std::cout << "client._version: " << client._version << std::endl; //testcout
     if (client._version != "HTTP/1.1")
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     

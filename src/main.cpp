@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     });
 
     Logger::initialize("logs/webserv.log");
-    Logger::log(DEBUG, "it is working\r\n");
     FileDescriptor::initializeAtexit();
     RunServers::getExecutableDirectory();
     if (signal(SIGINT, &sigint_handler))

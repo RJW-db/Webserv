@@ -40,19 +40,14 @@ int main() {
     else if (method == "POST") {
         sleep(1);
         int content_length = std::atoi(getenv("CONTENT_LENGTH"));
-        std::cout << 1 << std::endl; //testcout
         std::string body;
         body.resize(content_length);
-        std::cout << 2 << std::endl; //testcout
         char buff[content_length];
         int readd = read(0, buff, 4);
         // std::cin.read(&body[0], content_length);
-        std::cout << 3 << std::endl; //testcout
-        // std::cout << buff << std::endl; //testcout
         write(1, buff, readd);
         write(1, "\n", 1);
         // params = parseQueryString(buff);
-        // std::cout << 4 << std::endl; //testcout
         // std::cout << "content length: " << content_length << std::endl; //testcout
     }
 

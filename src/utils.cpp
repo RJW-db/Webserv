@@ -97,3 +97,23 @@ uint64_t stoullSafe(string_view stringValue)
     return static_cast<uint64_t>(value);
 }
 
+string escapeSpecialChars(const string &input, bool useColors)
+{
+    const string RED = useColors ? "\033[31m" : "";
+    const string MAGENTA = useColors ? "\033[35m" : "";
+    const string RESET = useColors ? "\033[0m" : "";
+
+    string result;
+    for (char ch : input) {
+        if (ch == '\r') {
+            result += RED + "\\r" + RESET;
+        } else if (ch == '\n') {
+            result += MAGENTA + "\\n\n" + RESET;
+        } else if (ch == '\t') {
+            result += RED + "\\t" + RESET;
+        } else {
+            result += ch;
+        }
+    }
+    return result;
+}

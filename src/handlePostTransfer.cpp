@@ -3,6 +3,7 @@
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
 #include <sys/epoll.h>
+#include "Logger.hpp"
 
 // POST
 HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
@@ -44,11 +45,10 @@ int HandlePostTransfer::validateFinalCRLF()
     {
         FileDescriptor::closeFD(_fd);
         _fd = -1;
-        RunServers::logMessage(5, "POST success, clientFD: ", _client._fd, ", filenamePath: ", _client._filenamePath);
+        Logger::log(INFO, _client, "POST  ", _client._filenamePath);
         size_t absolutePathSize = RunServers::getServerRootDir().size();
         string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
         string headers =  HttpRequest::HttpResponse(_client, 201, ".txt", relativePath.size()) + relativePath;
-        std::cout << escapeSpecialChars(headers) << std::endl; //testcout
         send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???
         return true;
     }
@@ -242,7 +242,6 @@ bool HandlePostTransfer::handlePostCgi()
 
     if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
     {
-        std::cout << "correct cgi syntax for post request" << std::endl; //testcout
         // send body to pipe for stdin of cgi
         // std::cout << _fileBuffer << std::endl; //testcout
         // std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout

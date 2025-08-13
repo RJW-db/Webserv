@@ -70,28 +70,11 @@ string Logger::getTimeStamp()
 string Logger::logLevelToString(uint8_t level)
 {
     switch (level) {
-        case DEBUG: return "[DEBUG] ";
-        case INFO:  return "[INFO]  ";
-        case WARN:  return "[WARN]  ";
-        case ERROR: return "[ERROR] ";
-        case FATAL: return "[FATAL] ";
-        default:    return "[?????] ";
+        case DEBUG: return "DEBUG ";
+        case INFO:  return "INFO  ";
+        case WARN:  return "WARN  ";
+        case ERROR: return "ERROR ";
+        case FATAL: return "FATAL ";
+        default:    return "????? ";
     }
-}
-
-string Logger::escapeSpecialCharsRaw(const string &input)
-{
-    std::string result;
-    for (char ch : input) {
-        if (ch == '\r') {
-            result += "\\r";
-        } else if (ch == '\n') {
-            result += "\\n\n";  // Literal \n + actual newline
-        } else if (ch == '\t') {
-            result += "\\t";
-        } else {
-            result += ch;
-        }
-    }
-	return result;
 }

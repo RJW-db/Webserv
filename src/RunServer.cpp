@@ -4,6 +4,7 @@
 #include <iostream>
 #include <FileDescriptor.hpp>
 #include <HandleTransfer.hpp>
+#include "Logger.hpp"
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -68,19 +69,19 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 #include <chrono>
 #include <thread>
 #include <ctime> 
-void clocking()
-{
-    auto start = chrono::system_clock::now();
-    // Some computation here
-    auto end = chrono::system_clock::now();
+// void clocking()
+// {
+//     auto start = chrono::system_clock::now();
+//     // Some computation here
+//     auto end = chrono::system_clock::now();
  
-    chrono::duration<double> elapsed_seconds = end-start;
-    time_t end_time = chrono::system_clock::to_time_t(end);
- 
-    cout << "finished computation at " << ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s"
-              << endl;
-}
+//     chrono::duration<double> elapsed_seconds = end-start;
+//     time_t end_time = chrono::system_clock::to_time_t(end);
+
+//     Logger::log(INFO, "finished computation at ", ctime(&end_time)
+//              , "elapsed time: ", elapsed_seconds.count(), "s"); //testlog
+
+// }
 
 void RunServers::addStdinToEpoll()
 {
@@ -112,7 +113,7 @@ int RunServers::runServers()
 {
     epollInit(_servers); // need throw protection
     addStdinToEpoll();
-    clocking();
+    // clocking();
     while (g_signal_status == 0)
     {
         int eventCount;
@@ -202,12 +203,8 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
     int eventFD = currentEvent.data.fd;
     for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
     {
-        // std::cout << 1 << std::endl; //testcout
-        // std::cout << "handlecgi fd: " << (*it)->_fd << std::endl; //testcout
         if ((*it)->_fd == eventFD)
         {
-            std::cout << 2 << std::endl; //testcout
-
             if (currentEvent.events & EPOLLOUT)
             {
                 if ((*it)->writeToCgiTransfer() == true)

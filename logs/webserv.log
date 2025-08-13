@@ -1,24 +1,268 @@
+[15:02:08] [DEBUG] [LOGGER] Shutting down logger
 
---- 2025-08-12 ---
-[20:03:01] [INFO]  Log file initialized: logs/webserv.log
-[20:03:01] [DEBUG] it is working\r\n
+--- 2025-08-13 ---
+[15:02:24] [INFO]  Log file initialized: logs/webserv.log
+[15:02:24] [DEBUG] it is working\r\n
 
-[20:03:01] [DEBUG] [LOGGER] Shutting down logger
+[15:02:30] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7parent ._pid 32011
+[15:02:30] [DEBUG] Server1 clientFD 7parent ._pid 32011
+[15:02:30] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7child ._pid 0
+[15:02:30] [DEBUG] Server1 clientFD 7child ._pid 0
+[15:02:30] [DEBUG] we got into child
+[15:11:08] [DEBUG] [LOGGER] Shutting down logger
 
---- 2025-08-12 ---
-[20:03:03] [INFO]  Log file initialized: logs/webserv.log
-[20:03:03] [DEBUG] it is working\r\n
+--- 2025-08-13 ---
+[15:11:09] [INFO]  Log file initialized: logs/webserv.log
+[15:11:09] [DEBUG] it is working\r\n
 
-[20:03:03] [DEBUG] [LOGGER] Shutting down logger
+[15:11:32] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7parent ._pid 34660
+[15:11:32] [DEBUG] Server1 clientFD 7parent ._pid 34660
+[15:11:32] [DEBUG] PortHost: 0.0.0.0:8080 clientFD 7child ._pid 0
+[15:11:32] [DEBUG] Server1 clientFD 7child ._pid 0
+[15:11:32] [DEBUG] we got into child
+[15:16:47] [DEBUG] [LOGGER] Shutting down logger
 
---- 2025-08-12 ---
-[20:03:17] [INFO]  Log file initialized: logs/webserv.log
-[20:03:17] [DEBUG] it is working\r\n
+--- 2025-08-13 ---
+[15:25:04] [INFO]  Log file initialized: logs/webserv.log
+[15:25:04] [DEBUG] it is working\r\n
 
-[20:03:17] [DEBUG] [LOGGER] Shutting down logger
+[15:26:00] [DEBUG] [LOGGER] Shutting down logger
 
---- 2025-08-12 ---
-[20:08:38] [INFO]  Log file initialized: logs/webserv.log
-[20:08:38] [DEBUG] it is working\r\n
+--- 2025-08-13 ---
+[15:26:02] [INFO]  Log file initialized: logs/webserv.log
+[15:26:02] [DEBUG] it is working\r\n
 
-[20:08:45] [DEBUG] [LOGGER] Shutting down logger
+[15:26:41] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:26:43] [INFO]  Log file initialized: logs/webserv.log
+[15:26:43] [DEBUG] it is working\r\n
+
+[15:27:25] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:27:26] [INFO]  Log file initialized: logs/webserv.log
+[15:27:26] [DEBUG] it is working\r\n
+
+[15:37:21] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:37:27] [INFO]  Log file initialized: logs/webserv.log
+[15:37:27] [DEBUG] it is working\r\n
+
+[15:37:29] [DEBUG] Server assigned: Server1 (0.0.0.0:8080)
+[15:37:29] [INFO]  PortHost: 0.0.0.0:8080 clientFD 7Client connected
+[15:37:29] [INFO]  Server1 clientFD 7Client connected
+[15:39:46] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:39:51] [INFO]  Log file initialized: logs/webserv.log
+[15:39:51] [DEBUG] it is working\r\n
+
+[15:39:54] [DEBUG] Server assigned: Server1 (0.0.0.0:8080)
+[15:39:54] [INFO]  PortHost: 0.0.0.0:8080 clientFD 7Client connected
+[15:39:54] [INFO]  Server1 clientFD 7Client connected
+[15:44:18] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:44:21] [INFO]  Log file initialized: logs/webserv.log
+[15:44:21] [DEBUG] it is working\r\n
+
+[15:44:24] [INFO]  [0.0.0.0:8080] [FD:7] Client connected
+[15:44:24] [INFO]  [Server1] [FD:7] Client connected
+[15:47:45] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:47:48] [INFO]  Log file initialized: logs/webserv.log
+[15:47:48] [DEBUG] it is working\r\n
+
+[15:47:48] [INFO]  [0.0.0.0:8080] [FD:7] Client connected
+[15:47:48] [INFO]  Server1  FD:7  Client connected
+[15:48:09] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:48:12] [INFO]  Log file initialized: logs/webserv.log
+[15:48:12] [DEBUG] it is working\r\n
+
+[15:48:15] [INFO]  0.0.0.0:8080  FD:7  Client connected
+[15:48:15] [INFO]  Server1  FD:7  Client connected
+[15:48:32] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:48:35] [INFO]  Log file initialized: logs/webserv.log
+[15:48:35] [DEBUG] it is working\r\n
+
+[15:48:39] [INFO]  0.0.0.0:8080  FD:7  Client connected
+[15:48:39] [INFO]  Server1  FD:7  Client connected
+[15:48:39] [DEBUG] 0.0.0.0:8080  FD:7  parent ._pid 38453
+[15:48:39] [DEBUG] Server1  FD:7  parent ._pid 38453
+[15:48:39] [DEBUG] 0.0.0.0:8080  FD:7  child ._pid 0
+[15:48:39] [DEBUG] Server1  FD:7  child ._pid 0
+[15:48:39] [DEBUG] we got into child
+[15:49:41] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:49:49] [INFO]  Log file initialized: logs/webserv.log
+[15:49:51] [INFO]  0.0.0.0:8080  FD:7  Client connected
+[15:49:51] [INFO]  Server1  FD:7  Client connected
+[15:50:22] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:53:03] [INFO]  Log file initialized: logs/webserv.log
+[15:53:09] [INFO]  0.0.0.0:8080  FD:7  Client connected
+[15:53:09] [INFO]  Server1  FD:7  Client connected
+[15:53:09] [INFO]  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[15:53:09] [INFO]  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[15:59:40] [DEBUG] [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[15:59:42] INFO  Log file initialized: logs/webserv.log
+[16:00:25] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:00:27] INFO  Log file initialized: logs/webserv.log
+[16:14:19] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:14:22] INFO  Log file initialized: logs/webserv.log
+[16:14:24] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:14:24] INFO  Server1  FD:7  Client connected
+[16:19:30] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:19:33] INFO  Log file initialized: logs/webserv.log
+[16:19:38] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:19:38] INFO  Server1  FD:7  Client connected
+[16:22:10] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:22:11] INFO  Log file initialized: logs/webserv.log
+[16:22:11] INFO  finished computation at Wed Aug 13 16:22:11 2025\n
+elapsed time: 1.89e-07s
+[16:23:04] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:23:05] INFO  Log file initialized: logs/webserv.log
+[16:23:12] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:23:12] INFO  Server1  FD:7  Client connected
+[16:23:20] INFO  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[16:23:20] INFO  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[16:23:45] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 41445
+[16:23:45] DEBUG Server1  FD:7  parent ._pid 41445
+[16:23:45] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:23:45] DEBUG Server1  FD:7  child ._pid 0
+[16:23:45] DEBUG we got into child
+[16:25:20] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:25:22] INFO  Log file initialized: logs/webserv.log
+[16:25:23] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:25:23] INFO  Server1  FD:7  Client connected
+[16:25:28] INFO  0.0.0.0:8080  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[16:25:28] INFO  Server1  FD:7  POST  /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[16:25:33] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 41706
+[16:25:33] DEBUG Server1  FD:7  parent ._pid 41706
+[16:25:33] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:25:33] DEBUG Server1  FD:7  child ._pid 0
+[16:25:33] DEBUG we got into child
+[16:28:49] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:28:50] INFO  Log file initialized: logs/webserv.log
+[16:29:02] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:29:02] INFO  Server1  FD:7  Client connected
+[16:29:02] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42013
+[16:29:02] DEBUG Server1  FD:7  parent ._pid 42013
+[16:29:13] DEBUG [LOGGER] Shutting down logger
+[16:29:13] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:29:14] INFO  Log file initialized: logs/webserv.log
+[16:29:17] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:29:17] INFO  Server1  FD:7  Client connected
+[16:29:20] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42107
+[16:29:20] DEBUG Server1  FD:7  parent ._pid 42107
+[16:29:55] DEBUG [LOGGER] Shutting down logger
+[16:29:55] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:29:55] INFO  Log file initialized: logs/webserv.log
+[16:30:00] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:30:00] INFO  Server1  FD:7  Client connected
+[16:30:00] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42195
+[16:30:00] DEBUG Server1  FD:7  parent ._pid 42195
+[16:30:11] DEBUG [LOGGER] Shutting down logger
+[16:30:11] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:30:11] INFO  Log file initialized: logs/webserv.log
+[16:30:19] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:30:19] INFO  Server1  FD:7  Client connected
+[16:30:19] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42295
+[16:30:19] DEBUG Server1  FD:7  parent ._pid 42295
+[16:30:26] DEBUG [LOGGER] Shutting down logger
+[16:30:26] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:30:50] INFO  Log file initialized: logs/webserv.log
+[16:30:52] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:30:52] INFO  Server1  FD:7  Client connected
+[16:30:55] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42419
+[16:30:55] DEBUG Server1  FD:7  parent ._pid 42419
+[16:30:55] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:30:55] DEBUG Server1  FD:7  child ._pid 0
+[16:30:55] DEBUG we got into child
+[16:31:13] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:31:15] INFO  Log file initialized: logs/webserv.log
+[16:31:17] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:31:17] INFO  Server1  FD:7  Client connected
+[16:31:17] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42512
+[16:31:17] DEBUG Server1  FD:7  parent ._pid 42512
+[16:32:29] DEBUG [LOGGER] Shutting down logger
+[16:32:29] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:32:30] INFO  Log file initialized: logs/webserv.log
+[16:32:34] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:32:34] INFO  Server1  FD:7  Client connected
+[16:32:34] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42628
+[16:32:34] DEBUG Server1  FD:7  parent ._pid 42628
+[16:32:34] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:32:34] DEBUG Server1  FD:7  child ._pid 0
+[16:32:34] DEBUG we got into child
+[16:33:42] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:33:43] INFO  Log file initialized: logs/webserv.log
+[16:33:47] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:33:47] INFO  Server1  FD:7  Client connected
+[16:33:47] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42772
+[16:33:47] DEBUG Server1  FD:7  parent ._pid 42772
+[16:33:47] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:33:47] DEBUG Server1  FD:7  child ._pid 0
+[16:33:47] DEBUG we got into child
+[16:35:00] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:35:01] INFO  Log file initialized: logs/webserv.log
+[16:35:04] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:35:04] INFO  Server1  FD:7  Client connected
+[16:35:04] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 42907
+[16:35:04] DEBUG Server1  FD:7  parent ._pid 42907
+[16:35:04] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:35:04] DEBUG Server1  FD:7  child ._pid 0
+[16:35:04] DEBUG we got into child
+[16:36:33] DEBUG [LOGGER] Shutting down logger
+
+--- 2025-08-13 ---
+[16:36:36] INFO  Log file initialized: logs/webserv.log
+[16:36:38] INFO  0.0.0.0:8080  FD:7  Client connected
+[16:36:38] INFO  Server1  FD:7  Client connected
+[16:36:38] DEBUG 0.0.0.0:8080  FD:7  parent ._pid 43147
+[16:36:38] DEBUG Server1  FD:7  parent ._pid 43147
+[16:36:38] DEBUG 0.0.0.0:8080  FD:7  child ._pid 0
+[16:36:38] DEBUG Server1  FD:7  child ._pid 0
+[16:36:38] DEBUG we got into child
+[16:36:42] DEBUG [LOGGER] Shutting down logger

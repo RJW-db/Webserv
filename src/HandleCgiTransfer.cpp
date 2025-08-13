@@ -72,7 +72,7 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
         return true;
     }
     
-    write(1, "IT WORKED\n", 10);
+    // write(1, "IT WORKED\n", 10);
     ssize_t sent = send(_client._fd, buff.data(), rd, 0);
     if (sent == -1)
     {
@@ -83,9 +83,9 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
         // _client.setDisconnectTime(RunServers::DISCONNECT_DELAY_SECONDS);
         std::cout << "read " << rd << std::endl; //testcout
     }
-    std::cout << "sent " << sent << std::endl; //testcout
-    write(1, buff.data(), rd);
-    std::cout << "_FD = " << _fd << std::endl; //testcout
+    // std::cout << "sent " << sent << std::endl; //testcout
+    // write(1, buff.data(), rd);
+    // std::cout << "_FD = " << _fd << std::endl; //testcout
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
     RunServers::cleanupFD(_fd);
     return true;

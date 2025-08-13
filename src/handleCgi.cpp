@@ -6,6 +6,7 @@
 #include <Client.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
+#include <Logger.hpp>
 
 #define PASS_TO_CGI "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" \
     "Content-Disposition: form-data; name=\"file\"; filename=\"chunk_test1.txt\"\r\n" \
@@ -68,7 +69,6 @@ vector<string> createArgv(Client &client)
     }
 
     argvString.push_back('.' + client._requestPath);
-    std::cerr << "client._requestPath " << '.' + client._requestPath << std::endl; //testcout
     return argvString;
 }
 
@@ -137,6 +137,7 @@ void printVecArray(vector<char *> &args)
 
 void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
+    Logger::log(DEBUG, "we got into child"); //testlog
     setupChildPipes(client, fdWriteToCgi, fdReadfromCgi);
     closing_pipes(fdWriteToCgi, fdReadfromCgi);
 
@@ -203,11 +204,14 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     }
 
     if (client._pid == CHILD) {
+        Logger::log(CHILD_DEBUG, client, "child ._pid ", client._pid); //testlog
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
 
     if (client._pid >= PARENT)
     {
+        Logger::log(CHILD, client, "parent ._pid ", client._pid); //testlog
+
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
         
