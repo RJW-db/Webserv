@@ -2,7 +2,12 @@
 
 # This script is used to run tests for the project.
 
-cd ../
+if [[ "$(pwd)" != *"Webserv"* ]]; then
+    echo "Error: You must run this script from within a Webserv directory."
+    exit 1
+fi
+
+cd "$(pwd | sed 's|\(.*Webserv\).*|\1|')"
 
 
 make

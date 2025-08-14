@@ -8,25 +8,25 @@ import shutil
 cgitb.enable()
 
 def main():
-    # === DEBUGGING SECTION ===
-    # Uncomment this block while testing to see environment info in the server's stderr log
-    content_type = os.environ.get('CONTENT_TYPE')
-    query_string = os.environ.get('QUERY_STRING')
-    upload_dir = os.environ.get('UPLOAD_STORE', './upload')
-    upload_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
+    # # === DEBUGGING SECTION ===
+    # # Uncomment this block while testing to see environment info in the server's stderr log
+    # content_type = os.environ.get('CONTENT_TYPE')
+    # query_string = os.environ.get('QUERY_STRING')
+    # upload_dir = os.environ.get('UPLOAD_STORE', './upload')
+    # upload_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
     
-    # print(f"DEBUG: CONTENT_TYPE = {content_type}", file=sys.stderr)
-    if content_type and 'boundary=' in content_type:
-        boundary = content_type.split('boundary=')[1]
-    else:
-        boundary = None
-    print(f"DEBUG: boundary = {boundary}", file=sys.stderr)
-    print(f"DEBUG: QUERY_STRING = {query_string}", file=sys.stderr)
-    print(f"DEBUG: UPLOAD_STORE = {upload_dir}", file=sys.stderr)
-    print(f"DEBUG: PUBLIC_URL_BASE = {upload_url_base}", file=sys.stderr)
-    print(f"DEBUG: contentlength = {os.environ.get('CONTENT_LENGTH')}", file=sys.stderr)
+    # # print(f"DEBUG: CONTENT_TYPE = {content_type}", file=sys.stderr)
+    # if content_type and 'boundary=' in content_type:
+    #     boundary = content_type.split('boundary=')[1]
+    # else:
+    #     boundary = None
+    # print(f"DEBUG: boundary = {boundary}", file=sys.stderr)
+    # print(f"DEBUG: QUERY_STRING = {query_string}", file=sys.stderr)
+    # print(f"DEBUG: UPLOAD_STORE = {upload_dir}", file=sys.stderr)
+    # print(f"DEBUG: PUBLIC_URL_BASE = {upload_url_base}", file=sys.stderr)
+    # print(f"DEBUG: contentlength = {os.environ.get('CONTENT_LENGTH')}", file=sys.stderr)
 
-    # === ACTUAL LOGIC ===
+    # # === ACTUAL LOGIC ===
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
     public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
 
@@ -56,14 +56,14 @@ def main():
         with open(save_path, "wb") as f:
             shutil.copyfileobj(fileitem.file, f)
 
-        print("Status: 200 OK")
-        print("Content-Type: text/plain")
-        print("Connection: keep-alive")
-        response_body = f"{public_url_base}/{filename}"
+        response_body = f".{public_url_base}/{filename}\n"
         content_length = len(response_body.encode('utf-8'))
-        print(f"Content-Length: {content_length}\n")
+        http_response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: keep-alive\r\nContent-Length: {content_length}\r\n\r\n{response_body}"
+        sys.stdout.write(http_response)
+        sys.stdout.flush()
 
-        print(response_body)
+        # print(f"DEBUG: response_body repr = {repr(response_body)}", file=sys.stderr)
+        # print(f"DEBUG: content_length = {content_length}", file=sys.stderr)
 
     except Exception as e:
         print("Status: 500 Internal Server Error")

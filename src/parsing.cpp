@@ -4,15 +4,16 @@
 #include <iostream>
 #include <stdlib.h>
 #include <Location.hpp>
+#include "Logger.hpp"
 
 using namespace std;
 
 // Constants for better readability
 namespace {
-    const char* WHITESPACE_CHARS = " \t\f\v\r";
-    const char* WHITESPACE_WITH_NEWLINE = " \t\f\v\r\n";
-    const size_t SERVER_KEYWORD_LENGTH = 6;
-    const size_t LOCATION_KEYWORD_LENGTH = 8;
+    constexpr const char *WHITESPACE_CHARS = " \t\f\v\r";
+    constexpr const char *WHITESPACE_WITH_NEWLINE = " \t\f\v\r\n";
+    constexpr size_t SERVER_KEYWORD_LENGTH = 6;
+    constexpr size_t LOCATION_KEYWORD_LENGTH = 8;
 }
 
 /**
@@ -25,9 +26,7 @@ bool isEmptyOrCommentLine(string &line, size_t &skipSpace)
 {
     skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (string::npos == skipSpace || line[skipSpace] == '#')
-    {
         return true;
-    }
     return false;
 }
 
@@ -49,15 +48,10 @@ void trimLeadingWhitespace(string &line)
  * @param lineNumber The line number for error reporting
  * @throws runtime_error if no whitespace found
  */
-void validateWhitespaceAfterCommand(const string& line, const char* whitespaceChars, int lineNumber = 0)
+void validateWhitespaceAfterCommand(const string& line, const char* whitespaceChars, int lineNumber)
 {
     if (line.empty() || string(whitespaceChars).find(line[0]) == std::string::npos)
-    {
-        string errorMsg = "no space found after command";
-        if (lineNumber > 0)
-            errorMsg = to_string(lineNumber) + ": " + errorMsg;
-        throw runtime_error(errorMsg);
-    }
+        Logger::logExit(ERROR, "Config error at line ", lineNumber, ": Missing whitespace after command - '", line, "'");
 }
 
 /**
@@ -68,7 +62,7 @@ bool    Parsing::runReadblock()
 {
     size_t  skipSpace;
 	if (validSyntax == false)
-		throw runtime_error(to_string(_lines.begin()->first) + ": invalid syntax: " + _lines.begin()->second);
+		Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": invalid syntax: ", _lines.begin()->second);
 
     if (_lines.begin()->second[0] == '}')
     {
@@ -96,7 +90,7 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
     if (string::npos == skipSpace || forceSkip)
     {
         if (_lines.size() <= 1)
-            throw runtime_error("No closing bracket found after block: " + to_string(_lines.begin()->first));
+            Logger::logExit(ERROR, "Missing closing bracket '}' for block starting at line ", _lines.begin()->first, ": ", _lines.begin()->second);
         _lines.erase(_lines.begin());
         line = _lines.begin()->second;
         curConf.setLineNbr(_lines.begin()->first);
@@ -124,7 +118,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         location.getLocationPath(line);
         skipLine(line, false, block, true);
         if (line[0] != '{')
-            throw runtime_error(to_string(_lines.begin()->first) + ": couldn't find opening curly bracket for location");
+            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": couldn't find opening curly bracket for location");
         line = line.erase(0, 1);
         skipLine(line, false, block, false);
         const map<string, bool (Location::*)(string &)> cmds = {
@@ -146,7 +140,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         validSyntax = true;
     }
     else
-        throw runtime_error(to_string(_lines.begin()->first) + ": location block can only be used in server block");
+        Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": location block can only be used in server block");
 }
 
 /**
@@ -171,7 +165,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 		if (foundSemicolon == true)
 		{
 			if (argumentCount == 1)
-				throw runtime_error(string("no arguments after ") + cmd.first);
+                Logger::logExit(ERROR, "Config error: no arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
 			break;
 		}
 	}
@@ -196,7 +190,7 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
     {
         skipLine(line, true, block, false);
         if (line[0] != ';')
-            throw runtime_error(to_string(_lines.begin()->first) + ": no semi colon found after input");
+            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": no semi colon found after input");
         line = line.substr(1);
     }
     skipLine(line, false, block, false);
@@ -236,7 +230,7 @@ void Parsing::readBlock(T &block,
 		}
         if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && validSyntax == false)
             LocationCheck(line, block, validSyntax);
-		if (validSyntax == false)
+		if (validSyntax == false) //TODO must be deleted?
 			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
     }
 	while (runReadblock() == true);
@@ -271,10 +265,7 @@ void Parsing::ServerCheck()
         _configs.push_back(curConf);
     }
     else
-    {
-
-        throw runtime_error(to_string(curConf.getLineNbr()) + ": Couldn't find opening curly bracket server block");
-    }
+        Logger::logExit(ERROR, "Config error at line ", curConf.getLineNbr(), ": Couldn't find opening curly bracket server block");
 }
 
 /**
@@ -286,11 +277,7 @@ void Parsing::readConfigFile(const char *input)
     fstream fs;
     fs.open(input, fstream::in);
     if (fs.is_open() == false)
-	{
-		std::cout << input << std::endl;
-		std::cout << "Current directory: " << getcwd(NULL, 0) << std::endl;
-		throw runtime_error("inputfile couldn't be opened: " + string(input));
-	}
+        Logger::logExit(ERROR, "Failed to open config file: ", input);
 
     string line;
     size_t skipSpace;
@@ -319,7 +306,7 @@ void Parsing::processServerBlocks()
         if (strncmp(_lines.begin()->second.c_str(), "server", SERVER_KEYWORD_LENGTH) == 0)
             ServerCheck();
         else
-            throw runtime_error(to_string(_lines.begin()->first) + "Invalid line found expecting server");
+            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": ", _lines.begin()->second);
     }
 }
 

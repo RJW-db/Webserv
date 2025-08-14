@@ -6,6 +6,7 @@
 #include <Client.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <HttpRequest.hpp>
+#include <Logger.hpp>
 
 #define PASS_TO_CGI "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" \
     "Content-Disposition: form-data; name=\"file\"; filename=\"chunk_test1.txt\"\r\n" \
@@ -30,7 +31,8 @@ void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
 
 void setupChildPipes(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1) {
+    if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1)
+    {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
     }
@@ -55,7 +57,7 @@ vector<string> createArgv(Client &client)
     vector<string> argvString;
     if (!client._location.getCgiPath().empty())
     {
-        std::cout << "client._location.getCgiPath() " << client._location.getCgiPath() << std::endl; //testcout
+        Logger::log(WARN, client, "client._location.getCgiPath() ", client._location.getCgiPath());
         argvString.push_back(client._location.getCgiPath());
     }
     else if (endsWith(client._requestPath, ".py"))
@@ -67,7 +69,6 @@ vector<string> createArgv(Client &client)
     }
 
     argvString.push_back('.' + client._requestPath);
-    std::cout << "client._requestPath " << '.' + client._requestPath << std::endl; //testcout
     return argvString;
 }
 
@@ -100,7 +101,7 @@ vector<string> createEnvp(Client &client)
         }
 
 
-        // std::cout << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
+        // std::cerr << "CONTENT_TYPE=Content-Type: " + contentType + "; boundary=" + string(client._bodyBoundary) << std::endl; //testcout
 
         // envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._bodyBoundary));
         // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=...");
@@ -141,13 +142,12 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 
     vector<string> argvString = createArgv(client);
     vector<char *> argv = convertToCharArray(argvString);
-    printVecArray(argv);
+    // printVecArray(argv);
 
     vector<string> envpString = createEnvp(client);
     vector<char *> envp= convertToCharArray(envpString);
-    printVecArray(envp);
-    // std::cout << "neeeee\n\n\n\n" << std::endl; //testcout
-// exit(0);
+    // printVecArray(envp);
+
     char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
     execve(filePath, argv.data(), envp.data());
     perror("execve failed");
@@ -156,13 +156,17 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     exit(EXIT_FAILURE);
 }
 
+/**
+ * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
+ * check the maximum size: cat /proc/sys/fs/pipe-max-size
+ */
 bool setPipeBufferSize(int pipeFd)
 {
     const size_t pipeSize = 500 * 1024; // 500 KB
 
     if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
     {
-        cerr << "fcntl (set pipe size): " << strerror(errno) << "\n";
+        Logger::log(ERROR, "fcntl (set pipe size): ", strerror(errno));
         return false;
     }
     return true;
@@ -186,106 +190,54 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     if (RunServers::make_socket_non_blocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
         RunServers::make_socket_non_blocking(fdReadfromCgi[0]) == false || // Server reads from CGI
         setPipeBufferSize(fdWriteToCgi[1]) == false ||
-        setPipeBufferSize(fdReadfromCgi[0]) == false/*  ||
-        setPipeBufferSize(fdWriteToCgi[1]) == false ||
-        setPipeBufferSize(fdReadfromCgi[0]) == false */)
+        setPipeBufferSize(fdReadfromCgi[0]) == false)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
     }
 
-
-    // int fd = open(client._filenamePath.data(), R_OK);
-    // if (fd == -1)
-    //     throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
-
-    // // FileDescriptor::setFD(fd);
-    // size_t fileSize = getFileLength(client._filenamePath);
-    // string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
-    // auto handle = make_unique<HandleTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
-    // RunServers::insertHandleTransfer(move(handle));
-
-    pid_t pid = fork();
-    if (pid == -1) {
+    client._pid = fork();
+    if (client._pid == -1) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
     }
 
-    if (pid == CHILD) {
-        // size_t pos = client._rootPath.find_last_of('/');
-        // string dirPath = client._rootPath.substr(0, pos);
-        // std::cout << "dirpath: " << dirPath << std::endl; //testcout
-        // std::cout << "client._uploadPath: " << client._location.getUploadStore() << std::endl; //testcout
-
-        // std::cout << "cgi_path: " << client._location.getCgiPath() << std::endl; //testcout
-        // // chdir(dirPath.data());
-        // chdir(client._location.getUploadStore().c_str());
+    if (client._pid == CHILD) {
+        Logger::log(CHILD, client, "child ._pid ", client._pid); //testlog
+        Logger::log(CHILD, "we got into child"); //testlog
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
 
-    if (pid >= PARENT)
+    if (client._pid >= PARENT)
     {
+        Logger::log(CHILD, client, "parent ._pid ", client._pid); //testlog
 
-        // wait for child to finish
-        // exit(0);
-        std::cout << "client content length: " << client._contentLength << std::endl; //testcout
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
-
+        
+        // try
+        // {
+            unique_ptr<HandleTransfer> handle;
+            if (client._useMethod & METHOD_POST)
+            {
+                handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
+                RunServers::insertHandleTransferCgi(move(handle));
+            }
+            handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
+            RunServers::insertHandleTransferCgi(move(handle));
+        // }
+        // catch(const std::exception& e)
+        // {
+        //     closing_pipes(fdWriteToCgi, fdReadfromCgi);
+        //     kill(client._pid, SIGKILL);
+        //     throw e;
+        //     std::cerr << e.what() << '\n';
+        // }
+        
+        client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        std::cout << "Added CGI pipes to epoll write: " << fdWriteToCgi[1] << std::endl; //testcout
-        std::cout << "Added CGI pipes to epoll read: " << fdReadfromCgi[0] << std::endl; //testcout
-        unique_ptr<HandleTransfer> handle;
-        if (client._useMethod & METHOD_POST)
-        {
-            handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
-            handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-            RunServers::insertHandleTransferCgi(move(handle));
-        }
-        handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
-        handle->_client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-        RunServers::insertHandleTransferCgi(move(handle));
-
         return true;
     }
     return false;
 }
-
-
-
-// void handleCgi(Client &client)
-// {
-//     int pipefd[2];
-//     pid_t pid;
-
-//     if (pipe(pipefd) == -1)
-//         throw ErrorCodeClientException(client, 500, "Failed to create pipe for CGI handling");
-
-//     pid = fork();
-//     if (pid == -1)
-//         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
-
-//     // if (dup2(STDOUT_FILENO, pipefd[1]) == -1)
-//     if (dup2(pipefd[1], STDOUT_FILENO) == -1)
-//         throw ErrorCodeClientException(client, 500, "Failed to dup2 for CGI handling");
-
-
-//     if (pid >= PARENT)
-//     {
-//         close(pipefd[0]);
-//         write(STDOUT_FILENO, "Get in here", 11);
-//         close(pipefd[1]);
-//     }
-//     if (pid == CHILD)
-//     {
-//         close(pipefd[1]);
-//         char buff[11];
-//         if (read(pipefd[0], buff, 11) == -1)
-//             throw ErrorCodeClientException(client, 500, "Failed to read for CGI handling");
-
-//         int fd = open("./newFile.txt", O_CREAT | O_WRONLY, 0644);
-//         write(fd, buff, 11);
-//         close(pipefd[0]);
-//     }
-// }

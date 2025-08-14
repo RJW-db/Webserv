@@ -8,10 +8,11 @@
 #include <cstdlib>
 using namespace std;
 
+static constexpr bool   TERMINAL = true;
+static constexpr bool   LOGGER = false;
 static constexpr size_t UUID_SIZE = 38;
 
 // Static Function
-static inline void insertUuidSegment(int8_t amount, char *buffIndex);
 
 void	 initRandomSeed();
 
@@ -24,5 +25,6 @@ void 	 generateUuid(char uuid[UUID_SIZE]);
 bool	 directoryCheck(string &path);
 size_t	 getFileLength(const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
+string   escapeSpecialChars(const string &input, bool useColors);
 
 #endif

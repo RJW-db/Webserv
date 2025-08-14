@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# cd /home/saleunin/Desktop/Webserv/testing 
+if [[ "$(pwd)" != *"Webserv"* ]]; then
+    echo "Error: You must run this script from within a Webserv directory."
+    exit 1
+fi
+
+cd "$(pwd | sed 's|\(.*Webserv\).*|\1|')/testing"
 
 mkdir -p results/get
 # Test 1: Basic GET request to port 8080

@@ -1,6 +1,11 @@
 #!/bin/bash
 
-cd /home/saleunin/Desktop/Webserv/testing
+if [[ "$(pwd)" != *"Webserv"* ]]; then
+    echo "Error: You must run this script from within a Webserv directory."
+    exit 1
+fi
+
+cd "$(pwd | sed 's|\(.*Webserv\).*|\1|')/testing"
 
 mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
@@ -32,7 +37,7 @@ curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
 sleep 2
 
 # Change to the Webserv root directory for comparisons
-cd /home/saleunin/Desktop/Webserv
+cd ..
 
 # print current working directory
 echo "Current working directory: $(pwd)"

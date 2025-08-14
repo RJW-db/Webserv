@@ -73,7 +73,7 @@ void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPag
 
 void ErrorCodeClientException::handleErrorClient() const
 {
-    std::cerr << "errorCodeClient: " << _message << std::endl;
+    Logger::log(WARN, _client, _message);
     if (_errorCode == 0)
     {
         RunServers::cleanupClient(_client);

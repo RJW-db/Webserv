@@ -40,18 +40,8 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 //     return *this;
 // }
 
-
-
-
-
-
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
-    // std::cout << "double check "<< _fileBuffer.size() << std::endl; //testcout
-    /**
-     * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
-     * check the maximum size: cat /proc/sys/fs/pipe-max-size
-     */
     ssize_t sent = write(_fd, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
     if (sent == -1)
     {
@@ -59,15 +49,10 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     }
     else if (sent > 0)
     {
-        std::cout << "sent " << sent << std::endl; //testcout
         _bytesWrittenTotal += static_cast<size_t>(sent);
         if (_fileBuffer.size() == _bytesWrittenTotal)
         {
             RunServers::cleanupFD(_fd);
-            // _isCgi = readFromCgi;
-            std::cout << "finished sending" << std::endl; //testcout
-            // FileDescriptor::closeFD(_fd);
-
             return true;
         }
     }
@@ -76,11 +61,32 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
-    std::vector<char> buff(500 * 1024);
+    std::vector<char> buff(1024 * 1024);
     ssize_t rd = read(_fd, buff.data(), buff.size());
-    write(1, "IT WORKED\n", 10);
+    if (rd <= 0) 
+    {
+        RunServers::cleanupFD(_fd);
+        if (rd == -1)
+            throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+        std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
+        return true;
+    }
+    
+    // write(1, "IT WORKED\n", 10);
     ssize_t sent = send(_client._fd, buff.data(), rd, 0);
-    std::cout << "sent " << sent << std::endl; //testcout
-    write(1, buff.data(), rd);
+    if (sent == -1)
+    {
+        throw ErrorCodeClientException(_client, 500, "Reading from CGI failed");
+    }
+    else if (sent > 0)
+    {
+        // _client.setDisconnectTime(RunServers::DISCONNECT_DELAY_SECONDS);
+        std::cout << "read " << rd << std::endl; //testcout
+    }
+    // std::cout << "sent " << sent << std::endl; //testcout
+    // write(1, buff.data(), rd);
+    // std::cout << "_FD = " << _fd << std::endl; //testcout
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+    RunServers::cleanupFD(_fd);
     return true;
 }

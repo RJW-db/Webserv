@@ -24,19 +24,19 @@ string timeDate(void)
 // if (!is_valid_http_request(request)) {
 //     std::ofstream log("error.log", std::ios::app);
 //     log << "[ERROR] Invalid HTTP request received:\n"
-//         << escape_special_chars(request) << "\n\n";
+//         << escapeSpecialChars(request) << "\n\n";
 // }
 void httpRequestLogger(string str)
 {
     string result = timeDate();
 
-    result += "[client <ip>:<port>] " + escape_special_chars(str);
+    result += "[client <ip>:<port>] " + escapeSpecialChars(str);
     // std::cout << "\t>" << str << "<" << std::endl;
     std::cout << "httprequestlogerr: " << result << std::endl;
 }
 
 
-std::string escape_special_chars(const std::string& input)
+std::string escapeSpecialChars(const std::string& input)
 {
     const std::string RED = "\033[31m";
     const std::string MAGENTA = "\033[35m";

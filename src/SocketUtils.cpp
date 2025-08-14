@@ -2,14 +2,16 @@
 # include <sys/epoll.h>
 #endif
 #include <RunServer.hpp>
+#include "Logger.hpp"
 #include <fcntl.h>
+#include <ErrorCodeClientException.hpp>
 
 int RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
-{
-        cerr << "Server epoll_create: " << strerror(errno);
+    {
+        Logger::log(ERROR, "Server epoll_create: ", strerror(errno));
         return -1;
     }
     FileDescriptor::setFD(_epfd);
@@ -54,6 +56,54 @@ int RunServers::epollInit(ServerList &servers)
     return 0;
 }
 
+static string NumIpToString2(uint32_t addr)
+{
+    uint32_t num;
+    string result;
+    int bitshift = 24;
+    uint32_t rev_addr = htonl(addr);
+
+    for (uint8_t i = 0; i < 4; ++i)
+    {
+        num = rev_addr >> bitshift;
+        result = result + to_string(num);
+        rev_addr &= ~(255 >> bitshift);
+        if (i != 3)
+            result += ".";
+        bitshift -= 8;
+    }
+    return result;
+}
+
+void RunServers::setServerFromListener(Client &client, int listenerFD)
+{
+    // Get the server info from the listener socket
+    sockaddr_in serverAddr;
+    socklen_t addrLen = sizeof(serverAddr);
+    if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0) {
+        // throw ErrorCodeClientException(client, 500, "Failed to get server info");
+    }
+    
+    string serverIP = NumIpToString2(ntohl(serverAddr.sin_addr.s_addr));
+    uint16_t serverPort = ntohs(serverAddr.sin_port);
+    string portStr = to_string(serverPort);
+    
+    
+    // Find the matching server
+    for (unique_ptr<Server> &server : _servers) {
+        for (pair<const string, string> &porthost : server->getPortHost()) {
+            if (porthost.first == portStr && 
+                (porthost.second == serverIP || porthost.second == "0.0.0.0"))
+            {
+                client._usedServer = make_unique<Server>(*server); // this needs to change to use HOST as well for picking server to use
+                return;
+            }
+        }
+    }
+    
+    // throw ErrorCodeClientException(client, 500, "No matching server configuration found");
+}
+
 void RunServers::acceptConnection(const int listener)
 {
     while (true)
@@ -65,34 +115,25 @@ void RunServers::acceptConnection(const int listener)
         if(infd == -1)
         {
             if(errno != EAGAIN)
-                perror("accept");
+                Logger::log(ERROR, "Server accept: ", strerror(errno));
             break;
         }
-        char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-        if(getnameinfo(&in_addr, in_len, hbuf, sizeof(hbuf), sbuf, 
-            sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
-        {
-            printf("%s: Accepted connection on descriptor %d"
-                "(host=%s, port=%s)\n", "server->getServerName().c_str()", infd, hbuf, sbuf);
-        }
-        // if(make_socket_non_blocking(infd) == -1)
-        // {
-        //     close(infd);
-        //     break;
-        // }
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
         if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
-            cerr << "epoll_ctl: " << strerror(errno) << endl;
-            close(infd);
+            Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+            FileDescriptor::closeFD(infd);
             break;
         }
         FileDescriptor::setFD(infd);
         // insertClientFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
 		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+        // RunServers::setServer(*_clients[infd]);
+        setServerFromListener(*_clients[infd], listener);
+        Logger::log(INFO, *_clients[infd], "Connected");
     }
 }
 
@@ -101,7 +142,7 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
-        cerr << "fcntl: " << strerror(errno);
+        Logger::log(ERROR, "fcntl: ", strerror(errno));
         return false;
     }
 
@@ -109,18 +150,21 @@ bool RunServers::make_socket_non_blocking(int sfd)
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
     if (fcntlResult == -1)
     {
-        cerr << "fcntl: " << strerror(errno);
+        Logger::log(ERROR, "fcntl: ", strerror(errno));
         return false;
     }
     return true;
 }
 
+// setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 void RunServers::setEpollEvents(int fd, int option, uint32_t events)
 {
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
     if (epoll_ctl(_epfd, option, fd, &ev) == -1)
-        std::cerr << "epoll_ctl: " << strerror(errno) << std::endl;
-    // setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+    {
+        Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+        // throw something
+    }
 }

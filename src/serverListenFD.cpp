@@ -1,4 +1,5 @@
 #include <RunServer.hpp>
+#include "Logger.hpp"
 #include <iostream>
 
 #include <arpa/inet.h>
@@ -56,7 +57,7 @@ int ServerListenFD::create_listener_socket()
 	// TODO test with 1~5 maximum pending queue of people connecting
 	if (listen(_listener, SOMAXCONN) == -1)
 	{
-		cerr << "Server listen: " << strerror(errno);
+		Logger::log(ERROR, "Server listen: ", strerror(errno));
 		return -1;
 	}
 	return _listener;
@@ -76,8 +77,7 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 	errHndl = getaddrinfo(_hostName, _port, &serverSetup, &server);
 	if (errHndl != 0)
 	{
-		cerr << "Server getaddrinfo: " << gai_strerror(errHndl)
-				<< endl;
+		Logger::log(ERROR, "Server getaddrinfo: ", gai_strerror(errHndl));
 		return NULL;
 	}
 	return server;
@@ -104,7 +104,7 @@ int ServerListenFD::bind_to_socket(struct addrinfo *server)
 		return _listener;
 	}
 	// std::cout << _port << " " << _hostName  << std::endl;
-	cerr << "Server bind_to_socket: " << strerror(errno);
+	Logger::log(ERROR, "Server bind_to_socket: ", strerror(errno));
 	return -1;
 }
 

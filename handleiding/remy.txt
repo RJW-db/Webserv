@@ -69,3 +69,11 @@ cgi_path python3;            # But only ONE interpreter path
 CGI
 the problem now is we are in a handlePOSTtransfer and when handleCgiTransfer made a transfer (move),
 the (it) in runserver for POST should remove this handle. and cgi handle should get triggered
+
+
+Logger
+create fd for log file, both parent and child can write there error messages for debugging.
+
+
+
+        send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???

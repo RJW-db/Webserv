@@ -1,4 +1,5 @@
 #include <HandleTransfer.hpp>
+#include "Logger.hpp"
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <sys/epoll.h>
@@ -59,8 +60,8 @@ bool HandleGetTransfer::handleGetTransfer()
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
     {
-        cout << "completed get request for file: " << _client._filenamePath << ", on fd: " << _client._fd << endl; //test
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        Logger::log(INFO, _client, "GET  ", _client._filenamePath);
         return true;
     }
     _fileBuffer = _fileBuffer.erase(0, _sent);

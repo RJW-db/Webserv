@@ -12,7 +12,6 @@
 #define EPOLL_DEL_EVENTS 0
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
 #include <iostream>
-#include <sstream> // logMessage
 
 #include <memory>
 #include <vector>
@@ -54,11 +53,14 @@ class RunServers
         static int runServers();
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const int listener);
+        static void setServerFromListener(Client &client, int listenerFD);
+
+
         static void processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);
 
 
-		static void setServer(Client &client);
+		// static void setServer(Client &client);
         static void setLocation(Client &state);
 
         static bool make_socket_non_blocking(int sfd);
@@ -102,17 +104,6 @@ class RunServers
             return _ramBufferLimit;
         }
 
-
-        template<typename... Args>
-        static void logMessage(int arg, Args&&... args)
-        {
-            if (_level == -1 || arg >= _level)
-            {
-                std::ostringstream oss;
-                (oss << ... << args);
-                std::cout << oss.str() << std::endl;
-            }
-        }
         class ClientException : public exception
 		{
             private:
@@ -168,7 +159,7 @@ int		getaddrinfo_usage(void);
 int		server(void);
 
 void parseHttpRequest(string &request);
-std::string escape_special_chars(const std::string& input);
+std::string escapeSpecialChars(const std::string& input);
 
 void httpRequestLogger(string str);
 

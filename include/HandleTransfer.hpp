@@ -143,18 +143,4 @@ class HandleReadFromCgiTransfer : public HandleTransfer
         bool readFromCgiTransfer();
 
 };
-/*
-        // CGI
-        bool writeToCgiTransfer();
-        bool handlePostCgi();
-
-        int8_t _isCgi = isNotCgi;
-
-
-
-        inline int8_t getIsCgi() const {
-            return _isCgi;
-        }
-
-*/
 #endif

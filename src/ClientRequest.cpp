@@ -2,6 +2,7 @@
 #include <HttpRequest.hpp>
 #include <Client.hpp>
 #include <ErrorCodeClientException.hpp>
+#include "Logger.hpp"
 
 void    RunServers::setLocation(Client &client)
 {
@@ -23,7 +24,7 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[_clientBufferSize];
         size_t bytesReceived = receiveClientData(client, buff);
-        // std::cout << "buff: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
+        // std::cout << "buff: " << escapeSpecialChars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
             &HttpRequest::appendToBody,                        // BODY_CHUNKED (1)
@@ -37,8 +38,7 @@ void RunServers::processClientRequest(Client &client)
     }
     catch(const exception& e)   // if catch we don't handle well
     {
-        cerr << e.what() << endl;
-        std::cout << "caught message in processclient request" << std::endl; //test
+        Logger::log(ERROR, client, "Error processing client request: ", e.what());
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
@@ -76,69 +76,76 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     return (0); // You never get here
 }
 
-static string NumIpToString(uint32_t addr)
-{
-    uint32_t num;
-    string result;
-    int bitshift = 24;
-    uint32_t rev_addr = htonl(addr);
+// static string NumIpToString(uint32_t addr)
+// {
+//     uint32_t num;
+//     string result;
+//     int bitshift = 24;
+//     uint32_t rev_addr = htonl(addr);
 
-    for (uint8_t i = 0; i < 4; ++i)
-    {
-        num = rev_addr >> bitshift;
-        result = result + to_string(num);
-        rev_addr &= ~(255 >> bitshift);
-        if (i != 3)
-            result += ".";
-        bitshift -= 8;
-    }
-    return result;
-}
+//     for (uint8_t i = 0; i < 4; ++i)
+//     {
+//         num = rev_addr >> bitshift;
+//         result = result + to_string(num);
+//         rev_addr &= ~(255 >> bitshift);
+//         if (i != 3)
+//             result += ".";
+//         bitshift -= 8;
+//     }
+//     return result;
+// }
 
-static bool pickServer(Client &client, pair<const string, string> &porthost, uint16_t port, string &ip, unique_ptr<Server> &server)
-{
-    if (porthost.second.find("0.0.0.0") != string::npos ||
-        porthost.second.find(ip) != string::npos)
-    {
-        if (to_string(port) == porthost.first)
-        {
-            size_t find = client._header.find("Host:") + 5;
-            string_view hostname = string_view(client._header).substr(find);
-            hostname.remove_prefix(hostname.find_first_not_of(" \t"));
-            size_t len = hostname.find_first_of(" \t\n\r");
-            hostname = hostname.substr(0, len);
-            if (hostname == server->getServerName())
-            {
-                client._usedServer = make_unique<Server>(*server);
-                return true;
-            }
-            if (client._usedServer == nullptr)
-                client._usedServer = make_unique<Server>(*server);
-        }
-    }
-    return false;
-}
+// static bool pickServer(Client &client, pair<const string, string> &porthost, uint16_t port, string &ip, unique_ptr<Server> &server)
+// {
+//     if (porthost.second.find("0.0.0.0") != string::npos ||
+//         porthost.second.find(ip) != string::npos)
+//     {
+//         std::cout << 1 << std::endl; //testcout
+//         if (to_string(port) == porthost.first)
+//         {
+//         std::cout << 2 << std::endl; //testcout
 
-void RunServers::setServer(Client &client)
-{
-    sockaddr_in res;
-    socklen_t resLen = sizeof(res);
-    int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
-    if (err != 0)
-        throw ErrorCodeClientException(client, 500, (string("Getsockname: ") + strerror(errno)));
-    string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
-    uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
-    client._usedServer = nullptr;
+//             uint find = client._header.find("Host:") + 5; // TODO uint sam?
+//             string_view hostname = string_view(client._header).substr(find);
+//             hostname.remove_prefix(hostname.find_first_not_of(" \t"));
+//             size_t len = hostname.find_first_of(" \t\n\r");
+//             hostname = hostname.substr(0, len);
+//             if (hostname == server->getServerName())
+//             {
+//         std::cout << 3<< std::endl; //testcout
 
-    for (unique_ptr<Server> &server : _servers)
-    {
-        for (pair<const string, string> &porthost : server->getPortHost())
-        {
-            if (pickServer(client, porthost, port, ip, server) == true)
-                return;
-        }
-    }
-}
+//                 client._usedServer = make_unique<Server>(*server);
+//                 return true;
+//             }
+//         std::cout << 4 << std::endl; //testcout
+
+//             if (client._usedServer == nullptr)
+//                 client._usedServer = make_unique<Server>(*server);
+//         }
+//     }
+//     return false;
+// }
+
+// void RunServers::setServer(Client &client)
+// {
+//     sockaddr_in res;
+//     socklen_t resLen = sizeof(res);
+//     int err = getsockname(client._fd, (struct sockaddr *)&res, &resLen);
+//     if (err != 0)
+//         throw ErrorCodeClientException(client, 500, (string("Getsockname: ") + strerror(errno)));
+//     string ip = NumIpToString(static_cast<uint32_t>(res.sin_addr.s_addr));
+//     uint16_t port = htons(static_cast<uint16_t>(res.sin_port));
+//     client._usedServer = nullptr;
+//     for (unique_ptr<Server> &server : _servers)
+//     {
+//         for (pair<const string, string> &porthost : server->getPortHost())
+//         {
+//             if (pickServer(client, porthost, port, ip, server) == true)
+//                 return;
+//         }
+//     }
+//     std::cout << "there" << std::endl; //testcout
+// }
 
 string extractHeader(const string &header, const string &key)
 {
@@ -184,6 +191,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._filename.clear();
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     client._isAutoIndex = false;
+    client._isCgi = false;
 }
 
 void RunServers::cleanupFD(int fd)
@@ -194,19 +202,15 @@ void RunServers::cleanupFD(int fd)
 
 void RunServers::cleanupClient(Client &client)
 {
-    // _connectedClients.erase(remove(_connectedClients.begin(), _connectedClients.end(), client._fd), _connectedClients.end());
-    std::cout << "cleaning up client with fd:" << client._fd << std::endl;
-    for (auto it = _handle.begin(); it != _handle.end(); )
+    int clientFD = client._fd;
+    Logger::log(INFO, client, "Disconnected");
+    for (auto it = _handle.begin(); it != _handle.end();)
     {
-        if ((*it)->_client._fd == client._fd)
-        {
+        if ((*it)->_client._fd == clientFD)
             it = _handle.erase(it);
-        }
         else
             ++it;
     }
-    cleanupFD(client._fd);
-    _clients.erase(client._fd);
+    _clients.erase(clientFD);
+    cleanupFD(clientFD);
 }
-
-// unique_ptr<Client> &RunServers::getClient(int clientFd)

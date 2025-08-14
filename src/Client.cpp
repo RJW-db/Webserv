@@ -21,5 +21,6 @@ void Client::resetRequestState()
     _filenamePath.clear();
     _fileContent = string_view();
     _headerFields.clear();
+    _pid = -1;
     // Do NOT reset: _fd, _usedServer, _location, _uploadPath, _disconnectTime, _keepAlive
 }

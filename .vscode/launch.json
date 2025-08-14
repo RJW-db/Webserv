@@ -6,7 +6,7 @@
 		"type": "cppdbg",
 		"request": "launch",
 		"program": "${workspaceFolder}/Webserv",  // adjust if needed
-		"args": [/* "testing/test1.conf" */ "config/default.conf", "1"], // adjust if needed
+		"args": [/* "testing/test1.conf" */ "config/default.conf"], // adjust if needed
 		"stopAtEntry": false,
 		"cwd": "${workspaceFolder}",
 		"environment": [],
