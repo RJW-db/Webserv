@@ -260,11 +260,11 @@ void RunServers::handleEvents(size_t eventCount)
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(DEBUG, "EPOLLERR detected on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ")");
+                    Logger::log(DEBUG, "EPOLLERR detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(DEBUG, "EPOLLHUP detected on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ")");
+                    Logger::log(DEBUG, "EPOLLHUP detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-                    Logger::log(DEBUG, "Unexpected epoll event on fd ", currentEvent.data.fd, " (events: ", currentEvent.events, ") - no EPOLLIN or EPOLLOUT");
+                    Logger::log(DEBUG, "Unexpected epoll event on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
                 auto clientIt = _clients.find(currentEvent.data.fd);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
@@ -321,9 +321,12 @@ void RunServers::insertHandleTransferCgi(unique_ptr<HandleTransfer> handle)
 
 void RunServers::getExecutableDirectory()
 {
-    try {
+    try
+    {
         _serverRootDir = filesystem::canonical("/proc/self/exe").parent_path().string();
-    } catch (const exception& e) {
-        throw runtime_error("Cannot determine executable directory: " + string(e.what()));
+    }
+    catch (const exception& e)
+    {
+        Logger::logExit(ERROR, "Cannot determine executable directory: " + string(e.what()));
     }
 }

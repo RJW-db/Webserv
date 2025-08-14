@@ -13,7 +13,6 @@ static constexpr bool   LOGGER = false;
 static constexpr size_t UUID_SIZE = 38;
 
 // Static Function
-static inline void insertUuidSegment(int8_t amount, char *buffIndex);
 
 void	 initRandomSeed();
 

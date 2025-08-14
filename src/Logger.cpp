@@ -8,29 +8,21 @@
 int Logger::_logFd = -1;
 
 
-void Logger::initialize(const string& logPath)
+void Logger::initialize(const char *logPath)
 {
     try {
-        // Create directory if needed
-        filesystem::path logDir = filesystem::path(logPath).parent_path();
-        if (!logDir.empty()) {
-            filesystem::create_directories(logDir);
-        }
-        
-        // Open with C-style - creates if doesn't exist, appends if exists
-        _logFd = open(logPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+        string absoluteLogPath = RunServers::getServerRootDir() + '/' + logPath;
+        _logFd = open(absoluteLogPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
         if (_logFd == -1) {
-            throw runtime_error("Failed to open log file: " + logPath + " - " + strerror(errno));
+            throw runtime_error("Couldn't open: \"" + absoluteLogPath + "\" Reason: " + strerror(errno));
         }
         
-        // Track the FD
         FileDescriptor::setFD(_logFd);
-        
-        log(INFO, "Log file initialized: ", logPath);
+        log(INFO, "Log file initialized:  ", absoluteLogPath);
     }
-    catch (const exception& e) {
-        cerr << "FATAL: Cannot initialize logger: " << e.what() << endl;
-        exit(1);
+    catch (const exception& e)
+    {
+        Logger::logExit(ERROR, e.what());
     }
 }
 

@@ -3,6 +3,8 @@
 #include <FileDescriptor.hpp>
 #include <Logger.hpp>
 
+constexpr char LOG[] = "logs/webserv.log";
+constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 volatile sig_atomic_t g_signal_status = 0;
 
 #include <sys/stat.h>
@@ -19,22 +21,19 @@ int main(int argc, char *argv[])
 {
     // atexit(Logger::cleanup);
     atexit(FileDescriptor::cleanupFD);
-
-    Logger::initialize("logs/webserv.log");
     RunServers::getExecutableDirectory();
+    Logger::initialize(LOG);
     if (signal(SIGINT, &sigint_handler))
     {
-        Logger::log(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
+        Logger::logExit(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
         return 1;
     }
-    string confFile = "config/default.conf";
-    if (argc >= 2)
-        confFile = argv[1];
+    const char *confFile = (argc >= 2) ? argv[1] : DEFAULT_CONFIG;
     if (argc == 3)
         RunServers::setClientBufferSize(stoullSafe(argv[2]));
 
     
-    Parsing test(confFile.data());
+    Parsing test(confFile);
     // test.printAll();
     RunServers::createServers(test.getConfigs());
     RunServers::runServers();

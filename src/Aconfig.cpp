@@ -1,6 +1,6 @@
 #include <Aconfig.hpp>
 #include <cstring>
-
+#include "Logger.hpp"
 // Constants for better readability
 namespace {
     const char* WHITESPACE_SEMICOLON = " \t\f\v\r;";
@@ -40,9 +40,9 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 bool Aconfig::root(string &line)
 {
 	if (!_root.empty())
-		throw runtime_error(to_string(_lineNbr) + ": root: tried setting second root");
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": tried setting second root");
 	if (line[0] != '/')
-		throw runtime_error(to_string(_lineNbr) + ": root: first character must be /: " + line);
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": root: first character must be /: ", line);
 	size_t lenRoot = line.find_first_of(WHITESPACE_SEMICOLON);
 	if (lenRoot == string::npos)
 	{
@@ -61,14 +61,14 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
 {
 	// Ensure we have error codes waiting for a page assignment
 	if (ErrorCodesWithoutPage.size() == 0)
-		throw runtime_error(to_string(_lineNbr) + ": error_page: no error codes in config for error_page");
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: no error codes in config for error_page");
 	
 	// Find the end of the error page path
 	size_t nameLen = line.find_first_of(INVALID_PATH_CHARS);
 	if (nameLen == string::npos)
 		nameLen = line.length();
 	else if (string(WHITESPACE_SEMICOLON).find(line[nameLen]) == std::string::npos)
-		throw runtime_error(to_string(_lineNbr) + ": error_page: invalid character found after error_page");
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: invalid character found after error_page");
 	
 	string error_page = line.substr(0, nameLen);
 	
@@ -99,7 +99,7 @@ bool Aconfig::error_page(string &line)
 	if (foundPage == true)
 	{
 		if (line[0] != ';')
-			throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input found after error page given");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: invalid input found after error page given");
 		foundPage = false;
 		line = line.substr(1);
 		return true;
@@ -112,17 +112,17 @@ bool Aconfig::error_page(string &line)
 	
 	// Validate input - shouldn't end without a page
 	if (line[0] == ';')
-		throw runtime_error(to_string(_lineNbr) + ": error_page: no error page given for error codes");
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: no error page given for error codes");
 	if (foundPage == true)
-		throw runtime_error(to_string(_lineNbr) + ": error_page: invalid input after error page");
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: invalid input after error page");
 	
 	// Parse error code
 	size_t pos;
 	size_t error_num = stoi(line, &pos);
 	if (error_num < MIN_ERROR_CODE || error_num > MAX_ERROR_CODE)
-		throw runtime_error(to_string(_lineNbr) + ": error_page: error code invalid must be between " + 
-		                   to_string(MIN_ERROR_CODE) + " and " + to_string(MAX_ERROR_CODE));
-	
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr,
+			": error_page: error code invalid must be between ", MIN_ERROR_CODE, " and ", MAX_ERROR_CODE);
+
 	ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
 	line = line.substr(pos + 1);
 	return false;
@@ -137,8 +137,8 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	size_t len;
 
 	if (isdigit(line[0]) == false)
-		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: first character must be digit: " + line[0]);
-	
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": client_max_body_size: first character must be digit: ", line);
+
 	// Parse the numeric value
 	_clientMaxBodySize = static_cast<size_t>(stoi(line, &len, 10));
 	if (_clientMaxBodySize == 0)
@@ -157,7 +157,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 			_clientMaxBodySize *= KILOBYTE;
 	}
 	else if (string(WHITESPACE_SEMICOLON).find(line[0]) == string::npos)
-		throw runtime_error(to_string(_lineNbr) + ": client_max_body_size: invalid character found after value: " + line[0]);
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": client_max_body_size: invalid character found after value: ", line);
 	
 	if (line[0] == ';')
 	{
@@ -176,13 +176,13 @@ bool Aconfig::indexPage(string &line)
 	if (line[0] == ';')
 	{
 		if (_indexPage.empty())
-			throw runtime_error(to_string(_lineNbr) + ": index: no index given for indexPage");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": index: no index given for indexPage: ", line);
 		line = line.substr(1);
 		return true;
 	}
 	size_t len = line.find_first_of(INVALID_PATH_CHARS);
 	if (len == 0)
-		throw (runtime_error(to_string(_lineNbr) + ": index: invalid index given after index"));
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": index: invalid character found: ", line);
 	if (len == string::npos)
 		len = line.length();
 	
@@ -208,7 +208,7 @@ bool Aconfig::autoIndex(string &line)
 	else if (strncmp(autoIndexing.c_str(), "off", 3) == 0)
 		_autoIndex = autoIndexFalse;
 	else
-		throw runtime_error(to_string(_lineNbr) + ": autoIndex: expected on/off after autoindex: " + autoIndexing);
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": autoIndex: expected on/off after autoindex: ", autoIndexing);
 	
 	return (handleNearEndOfLine(line, len, "autoIndex"));
 }
@@ -227,13 +227,12 @@ bool Aconfig::returnRedirect(string &line)
 		size_t errorCode = stoi(line, &len);
 		
 		if ((errorCode < 301 || errorCode > 303) && (errorCode < 307 || errorCode > 308))
-			throw runtime_error(to_string(_lineNbr) + ": return: invalid error code given");
-		
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: invalid error code given: ", line);
 		if (!_returnRedirect.second.empty())
-			throw runtime_error(to_string(_lineNbr) + ": return: cant have multiple return redirects");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: cant have multiple return redirects: ", line);
 		if (_returnRedirect.first != 0)
-			throw runtime_error(to_string(_lineNbr) + ": return: can't have multiple error code redirects");
-		
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: can't have multiple error code redirects: ", line);
+
 		_returnRedirect.first = errorCode;
 		line = line.substr(len);
 		return false;
@@ -243,18 +242,18 @@ bool Aconfig::returnRedirect(string &line)
 		if (line[0] == ';')
 		{
 			if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
-				throw runtime_error(to_string(_lineNbr) + ": return: not enough valid arguments given");
+				Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: not enough valid arguments given: ", line);
 			line = line.substr(1);
 			return true;
 		}
 		
 		len = line.find_first_of(WHITESPACE_SEMICOLON);
 		if (len == 0)
-			throw runtime_error(to_string(_lineNbr) + ": return: invalid character found");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: invalid character found: ", line);
 		if (_returnRedirect.first == 0)
-			throw runtime_error(to_string(_lineNbr) + ": return: no error code given");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: no error code given: ", line);
 		if (!_returnRedirect.second.empty())
-			throw runtime_error(to_string(_lineNbr) + ": return: multiple error pages given");
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: multiple error pages given: ", line);
 		
 		if (len == string::npos)
 			len = line.length();
@@ -281,13 +280,9 @@ bool Aconfig::handleNearEndOfLine(string &line, size_t pos, string err)
 {
 	size_t k = line.find_first_not_of(WHITESPACE_ONLY, pos);
 	if (k == string::npos)
-	{
 		return false;
-	}
 	if (line[k] != ';')
-	{
-		throw runtime_error(to_string(_lineNbr) + ": " + err + ": invalid input found before semi colon: " + line[k]);
-	}
+		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": " + err + ": invalid input found before semi colon: ", line);
 	line = line.substr(k + 1);
 	return true;
 }
@@ -322,7 +317,7 @@ void Aconfig::setDefaultErrorPages()
         
         // Verify the error page file is accessible
         if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
-            throw runtime_error("couldn't open error page: " + ErrorCodesWithPage.at(errorCode));
+			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": couldn't open error page: ", ErrorCodesWithPage.at(errorCode));
     }
 }
 

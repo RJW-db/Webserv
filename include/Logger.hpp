@@ -17,16 +17,12 @@ constexpr char LOG_ERROR[] = "Logger error occurred\n";
 
 enum LogLevel : uint8_t
 {
-    DEBUG = 0,
-    INFO  = 1,
-    WARN  = 2,
-    ERROR = 3,
-    FATAL = 4,
-    CHILD_DEBUG = 5,
-    CHILD_INFO  = 6,
-    CHILD_WARN  = 7,
-    CHILD_ERROR = 8,
-    CHILD_FATAL = 9
+    CHILD_INFO = 0, // cout
+    INFO       = 1, // cout
+    DEBUG      = 2, // cerr
+    WARN       = 3, // cerr
+    ERROR      = 4, // cerr
+    FATAL      = 5  // cerr
 };
 
 class Logger {
@@ -37,12 +33,14 @@ private:
     static string logLevelToString(uint8_t level, bool useColors);
 
 public:
-    static void initialize(const string& logPath);
-    
+    static void initialize(const char *logPath);
+
     template<typename... Args>
     static void log(int level, Args&&... args);
-    
-    // Client-specific logging - calls the general one
+
+    template<typename... Args>
+    static void logExit(int level, Args&&... args);
+
     template<typename... Args>
     static void log(int level, Client &client, Args&&... args);
 };
@@ -57,7 +55,7 @@ void Logger::log(int level, Args&&... args)
         string rawMessage = oss.str();
         
         string timeStamp = getTimeStamp();
-        int lvlStr = level < CHILD_DEBUG ? level : level - 5;
+        int lvlStr = level == CHILD_INFO ? level + 1 : level;
         string levelStr = logLevelToString(lvlStr, LOGGER);
 
         ostringstream logMsg;
@@ -67,24 +65,29 @@ void Logger::log(int level, Args&&... args)
         if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
         {
             cerr << "Error writing to log file: " << strerror(errno) << endl;
-            _logFd = -1;  // Mark as closed to prevent future write attempts
+            _logFd = -1;
         }
 
-        if (TERMINAL_DEBUG && level < CHILD_DEBUG)
+        if (level >= DEBUG || (TERMINAL_DEBUG == true && level == INFO))
         {
             levelStr = logLevelToString(lvlStr, TERMINAL);
-            ostream& output = (level >= WARN && level <= FATAL) ? cerr : cout;
+            ostream& output = (level == INFO) ? cout : cerr;
             output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
         }
-        
     }
     catch (...)
     {
         if (_logFd != -1)
             write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        if (level < CHILD_DEBUG)
-            write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
     }
+}
+
+template<typename... Args>
+void Logger::logExit(int level, Args&&... args)
+{
+    log(level, std::forward<Args>(args)...);
+    exit(EXIT_FAILURE);
 }
 
 template<typename... Args>
@@ -94,15 +97,11 @@ void Logger::log(int level, Client &client, Args&&... args)
     {
         auto portHostMap = client._usedServer->getPortHost().begin();
         string portHostInfo = portHostMap->second + ":" + portHostMap->first;
+        // string portHostInfo = "255.255.255.255:65535";
         
         // max size 255.255.255.255:65535
-        if (portHostInfo.length() < 20) {
-            portHostInfo.append(20 - portHostInfo.length(), ' ');
-        } else if (portHostInfo.length() > 20) {
-            portHostInfo = portHostInfo.substr(0, 20);  // Truncate if too long
-        }
-        portHostInfo += " ";
-        // log(level, portHostInfo, "  FD:", client._fd, "  ", args...);
+        if (portHostInfo.length() < 21)
+            portHostInfo.append(21 - portHostInfo.length(), ' ');
         log(level, portHostInfo, "  ClientFD:", client._fd, "  ", args...);
         // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
@@ -110,8 +109,7 @@ void Logger::log(int level, Client &client, Args&&... args)
     {
         if (_logFd != -1)
             write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        if (level < CHILD_DEBUG)
-            write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
     }
 }
 #endif

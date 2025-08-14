@@ -2,7 +2,7 @@
 #include <RunServer.hpp>
 
 #include <dirent.h>
-
+static inline void insertUuidSegment(int8_t amount, char *uuidIndex);
 
 void initRandomSeed()
 {

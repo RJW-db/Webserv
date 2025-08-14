@@ -137,7 +137,6 @@ void printVecArray(vector<char *> &args)
 
 void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    Logger::log(DEBUG, "we got into child"); //testlog
     setupChildPipes(client, fdWriteToCgi, fdReadfromCgi);
     closing_pipes(fdWriteToCgi, fdReadfromCgi);
 
@@ -204,7 +203,8 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     }
 
     if (client._pid == CHILD) {
-        Logger::log(CHILD_DEBUG, client, "child ._pid ", client._pid); //testlog
+        Logger::log(CHILD, client, "child ._pid ", client._pid); //testlog
+        Logger::log(CHILD, "we got into child"); //testlog
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
 
