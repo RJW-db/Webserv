@@ -77,3 +77,7 @@ create fd for log file, both parent and child can write there error messages for
 
 
         send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???
+
+
+segmentation because of 983938893
+make && valgrind ./Webserv config/default.conf 983938893

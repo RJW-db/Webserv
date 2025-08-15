@@ -71,7 +71,7 @@ bool    FileDescriptor::safeCloseFD(int fd)
 
     if (ret == -1 && errno == EIO)
     {
-        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        // Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
         return false;
     }
     return true;

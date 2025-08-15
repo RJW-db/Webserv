@@ -23,7 +23,7 @@
 ServerListenFD::ServerListenFD(const char *port, const char *hostName)
 : _port(port), _hostName(hostName)
 {
-	create_listener_socket();
+	createListenerSocket();
 }
 
 ServerListenFD::~ServerListenFD()
@@ -35,35 +35,19 @@ int	ServerListenFD::getFD() const
 	return (_listener);
 }
 
-
-int ServerListenFD::create_listener_socket()
+void ServerListenFD::createListenerSocket()
 {
-	struct addrinfo *serverInfo = get_server_addrinfo();
-	if (serverInfo == NULL)
-	{
-		return -1;
-	}
-
-	_listener = bind_to_socket(serverInfo);
+	struct addrinfo *serverInfo = getServerAddrinfo();
+	bindToSocket(serverInfo);
 	freeaddrinfo(serverInfo);
-	if (_listener == -1)
-	{
-		return -1;
-	}
-	if (RunServers::make_socket_non_blocking(_listener) == false)
-	{
-		return -1;
-	}
-	// TODO test with 1~5 maximum pending queue of people connecting
+	if (RunServers::makeSocketNonBlocking(_listener) == false)
+		Logger::logExit(ERROR, "Server create_listener_socket: makeSocketNonBlocking failed");
+
 	if (listen(_listener, SOMAXCONN) == -1)
-	{
-		Logger::log(ERROR, "Server listen: ", strerror(errno));
-		return -1;
-	}
-	return _listener;
+		Logger::logExit(ERROR, "Server create_listener_socket: listen failed");
 }
 
-struct addrinfo* ServerListenFD::get_server_addrinfo(void)
+struct addrinfo* ServerListenFD::getServerAddrinfo(void)
 {
 	struct addrinfo  serverSetup;
 	struct addrinfo *server;
@@ -76,36 +60,35 @@ struct addrinfo* ServerListenFD::get_server_addrinfo(void)
 
 	errHndl = getaddrinfo(_hostName, _port, &serverSetup, &server);
 	if (errHndl != 0)
-	{
-		Logger::log(ERROR, "Server getaddrinfo: ", gai_strerror(errHndl));
-		return NULL;
-	}
+		Logger::logExit(ERROR, "Server getaddrinfo: ", gai_strerror(errHndl));
 	return server;
 }
 
-int ServerListenFD::bind_to_socket(struct addrinfo *server)
+void ServerListenFD::bindToSocket(struct addrinfo *server)
 {
 	struct addrinfo *p;
 	for (p = server; p != NULL; p = p->ai_next)
 	{
-		_listener =
-			socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		_listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+
 		if (_listener < 0)
-		{
 			continue;
-		}
+
 		int reUse = 1;
 		setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &reUse, sizeof(int));
 		if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1)
 		{
-			close(_listener);
+			if (FileDescriptor::safeCloseFD(_listener) == false)
+				Logger::logExit(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", _listener);
 			continue;
 		}
-		return _listener;
+		FileDescriptor::setFD(_listener);
+		Logger::log(INFO, "Server created         listenFD:", _listener, " Successfuly bound to ", _hostName, ":", _port);
+		RunServers::setEpollEvents(_listener, EPOLL_CTL_ADD, EPOLLIN); //TODO I just aded this, is it correct?
+		return;
 	}
-	// std::cout << _port << " " << _hostName  << std::endl;
-	Logger::log(ERROR, "Server bind_to_socket: ", strerror(errno));
-	return -1;
+	freeaddrinfo(server);
+	Logger::logExit(ERROR, "Server bindToSocket: ", strerror(errno));
 }
 
 

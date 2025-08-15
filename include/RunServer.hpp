@@ -43,8 +43,9 @@ class RunServers
         ~RunServers();
 
         static void getExecutableDirectory();
+        static void setupEpoll();
 
-        static int epollInit(ServerList &servers);
+        static void epollInit(ServerList &servers);
         static void addStdinToEpoll();
 
 		static void createServers(vector<ConfigServer> &configs);
@@ -63,7 +64,7 @@ class RunServers
 		// static void setServer(Client &client);
         static void setLocation(Client &state);
 
-        static bool make_socket_non_blocking(int sfd);
+        static bool makeSocketNonBlocking(int sfd);
 
         static void setEpollEvents(int fd, int option, uint32_t events);
 

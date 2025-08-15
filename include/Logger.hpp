@@ -43,6 +43,15 @@ public:
 
     template<typename... Args>
     static void log(int level, Client &client, Args&&... args);
+
+    class ErrorLogExit : public std::exception
+    {
+    public:
+        explicit ErrorLogExit() noexcept {}
+        const char *what() const noexcept override {
+            return "Exiting";
+        }
+    };
 };
 
 template<typename... Args>
@@ -87,7 +96,8 @@ template<typename... Args>
 void Logger::logExit(int level, Args&&... args)
 {
     log(level, std::forward<Args>(args)...);
-    exit(EXIT_FAILURE);
+    throw Logger::ErrorLogExit();
+    // exit(EXIT_FAILURE);
 }
 
 template<typename... Args>
