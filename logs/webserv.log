@@ -1,2 +1,104 @@
 [19:04:47] INFO  SIGINT received, stopping webserver
 [19:04:47] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:11:34] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:11:34] INFO  Epoll fd created       FD:4
+[19:11:34] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:11:34] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:11:36] INFO  SIGINT received, stopping webserver
+[19:11:36] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:14:25] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:14:25] INFO  Epoll fd created       FD:4
+[19:14:25] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:14:25] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:14:36] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:16:30] INFO  SIGINT received, stopping webserver
+[19:16:30] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:16:33] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:16:33] INFO  Epoll fd created       FD:4
+[19:16:33] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:16:33] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 1.256.65536.16777343:53380
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:16:44] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:20:45] INFO  SIGINT received, stopping webserver
+[19:20:45] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:20:47] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:20:47] INFO  Epoll fd created       FD:4
+[19:20:47] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:20:47] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 1.0.0.127:40024
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:21:00] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:24:58] INFO  SIGINT received, stopping webserver
+[19:24:58] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:25:00] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:25:00] INFO  Epoll fd created       FD:4
+[19:25:00] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:25:00] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 127.0.0.1:50798
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:25:12] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:26:42] INFO  SIGINT received, stopping webserver
+[19:26:42] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:26:44] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:26:44] INFO  Epoll fd created       epollFD:4
+[19:26:44] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:26:44] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 127.0.0.1:33892
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:26:52] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:31:04] INFO  SIGINT received, stopping webserver
+[19:31:04] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:31:10] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:31:10] INFO  Epoll fd created       epollFD:4
+[19:31:10] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:31:10] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:32:52] INFO  SIGINT received, stopping webserver
+[19:32:52] INFO  Server shutting down gracefully...
+
+--- 2025-08-15 ---
+[19:32:53] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:32:53] INFO  Epoll fd created       epollFD:4
+[19:32:53] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:32:53] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:40186
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:33:05] INFO  0.0.0.0:8080           clientFD:7  POST   /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[19:33:05] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 110285
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[19:33:09] INFO  we got into child
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753626.jpg
+[19:33:12] WARN  0.0.0.0:8080           clientFD:7  Method not allowed: DELETE
+[19:33:12] INFO  0.0.0.0:8080           clientFD:7  GET    ./webPages/defaultErrorPages/405.html
+[19:33:20] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[19:35:43] INFO  SIGINT received, stopping webserver
+[19:35:43] INFO  Server shutting down gracefully...

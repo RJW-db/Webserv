@@ -16,8 +16,7 @@ void Logger::initialize(const char *logPath)
         Logger::logExit(ERROR, "Couldn't open: \"", absoluteLogPath, "\" Reason: ", strerror(errno));
     
     FileDescriptor::setFD(_logFd);
-    log(INFO, "Log file initialized   FD:", _logFd, " ", absoluteLogPath);
-
+    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteLogPath);
 }
 
 string Logger::getTimeStamp()

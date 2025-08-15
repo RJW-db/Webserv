@@ -12,7 +12,7 @@ void RunServers::epollInit(ServerList &servers)
     if (_epfd == -1)
         Logger::logExit(ERROR, "Setup failed: Server epoll_create: ", strerror(errno));
     FileDescriptor::setFD(_epfd);
-    Logger::log(INFO, "Epoll fd created       FD:", _epfd);
+    Logger::log(INFO, "Epoll fd created       epollFD:", _epfd);
 
 	map<pair<const string, string>, int> listenersMade;
     for (auto &server : servers)
@@ -32,21 +32,16 @@ void RunServers::epollInit(ServerList &servers)
 
 static string NumIpToString(uint32_t addr)
 {
-    uint32_t num;
-    string result;
-    int bitshift = 24;
-    uint32_t rev_addr = htonl(addr);
+    unsigned char bytes[4];
+    bytes[0] = (addr >> 24) & 0xFF;
+    bytes[1] = (addr >> 16) & 0xFF;
+    bytes[2] = (addr >> 8) & 0xFF;
+    bytes[3] = addr & 0xFF;
 
-    for (uint8_t i = 0; i < 4; ++i)
-    {
-        num = rev_addr >> bitshift;
-        result = result + to_string(num);
-        rev_addr &= ~(255 >> bitshift);
-        if (i != 3)
-            result += ".";
-        bitshift -= 8;
-    }
-    return result;
+    return to_string(bytes[0]) + "." +
+           to_string(bytes[1]) + "." +
+           to_string(bytes[2]) + "." +
+           to_string(bytes[3]);
 }
 
 void RunServers::setServerFromListener(Client &client, int listenerFD)
@@ -84,16 +79,16 @@ void RunServers::acceptConnection(const int listener)
         struct sockaddr in_addr;
         errno = 0;
         int infd = accept(listener, &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
-        if(infd == -1)
+        if (infd == -1)
         {
-            if(errno != EAGAIN)
+            if (errno != EAGAIN)
                 Logger::log(ERROR, "Server accept: ", strerror(errno));
             break;
         }
         struct epoll_event  current_event;
         current_event.data.fd = infd;
         current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
-        if(epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
+        if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
             Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
             if (FileDescriptor::safeCloseFD(infd) == false)
@@ -106,7 +101,9 @@ void RunServers::acceptConnection(const int listener)
 		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         // RunServers::setServer(*_clients[infd]);
         setServerFromListener(*_clients[infd], listener);
-        Logger::log(INFO, *_clients[infd], "Connected");
+        Logger::log(INFO, *_clients[infd], "Connected on: ",
+            NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
+            ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
     }
 }
 

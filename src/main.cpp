@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 #include <RunServer.hpp>
 #include <Parsing.hpp>
 #include <FileDescriptor.hpp>
@@ -7,24 +8,15 @@ constexpr char LOG[] = "logs/webserv.log";
 constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 volatile sig_atomic_t g_signal_status = 0;
 
-#include <sys/stat.h>
-// Static Functions
-// static void examples(void);
-
 
 namespace {
     int  runWebServer(int argc, char *argv[]);
     void setupEnvironment();
     void setupSignalHandlers();
+    void sigintHandler(int signum);
     void configureServer(int argc, char *argv[]);
 }
 
-void sigint_handler(int signum)
-{
-    Logger::log(INFO, "SIGINT received, stopping webserver");
-    g_signal_status = signum;
-}
-// #include <fcntl.h>
 int main(int argc, char *argv[])
 {
     try
@@ -67,8 +59,14 @@ namespace
 
     void setupSignalHandlers()
     {
-        if (signal(SIGINT, &sigint_handler))
+        if (signal(SIGINT, &sigintHandler))
             Logger::logExit(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
+    }
+
+    void sigintHandler(int signum)
+    {
+        Logger::log(INFO, "SIGINT received, stopping webserver");
+        g_signal_status = signum;
     }
 
     void configureServer(int argc, char *argv[])

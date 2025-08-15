@@ -112,7 +112,7 @@ void Logger::log(int level, Client &client, Args&&... args)
         // max size 255.255.255.255:65535
         if (portHostInfo.length() < 21)
             portHostInfo.append(21 - portHostInfo.length(), ' ');
-        log(level, portHostInfo, "  ClientFD:", client._fd, "  ", args...);
+        log(level, portHostInfo, "  clientFD:", client._fd, "  ", args...);
         // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
     catch(...)
