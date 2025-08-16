@@ -132,8 +132,6 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 
         bool writeToCgiTransfer();
         chrono::steady_clock::time_point _cgiDisconnectTime;
-
-
 };
 
 class HandleReadFromCgiTransfer : public HandleTransfer

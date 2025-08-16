@@ -60,8 +60,8 @@ class RunServers
         static void processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);
 
-
-		// static void setServer(Client &client);
+        static void serverMatchesPortHost(Server &Server, int fd);
+		static void setServerFromHost(Client &client);
         static void setLocation(Client &state);
 
         static bool makeSocketNonBlocking(int sfd);
@@ -82,6 +82,7 @@ class RunServers
         static void cleanupFD(int fd);
         static void cleanupClient(Client &client);
 
+        static void checkClientDisconnects();
         static void checkCgiDisconnect();
         static void closeHandles(pid_t pid);
 

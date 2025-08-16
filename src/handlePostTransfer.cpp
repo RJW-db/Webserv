@@ -36,14 +36,16 @@ int HandlePostTransfer::validateFinalCRLF()
     {
         _fileBuffer = _fileBuffer.erase(0, 2);
         _searchContentDisposition = true;
-        FileDescriptor::closeFD(_fd);
+        if (_fd != -1)
+            FileDescriptor::closeFD(_fd);
         _fd = -1;
         _foundBoundary = false;
         return 2;
     }
     if (foundReturn == 2 && strncmp(_fileBuffer.data(), "--\r\n", 4) == 0 && _fileBuffer.size() <= 4)
     {
-        FileDescriptor::closeFD(_fd);
+        if (_fd != -1)
+            FileDescriptor::closeFD(_fd);
         _fd = -1;
         size_t absolutePathSize = RunServers::getServerRootDir().size();
         string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';

@@ -24,7 +24,10 @@ void    HttpRequest::validateHEAD(Client &client)
     if (client._method.empty() || client._version.empty())
         throw ErrorCodeClientException(client, 400, "Malformed request line");
 
+    
     parseRequestPath(client);
+    // throwTesting();
+    RunServers::setServerFromListener(client, client._fd);
     // RunServers::setServer(client);
     RunServers::setLocation(client);
 
