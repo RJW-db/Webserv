@@ -23,12 +23,12 @@ void Logger::initialize(const string &logDir, const string &filename)
     log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteFilePath);
 }
 
-string initLogDirectory(const string &logDir)
+string Logger::initLogDirectory(const string &logDir)
 {
     string absolutePath = RunServers::getServerRootDir() + '/' + logDir;
     try
     {
-        if (!std::filesystem::exists(absolutePath))
+        if (std::filesystem::exists(absolutePath))
             Logger::logExit(ERROR, "Log directory does not exist or is not accessible: ", absolutePath, " Reason: ", strerror(errno));
         std::filesystem::create_directory(absolutePath);
     }
