@@ -7,16 +7,39 @@
 // Static member definitions
 int Logger::_logFd = -1;
 
-
-void Logger::initialize(const char *logPath)
+void Logger::initialize(const string &logDir, const string &filename)
 {
-    string absoluteLogPath = RunServers::getServerRootDir() + '/' + logPath;
-    _logFd = open(absoluteLogPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    string absoluteFilePath;
+    if (!logDir.empty())
+        absoluteFilePath = initLogDirectory(logDir) + '/' + filename;
+    else
+        absoluteFilePath = RunServers::getServerRootDir() + '/' + filename;
+
+    _logFd = open(absoluteFilePath.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (_logFd == -1)
-        Logger::logExit(ERROR, "Couldn't open: \"", absoluteLogPath, "\" Reason: ", strerror(errno));
+        Logger::logExit(ERROR, "Couldn't open: \"", absoluteFilePath, "\" Reason: ", strerror(errno));
     
     FileDescriptor::setFD(_logFd);
-    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteLogPath);
+    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteFilePath);
+}
+
+string initLogDirectory(const string &logDir)
+{
+    string absolutePath = RunServers::getServerRootDir() + '/' + logDir;
+    try
+    {
+        if (!std::filesystem::exists(absolutePath))
+            Logger::logExit(ERROR, "Log directory does not exist or is not accessible: ", absolutePath, " Reason: ", strerror(errno));
+        std::filesystem::create_directory(absolutePath);
+    }
+    catch (const std::filesystem::filesystem_error &e)
+    {
+        if (e.code() == std::errc::permission_denied)
+            Logger::logExit(ERROR, "Permission denied creating log directory: ", absolutePath);
+        else
+            Logger::logExit(ERROR, "Filesystem error creating log directory: ", e.what());
+    }
+    return absolutePath;
 }
 
 string Logger::getTimeStamp()

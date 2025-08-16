@@ -3,4 +3,4 @@ Webserv
 upload/*
 testing/expectedResults/upload3/large100mb.txt
 testing/results
-logs/*
+log/

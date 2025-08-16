@@ -33,7 +33,9 @@ private:
     static string logLevelToString(uint8_t level, bool useColors);
 
 public:
-    static void initialize(const char *logPath);
+    static void initialize(const string &logDir, const string &logFilename);
+    static string initLogDirectory(const string &logDir);
+
 
     template<typename... Args>
     static void log(int level, Args&&... args);

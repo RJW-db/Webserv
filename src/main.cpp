@@ -4,7 +4,8 @@
 #include <FileDescriptor.hpp>
 #include <Logger.hpp>
 
-constexpr char LOG[] = "logs/webserv.log";
+constexpr char LOG_DIR[] = "log";
+constexpr char LOG[] = "webserv.log";
 constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 volatile sig_atomic_t g_signal_status = 0;
 
@@ -53,7 +54,7 @@ namespace
     void setupEnvironment()
     {
         RunServers::getExecutableDirectory();
-        Logger::initialize(LOG);
+        Logger::initialize(LOG_DIR, LOG);
         atexit(FileDescriptor::cleanupFD);
     }
 
