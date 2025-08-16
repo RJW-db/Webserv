@@ -74,7 +74,8 @@ void clocking();
 void RunServers::setupEpoll()
 {
     epollInit(_servers);
-    addStdinToEpoll();
+    // if (TERMINAL_DEBUG)
+    //     addStdinToEpoll();
 }
 
 

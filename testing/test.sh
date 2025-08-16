@@ -16,10 +16,20 @@ rm -rf testing/results/*
 
 # run with ./test.sh -y if you want to start the server
 if [[ "$1" == "y" || "$1" == "Y" || "$1" == "-y" || "$1" == "-Y" ]]; then
-    # Start the web server in the background
-# disable if you don't want server to start
-./Webserv testing/test1.conf > testing/results/webservOut.txt &
-SERVER_PID=$!
+    # Start the web server in the background with stdin from /dev/null
+    # disable if you don't want server to start
+    (./Webserv testing/test1.conf < /dev/null > testing/results/webservOut.txt 2>&1) &
+    SERVER_PID=$!
+    disown $SERVER_PID
+    
+    # Wait a moment and check if server started successfully
+    sleep 2
+    if ! kill -0 $SERVER_PID 2>/dev/null; then
+        echo "Error: Server failed to start. Check testing/results/webservOut.txt for details."
+        cat testing/results/webservOut.txt
+        exit 1
+    fi
+    echo "Server started with PID $SERVER_PID"
 fi
 
 
@@ -49,8 +59,15 @@ echo "Check the results in the 'results' directory. and summary.txt for details.
 
 # # Clean up: Kill the server
 # echo "Stopping server..."
-kill $SERVER_PID
-wait $SERVER_PID 2>/dev/null
+
+if [[ -n "$SERVER_PID" ]]; then
+    echo "Stopping server with PID $SERVER_PID..."
+    kill $SERVER_PID
+    wait $SERVER_PID 2>/dev/null
+else
+    echo "No server was started."
+fi
+
 
 echo server output in results/webservOut.txt
 
