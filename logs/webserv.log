@@ -744,3 +744,114 @@
 [14:31:45] INFO  0.0.0.0:8080           clientFD:7  Disconnected
 [14:34:55] INFO  SIGINT received, stopping webserver
 [14:34:55] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:47:40] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:47:40] INFO  Epoll fd created       epollFD:4
+[14:47:40] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:47:40] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:47:42] DEBUG errno: :0
+[14:47:42] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:60892
+[14:47:42] DEBUG errno: :0
+[14:47:42] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 29114
+[14:47:42] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[14:47:42] INFO  we got into child
+[14:47:42] WARN  EPOLLERR detected on fd 9 (events: 12)
+[14:47:47] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:47:47] DEBUG errno: :0
+[14:47:47] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:39580
+[14:47:47] DEBUG errno: :0
+[14:47:47] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:47:52] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:48:12] DEBUG errno: :0
+[14:48:12] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:60190
+[14:48:12] DEBUG errno: :0
+[14:48:12] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:48:12] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:48:12] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:48:17] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:48:48] DEBUG errno: :0
+[14:48:48] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:41972
+[14:48:48] DEBUG errno: :0
+[14:48:48] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:48:48] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:48:53] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:51:55] INFO  SIGINT received, stopping webserver
+[14:51:55] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[15:00:42] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:00:42] INFO  Epoll fd created       epollFD:4
+[15:00:42] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:00:42] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:00:43] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:39710
+[15:00:43] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[15:00:43] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[15:00:43] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[15:00:48] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[15:01:46] INFO  SIGINT received, stopping webserver
+[15:01:46] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[15:01:48] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:01:48] INFO  Epoll fd created       epollFD:4
+[15:01:48] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:01:48] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:01:49] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:50026
+[15:01:49] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
+[15:01:49] ERROR An error occurred
+
+--- 2025-08-16 ---
+[15:03:36] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:03:36] INFO  Epoll fd created       epollFD:4
+[15:03:36] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:03:36] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:03:37] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:47724
+[15:03:37] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
+[15:03:37] ERROR An error occurred
+
+--- 2025-08-16 ---
+[15:17:16] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:17:16] INFO  Epoll fd created       epollFD:4
+[15:17:16] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:17:16] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:17:17] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:59986
+[15:17:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[15:17:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[15:17:17] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
+[15:17:17] INFO  0.0.0.0:8080           clientFD:7  GET    ./webPages/defaultErrorPages/500.html
+[15:17:22] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[15:17:53] INFO  SIGINT received, stopping webserver
+[15:17:53] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[15:17:54] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:17:54] INFO  Epoll fd created       epollFD:4
+[15:17:54] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:17:54] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:17:55] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:51556
+[15:17:55] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
+[15:17:55] ERROR An error occurred
+
+--- 2025-08-16 ---
+[15:18:29] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:18:37] INFO  Epoll fd created       epollFD:4
+[15:18:37] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:18:37] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:18:39] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:50670
+[15:20:13] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
+[15:20:25] ERROR An error occurred
+
+--- 2025-08-16 ---
+[15:20:34] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:20:34] INFO  Epoll fd created       epollFD:4
+[15:20:34] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:20:34] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+
+--- 2025-08-16 ---
+[15:21:08] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[15:21:08] INFO  Epoll fd created       epollFD:4
+[15:21:08] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[15:21:08] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[15:21:09] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:35356
+[15:21:18] WARN  0.0.0.0:8080           clientFD:7  epoll_ctl failed: Success for fd: 7
