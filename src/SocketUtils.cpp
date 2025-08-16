@@ -78,8 +78,7 @@ void RunServers::acceptConnection(const int listener)
     {
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
-        errno = 0;
-        int infd = accept(listener, &in_addr, &in_len); // TODO does it matter if server accepts on different listener fd than what it was caught on?
+        int infd = accept(listener, &in_addr, &in_len);
         if (infd == -1)
         {
             if (errno != EAGAIN)
@@ -88,7 +87,7 @@ void RunServers::acceptConnection(const int listener)
         }
         struct epoll_event  current_event;
         current_event.data.fd = infd;
-        current_event.events = EPOLLIN /* | EPOLLET */; // EPOLLET niet gebruiken, stopt meerdere pakketen verzende
+        current_event.events = EPOLLIN;
         if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
         {
             Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
@@ -138,6 +137,7 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
             Logger::log(ERROR, "setEpollEvents: invalid client FD ", fd);
             throw std::runtime_error("epoll_ctl failed: " + string(strerror(errno)));
         }
+        // need new throw to kickout the client, still needs to be catched near the other one in runserver
         throw ErrorCodeClientException(*_clients[fd], 500, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
     }
 }
