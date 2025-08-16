@@ -1,5 +1,6 @@
 #include <utils.hpp>
 #include <RunServer.hpp>
+#include "Logger.hpp"
 
 #include <dirent.h>
 static inline void insertUuidSegment(int8_t amount, char *uuidIndex);
@@ -116,4 +117,16 @@ string escapeSpecialChars(const string &input, bool useColors)
         }
     }
     return result;
+}
+
+void throwTesting()
+{
+    static uint8_t count = 1;
+
+    // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
+    if (count++ < 2)
+    {
+        throw bad_alloc();
+        // throw runtime_error("Throw test");
+    }
 }

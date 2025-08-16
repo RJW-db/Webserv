@@ -76,8 +76,6 @@ class RunServers
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
         static void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle);
 
-        static void insertClientFD(int fd);
-
         static void clientHttpCleanup(Client &client);
 
         static void cleanupServer();

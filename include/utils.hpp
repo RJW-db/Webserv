@@ -26,5 +26,6 @@ bool	 directoryCheck(string &path);
 size_t	 getFileLength(const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
+void     throwTesting();
 
 #endif

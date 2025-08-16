@@ -49,10 +49,10 @@ void RunServers::setServerFromListener(Client &client, int listenerFD)
     // Get the server info from the listener socket
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr);
-    if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0) {
+    if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0)
         throw ErrorCodeClientException(client, 500, "Failed to get server info"); //TODO not protected
-    }
-    
+
+        
     string serverIP = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     uint16_t serverPort = ntohs(serverAddr.sin_port);
     string portStr = to_string(serverPort);
@@ -63,6 +63,7 @@ void RunServers::setServerFromListener(Client &client, int listenerFD)
             if (porthost.first == portStr && 
                 (porthost.second == serverIP || porthost.second == "0.0.0.0"))
             {
+
                 client._usedServer = make_unique<Server>(*server);
                 return;
             }
@@ -96,14 +97,12 @@ void RunServers::acceptConnection(const int listener)
             break;
         }
         FileDescriptor::setFD(infd);
-        // insertClientFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
-		_clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-        // RunServers::setServer(*_clients[infd]);
         setServerFromListener(*_clients[infd], listener);
         Logger::log(INFO, *_clients[infd], "Connected on: ",
             NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
             ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
+        _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
 }
 
