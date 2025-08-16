@@ -744,3 +744,25 @@
 [14:31:45] INFO  0.0.0.0:8080           clientFD:7  Disconnected
 [14:34:55] INFO  SIGINT received, stopping webserver
 [14:34:55] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:36:49] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:36:49] INFO  Epoll fd created       epollFD:4
+[14:36:49] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:36:49] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:38138
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:36:56] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:45084
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 28290
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[14:37:06] INFO  we got into child
+[14:37:06] WARN  EPOLLERR detected on fd 9 (events: 12)
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:45088
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:37:16] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:18] INFO  SIGINT received, stopping webserver
+[14:37:18] INFO  Server shutting down gracefully...

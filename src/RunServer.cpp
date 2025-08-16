@@ -247,12 +247,12 @@ void RunServers::handleEvents(size_t eventCount)
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(WARN, "EPOLLERR detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN, "EPOLLERR detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(WARN, "EPOLLHUP detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN, "EPOLLHUP detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-                    Logger::log(WARN, "Unexpected epoll event on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
-                auto clientIt = _clients.find(currentEvent.data.fd);
+                    Logger::log(WARN, "Unexpected epoll event on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+                auto clientIt = _clients.find(eventFD);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
                     cleanupClient(*clientIt->second);
