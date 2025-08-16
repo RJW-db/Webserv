@@ -4,6 +4,7 @@
 #include <ErrorCodeClientException.hpp>
 #include "Logger.hpp"
 
+
 void    RunServers::setLocation(Client &client)
 {
 	for (pair<string, Location> &locationPair : client._usedServer->getLocations())

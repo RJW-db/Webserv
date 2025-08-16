@@ -44,33 +44,70 @@ static string NumIpToString(uint32_t addr)
            to_string(bytes[3]);
 }
 
+
 void RunServers::setServerFromListener(Client &client, int listenerFD)
 {
-    // Get the server info from the listener socket
+    auto hostHeader = client._headerFields.find("Host");
+    if (hostHeader == client._headerFields.end()) {
+        throw ErrorCodeClientException(client, 400, "Missing required Host header");
+    }
+    string_view host = hostHeader->second;
+
     sockaddr_in serverAddr;
-    socklen_t addrLen = sizeof(serverAddr);
+    socklen_t addrLen = sizeof(serverAddr); 
     if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0)
         throw ErrorCodeClientException(client, 500, "Failed to get server info"); //TODO not protected
-
-        
     string serverIP = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     uint16_t serverPort = ntohs(serverAddr.sin_port);
     string portStr = to_string(serverPort);
-    // throw bad_alloc(); // TODO: this line leaks
+
+    Server *tmpServer = nullptr;
     // Find the matching server
     for (unique_ptr<Server> &server : _servers) {
         for (pair<const string, string> &porthost : server->getPortHost()) {
             if (porthost.first == portStr && 
                 (porthost.second == serverIP || porthost.second == "0.0.0.0"))
             {
-
-                client._usedServer = make_unique<Server>(*server);
-                return;
+                if (server->getServerName() == host)
+                {
+                    client._usedServer = make_unique<Server>(*server);
+                    return;
+                }
+                if (tmpServer == nullptr)
+                    tmpServer = server.get();
             }
         }
     }
-    throw ErrorCodeClientException(client, 500, "No matching server configuration found");
+    if (tmpServer != nullptr)
+        client._usedServer = make_unique<Server>(*tmpServer);
+    else
+        throw ErrorCodeClientException(client, 0, "No matching server configuration found");
 }
+
+// void RunServers::setServerFromListener(Client &client, int listenerFD)
+// {
+//     // Get the server info from the listener socket
+//     sockaddr_in serverAddr;
+//     socklen_t addrLen = sizeof(serverAddr);
+//     if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0)
+//         throw ErrorCodeClientException(client, 500, "Failed to get server info"); //TODO not protected
+//     string serverIP = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
+//     uint16_t serverPort = ntohs(serverAddr.sin_port);
+//     string portStr = to_string(serverPort);
+//     // Find the matching server
+//     for (unique_ptr<Server> &server : _servers) {
+//         for (pair<const string, string> &porthost : server->getPortHost()) {
+//             if (porthost.first == portStr && 
+//                 (porthost.second == serverIP || porthost.second == "0.0.0.0"))
+//             {
+//                 client._usedServer = make_unique<Server>(*server);
+//                 return;
+//             }
+//         }
+//     }
+//     throw ErrorCodeClientException(client, 0, "No matching server configuration found");
+// }
+
 
 void RunServers::acceptConnection(const int listener)
 {
@@ -97,7 +134,7 @@ void RunServers::acceptConnection(const int listener)
         }
         FileDescriptor::setFD(infd);
         _clients[infd] = std::make_unique<Client>(infd);
-        setServerFromListener(*_clients[infd], listener);
+        // setServerFromListener(*_clients[infd], listener);
         Logger::log(INFO, *_clients[infd], "Connected on: ",
             NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
             ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
@@ -130,14 +167,13 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
-    if (/* fd == 7 ||  */epoll_ctl(_epfd, option, fd, &ev) == -1)
+    if (epoll_ctl(_epfd, option, fd, &ev) == -1)
     {
         if (_clients.count(fd) == 0 || !_clients[fd])
         {
             Logger::log(ERROR, "setEpollEvents: invalid client FD ", fd);
             throw std::runtime_error("epoll_ctl failed: " + string(strerror(errno)));
         }
-        // need new throw to kickout the client, still needs to be catched near the other one in runserver
-        throw ErrorCodeClientException(*_clients[fd], 500, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
+        throw ErrorCodeClientException(*_clients[fd], 0, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
     }
 }

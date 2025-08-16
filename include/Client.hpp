@@ -29,34 +29,6 @@ class Client
     public:
             // Add more fields as needed
         Client(int fd);
-        Client(const Client& other)
-            : _fd(other._fd),
-              _usedServer(other._usedServer ? std::make_unique<Server>(*other._usedServer) : nullptr),
-              _location(other._location),
-              _uploadPath(other._uploadPath),
-              _isCgi(other._isCgi),
-              _headerParseState(other._headerParseState),
-              _header(other._header),
-              _body(other._body),
-              _method(other._method),
-              _useMethod(other._useMethod),
-              _requestPath(other._requestPath),
-              _queryString(other._queryString),
-              _rootPath(other._rootPath),
-              _filenamePath(other._filenamePath),
-              _version(other._version),
-              _contentLength(other._contentLength),
-              _bodyEnd(other._bodyEnd),
-              _contentType(other._contentType),
-              _bodyBoundary(other._bodyBoundary),
-              _filename(other._filename),
-              _name(other._name),
-              _fileContent(other._fileContent),
-              _isAutoIndex(other._isAutoIndex),
-              _disconnectTime(other._disconnectTime),
-              _keepAlive(other._keepAlive),
-              _headerFields(other._headerFields)
-        {}
         // Client &operator=(const Client &other);
 
         void resetRequestState();
@@ -95,7 +67,6 @@ class Client
 
         bool _isAutoIndex = false;
 
-        pid_t _cgiPid;
 
         chrono::steady_clock::time_point _disconnectTime;
 		bool _keepAlive;

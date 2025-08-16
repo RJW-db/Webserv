@@ -47,15 +47,10 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
 
-    HttpRequest::validateHEAD(client); // TODO cleanupClient
     HttpRequest::parseHeaders(client); // TODO cleanupClient
+    HttpRequest::validateHEAD(client); // TODO cleanupClient
     
-    // Validate Host header (required in HTTP/1.1)
-    auto hostHeader = client._headerFields.find("Host");
-    if (hostHeader == client._headerFields.end()) {
-        throw ErrorCodeClientException(client, 400, "Missing required Host header");
-    }
-    
+
     // Handle Connection header properly
     auto connectionHeader = client._headerFields.find("Connection");
     if (connectionHeader != client._headerFields.end()) {
@@ -118,6 +113,7 @@ static string_view trimWhiteSpace(string_view sv)
     size_t last = sv.find_last_not_of(ws);
     return sv.substr(first, last - first + 1);
 }
+
 
 void HttpRequest::parseHeaders(Client &client)
 {

@@ -97,7 +97,7 @@ void RunServers::closeHandles(pid_t pid)
 {
     for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
     {
-        if ((*it)->_client._cgiPid == pid)
+        if ((*it)->_client._pid == pid)
         {
             cleanupFD((*it)->_fd);
             it =_handleCgi.erase(it);
@@ -107,30 +107,90 @@ void RunServers::closeHandles(pid_t pid)
     }
 }
 
+// void RunServers::checkCgiDisconnect()
+// {
+//     for (std::pair<const int, std::unique_ptr<Client>> &clientPair : _clients)
+//     {
+//         unique_ptr<Client> &client = clientPair.second;
+//         if (client->_cgiPid != -1)
+//         {
+//             int exit_code;
+//             pid_t result = waitpid(client->_cgiPid, &exit_code, WNOHANG);
+//             if (result > 0)
+//             {
+//                 if (WIFEXITED(exit_code))
+//                 {
+//                     std::cout << "CGI process " << client->_cgiPid << " exited with status " << WEXITSTATUS(exit_code) << " on client with fd " << client->_fd << std::endl;
+//                     closeHandles(client->_cgiPid);
+//                     // if (WEXITSTATUS(exit_code) > 0)
+//                         // throw ErrorCodeClientException(*client, 500, "Cgi error");
+//                     if (client->_keepAlive == false)
+//                         cleanupClient(*client);
+//                     else
+//                         clientHttpCleanup(*client);
+//                 }
+//             }
+//         }
+//     }
+// }
+
+
 void RunServers::checkCgiDisconnect()
 {
-    for (std::pair<const int, std::unique_ptr<Client>> &clientPair : _clients)
+    for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
     {
-        unique_ptr<Client> &client = clientPair.second;
-        if (client->_cgiPid != -1)
+        Client &client = (*it)->_client;
+        int exit_code;
+        pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
+        if (result == 0)
         {
-            int exit_code;
-            pid_t result = waitpid(client->_cgiPid, &exit_code, WNOHANG);
-            if (result > 0)
+            ++it;
+        }
+        else
+        {
+            if (WIFEXITED(exit_code))
             {
-                if (WIFEXITED(exit_code))
-                {
-                    std::cout << "CGI process " << client->_cgiPid << " exited with status " << WEXITSTATUS(exit_code) << " on client with fd " << client->_fd << std::endl;
-                    closeHandles(client->_cgiPid);
-                    // if (WEXITSTATUS(exit_code) > 0)
-                        // throw ErrorCodeClientException(*client, 500, "Cgi error");
-                    if (client->_keepAlive == false)
-                        cleanupClient(*client);
-                    else
-                        clientHttpCleanup(*client);
-                }
+                Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
+
+                // if (WEXITSTATUS(exit_code) > 0)
+                // throw ErrorCodeClientException(*client, 500, "Cgi error");
+                if (client._keepAlive == false)
+                    cleanupClient(client);
+                else
+                    clientHttpCleanup(client);
+                it = _handleCgi.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
+    }
+}
+
+void RunServers::checkClientDisconnects()
+{
+    try
+    {
+        for (auto it = _clients.begin(); it != _clients.end();)
+        {
+            unique_ptr<Client> &client = it->second;
+            ++it;
+            if (client->_disconnectTime <= chrono::steady_clock::now())
+            {
+                // cout << "disconnectTime: "
+                //         << chrono::duration_cast<chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
+                //         << " ms" << endl;
+                // cout << "now: "
+                //         << chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()
+                //         << " ms" << endl;
+                cleanupClient(*client);
+            }
+        }
+    }
+    catch (const std::exception &e)
+    {
+        Logger::log(ERROR, "Exception in checkClientDisconnects: ", e.what()); // testlog
     }
 }
 
@@ -139,22 +199,10 @@ int RunServers::runServers()
     while (g_signal_status == 0)
     {
         int eventCount;
-        for (auto it = _clients.begin(); it != _clients.end();)
-		{
-			unique_ptr<Client> &client = it->second;
-			++it;
-			if (client->_disconnectTime <= chrono::steady_clock::now())
-            {
-                // cout << "disconnectTime: "
-                //         << chrono::duration_cast<chrono::milliseconds>(client->_disconnectTime.time_since_epoch()).count()
-                //         << " ms" << endl;
-                // cout << "now: "
-                //         << chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()
-                //         << " ms" << endl;
-				cleanupClient(*client);
-            }
-		}
+
         // cout << "Blocking and waiting for epoll event..." << endl;
+        checkClientDisconnects();
+        checkCgiDisconnect();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
