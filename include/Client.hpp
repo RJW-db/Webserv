@@ -94,7 +94,8 @@ class Client
         string_view _fileContent;
 
         bool _isAutoIndex = false;
-  
+
+        pid_t _cgiPid;
 
         chrono::steady_clock::time_point _disconnectTime;
 		bool _keepAlive;

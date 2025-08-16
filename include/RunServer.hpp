@@ -83,7 +83,10 @@ class RunServers
         static void cleanupFD(int fd);
         static void cleanupClient(Client &client);
 
-        static bool runHandleTransfer(struct epoll_event &currentEvent);
+        static void checkCgiDisconnect();
+        static void closeHandles(pid_t pid);
+
+            static bool runHandleTransfer(struct epoll_event &currentEvent);
         static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
 
         static inline string &getServerRootDir()

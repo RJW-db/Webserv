@@ -21,36 +21,36 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-void    Server::createListeners(vector<unique_ptr<Server>> &servers)
-{
-	map<pair<const string, string>, int> listenersMade;
-	int fd;
+// void    Server::createListeners(vector<unique_ptr<Server>> &servers)
+// {
+// 	map<pair<const string, string>, int> listenersMade;
+// 	int fd;
     
-	for (auto &server : servers)
-	{
-		for (pair<const string, string> &hostPort : server->getPortHost())
-		{
-			auto it = listenersMade.find(hostPort);
-			if (it == listenersMade.end())
-			{
-				ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
-				fd = listenerFD.getFD();
-                FileDescriptor::setFD(fd);
-				listenersMade.insert({hostPort, fd});
-			}
-			else
-			{
-				fd = it->second;
-			}
-			server->addListener(fd);
-		}
-	}
-}
+// 	for (auto &server : servers)
+// 	{
+// 		for (pair<const string, string> &hostPort : server->getPortHost())
+// 		{
+// 			auto it = listenersMade.find(hostPort);
+// 			if (it == listenersMade.end())
+// 			{
+// 				ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
+// 				fd = listenerFD.getFD();
+//                 FileDescriptor::setFD(fd);
+// 				listenersMade.insert({hostPort, fd});
+// 			}
+// 			else
+// 			{
+// 				continue; // already created listener for this host:port
+// 			}
+// 			server->addListener(fd);
+// 		}
+// 	}
+// }
 
-void Server::addListener(int fd)
-{
-	_listeners.push_back(fd);
-}
+// void Server::addListener(int fd)
+// {
+// 	_listeners.push_back(fd);
+// }
 
 vector<int> &Server::getListeners()
 {

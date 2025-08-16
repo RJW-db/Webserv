@@ -56,14 +56,16 @@ def main():
         with open(save_path, "wb") as f:
             shutil.copyfileobj(fileitem.file, f)
 
-        response_body = f".{public_url_base}/{filename}\n"
+        response_body = f".{public_url_base}/{filename}"
         content_length = len(response_body.encode('utf-8'))
-        http_response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: keep-alive\r\nContent-Length: {content_length}\r\n\r\n{response_body}"
-        sys.stdout.write(http_response)
-        sys.stdout.flush()
-
-        # print(f"DEBUG: response_body repr = {repr(response_body)}", file=sys.stderr)
-        # print(f"DEBUG: content_length = {content_length}", file=sys.stderr)
+        
+        # Send proper HTTP headers with consistent \r\n line endings
+        print("HTTP/1.1 200 OK\r")
+        print("Content-Type: text/plain\r")
+        print("Connection: keep-alive\r")
+        print(f"Content-Length: {content_length}\r")
+        print("\r")  # Empty line to end headers
+        print(response_body, end="\n")
 
     except Exception as e:
         print("Status: 500 Internal Server Error")

@@ -7,11 +7,14 @@
 
 #include <sys/epoll.h>
 
+#define CGI_DISCONNECT_TIME_SECONDS 30
+
 HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
 : HandleTransfer(client, fdWriteToCgi), _bytesWrittenTotal(0)
 {
     _fileBuffer = body;
     // _isCgi = writeToCgi;
+    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
@@ -19,6 +22,7 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 : HandleTransfer(client, fdReadfromCgi)
 {
     // _isCgi = writeToCgi;
+    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 

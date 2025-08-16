@@ -129,7 +129,9 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 
         size_t _bytesWrittenTotal;
 
+
         bool writeToCgiTransfer();
+        chrono::steady_clock::time_point _cgiDisconnectTime;
 
 
 };
@@ -139,8 +141,7 @@ class HandleReadFromCgiTransfer : public HandleTransfer
     public:
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
 
-
         bool readFromCgiTransfer();
-
+        chrono::steady_clock::time_point _cgiDisconnectTime;
 };
 #endif

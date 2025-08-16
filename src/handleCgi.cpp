@@ -20,7 +20,6 @@
 #define PARENT 1
 #define CHILD 0
 
-
 void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
     FileDescriptor::closeFD(fdWriteToCgi[0]);
@@ -34,12 +33,14 @@ void setupChildPipes(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
+        std::exit(1);
         throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
     }
     if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         close(STDIN_FILENO);
+        std::exit(1);
         throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
     }
 }
@@ -105,7 +106,7 @@ vector<string> createEnvp(Client &client)
 
         // envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._bodyBoundary));
         // envpString.push_back("CONTENT_TYPE=Content-Type: " + contentType + "; boundary=...");
-        // exit(0);
+        // std::exit(0);
     }
 
     envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
@@ -131,7 +132,7 @@ void printVecArray(vector<char *> &args)
 {
     for (auto it = args.begin(); it != args.end() && *it != NULL; ++it)
     {
-        cout << *it << endl; // optional debug output
+        cerr << *it << endl; // optional debug output
     }
 }
 
@@ -147,13 +148,12 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     vector<string> envpString = createEnvp(client);
     vector<char *> envp= convertToCharArray(envpString);
     // printVecArray(envp);
-
     char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
     execve(filePath, argv.data(), envp.data());
     perror("execve failed");
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
-    exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 }
 
 /**
@@ -199,6 +199,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     client._pid = fork();
     if (client._pid == -1) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
+        std::exit(1);
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
     }
 
@@ -225,6 +226,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
             }
             handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
             RunServers::insertHandleTransferCgi(move(handle));
+            client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         // }
         // catch(const std::exception& e)
         // {
@@ -234,9 +236,10 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         //     std::cerr << e.what() << '\n';
         // }
         
-        client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
+
+
         return true;
     }
     return false;

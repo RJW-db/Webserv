@@ -31,6 +31,7 @@
 #include <dirent.h>
 
 #include <signal.h>
+#include <sys/wait.h>
 
 // Static member variables
 // FileDescriptor RunServers::_fds;
@@ -105,6 +106,47 @@ void RunServers::addStdinToEpoll()
     }
 }
 
+void RunServers::closeHandles(pid_t pid)
+{
+    for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
+    {
+        if ((*it)->_client._cgiPid == pid)
+        {
+            cleanupFD((*it)->_fd);
+            it =_handleCgi.erase(it);
+            continue ;
+        }
+        ++it;
+    }
+}
+
+void RunServers::checkCgiDisconnect()
+{
+    for (std::pair<const int, std::unique_ptr<Client>> &clientPair : _clients)
+    {
+        unique_ptr<Client> &client = clientPair.second;
+        if (client->_cgiPid != -1)
+        {
+            int exit_code;
+            pid_t result = waitpid(client->_cgiPid, &exit_code, WNOHANG);
+            if (result > 0)
+            {
+                if (WIFEXITED(exit_code))
+                {
+                    std::cout << "CGI process " << client->_cgiPid << " exited with status " << WEXITSTATUS(exit_code) << " on client with fd " << client->_fd << std::endl;
+                    closeHandles(client->_cgiPid);
+                    // if (WEXITSTATUS(exit_code) > 0)
+                        // throw ErrorCodeClientException(*client, 500, "Cgi error");
+                    if (client->_keepAlive == false)
+                        cleanupClient(*client);
+                    else
+                        clientHttpCleanup(*client);
+                }
+            }
+        }
+    }
+}
+
 int RunServers::runServers()
 {
     epollInit(_servers); // need throw protection
@@ -175,11 +217,10 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
-                if (client._keepAlive == false)
+                if (client._keepAlive == false && client._isCgi == false)
                 {
-                    // cleanupClient(*_clients[(*it)->_client._fd]);
-                    if (_clients[(*it)->_client._fd]->_isCgi == false)
-                        cleanupClient(*_clients[(*it)->_client._fd]);
+                    std::cout << "cleaning here" << std::endl; //testcout
+                    cleanupClient(*_clients[(*it)->_client._fd]);
                 }
                 else
                 {

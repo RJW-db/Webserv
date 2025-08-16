@@ -11,7 +11,7 @@ bool HttpRequest::processHttpBody(Client &client)
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->handlePostTransfer(false) == true)
     {
-        if (client._keepAlive == false)
+        if (client._keepAlive == false && client._isCgi == false)
             RunServers::cleanupClient(client);
         else
         {

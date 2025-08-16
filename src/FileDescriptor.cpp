@@ -9,11 +9,10 @@ vector<int> FileDescriptor::_fds = {};
 
 void FileDescriptor::cleanupFD()
 {
-    // Logger::log(DEBUG, "Starting cleanup of ", _fds.size(), " tracked file descriptors");
-    reverse(_fds.begin(), _fds.end());
-    for (int fd : _fds) {
-        // Logger::log(DEBUG, "Closing tracked FD: ", fd);
-        safeCloseFD(fd);
+    while (!_fds.empty())
+    {
+        int fd = _fds.back();
+        closeFD(fd);
     }
 }
 
@@ -41,13 +40,11 @@ void FileDescriptor::printAllFDs()
 
 void	FileDescriptor::closeFD(int &fd)
 {
-    if (fd == -1)
-        return;
-    // printAllFDs();
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
     if (it != _fds.end())
 	{
-        if (safeCloseFD(fd) == false)
+        // std::cerr << "closing fd " << fd << std::endl; //testcout
+        if (fd != -1 && safeCloseFD(fd) == false)
         {
             // finishes up clients and restart webserv
             // throw something
