@@ -69,41 +69,27 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 
 #include <chrono>
 #include <thread>
-#include <ctime> 
-// void clocking()
-// {
-//     auto start = chrono::system_clock::now();
-//     // Some computation here
-//     auto end = chrono::system_clock::now();
- 
-//     chrono::duration<double> elapsed_seconds = end-start;
-//     time_t end_time = chrono::system_clock::to_time_t(end);
+#include <ctime>
+void clocking();
+void RunServers::setupEpoll()
+{
+    epollInit(_servers);
+    addStdinToEpoll();
+}
 
-//     Logger::log(INFO, "finished computation at ", ctime(&end_time)
-//              , "elapsed time: ", elapsed_seconds.count(), "s"); //testlog
-
-// }
 
 void RunServers::addStdinToEpoll()
 {
-    int stdin_fd = 0; // stdin is always fd 0
+    int stdin_fd = 0;
 
-    // Set stdin to non-blocking
-    if (make_socket_non_blocking(stdin_fd) == false)
-    {
-        Logger::log(ERROR, "Failed to set stdin non-blocking");
-        return;
-    }
+    if (makeSocketNonBlocking(stdin_fd) == false)
+        Logger::logExit(ERROR, "Failed to set stdin to non-blocking mode");
 
-    // Add stdin to epoll
     struct epoll_event current_event;
     current_event.data.fd = stdin_fd;
     current_event.events = EPOLLIN;
     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
-    {
-        Logger::log(ERROR, "epoll_ctl (stdin): ", strerror(errno));
-        return;
-    }
+        Logger::logExit(ERROR, "epoll_ctl (stdin): ", strerror(errno));
 }
 
 void RunServers::closeHandles(pid_t pid)
@@ -149,9 +135,6 @@ void RunServers::checkCgiDisconnect()
 
 int RunServers::runServers()
 {
-    epollInit(_servers); // need throw protection
-    addStdinToEpoll();
-    // clocking();
     while (g_signal_status == 0)
     {
         int eventCount;
@@ -176,12 +159,16 @@ int RunServers::runServers()
         {
             if (errno == EINTR)
                 break ;
-            throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
+            Logger::logExit(ERROR, "Server epoll_wait: ", strerror(errno));
         }
         try
         {
             // cout << "event count "<<  eventCount << endl;
             handleEvents(static_cast<size_t>(eventCount));
+        }
+        catch(Logger::ErrorLogExit&)
+        {
+            Logger::logExit(ERROR, "Restart now or finish existing clients and exit");
         }
         catch(const exception& e)
         {
@@ -300,12 +287,12 @@ void RunServers::handleEvents(size_t eventCount)
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(DEBUG, "EPOLLERR detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN, "EPOLLERR detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(DEBUG, "EPOLLHUP detected on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN, "EPOLLHUP detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-                    Logger::log(DEBUG, "Unexpected epoll event on fd ", static_cast<int>(currentEvent.data.fd), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
-                auto clientIt = _clients.find(currentEvent.data.fd);
+                    Logger::log(WARN, "Unexpected epoll event on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+                auto clientIt = _clients.find(eventFD);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
                     cleanupClient(*clientIt->second);
@@ -363,7 +350,14 @@ void RunServers::getExecutableDirectory()
 {
     try
     {
-        _serverRootDir = filesystem::canonical("/proc/self/exe").parent_path().string();
+        char buf[PATH_MAX];
+        ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+        if (len == -1)
+            Logger::logExit(ERROR, "readlink failed: ", strerror(errno));
+        buf[len] = '\0';
+
+        std::filesystem::path exePath(buf);
+        _serverRootDir = exePath.parent_path().string();
     }
     catch (const exception& e)
     {

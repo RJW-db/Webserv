@@ -1,5 +1,6 @@
 #include <utils.hpp>
 #include <RunServer.hpp>
+#include "Logger.hpp"
 
 #include <dirent.h>
 static inline void insertUuidSegment(int8_t amount, char *uuidIndex);
@@ -75,11 +76,11 @@ uint64_t stoullSafe(string_view stringValue)
 {
     if (stringValue.empty())
     {
-        throw runtime_error("Given buffer_size for Webserv is \"\"");
+        throw runtime_error("Given value is \"\"");
     }
     if (all_of(stringValue.begin(), stringValue.end(), ::isdigit) == false)
     {
-        throw runtime_error("Given buffer_size for Webserv contains non-digit characters: " + string(stringValue));
+        throw runtime_error("Given value contains non-digit characters: " + string(stringValue));
     }
     unsigned long long value;
     try
@@ -88,11 +89,11 @@ uint64_t stoullSafe(string_view stringValue)
     }
     catch (const invalid_argument &)
     {
-        throw runtime_error("Given buffer_size for Webserv is invalid: " + string(stringValue));
+        throw runtime_error("Given value is invalid: " + string(stringValue));
     }
     catch (const out_of_range &)
     {
-        throw runtime_error("Given buffer_size for Webserv is out of range: " + string(stringValue));
+        throw runtime_error("Given value is out of range: " + string(stringValue));
     }
     return static_cast<uint64_t>(value);
 }
@@ -116,4 +117,16 @@ string escapeSpecialChars(const string &input, bool useColors)
         }
     }
     return result;
+}
+
+void throwTesting()
+{
+    static uint8_t count = 1;
+
+    // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
+    if (count++ < 2)
+    {
+        throw bad_alloc();
+        // throw runtime_error("Throw test");
+    }
 }

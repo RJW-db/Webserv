@@ -1,261 +1,496 @@
+[19:04:47] INFO  SIGINT received, stopping webserver
+[19:04:47] INFO  Server shutting down gracefully...
 
---- 2025-08-13 ---
-[23:56:42] INFO  Log file initialized: logs/webserv.log
-[23:56:59] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[23:56:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[23:56:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[23:56:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/favicon.ico
-[23:56:59] WARN  0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
-[23:56:59] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[23:57:16] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[23:57:16] INFO  0.0.0.0:8080           ClientFD:7  POST  /home/relax/Webserv/upload/ip4_address-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
-[23:57:16] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/upload/ip4_address-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
-[23:57:24] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[23:58:40] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[23:58:40] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 26414
-[23:58:40] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
-[23:58:40] DEBUG we got into child
-[23:58:40] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/upload/ip4_address.png
-[23:58:48] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+--- 2025-08-15 ---
+[19:11:34] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:11:34] INFO  Epoll fd created       FD:4
+[19:11:34] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:11:34] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:11:36] INFO  SIGINT received, stopping webserver
+[19:11:36] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:02:05] INFO  SIGINT received, stopping webserver
-[00:02:05] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:14:25] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:14:25] INFO  Epoll fd created       FD:4
+[19:14:25] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:14:25] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  Connected
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:14:28] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:14:36] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:16:30] INFO  SIGINT received, stopping webserver
+[19:16:30] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:02:20] INFO  Log file initialized: logs/webserv.log
-[00:07:21] INFO  SIGINT received, stopping webserver
-[00:07:21] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:16:33] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:16:33] INFO  Epoll fd created       FD:4
+[19:16:33] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:16:33] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 1.256.65536.16777343:53380
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:16:36] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:16:44] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:20:45] INFO  SIGINT received, stopping webserver
+[19:20:45] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:07:42] INFO  Log file initialized: logs/webserv.log
-[00:08:41] INFO  SIGINT received, stopping webserver
-[00:08:41] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:20:47] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:20:47] INFO  Epoll fd created       FD:4
+[19:20:47] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:20:47] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 1.0.0.127:40024
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:20:52] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:21:00] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:24:58] INFO  SIGINT received, stopping webserver
+[19:24:58] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:08:52] INFO  Log file initialized: logs/webserv.log
-[00:15:44] INFO  SIGINT received, stopping webserver
-[00:15:44] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:25:00] INFO  Log file initialized   FD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:25:00] INFO  Epoll fd created       FD:4
+[19:25:00] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:25:00] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 127.0.0.1:50798
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:25:04] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:25:12] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:26:42] INFO  SIGINT received, stopping webserver
+[19:26:42] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:15:58] INFO  Log file initialized: logs/webserv.log
-[00:15:59] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:15:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[00:15:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[00:15:59] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/favicon.ico
-[00:15:59] ????? 0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
-[00:15:59] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:16:18] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:16:18] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 29784
-[00:16:18] ????? 0.0.0.0:8080           ClientFD:7  child ._pid 0
-[00:16:18] DEBUG we got into child
-[00:16:18] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/upload/ip4_address.png
-[00:16:26] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:46:04] INFO  SIGINT received, stopping webserver
-[00:46:04] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:26:44] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:26:44] INFO  Epoll fd created       epollFD:4
+[19:26:44] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:26:44] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  Connected on: 127.0.0.1:33892
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:26:44] INFO  0.0.0.0:8080           ClientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:26:52] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
+[19:31:04] INFO  SIGINT received, stopping webserver
+[19:31:04] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:47:29] INFO  Log file initialized: logs/webserv.log
-[00:47:34] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:47:34] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[00:47:35] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[00:47:42] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 1116
-[00:47:42] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
-[00:47:42] DEBUG we got into child
-[00:47:42] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/upload/router_port_forwarding.png
-[00:47:50] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:51:41] INFO  SIGINT received, stopping webserver
-[00:51:41] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:31:10] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:31:10] INFO  Epoll fd created       epollFD:4
+[19:31:10] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:31:10] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:32:52] INFO  SIGINT received, stopping webserver
+[19:32:52] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:54:13] INFO  Log file initialized: logs/webserv.log
-[00:54:14] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:54:14] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[00:54:14] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[00:54:14] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/favicon.ico
-[00:54:14] WARN  0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
-[00:54:14] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:54:21] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:54:21] DEBUG 0.0.0.0:8080           ClientFD:7  parent ._pid 1984
-[00:54:21] DEBUG 0.0.0.0:8080           ClientFD:7  child ._pid 0
-[00:54:21] DEBUG we got into child
-[00:54:21] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/upload/router_port_forwarding.png
-[00:54:29] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:55:01] INFO  SIGINT received, stopping webserver
-[00:55:01] INFO  Server shutting down gracefully...
+--- 2025-08-15 ---
+[19:32:53] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[19:32:53] INFO  Epoll fd created       epollFD:4
+[19:32:53] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[19:32:53] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:40186
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[19:33:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[19:33:05] INFO  0.0.0.0:8080           clientFD:7  POST   /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[19:33:05] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/Screenshot from 2025-07-01 18-10-06-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 110285
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[19:33:09] INFO  we got into child
+[19:33:09] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753626.jpg
+[19:33:12] WARN  0.0.0.0:8080           clientFD:7  Method not allowed: DELETE
+[19:33:12] INFO  0.0.0.0:8080           clientFD:7  GET    ./webPages/defaultErrorPages/405.html
+[19:33:20] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[19:35:43] INFO  SIGINT received, stopping webserver
+[19:35:43] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:55:53] INFO  Log file initialized: logs/webserv.log
-[00:56:04] INFO  255.255.255.255:65535  ClientFD:7  Connected
-[00:56:04] DEBUG 255.255.255.255:65535  ClientFD:7  parent ._pid 2521
-[00:56:04] DEBUG 255.255.255.255:65535  ClientFD:7  child ._pid 0
-[00:56:04] DEBUG we got into child
-[00:56:04] INFO  255.255.255.255:65535  ClientFD:7  GET  /home/relax/Webserv/upload/ip4_address.png
-[00:56:12] INFO  255.255.255.255:65535  ClientFD:7  Disconnected
-[00:56:44] INFO  SIGINT received, stopping webserver
-[00:56:44] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:28:34] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:28:34] INFO  Epoll fd created       epollFD:4
+[13:28:34] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:28:34] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:37172
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[13:28:44] DEBUG EPOLLERR detected on fd 7 (events: 25)
+[13:28:44] DEBUG EPOLLHUP detected on fd 7 (events: 25)
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:37176
+[13:28:44] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[13:28:52] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[13:29:55] INFO  SIGINT received, stopping webserver
+[13:29:55] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:56:54] INFO  Log file initialized:  logs/webserv.log
-[00:57:06] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[00:57:06] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[00:57:07] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[00:57:15] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[00:58:04] INFO  SIGINT received, stopping webserver
-[00:58:04] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:29:57] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:29:57] INFO  Epoll fd created       epollFD:4
+[13:29:57] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:29:57] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:30:20] INFO  SIGINT received, stopping webserver
+[13:30:20] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[00:58:25] INFO  Log file initialized:  logs/webserv.log
+--- 2025-08-16 ---
+[13:30:21] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:30:21] INFO  Epoll fd created       epollFD:4
+[13:30:21] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:30:21] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:30:23] ERROR Exception in handleEvents: std::bad_alloc
+[13:30:30] ERROR Exception in handleEvents: std::bad_alloc
+[13:34:34] INFO  SIGINT received, stopping webserver
+[13:34:34] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[01:00:48] INFO  Log file initialized:  logs/webserv.log
-[01:00:48] ERROR Cannot determine executable directory: 
+--- 2025-08-16 ---
+[13:34:37] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:34:37] INFO  Epoll fd created       epollFD:4
+[13:34:37] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:34:37] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:34:38] ERROR Exception in handleEvents: std::bad_alloc
+[13:34:42] ERROR Exception in handleEvents: std::bad_alloc
+[13:34:59] INFO  SIGINT received, stopping webserver
+[13:34:59] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[01:01:27] INFO  Log file initialized:  logs/webserv.log
-[01:01:27] ERROR Cannot determine executable directory: 
+--- 2025-08-16 ---
+[13:35:00] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:35:00] INFO  Epoll fd created       epollFD:4
+[13:35:00] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:35:00] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:35:02] ERROR Exception in handleEvents: std::bad_alloc
+[13:35:04] INFO  0.0.0.0:8080           clientFD:8  Connected on: 127.0.0.1:51734
+[13:35:04] INFO  0.0.0.0:8080           clientFD:8  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[13:35:04] INFO  0.0.0.0:8080           clientFD:8  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[13:35:12] INFO  0.0.0.0:8080           clientFD:8  Disconnected
+[13:36:42] INFO  SIGINT received, stopping webserver
+[13:36:42] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[01:01:40] INFO  Log file initialized:  logs/webserv.log
-[01:01:40] ERROR Cannot determine executable directory: 
+--- 2025-08-16 ---
+[13:36:45] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:36:45] INFO  Epoll fd created       epollFD:4
+[13:36:45] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:36:45] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:36:48] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[01:01:59] INFO  Log file initialized:  logs/webserv.log
-[01:01:59] ERROR Cannot determine executable directory: 
+--- 2025-08-16 ---
+[13:37:09] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:37:09] INFO  Epoll fd created       epollFD:4
+[13:37:09] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:37:09] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:37:15] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[01:02:01] INFO  Log file initialized:  logs/webserv.log
-[01:02:01] ERROR Cannot determine executable directory: 
+--- 2025-08-16 ---
+[13:40:22] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:40:22] INFO  Epoll fd created       epollFD:4
+[13:40:22] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:40:22] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:40:23] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[01:14:49] INFO  Log file initialized:  logs/webserv.log
-[01:15:08] INFO  SIGINT received, stopping webserver
-[01:15:08] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:42:37] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:42:37] INFO  Epoll fd created       epollFD:4
+[13:42:37] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:42:37] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:42:44] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[01:15:10] INFO  Log file initialized:  logs/webserv.log
-[01:15:25] INFO  SIGINT received, stopping webserver
-[01:15:25] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:46:54] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:46:54] INFO  Epoll fd created       epollFD:4
+[13:46:54] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:46:54] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:46:56] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[01:15:27] INFO  Log file initialized:  logs/webserv.log
-[01:15:52] INFO  SIGINT received, stopping webserver
-[01:15:52] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:48:22] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:48:22] INFO  Epoll fd created       epollFD:4
+[13:48:22] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:48:22] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:48:23] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:53702
+[13:48:23] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[13:48:23] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[13:48:34] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 20604
+[13:48:34] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[13:48:34] INFO  we got into child
+[13:48:34] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339.jpg
+[13:48:38] INFO  0.0.0.0:8080           clientFD:7  POST   /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-62d7183a-5d57-89e4-b2d6-b441e2411dc7.jpg
+[13:48:38] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753339-62d7183a-5d57-89e4-b2d6-b441e2411dc7.jpg
+[13:48:53] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[13:51:44] INFO  SIGINT received, stopping webserver
+[13:51:44] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[01:20:19] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:04:43] INFO  SIGINT received, stopping webserver
-[02:04:43] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:51:51] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:51:51] ERROR Failed to set SIGINT handler: Success
+[13:51:51] ERROR Logger exit triggered
 
---- 2025-08-14 ---
-[02:05:00] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:05:03] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[02:05:03] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[02:05:04] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[02:05:04] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/favicon.ico
-[02:05:04] WARN  0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
-[02:05:04] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[02:05:10] INFO  SIGINT received, stopping webserver
-[02:05:10] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:54:04] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:54:04] INFO  Epoll fd created       epollFD:4
+[13:54:04] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:54:04] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:54:27] INFO  SIGINT received, stopping webserver
+[13:54:27] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[02:05:14] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:06:48] INFO  SIGINT received, stopping webserver
-[02:06:48] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:54:34] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:54:34] INFO  Epoll fd created       epollFD:4
+[13:54:34] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:54:34] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:54:37] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:06:59] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:07:02] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[02:07:02] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[02:07:02] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[02:07:03] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/favicon.ico
-[02:07:03] WARN  0.0.0.0:8080           ClientFD:7  kicking out client after read of 0
-[02:07:03] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[02:07:20] INFO  SIGINT received, stopping webserver
-[02:07:20] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:54:59] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:54:59] INFO  Epoll fd created       epollFD:4
+[13:54:59] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:54:59] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:55:05] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:07:30] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:07:33] INFO  0.0.0.0:8080           ClientFD:7  Connected
-[02:07:33] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/index.html
-[02:07:34] INFO  0.0.0.0:8080           ClientFD:7  GET  /home/relax/Webserv/webPages/main.js
-[02:07:42] INFO  0.0.0.0:8080           ClientFD:7  Disconnected
-[02:28:35] INFO  SIGINT received, stopping webserver
-[02:28:35] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[13:55:58] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:55:58] INFO  Epoll fd created       epollFD:4
+[13:55:58] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:55:58] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:55:59] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:28:44] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:28:44] ERROR Invalid line found in config file: server
+--- 2025-08-16 ---
+[13:58:02] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[13:58:02] INFO  Epoll fd created       epollFD:4
+[13:58:02] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[13:58:02] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[13:58:03] ERROR Exception in handleEvents: std::bad_alloc
+[13:58:03] INFO  Disconnected
+[13:58:03] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:57750
+[13:58:03] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[13:58:03] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[13:58:03] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[13:58:18] INFO  Disconnected
+[13:58:25] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:47178
+[13:58:25] INFO  0.0.0.0:8080           clientFD:7  POST   /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753626-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[13:58:25] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/upload/pexels-julius-silver-240301-753626-76931fac-9dab-2b36-c248-b87d6ae33f9a.jpg
+[13:58:40] INFO  Disconnected
+[14:01:04] INFO  SIGINT received, stopping webserver
+[14:01:04] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[02:32:05] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:32:05] ERROR nd Host:  server
+--- 2025-08-16 ---
+[14:13:01] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:13:01] INFO  Epoll fd created       epollFD:4
+[14:13:01] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:13:01] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:13:32] INFO  SIGINT received, stopping webserver
+[14:13:32] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[02:32:12] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:32:12] ERROR nd Host:  server
+--- 2025-08-16 ---
+[14:13:33] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:13:33] INFO  Epoll fd created       epollFD:4
+[14:13:33] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:13:33] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:13:35] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:33:32] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:33:32] ERROR Config file line: 42  server
+--- 2025-08-16 ---
+[14:14:45] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:14:45] INFO  Epoll fd created       epollFD:4
+[14:14:46] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:14:46] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:14:47] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[02:35:27] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:35:27] ERROR Line 42: server
+--- 2025-08-16 ---
+[14:15:07] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:15:08] INFO  Epoll fd created       epollFD:4
+[14:15:09] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:15:09] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:15:20] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:35:48] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:35:48] ERROR Config error at line 42: server
+--- 2025-08-16 ---
+[14:15:39] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:15:39] INFO  Epoll fd created       epollFD:4
+[14:15:39] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:15:39] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:15:42] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:45:24] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:45:24] ERROR Missing closing bracket '}' for block starting at line 42: server
+--- 2025-08-16 ---
+[14:15:59] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:15:59] INFO  Epoll fd created       epollFD:4
+[14:15:59] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:15:59] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:16:01] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:58:14] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[02:58:16] INFO  SIGINT received, stopping webserver
-[02:58:16] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[14:16:18] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:16:18] INFO  Epoll fd created       epollFD:4
+[14:16:18] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:16:18] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:16:22] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[02:58:44] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[03:21:28] INFO  SIGINT received, stopping webserver
-[03:21:28] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[14:16:51] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:17:01] INFO  Epoll fd created       epollFD:4
+[14:17:01] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:17:02] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:17:14] ERROR Exception in handleEvents: std::bad_alloc
 
---- 2025-08-14 ---
-[03:27:43] ERROR FATAL: Cannot initialize logger: Failed to open log file: /home/relax/Webserv/logs/webserv.log - Invalid argument
+--- 2025-08-16 ---
+[14:20:39] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:20:39] INFO  Epoll fd created       epollFD:4
+[14:20:39] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:20:39] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:20:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:20:41] INFO    clientFD:7  Disconnected
+[14:20:41] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:41794
+[14:20:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:20:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:20:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:20:56] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:21:01] INFO  SIGINT received, stopping webserver
+[14:21:01] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:29:51] FATAL Logger initialization failed.\n
-Reason: Logger initialization failed.\n
-Could not open log file: /home/relax/Webserv/logs/webserv.log\n
-Reason: Invalid argument\n
-Check if the path exists, is writable, and is a valid filename.\n
-Webserv cannot continue without logging. Exiting.
+--- 2025-08-16 ---
+[14:21:05] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:21:05] INFO  Epoll fd created       epollFD:4
+[14:21:05] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:21:05] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:21:06] ERROR Exception in handleEvents: std::bad_alloc
+[14:21:06] INFO    clientFD:7  Disconnected
+[14:21:06] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:46090
+[14:21:06] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:21:06] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:21:06] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:21:13] INFO  SIGINT received, stopping webserver
+[14:21:13] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:32:17] FATAL Logger initialization failed. Could not open log file: /home/relax/Webserv/logs/webserv.log\n
-Reason: Invalid argument\n
-Check if the path exists, is writable, and is a valid filename.\n
-Webserv cannot continue without logging. Exiting.
+--- 2025-08-16 ---
+[14:21:15] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:21:15] INFO  Epoll fd created       epollFD:4
+[14:21:15] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:21:15] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:21:16] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:40464
+[14:21:16] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:21:16] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:21:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:21:32] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:21:48] INFO  SIGINT received, stopping webserver
+[14:21:48] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:33:58] FATAL Logger initialization failed. Could not open log file: /home/relax/Webserv/logs/webserv.log\n
-Reason: Invalid argument\n
-Check if the path exists, is writable, and is a valid filename. Webserv cannot continue without logging. Exiting.
+--- 2025-08-16 ---
+[14:21:49] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:21:49] INFO  Epoll fd created       epollFD:4
+[14:21:49] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:21:49] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:21:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:21:50] INFO    clientFD:7  Disconnected
+[14:21:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:21:50] INFO    clientFD:7  Disconnected
+[14:21:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:21:50] INFO    clientFD:7  Disconnected
+[14:21:50] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:35002
+[14:21:50] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:21:50] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:21:50] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:22:04] INFO  SIGINT received, stopping webserver
+[14:22:04] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:35:26] FATAL Couldn't open: "/home/relax/Webserv/logs/webserv.log"\n
-Reason: Invalid argument\n
-Check if the path exists, is writable, and is a valid filename. Webserv cannot continue without logging. Exiting.
+--- 2025-08-16 ---
+[14:22:05] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:22:05] INFO  Epoll fd created       epollFD:4
+[14:22:05] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:22:05] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:07] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:07] INFO    clientFD:7  Disconnected
+[14:22:17] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:17] INFO    clientFD:7  Disconnected
+[14:22:17] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:40784
+[14:22:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:22:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:22:17] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:22:32] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:22:44] INFO  SIGINT received, stopping webserver
+[14:22:44] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:36:37] FATAL Couldn't open: "/home/relax/Webserv/logs/webserv.log" Reason: Invalid argument
+--- 2025-08-16 ---
+[14:22:45] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:22:45] INFO  Epoll fd created       epollFD:4
+[14:22:45] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:22:45] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:47] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:47] INFO    clientFD:7  Disconnected
+[14:22:48] ERROR Exception in handleEvents: std::bad_alloc
+[14:22:48] INFO    clientFD:7  Disconnected
+[14:22:48] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:39746
+[14:22:48] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:22:48] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:22:48] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:23:03] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:23:40] INFO  SIGINT received, stopping webserver
+[14:23:40] INFO  Server shutting down gracefully...
 
---- 2025-08-14 ---
-[03:51:52] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
-[03:51:54] INFO  SIGINT received, stopping webserver
-[03:51:54] INFO  Server shutting down gracefully...
+--- 2025-08-16 ---
+[14:23:41] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:23:41] INFO  Epoll fd created       epollFD:4
+[14:23:41] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:23:41] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:50] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:50] INFO    clientFD:7  Disconnected
+[14:23:52] ERROR Exception in handleEvents: std::bad_alloc
+[14:23:52] INFO    clientFD:7  Disconnected
+[14:23:52] DEBUG ThrowTesting(), count: \r
+[14:23:52] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:53922
+[14:23:52] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:23:52] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:23:52] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:24:07] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:24:25] INFO  SIGINT received, stopping webserver
+[14:24:25] INFO  Server shutting down gracefully...
 
+<<<<<<< HEAD
 --- 2025-08-14 ---
 [03:56:04] INFO  Log file initialized:  /home/relax/Webserv/logs/webserv.log
 [03:56:18] INFO  0.0.0.0:8080           ClientFD:7  Connected
@@ -363,3 +598,298 @@ Check if the path exists, is writable, and is a valid filename. Webserv cannot c
 --- 2025-08-14 ---
 [13:32:55] INFO  Log file initialized:  /home/samle/Webserv/logs/webserv.log
 [13:34:43] INFO  Server shutting down gracefully...
+=======
+--- 2025-08-16 ---
+[14:24:27] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:24:27] INFO  Epoll fd created       epollFD:4
+[14:24:27] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:24:27] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: 
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: \t
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:29] DEBUG ThrowTesting(), count: \n
+
+[14:24:29] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:29] INFO    clientFD:7  Disconnected
+[14:24:39] INFO  SIGINT received, stopping webserver
+[14:24:39] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:24:40] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:24:40] INFO  Epoll fd created       epollFD:4
+[14:24:40] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:24:40] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:24:41] DEBUG ThrowTesting(), count: 1
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 2
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 3
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 4
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 5
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 6
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 7
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 8
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 9
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:41] DEBUG ThrowTesting(), count: 10
+[14:24:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:41] INFO    clientFD:7  Disconnected
+[14:24:42] DEBUG ThrowTesting(), count: 11
+[14:24:42] ERROR Exception in handleEvents: std::bad_alloc
+[14:24:42] INFO    clientFD:7  Disconnected
+[14:24:42] DEBUG ThrowTesting(), count: 12
+[14:24:42] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:49148
+[14:24:42] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:24:42] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:24:42] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:24:57] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:25:02] INFO  SIGINT received, stopping webserver
+[14:25:02] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:25:03] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:25:03] INFO  Epoll fd created       epollFD:4
+[14:25:03] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:25:03] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:05] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:05] INFO    clientFD:7  Disconnected
+[14:25:39] INFO  SIGINT received, stopping webserver
+[14:25:39] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:25:42] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:25:42] INFO  Epoll fd created       epollFD:4
+[14:25:42] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:25:42] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:43] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:43] INFO    clientFD:7  Disconnected
+[14:25:52] INFO  SIGINT received, stopping webserver
+[14:25:52] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:25:54] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:25:54] INFO  Epoll fd created       epollFD:4
+[14:25:54] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:25:54] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:25:55] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:55] INFO    clientFD:7  Disconnected
+[14:25:55] ERROR Exception in handleEvents: std::bad_alloc
+[14:25:55] INFO    clientFD:7  Disconnected
+[14:25:55] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:52878
+[14:25:55] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:25:55] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:25:55] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:26:00] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:26:45] INFO  SIGINT received, stopping webserver
+[14:26:45] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:26:47] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:26:47] INFO  Epoll fd created       epollFD:4
+[14:26:47] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:26:47] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:26:48] ERROR Exception in handleEvents: std::bad_alloc
+
+--- 2025-08-16 ---
+[14:27:53] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:27:53] INFO  Epoll fd created       epollFD:4
+[14:27:53] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:27:53] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+
+--- 2025-08-16 ---
+[14:29:54] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:29:54] INFO  Epoll fd created       epollFD:4
+[14:29:54] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:29:54] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:29:58] WARN    clientFD:7  Failed to get server info
+[14:29:58] INFO    clientFD:7  Disconnected
+[14:29:58] WARN    clientFD:7  Failed to get server info
+[14:29:58] INFO    clientFD:7  Disconnected
+[14:30:23] INFO  SIGINT received, stopping webserver
+[14:30:23] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:30:25] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:30:25] INFO  Epoll fd created       epollFD:4
+[14:30:25] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:30:25] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:30:26] ERROR Exception in handleEvents: std::bad_alloc
+[14:30:26] INFO    clientFD:7  Disconnected
+[14:30:26] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:52914
+[14:30:26] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:30:26] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:30:26] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:30:31] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:30:35] INFO  SIGINT received, stopping webserver
+[14:30:35] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:30:37] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:30:37] INFO  Epoll fd created       epollFD:4
+[14:30:37] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:30:37] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:30:41] ERROR Exception in handleEvents: std::bad_alloc
+[14:30:41] INFO    clientFD:7  Disconnected
+[14:30:41] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:38268
+[14:30:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:30:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:30:41] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:30:46] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:30:59] INFO  SIGINT received, stopping webserver
+[14:30:59] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:31:00] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:31:00] INFO  Epoll fd created       epollFD:4
+[14:31:00] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:31:00] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:31:02] ERROR Exception in handleEvents: std::bad_alloc
+[14:31:02] INFO    clientFD:7  Disconnected
+[14:31:02] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:54414
+[14:31:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:31:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:31:02] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:31:07] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:31:14] INFO  SIGINT received, stopping webserver
+[14:31:14] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:31:15] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:31:15] INFO  Epoll fd created       epollFD:4
+[14:31:15] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:31:15] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:31:17] WARN    clientFD:7  No matching server configuration found
+[14:31:17] INFO    clientFD:7  Disconnected
+[14:31:17] WARN    clientFD:7  No matching server configuration found
+[14:31:17] INFO    clientFD:7  Disconnected
+[14:31:38] INFO  SIGINT received, stopping webserver
+[14:31:38] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:31:39] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:31:39] INFO  Epoll fd created       epollFD:4
+[14:31:39] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:31:39] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:31:40] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:36356
+[14:31:40] ERROR Exception in handleEvents: std::bad_alloc
+[14:31:40] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:31:40] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:31:40] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:31:45] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:34:55] INFO  SIGINT received, stopping webserver
+[14:34:55] INFO  Server shutting down gracefully...
+
+--- 2025-08-16 ---
+[14:36:49] INFO  Log file initialized   logFD:3 /sgoinfre/rde-brui/sandbox/Webserv/logs/webserv.log
+[14:36:49] INFO  Epoll fd created       epollFD:4
+[14:36:49] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:36:49] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:38138
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/index.html
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/main.js
+[14:36:51] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:36:56] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:45084
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  parent ._pid 28290
+[14:37:06] INFO  0.0.0.0:8080           clientFD:7  child ._pid 0
+[14:37:06] INFO  we got into child
+[14:37:06] WARN  EPOLLERR detected on fd 9 (events: 12)
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:45088
+[14:37:11] INFO  0.0.0.0:8080           clientFD:7  GET    /sgoinfre/rde-brui/sandbox/Webserv/webPages/favicon.ico
+[14:37:16] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:37:18] INFO  SIGINT received, stopping webserver
+[14:37:18] INFO  Server shutting down gracefully...
+>>>>>>> origin/main
+
+--- 2025-08-16 ---
+[14:50:40] INFO  Log file initialized   logFD:3 /home/saleunin/Desktop/Webserv/logs/webserv.log
+[14:50:40] INFO  Epoll fd created       epollFD:4
+[14:50:40] INFO  Server created         listenFD:5 Successfuly bound to 0.0.0.0:8080
+[14:50:40] INFO  Server created         listenFD:6 Successfuly bound to 0.0.0.0:7070
+[14:50:42] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:59164
+[14:50:42] INFO  0.0.0.0:8080           clientFD:7  GET    /home/saleunin/Desktop/Webserv/webPages/index.html
+[14:50:42] INFO  0.0.0.0:8080           clientFD:7  GET    /home/saleunin/Desktop/Webserv/webPages/main.js
+[14:50:47] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:50:47] INFO  0.0.0.0:8080           clientFD:7  Connected on: 127.0.0.1:37310
+[14:50:47] WARN  FileDescriptor::closeFD: Attempted to close a file descriptor that is not in the vector: -1
+[14:50:47] INFO  0.0.0.0:8080           clientFD:7  POST   /home/saleunin/Desktop/Webserv/upload/Screensho tfrom2025-05-3017-25-07-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[14:50:47] INFO  0.0.0.0:8080           clientFD:7  GET    /home/saleunin/Desktop/Webserv/upload/Screensho tfrom2025-05-3017-25-07-76931fac-9dab-2b36-c248-b87d6ae33f9a.png
+[14:50:52] INFO  0.0.0.0:8080           clientFD:7  Disconnected
+[14:51:02] INFO  SIGINT received, stopping webserver
+[14:51:02] INFO  Server shutting down gracefully...

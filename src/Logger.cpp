@@ -10,20 +10,13 @@ int Logger::_logFd = -1;
 
 void Logger::initialize(const char *logPath)
 {
-    try {
-        string absoluteLogPath = RunServers::getServerRootDir() + '/' + logPath;
-        _logFd = open(absoluteLogPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
-        if (_logFd == -1) {
-            throw runtime_error("Couldn't open: \"" + absoluteLogPath + "\" Reason: " + strerror(errno));
-        }
-        
-        FileDescriptor::setFD(_logFd);
-        log(INFO, "Log file initialized:  ", absoluteLogPath);
-    }
-    catch (const exception& e)
-    {
-        Logger::logExit(ERROR, e.what());
-    }
+    string absoluteLogPath = RunServers::getServerRootDir() + '/' + logPath;
+    _logFd = open(absoluteLogPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (_logFd == -1)
+        Logger::logExit(ERROR, "Couldn't open: \"", absoluteLogPath, "\" Reason: ", strerror(errno));
+    
+    FileDescriptor::setFD(_logFd);
+    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteLogPath);
 }
 
 string Logger::getTimeStamp()

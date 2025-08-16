@@ -187,8 +187,8 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
     FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
 
-    if (RunServers::make_socket_non_blocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
-        RunServers::make_socket_non_blocking(fdReadfromCgi[0]) == false || // Server reads from CGI
+    if (RunServers::makeSocketNonBlocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
+        RunServers::makeSocketNonBlocking(fdReadfromCgi[0]) == false || // Server reads from CGI
         setPipeBufferSize(fdWriteToCgi[1]) == false ||
         setPipeBufferSize(fdReadfromCgi[0]) == false)
     {

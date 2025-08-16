@@ -168,11 +168,6 @@ void sendErrorResponse(int clientFD, const string &message)
     send(clientFD, response.c_str(), response.size(), MSG_NOSIGNAL);
 }
 
-// void RunServers::insertClientFD(int fd)
-// {
-//     _connectedClients.push_back(fd);
-// }
-
 void RunServers::clientHttpCleanup(Client &client)
 {
     client._headerParseState = HEADER_AWAITING;
