@@ -224,8 +224,11 @@ bool HttpRequest::handleCgi(Client &client, string &body)
                 handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
                 RunServers::insertHandleTransferCgi(move(handle));
             }
+
             handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
             RunServers::insertHandleTransferCgi(move(handle));
+
+
             client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         // }
         // catch(const std::exception& e)

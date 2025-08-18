@@ -14,7 +14,7 @@ class HandleTransfer
         Client &_client;
         int _fd;
         string _fileBuffer;
-        size_t  _bytesReadTotal;
+        size_t  _bytesReadTotal = 0;
 
 
         // Pure virtual functions for polymorphic behavior
@@ -25,10 +25,14 @@ class HandleTransfer
 		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented"); }
         virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
         virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
+        virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported"); }
         virtual ~HandleTransfer() = default;
 
     protected :
         HandleTransfer(Client &client, int fd) : _client(client), _fd(fd) {};
+        // HandleToClientTransfer(Client &client, string &response);
+        // HandleTransfer(Client &client, string &response);
+        // HandleTransfer(Client &client, string &response) :_client(client), _fileBuffer(response) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
@@ -141,5 +145,14 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 
         bool readFromCgiTransfer();
         chrono::steady_clock::time_point _cgiDisconnectTime;
+};
+
+class HandleToClientTransfer : public HandleTransfer
+{
+    public:
+        HandleToClientTransfer(Client &client, string &response);
+
+        bool sendToClientTransfer();
+        // string &response;
 };
 #endif
