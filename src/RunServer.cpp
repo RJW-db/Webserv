@@ -194,7 +194,7 @@ void RunServers::checkClientDisconnects()
     }
 }
 
-int RunServers::runServers()
+void RunServers::runServers()
 {
     while (g_signal_status == 0)
     {
@@ -225,7 +225,6 @@ int RunServers::runServers()
         }
     }
     Logger::log(INFO, "Server shutting down gracefully...");
-    return 0;
 }
 
 bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)

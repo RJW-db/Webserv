@@ -49,11 +49,14 @@ class RunServers
         static void addStdinToEpoll();
 
 		static void createServers(vector<ConfigServer> &configs);
-        // int run(FileDescriptor& fds);
-        // static int runServers(vector<Server>& servers);
-        static int runServers();
+
+        static void runServers();
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const int listener);
+        static bool addFdToEpoll(int infd);
+
+        static void setClientServerAddress(Client &client, int infd);
+
         static void setServerFromListener(Client &client);
 
 

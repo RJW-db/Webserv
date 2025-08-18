@@ -44,7 +44,6 @@ static string NumIpToString(uint32_t addr)
            to_string(bytes[3]);
 }
 
-
 void RunServers::setServerFromListener(Client &client)
 {
     auto hostHeader = client._headerFields.find("Host");
@@ -87,34 +86,44 @@ void RunServers::acceptConnection(const int listener)
                 Logger::log(ERROR, "Server accept: ", strerror(errno));
             break;
         }
-        struct epoll_event  current_event;
-        current_event.data.fd = infd;
-        current_event.events = EPOLLIN;
-        if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
-        {
-            Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
-            if (FileDescriptor::safeCloseFD(infd) == false)
-                Logger::logExit(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", infd);
-            break;
-        }
-        FileDescriptor::setFD(infd);
-        
-        _clients[infd] = std::make_unique<Client>(infd);
-        // setServerFromListener(*_clients[infd], listener);
 
-        sockaddr_in serverAddr;
-        socklen_t addrLen = sizeof(serverAddr); 
-        if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
-            throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info"); //TODO not protected
-        throwTesting();
-        _clients[infd]->_ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
-        _clients[infd]->_ipPort.second = to_string(ntohs(serverAddr.sin_port));
+        if (addFdToEpoll(infd) == false)
+            break;
+
+        _clients[infd] = std::make_unique<Client>(infd);
+        setClientServerAddress(*_clients[infd], infd);
 
         Logger::log(INFO, *_clients[infd], "Connected on: ",
             NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
             ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
         _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
+}
+
+bool RunServers::addFdToEpoll(int infd)
+{
+    struct epoll_event  current_event;
+    current_event.data.fd = infd;
+    current_event.events = EPOLLIN;
+    if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
+    {
+        Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+        if (FileDescriptor::safeCloseFD(infd) == false)
+            Logger::logExit(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", infd);
+        return false;
+    }
+    FileDescriptor::setFD(infd);
+    return true;
+}
+
+void    RunServers::setClientServerAddress(Client &client, int infd)
+{
+    sockaddr_in serverAddr;
+    socklen_t addrLen = sizeof(serverAddr); 
+    if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
+        throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info"); //TODO not protected
+    client._ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
+    client._ipPort.second = to_string(ntohs(serverAddr.sin_port));
 }
 
 bool RunServers::makeSocketNonBlocking(int sfd)
