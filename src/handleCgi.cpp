@@ -184,7 +184,9 @@ bool HttpRequest::handleCgi(Client &client, string &body)
 
     FileDescriptor::setFD(fdWriteToCgi[0]);   // CGI reads from this (CGI's stdin)
     FileDescriptor::setFD(fdWriteToCgi[1]);   // Server writes to CGI's stdin
+    Logger::log(INFO, client, "fdWriteToCgi[1]:", fdWriteToCgi[1]);
     FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
+    Logger::log(INFO, client, "fdReadfromCgi[0]:", fdReadfromCgi[0]);
     FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
 
     if (RunServers::makeSocketNonBlocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
@@ -224,8 +226,11 @@ bool HttpRequest::handleCgi(Client &client, string &body)
                 handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
                 RunServers::insertHandleTransferCgi(move(handle));
             }
+
             handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
             RunServers::insertHandleTransferCgi(move(handle));
+
+
             client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         // }
         // catch(const std::exception& e)

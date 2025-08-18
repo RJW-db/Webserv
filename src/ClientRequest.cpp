@@ -25,7 +25,6 @@ void RunServers::processClientRequest(Client &client)
     {
         char   buff[_clientBufferSize];
         size_t bytesReceived = receiveClientData(client, buff);
-        std::cout << "buff: " << escapeSpecialChars(string(buff, bytesReceived)) << std::endl; //DONT REMOVE
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
             &HttpRequest::appendToBody,                        // BODY_CHUNKED (1)

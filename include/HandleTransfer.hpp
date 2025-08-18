@@ -13,7 +13,8 @@ enum HandleTransferType {
     HANDLE_POST_TRANSFER = 2,
     HANDLE_CHUNK_TRANSFER = 3,
     HANDLE_WRITE_TO_CGI_TRANSFER = 4,
-    HANDLE_READ_FROM_CGI_TRANSFER = 5
+    HANDLE_READ_FROM_CGI_TRANSFER = 5,
+    HANDLE_TO_CLIENT_TRANSFER = 6
 };
 
 class HandleTransfer
@@ -34,10 +35,11 @@ class HandleTransfer
 		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented"); }
         virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
         virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
+        virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported"); }
         virtual ~HandleTransfer() = default;
 
     protected :
-        HandleTransfer(Client &client, int fd, int _handleType) : _client(client), _fd(fd) {};
+        HandleTransfer(Client &client, int fd, int handleType) : _client(client), _fd(fd), _handleType(handleType) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
@@ -150,5 +152,14 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 
         bool readFromCgiTransfer();
         chrono::steady_clock::time_point _cgiDisconnectTime;
+};
+
+class HandleToClientTransfer : public HandleTransfer
+{
+    public:
+        HandleToClientTransfer(Client &client, string &response);
+
+        bool sendToClientTransfer();
+        // string &response;
 };
 #endif

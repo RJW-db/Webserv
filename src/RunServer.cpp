@@ -107,34 +107,6 @@ void RunServers::closeHandles(pid_t pid)
     }
 }
 
-// void RunServers::checkCgiDisconnect()
-// {
-//     for (std::pair<const int, std::unique_ptr<Client>> &clientPair : _clients)
-//     {
-//         unique_ptr<Client> &client = clientPair.second;
-//         if (client->_cgiPid != -1)
-//         {
-//             int exit_code;
-//             pid_t result = waitpid(client->_cgiPid, &exit_code, WNOHANG);
-//             if (result > 0)
-//             {
-//                 if (WIFEXITED(exit_code))
-//                 {
-//                     std::cout << "CGI process " << client->_cgiPid << " exited with status " << WEXITSTATUS(exit_code) << " on client with fd " << client->_fd << std::endl;
-//                     closeHandles(client->_cgiPid);
-//                     // if (WEXITSTATUS(exit_code) > 0)
-//                         // throw ErrorCodeClientException(*client, 500, "Cgi error");
-//                     if (client->_keepAlive == false)
-//                         cleanupClient(*client);
-//                     else
-//                         clientHttpCleanup(*client);
-//                 }
-//             }
-//         }
-//     }
-// }
-
-
 void RunServers::checkCgiDisconnect()
 {
     for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
@@ -207,7 +179,7 @@ void RunServers::checkClientDisconnects()
     }
 }
 
-int RunServers::runServers()
+void RunServers::runServers()
 {
     while (g_signal_status == 0)
     {
@@ -215,7 +187,7 @@ int RunServers::runServers()
 
         // cout << "Blocking and waiting for epoll event..." << endl;
         checkClientDisconnects();
-        checkCgiDisconnect();
+        // checkCgiDisconnect();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -238,7 +210,6 @@ int RunServers::runServers()
         }
     }
     Logger::log(INFO, "Server shutting down gracefully...");
-    return 0;
 }
 
 bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
@@ -253,7 +224,12 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             _clients[client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
-                finished = handle.handleGetTransfer();
+            {
+                if (handle._handleType == HANDLE_GET_TRANSFER)
+                    finished = handle.handleGetTransfer();
+                else
+                    finished = handle.sendToClientTransfer();
+            }
             else if (currentEvent.events & EPOLLIN)
             {
                 if ((*it)->getIsChunk() == false)
