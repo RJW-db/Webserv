@@ -37,6 +37,12 @@ void    HttpRequest::validateHEAD(Client &client)
     if (client._version != "HTTP/1.1")
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     
+    if (client._location.getRoot().back() == '/')
+        client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
+    else
+        client._rootPath = client._location.getRoot() + string(client._requestPath);
+    decodeSafeFilenameChars(client);
+    
     validateResourceAccess(client);
 }
 

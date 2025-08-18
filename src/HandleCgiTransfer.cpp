@@ -10,7 +10,7 @@
 #define CGI_DISCONNECT_TIME_SECONDS 30
 
 HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
-: HandleTransfer(client, fdWriteToCgi), _bytesWrittenTotal(0)
+: HandleTransfer(client, fdWriteToCgi, HANDLE_WRITE_TO_CGI_TRANSFER), _bytesWrittenTotal(0)
 {
     _fileBuffer = body;
     // _isCgi = writeToCgi;
@@ -19,7 +19,7 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body,
 }
 
 HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi)
-: HandleTransfer(client, fdReadfromCgi)
+: HandleTransfer(client, fdReadfromCgi, HANDLE_READ_FROM_CGI_TRANSFER)
 {
     // _isCgi = writeToCgi;
     _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);

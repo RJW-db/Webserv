@@ -139,8 +139,9 @@ void RunServers::checkCgiDisconnect()
 {
     for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
     {
-        Client &client = (*it)->_client;
         int exit_code;
+        Client &client = (*it)->_client;
+
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
         if (result == 0)
         {
@@ -151,14 +152,26 @@ void RunServers::checkCgiDisconnect()
             if (WIFEXITED(exit_code))
             {
                 Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
-
-                // if (WEXITSTATUS(exit_code) > 0)
-                // throw ErrorCodeClientException(*client, 500, "Cgi error");
-                if (client._keepAlive == false)
-                    cleanupClient(client);
+                HandleTransfer& currentTransfer = *(*it);
+                if (currentTransfer._handleType == HANDLE_WRITE_TO_CGI_TRANSFER)
+                {
+                    cleanupFD(currentTransfer._fd);
+                    it = _handleCgi.erase(it);
+                    continue ;
+                }
+                if (WEXITSTATUS(exit_code) > 0)
+                    throw ErrorCodeClientException(client, 500, "Cgi error");
+                bool finished = currentTransfer.readFromCgiTransfer();
+                if (finished)
+                {
+                    it = _handleCgi.erase(it);
+                    if (client._keepAlive == false)
+                        cleanupClient(client);
+                    else
+                        clientHttpCleanup(client);
+                }
                 else
-                    clientHttpCleanup(client);
-                it = _handleCgi.erase(it);
+                    ++it;
             }
             else
             {

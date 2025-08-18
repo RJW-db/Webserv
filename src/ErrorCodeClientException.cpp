@@ -49,7 +49,16 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
         message = HttpRequest::HttpResponse(_client, 500, ".html", body.size());
     }
     else
-        throw runtime_error("invalid error code given in code: " + to_string(_errorCode));
+    {
+        body = "<html>\n"
+            "  <head><title>" + std::to_string(_errorCode) + " Error</title></head>\n"
+            "  <body>\n"
+            "    <h1>" + std::to_string(_errorCode) + " Error</h1>\n"
+            "    <p>An error occurred (" + std::to_string(_errorCode) + ").</p>\n"
+            "  </body>\n"
+            "</html>";
+        message = HttpRequest::HttpResponse(_client, _errorCode, ".html", body.size());
+    }
     message += body;
     send(_client._fd, message.data(), message.size(), MSG_NOSIGNAL);
     RunServers::cleanupClient(_client);

@@ -106,7 +106,6 @@ void RunServers::acceptConnection(const int listener)
         socklen_t addrLen = sizeof(serverAddr); 
         if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
             throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info"); //TODO not protected
-        throwTesting();
         _clients[infd]->_ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
         _clients[infd]->_ipPort.second = to_string(ntohs(serverAddr.sin_port));
 

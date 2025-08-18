@@ -23,9 +23,9 @@ echo "3. Testing GET request for JS file to localhost:15001/main.js with Host he
 curl -i -H "Connection: close" -H "Host: server2" http://localhost:15001/main.js > results/get/get3.txt &
 echo -e "\n"
 
-# Test 4: GET request for XML file
-echo "4. Testing GET request for XML file to localhost:15001/catalog.xml with Host header 'server2'"
-curl -i -H "Connection: close" -H "Host: server2" http://localhost:15001/catalog.xml > results/get/get4.txt &
+# Test 4: GET request for XML file with percent-encoded path
+echo "4. Testing GET request for XML file to localhost:15001/cata%log.xml with Host header 'server2'"
+curl -i -H "Connection: close" -H "Host: server2" http://localhost:15001/cata%log.xml > results/get/get4.txt &
 echo -e "\n"
 
 

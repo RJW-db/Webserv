@@ -8,6 +8,14 @@
 
 using namespace std;
 
+enum HandleTransferType {
+    HANDLE_GET_TRANSFER = 1,
+    HANDLE_POST_TRANSFER = 2,
+    HANDLE_CHUNK_TRANSFER = 3,
+    HANDLE_WRITE_TO_CGI_TRANSFER = 4,
+    HANDLE_READ_FROM_CGI_TRANSFER = 5
+};
+
 class HandleTransfer
 {
     public :
@@ -15,6 +23,7 @@ class HandleTransfer
         int _fd;
         string _fileBuffer;
         size_t  _bytesReadTotal;
+        uint8_t _handleType;
 
 
         // Pure virtual functions for polymorphic behavior
@@ -28,7 +37,7 @@ class HandleTransfer
         virtual ~HandleTransfer() = default;
 
     protected :
-        HandleTransfer(Client &client, int fd) : _client(client), _fd(fd) {};
+        HandleTransfer(Client &client, int fd, int _handleType) : _client(client), _fd(fd) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
@@ -85,7 +94,7 @@ public:
     bool handlePostCgi();
 
 protected:
-    HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd) {};
+    HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
 
 private:
     int validateFinalCRLF();

@@ -7,7 +7,7 @@
 
 // POST
 HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
-: HandleTransfer(client, -1), _isChunked(false), _foundBoundary(false), _searchContentDisposition(false)
+: HandleTransfer(client, -1, HANDLE_POST_TRANSFER), _isChunked(false), _foundBoundary(false), _searchContentDisposition(false)
 {
     _bytesReadTotal = bytesRead;
     _fileBuffer = buffer;
@@ -170,14 +170,17 @@ bool HandlePostTransfer::handlePostTransfer(bool readData)
 
 void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
-    FileDescriptor::closeFD(_fd);
-    _fd = -1;
+    if (_fd != -1)
+    {
+        FileDescriptor::closeFD(_fd);
+        _fd = -1;
+    }
     for (const auto &filePath : _fileNamePaths)
     {
         if (remove(filePath.data()) != 0)
             cout << "remove failed on file: " << filePath << endl;
     }
-    throw ErrorCodeClientException(client, errorCode, errMsg + strerror(errno) + ", on file with fileDescriptor: " + to_string(_fd));
+    throw ErrorCodeClientException(client, errorCode, errMsg + " " + strerror(errno));
 }
 
 void HandlePostTransfer::parseContentDisposition(Client &client, string_view &buffer)

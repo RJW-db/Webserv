@@ -40,9 +40,16 @@
 bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t receivedBytes)
 {
     client._header.append(buff, receivedBytes); // can fail, need to call cleanupClient
+
+    if (client._header.size() > RunServers::getRamBufferLimit())
+        throw ErrorCodeClientException(client, 413, "Header size sent by client larger then ramBufferLimit");
+
     size_t headerEnd = client._header.find("\r\n\r\n");
     if (headerEnd == string::npos)
         return false;
+
+    if (client._header.find('\0') != string::npos)
+        throw ErrorCodeClientException(client, 400, "Null terminator found in header request");
 
     client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
     client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
@@ -67,11 +74,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     // Check if there is a null character in buff
     if (client._header.find('\0') != string::npos)
        throw ErrorCodeClientException(client, 400, "Null bytes not allowed in HTTP request");
-    if (client._location.getRoot().back() == '/')
-        client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
-    else
-        client._rootPath = client._location.getRoot() + string(client._requestPath);
-    decodeSafeFilenameChars(client);
+
     if (client._method == "POST")
     {
         
