@@ -54,7 +54,7 @@ class RunServers
         static int runServers();
         static void handleEvents(size_t eventCount);
         static void acceptConnection(const int listener);
-        static void setServerFromListener(Client &client, int listenerFD);
+        static void setServerFromListener(Client &client);
 
 
         static void processClientRequest(Client &client);

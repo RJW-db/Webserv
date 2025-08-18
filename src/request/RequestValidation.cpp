@@ -27,8 +27,7 @@ void    HttpRequest::validateHEAD(Client &client)
     
     parseRequestPath(client);
     // throwTesting();
-    RunServers::setServerFromListener(client, client._fd);
-    // RunServers::setServer(client);
+    RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
 
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());

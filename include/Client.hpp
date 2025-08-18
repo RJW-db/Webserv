@@ -41,6 +41,7 @@ class Client
 		int _fd;
 
         unique_ptr<Server> _usedServer;
+        pair<string, string> _ipPort;
         Location _location;
         string_view _uploadPath;
         bool _isCgi = false;

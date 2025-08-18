@@ -45,30 +45,20 @@ static string NumIpToString(uint32_t addr)
 }
 
 
-void RunServers::setServerFromListener(Client &client, int listenerFD)
+void RunServers::setServerFromListener(Client &client)
 {
     auto hostHeader = client._headerFields.find("Host");
     if (hostHeader == client._headerFields.end()) {
         throw ErrorCodeClientException(client, 400, "Missing required Host header");
     }
-    string_view host = hostHeader->second;
-
-    sockaddr_in serverAddr;
-    socklen_t addrLen = sizeof(serverAddr); 
-    if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0)
-        throw ErrorCodeClientException(client, 500, "Failed to get server info"); //TODO not protected
-    string serverIP = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
-    uint16_t serverPort = ntohs(serverAddr.sin_port);
-    string portStr = to_string(serverPort);
-
     Server *tmpServer = nullptr;
     // Find the matching server
     for (unique_ptr<Server> &server : _servers) {
         for (pair<const string, string> &porthost : server->getPortHost()) {
-            if (porthost.first == portStr && 
-                (porthost.second == serverIP || porthost.second == "0.0.0.0"))
+            if (porthost.first == client._ipPort.second && 
+                (porthost.second == client._ipPort.first || porthost.second == "0.0.0.0"))
             {
-                if (server->getServerName() == host)
+                if (server->getServerName() == hostHeader->second)
                 {
                     client._usedServer = make_unique<Server>(*server);
                     return;
@@ -83,31 +73,6 @@ void RunServers::setServerFromListener(Client &client, int listenerFD)
     else
         throw ErrorCodeClientException(client, 0, "No matching server configuration found");
 }
-
-// void RunServers::setServerFromListener(Client &client, int listenerFD)
-// {
-//     // Get the server info from the listener socket
-//     sockaddr_in serverAddr;
-//     socklen_t addrLen = sizeof(serverAddr);
-//     if (getsockname(listenerFD, (struct sockaddr*)&serverAddr, &addrLen) != 0)
-//         throw ErrorCodeClientException(client, 500, "Failed to get server info"); //TODO not protected
-//     string serverIP = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
-//     uint16_t serverPort = ntohs(serverAddr.sin_port);
-//     string portStr = to_string(serverPort);
-//     // Find the matching server
-//     for (unique_ptr<Server> &server : _servers) {
-//         for (pair<const string, string> &porthost : server->getPortHost()) {
-//             if (porthost.first == portStr && 
-//                 (porthost.second == serverIP || porthost.second == "0.0.0.0"))
-//             {
-//                 client._usedServer = make_unique<Server>(*server);
-//                 return;
-//             }
-//         }
-//     }
-//     throw ErrorCodeClientException(client, 0, "No matching server configuration found");
-// }
-
 
 void RunServers::acceptConnection(const int listener)
 {
@@ -133,8 +98,18 @@ void RunServers::acceptConnection(const int listener)
             break;
         }
         FileDescriptor::setFD(infd);
+        
         _clients[infd] = std::make_unique<Client>(infd);
         // setServerFromListener(*_clients[infd], listener);
+
+        sockaddr_in serverAddr;
+        socklen_t addrLen = sizeof(serverAddr); 
+        if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
+            throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info"); //TODO not protected
+        throwTesting();
+        _clients[infd]->_ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
+        _clients[infd]->_ipPort.second = to_string(ntohs(serverAddr.sin_port));
+
         Logger::log(INFO, *_clients[infd], "Connected on: ",
             NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
             ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));

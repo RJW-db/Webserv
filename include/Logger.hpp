@@ -107,10 +107,11 @@ void Logger::log(int level, Client &client, Args&&... args)
 {
     try
     {
-        if (client._usedServer)
+        if (!client._ipPort.first.empty())
         {
-            auto portHostMap = client._usedServer->getPortHost().begin();
-            string portHostInfo = portHostMap->second + ":" + portHostMap->first;
+
+            // auto portHostMap = client._usedServer->getPortHost().begin();
+            string portHostInfo = client._ipPort.first + ":" + client._ipPort.second;
             // string portHostInfo = "255.255.255.255:65535";
             
             // max size 255.255.255.255:65535
@@ -119,7 +120,7 @@ void Logger::log(int level, Client &client, Args&&... args)
             log(level, portHostInfo, "  clientFD:", client._fd, "  ", args...);
             return;
         }
-        Logger::log(level, "  clientFD:", client._fd, "  ", args...);
+        Logger::log(level, "                       clientFD:", client._fd, "  ", args...);
         // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
     catch(...)
