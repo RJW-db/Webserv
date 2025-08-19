@@ -172,6 +172,17 @@ bool setPipeBufferSize(int pipeFd)
     return true;
 }
 
+void sigtermHandler(int signum)
+{
+    if (signum == SIGTERM)
+    {
+        Logger::log(WARN, "SIGTERM received, CGI took too long to respond, exiting child process");
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        exit(EXIT_FAILURE);
+    }
+}
+
 bool HttpRequest::handleCgi(Client &client, string &body)
 {
     int fdWriteToCgi[2] = { -1, -1 };   // Server → CGI (stdin)
@@ -204,9 +215,13 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
     }
 
-    if (client._pid == CHILD) {
+    if (client._pid == CHILD)
+    {
+        if (signal(SIGTERM, &sigtermHandler) == SIG_ERR)
+            Logger::logExit(ERROR, "Failed to set SIGTERM handler: ", strerror(errno));
         Logger::log(CHILD, client, "child ._pid ", client._pid); //testlog
         Logger::log(CHILD, "we got into child"); //testlog
+        // sleep(10);
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
 
@@ -239,6 +254,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         //     throw e;
         //     std::cerr << e.what() << '\n';
         // }
+        client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);

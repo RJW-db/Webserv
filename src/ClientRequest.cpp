@@ -190,10 +190,13 @@ void RunServers::clientHttpCleanup(Client &client)
     client._isCgi = false;
 }
 
-void RunServers::cleanupFD(int fd)
+void RunServers::cleanupFD(int &fd)
 {
-    setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
-    FileDescriptor::closeFD(fd);
+    if (fd > 0)
+    {
+        setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+        FileDescriptor::closeFD(fd);
+    }
 }
 
 void RunServers::cleanupClient(Client &client)

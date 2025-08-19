@@ -82,7 +82,7 @@ class RunServers
         static void clientHttpCleanup(Client &client);
 
         static void cleanupServer();
-        static void cleanupFD(int fd);
+        static void cleanupFD(int &fd);
         static void cleanupClient(Client &client);
 
         static void checkClientDisconnects();

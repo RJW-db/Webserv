@@ -52,6 +52,8 @@ def main():
     filename = os.path.basename(fileitem.filename)
     save_path = os.path.join(upload_dir, filename)
 
+    # sleep(5)
+
     try:
         with open(save_path, "wb") as f:
             shutil.copyfileobj(fileitem.file, f)

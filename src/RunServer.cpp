@@ -114,9 +114,26 @@ void RunServers::checkCgiDisconnect()
         int exit_code;
         Client &client = (*it)->_client;
 
+        if (client._cgiClosing == true)
+        {
+            cleanupFD((*it)->_fd);
+            Logger::log(DEBUG, (*it)->_handleType, "Child process for client ", client._fd, " has closed its pipes"); //testlog
+            it = _handleCgi.erase(it);
+            continue ;
+        }
+        // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
+        // Logger::log(DEBUG, "result: ", result); //testlog
         if (result == 0)
         {
+            if (client._disconnectTimeCgi <= chrono::steady_clock::now())
+            {
+                cleanupFD((*it)->_fd);
+                it = _handleCgi.erase(it);
+                kill(client._pid, SIGTERM);
+                Logger::log(DEBUG, "Killed child"); //testlog
+                continue;
+            }
             ++it;
         }
         else
@@ -128,6 +145,8 @@ void RunServers::checkCgiDisconnect()
                 if (currentTransfer._handleType == HANDLE_WRITE_TO_CGI_TRANSFER)
                 {
                     cleanupFD(currentTransfer._fd);
+                    client._cgiClosing = true;
+                    Logger::log(DEBUG, (*it)->_handleType, "Child process for client ", client._fd, " has closed its pipes"); //testlog
                     it = _handleCgi.erase(it);
                     continue ;
                 }
@@ -198,8 +217,8 @@ void RunServers::runServers()
         int eventCount;
 
         // cout << "Blocking and waiting for epoll event..." << endl;
-        checkClientDisconnects();
         checkCgiDisconnect();
+        checkClientDisconnects();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -282,7 +301,7 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             {
                 if ((*it)->writeToCgiTransfer() == true)
                 {
-                    _handleCgi.erase(it);
+                    // _handleCgi.erase(it);
                 }
             }
             else if (currentEvent.events & EPOLLIN)
@@ -290,15 +309,15 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
                 if ((*it)->readFromCgiTransfer() == true)
                 {
                     Client &client = (*it)->_client;
-                    if (client._keepAlive == false)
-                    {
-                        cleanupClient(client);
-                    }
-                    else
-                    {
+                    // if (client._keepAlive == false)
+                    // {
+                    //     cleanupClient(client);
+                    // }
+                    // else
+                    // {
                         clientHttpCleanup(client);
-                    }
-                    _handleCgi.erase(it);
+                    // }
+                    // _handleCgi.erase(it);
                 }
             }
             return true;

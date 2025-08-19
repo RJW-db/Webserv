@@ -60,7 +60,7 @@ namespace
 
     void setupSignalHandlers()
     {
-        if (signal(SIGINT, &sigintHandler))
+        if (signal(SIGINT, &sigintHandler) == SIG_ERR)
             Logger::logExit(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
     }
 
