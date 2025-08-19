@@ -21,7 +21,7 @@ bool HandleToClientTransfer::sendToClientTransfer()
     if (sent <= 0)
     {
         if (sent == -1)
-            throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, 500, "sending to Client failed: " + string(strerror(errno)));
         std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         return true;

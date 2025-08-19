@@ -239,7 +239,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             {
                 if (handle._handleType == HANDLE_GET_TRANSFER)
                     finished = handle.handleGetTransfer();
-                else
+                else if (handle._handleType == HANDLE_TO_CLIENT_TRANSFER)
                     finished = handle.sendToClientTransfer();
             }
             else if (currentEvent.events & EPOLLIN)

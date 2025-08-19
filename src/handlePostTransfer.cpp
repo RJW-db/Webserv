@@ -6,6 +6,8 @@
 #include "Logger.hpp"
 
 // POST
+
+
 HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
 : HandleTransfer(client, -1, HANDLE_POST_TRANSFER), _isChunked(false), _foundBoundary(false), _searchContentDisposition(false)
 {
@@ -26,6 +28,82 @@ HandlePostTransfer &HandlePostTransfer::operator=(const HandlePostTransfer &othe
         _searchContentDisposition = other._searchContentDisposition;
     }
     return *this;
+}
+
+bool HandlePostTransfer::handlePostTransfer(bool readData)
+{
+    try
+    {
+        if (readData == true)
+        {
+            char buff[RunServers::getClientBufferSize()];
+            size_t bytesReceived = RunServers::receiveClientData(_client, buff);
+            _bytesReadTotal += bytesReceived;
+            _fileBuffer.append(buff, bytesReceived);
+        }
+        if (_client._isCgi)
+        {
+            return handlePostCgi();
+        }
+        while (true)
+        {
+            if (_bytesReadTotal > _client._contentLength)
+                throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
+            if (_searchContentDisposition == true && searchContentDisposition() == false)
+                return false;
+            if (_foundBoundary == true)
+            {
+                int result = validateFinalCRLF();
+                if (result == 2)
+                    continue ;
+                return (result == 1); // if result is true, then we are done with the post transfer
+            }
+            ssize_t bytesWritten = 0;
+            size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
+            if (boundaryFound != string::npos)
+            {
+                _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryFound - bytesWritten);
+                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+                _foundBoundary = true;
+            }
+            else
+                return false;
+        }
+
+        return false;
+    }
+    catch(const exception& e)
+    {
+        _client._keepAlive = false;
+        errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
+    }
+    catch (const ErrorCodeClientException &e)
+    {
+        errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
+    }
+    return true;
+}
+
+bool HandlePostTransfer::handlePostCgi()
+{
+    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
+    {
+        // std::cout << "count" << std::endl; //testcout
+        return false;
+    }
+
+    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    {
+        // send body to pipe for stdin of cgi
+        // std::cout << _fileBuffer << std::endl; //testcout
+        // std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
+        // std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
+        HttpRequest::handleCgi(_client, _fileBuffer);
+        return true;
+    }
+    else
+        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    return false;
 }
 
 // return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
@@ -113,60 +191,6 @@ bool HandlePostTransfer::searchContentDisposition()
     return true;
 }
 
-bool HandlePostTransfer::handlePostTransfer(bool readData)
-{
-    try
-    {
-        if (readData == true)
-        {
-            char buff[RunServers::getClientBufferSize()];
-            size_t bytesReceived = RunServers::receiveClientData(_client, buff);
-            _bytesReadTotal += bytesReceived;
-            _fileBuffer.append(buff, bytesReceived);
-        }
-        if (_client._isCgi)
-        {
-            return handlePostCgi();
-        }
-        while (true)
-        {
-            if (_bytesReadTotal > _client._contentLength)
-                throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
-            if (_searchContentDisposition == true && searchContentDisposition() == false)
-                return false;
-            if (_foundBoundary == true)
-            {
-                int result = validateFinalCRLF();
-                if (result == 2)
-                    continue ;
-                return (result == 1); // if result is true, then we are done with the post transfer
-            }
-            ssize_t bytesWritten = 0;
-            size_t boundaryFound = FindBoundaryAndWrite(bytesWritten);
-            if (boundaryFound != string::npos)
-            {
-                _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryFound - bytesWritten);
-                RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                _foundBoundary = true;
-            }
-            else
-                return false;
-        }
-
-        return false;
-    }
-    catch(const exception& e)
-    {
-        _client._keepAlive = false;
-        errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
-    }
-    catch (const ErrorCodeClientException &e)
-    {
-        errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
-    }
-    return true;
-}
-
 
 void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
@@ -245,24 +269,3 @@ bool HandlePostTransfer::validateMultipartPostSyntax(Client &client, string &inp
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }
 
-bool HandlePostTransfer::handlePostCgi()
-{
-    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
-    {
-        // std::cout << "count" << std::endl; //testcout
-        return false;
-    }
-
-    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
-    {
-        // send body to pipe for stdin of cgi
-        // std::cout << _fileBuffer << std::endl; //testcout
-        // std::cout << "_client._body.size() " << _client._body.size() << std::endl; //testcout
-        // std::cout << "_fileBuffer.size() " << _fileBuffer.size() << std::endl; //testcout
-        HttpRequest::handleCgi(_client, _fileBuffer);
-        return true;
-    }
-    else
-        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
-    return false;
-}
