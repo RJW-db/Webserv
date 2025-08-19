@@ -51,8 +51,8 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     // Logger::log(DEBUG, client._header); //testlog
  
 
-    client._body = client._header.substr(headerEnd + 4);      // can fail, need to call cleanupClient
-    client._header = client._header.substr(0, headerEnd + 4); // can fail, need to call cleanupClient
+    client._body = client._header.substr(headerEnd + CRLF2_LEN);      // can fail, need to call cleanupClient
+    client._header = client._header.erase(headerEnd + CRLF2_LEN); // can fail, need to call cleanupClient
 
     if (client._header.find('\0') != string::npos)
         throw ErrorCodeClientException(client, 400, "Null terminator found in header request at index: " + to_string(client._header.find('\0')));

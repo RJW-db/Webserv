@@ -83,7 +83,7 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
 	
 	ErrorCodesWithoutPage.clear();
 	foundPage = true;
-	line = line.substr(nameLen);
+    line.erase(0, nameLen);
 	return false;
 }
 
@@ -101,7 +101,7 @@ bool Aconfig::error_page(string &line)
 		if (line[0] != ';')
 			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": error_page: invalid input found after error page given");
 		foundPage = false;
-		line = line.substr(1);
+		line.erase(0, 1);
 		return true;
 	}
 	// If line starts with '/', it's an error page path
@@ -124,7 +124,7 @@ bool Aconfig::error_page(string &line)
 			": error_page: error code invalid must be between ", MIN_ERROR_CODE, " and ", MAX_ERROR_CODE);
 
 	ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
-	line = line.substr(pos + 1);
+	line = line.erase(0, pos + 1);
 	return false;
 }
 
@@ -143,7 +143,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	_clientMaxBodySize = static_cast<size_t>(stoi(line, &len, 10));
 	if (_clientMaxBodySize == 0)
 		_clientMaxBodySize = SIZE_MAX;
-	line = line.substr(len);
+	line = line.erase(0, len);
 	if (string("kKmMgG;").find(line[0]) != string::npos)
 	{
 		if (isupper(line[0]) != 0)
@@ -161,7 +161,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
 	
 	if (line[0] == ';')
 	{
-		line = line.substr(1);
+		line.erase(0, 1);
 		return true;
 	}
 	return handleNearEndOfLine(line, 1, "client_max_body_size");
@@ -177,7 +177,7 @@ bool Aconfig::indexPage(string &line)
 	{
 		if (_indexPage.empty())
 			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": index: no index given for indexPage: ", line);
-		line = line.substr(1);
+		line = line.erase(0, 1);
 		return true;
 	}
 	size_t len = line.find_first_of(INVALID_PATH_CHARS);
@@ -188,7 +188,7 @@ bool Aconfig::indexPage(string &line)
 	
 	string indexPage = line.substr(0, len);
 	_indexPage.push_back(indexPage);
-	line = line.substr(len + 1);
+	line.erase(0, len + 1);
 	return false;
 }
 
@@ -234,7 +234,7 @@ bool Aconfig::returnRedirect(string &line)
 			Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: can't have multiple error code redirects: ", line);
 
 		_returnRedirect.first = errorCode;
-		line = line.substr(len);
+		line.erase(0, len);
 		return false;
 	}
 	else
@@ -243,7 +243,7 @@ bool Aconfig::returnRedirect(string &line)
 		{
 			if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
 				Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": return: not enough valid arguments given: ", line);
-			line = line.substr(1);
+			line.erase(0, 1);
 			return true;
 		}
 		
@@ -259,7 +259,7 @@ bool Aconfig::returnRedirect(string &line)
 			len = line.length();
 		
 		_returnRedirect.second = line.substr(0, len);
-		line = line.substr(len);
+		line.erase(0, len);
 		return false;
 	}
 }
@@ -278,12 +278,12 @@ void Aconfig::setLineNbr(int num)
  */
 bool Aconfig::handleNearEndOfLine(string &line, size_t pos, string err)
 {
-	size_t k = line.find_first_not_of(WHITESPACE_ONLY, pos);
-	if (k == string::npos)
+	size_t index = line.find_first_not_of(WHITESPACE_ONLY, pos);
+	if (index == string::npos)
 		return false;
-	if (line[k] != ';')
+	if (line[index] != ';')
 		Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": " + err + ": invalid input found before semi colon: ", line);
-	line = line.substr(k + 1);
+	line.erase(0, index + 1);
 	return true;
 }
 
@@ -310,9 +310,9 @@ void Aconfig::setDefaultErrorPages()
         {
             // Prepend root to custom error page path
             ErrorCodesWithPage.at(errorCode).insert(0, _root);
-            ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+            ErrorCodesWithPage.at(errorCode).erase(0, 1);
             if (ErrorCodesWithPage.at(errorCode)[0] == '/')
-                ErrorCodesWithPage.at(errorCode) = ErrorCodesWithPage.at(errorCode).substr(1);
+                ErrorCodesWithPage.at(errorCode).erase(0, 1);
         }
         
         // Verify the error page file is accessible
@@ -328,3 +328,22 @@ int8_t Aconfig::getAutoIndex() const { return _autoIndex; }
 pair<uint16_t, string> Aconfig::getReturnRedirect() const { return _returnRedirect; }
 map<uint16_t, string> Aconfig::getErrorCodesWithPage() const { return ErrorCodesWithPage; }
 vector<string> Aconfig::getIndexPage() const { return _indexPage; }
+
+
+unordered_multimap<string, string> &AconfigServ::getPortHost() { return _portHost; }
+vector<pair<string, Location>> &AconfigServ::getLocations() { return _locations; }
+string &AconfigServ::getServerName() { return _serverName; }
+
+AconfigServ::AconfigServ(const AconfigServ &other) : Aconfig(other) { *this = other; }
+AconfigServ &AconfigServ::operator=(const AconfigServ &other) {
+    if (this != &other) {
+        Aconfig::operator=(other);
+        _portHost = other._portHost;
+        _locations = other._locations;
+        _serverName = other._serverName;
+    }
+    return *this;
+}
+
+int ConfigServer::getLineNbr() const { return _lineNbr; }
+string &ConfigServer::getServerName() { return _serverName; }

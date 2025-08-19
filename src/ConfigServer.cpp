@@ -37,7 +37,7 @@ bool ConfigServer::listenHostname(string &line)
     else if (line[index] == ':')
     {
         hostname = line.substr(0, skipHostname);
-        line = line.substr(skipHostname + 1);
+        line.erase(0, skipHostname + 1);
     }
     else
         Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": listen: invalid character found after hostname - '", line, "'");
@@ -129,45 +129,4 @@ void ConfigServer::addLocation(const Location &location, string path)
         }
     }
     _locations.insert(_locations.end(), {path, location});
-}
-
-unordered_multimap<string, string> &AconfigServ::getPortHost(void)
-{
-    return _portHost;
-}
-vector<pair<string, Location>> &AconfigServ::getLocations(void)
-{
-    return _locations;
-}
-string &AconfigServ::getServerName(void)
-{
-    return _serverName;
-}
-
-AconfigServ::AconfigServ(const AconfigServ &other)
-: Aconfig(other)
-{
-    *this = other;
-}
-
-AconfigServ &AconfigServ::operator=(const AconfigServ &other)
-{
-    if (this != &other)
-    {
-        Aconfig::operator=(other);
-        _portHost = other._portHost;
-        _locations = other._locations;
-        _serverName = other._serverName;
-    }
-    return (*this);
-}
-
-int ConfigServer::getLineNbr(void) const
-{
-    return _lineNbr;
-}
-
-string &ConfigServer::getServerName(void)
-{
-    return _serverName;
 }

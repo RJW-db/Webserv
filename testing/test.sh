@@ -46,11 +46,20 @@ echo "=== Testing Web Server ==="
 POST_PID=$!
 ./tests/get_tests.sh &
 GET_PID=$!
+./tests/get_fail_test.sh &
+GET_FAIL_PID=$!
+./tests/post_fail_test.sh &
+POST_FAIL_PID=$!
+./tests/chunked_tests.sh &
+CHUNKED_PID=$!
 
 echo "testing started, waiting for tests to finish..."
 
 wait $POST_PID
 wait $GET_PID
+wait $GET_FAIL_PID
+wait $POST_FAIL_PID
+wait $CHUNKED_PID
 
 
 
@@ -73,9 +82,21 @@ echo server output in results/webservOut.txt
 
 echo "Get results summary: "
 cat results/get/summary.txt
+
 echo -en "\n"
 
 echo "Post results summary: "
 cat results/post/summary.txt
 
+echo -en "\n"
 
+echo "Get fail results summary: "
+cat results/get_fail/summary.txt
+echo -en "\n"
+
+echo "Post fail results summary: "
+cat results/post_fail/summary.txt
+echo -en "\n"
+
+echo "Chunked results summary: "
+cat results/chunked/summary.txt

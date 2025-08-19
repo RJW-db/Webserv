@@ -7,6 +7,8 @@ fi
 
 cd "$(pwd | sed 's|\(.*Webserv\).*|\1|')/testing"
 
+rm -rf results/post
+
 mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
 # test 1: POST request to upload a file

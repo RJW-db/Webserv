@@ -17,6 +17,12 @@ enum HandleTransferType {
     HANDLE_TO_CLIENT_TRANSFER = 6
 };
 
+enum ValidationResult {
+    CONTINUE_READING = 0,
+    FINISHED = 1,
+    RERUN_WITHOUT_READING = 2
+};
+
 class HandleTransfer
 {
     public :
@@ -24,7 +30,7 @@ class HandleTransfer
         int _fd;
         string _fileBuffer;
         size_t  _bytesReadTotal;
-        uint8_t _handleType;
+        HandleTransferType _handleType;
 
 
         // Pure virtual functions for polymorphic behavior
@@ -39,7 +45,7 @@ class HandleTransfer
         virtual ~HandleTransfer() = default;
 
     protected :
-        HandleTransfer(Client &client, int fd, int handleType) : _client(client), _fd(fd), _handleType(handleType) {};
+        HandleTransfer(Client &client, int fd, HandleTransferType handleType) : _client(client), _fd(fd), _handleType(handleType) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
@@ -99,9 +105,12 @@ protected:
     HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
 
 private:
-    int validateFinalCRLF();
+    ValidationResult validateFinalCRLF();
     size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
     bool searchContentDisposition();
+    void ReadIncomingData();
+    bool processMultipartData();
+    void sendSuccessResponse();
 
     bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
     static void parseContentDisposition(Client &client, string_view &buffer);

@@ -1,0 +1,12 @@
+HTTP/1.1 414 URI Too Long
+Content-Type: text/html
+Content-Length: 132
+Connection: close
+
+<html>
+  <head><title>414 Error</title></head>
+  <body>
+    <h1>414 Error</h1>
+    <p>An error occurred (414).</p>
+  </body>
+</html>

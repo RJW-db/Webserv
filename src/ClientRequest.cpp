@@ -42,17 +42,6 @@ void RunServers::processClientRequest(Client &client)
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
-    // catch (const LengthRequiredException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "411 Length Required");
-    // }
-    // catch (const ClientException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "400 Bad Request");
-    // }
-    // cleanupClient(clientFD);
 }
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
@@ -66,8 +55,9 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
     {
-        cerr << "recv: " << strerror(errno);
-        RunServers::cleanupClient(client);
+        // cerr << "recv: " << strerror(errno);
+        // RunServers::cleanupClient(client);
+        throw ErrorCodeClientException(client, 500, "recv failed: " + string(strerror(errno)));
         throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
     }
     if (bytesReceived == 0)

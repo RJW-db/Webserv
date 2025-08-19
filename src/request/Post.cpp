@@ -27,23 +27,8 @@ ContentType HttpRequest::getContentType(Client &client)
 {
     auto it = client._headerFields.find("Content-Type");
     if (it == client._headerFields.end())
-        throw RunServers::ClientException("Missing Content-Type");
+        throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
     const string_view ct = it->second;
-    if (ct == "application/x-www-form-urlencoded")
-    {
-        client._contentType = ct;
-        return FORM_URLENCODED;
-    }
-    if (ct == "application/json")
-    {
-        client._contentType = ct;
-        return JSON;
-    }
-    if (ct == "text/plain")
-    {
-        client._contentType = ct;
-        return TEXT;
-    }
     if (ct.find("multipart/form-data") == 0)
     {
         size_t semi = ct.find(';');
@@ -59,6 +44,23 @@ ContentType HttpRequest::getContentType(Client &client)
         else
             throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
         return MULTIPART;
+    }
+    else
+        throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
+    if (ct == "application/x-www-form-urlencoded")
+    {
+        client._contentType = ct;
+        return FORM_URLENCODED;
+    }
+    if (ct == "application/json")
+    {
+        client._contentType = ct;
+        return JSON;
+    }
+    if (ct == "text/plain")
+    {
+        client._contentType = ct;
+        return TEXT;
     }
     return UNSUPPORTED;
 }

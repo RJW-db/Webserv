@@ -38,7 +38,7 @@ void trimLeadingWhitespace(string &line)
 {
     size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (skipSpace != 0 && skipSpace != string::npos)
-        line = line.substr(skipSpace);
+        line.erase(0, skipSpace);
 }
 
 /**
@@ -66,7 +66,7 @@ bool    Parsing::runReadblock()
 
     if (_lines.begin()->second[0] == '}')
     {
-        _lines.begin()->second =  _lines.begin()->second.substr(1);
+        _lines.begin()->second.erase(0, 1);
         if (isEmptyOrCommentLine(_lines.begin()->second, skipSpace) == true)
             _lines.erase(_lines.begin());
         return false;
@@ -112,7 +112,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
     {
         Location location;
         location.setLineNbr(_lines.begin()->first);
-        line = line.substr(LOCATION_KEYWORD_LENGTH);
+        line.erase(0, LOCATION_KEYWORD_LENGTH);
         validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
         skipLine(line, false, block, true);
         location.getLocationPath(line);
@@ -153,7 +153,7 @@ template <typename T>
 void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
 	bool foundSemicolon;
-	line = line.substr(cmd.first.size());
+	line.erase(0, cmd.first.size());
 	validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
 
 	size_t argumentCount = 0;
@@ -181,7 +181,7 @@ template <typename T>
 void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
 	bool foundSemicolon;
-    line = line.substr(cmd.first.size());
+    line.erase(0, cmd.first.size());
     skipLine(line, false, block, false);
     validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
     trimLeadingWhitespace(line);
@@ -191,7 +191,7 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
         skipLine(line, true, block, false);
         if (line[0] != ';')
             Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": no semi colon found after input");
-        line = line.substr(1);
+        line.erase(0, 1);
     }
     skipLine(line, false, block, false);
 }
@@ -244,11 +244,11 @@ void Parsing::ServerCheck()
     ConfigServer curConf;
     curConf.setLineNbr(_lines.begin()->first);
 	string line = _lines.begin()->second;
-    line = line.substr(SERVER_KEYWORD_LENGTH);
+    line.erase(0, SERVER_KEYWORD_LENGTH);
     skipLine(line, false, curConf, true);
     if (line[0] == '{')
     {
-        line = line.substr(1);
+        line.erase(0, 1);
         skipLine(line, false, curConf, false);
         const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
             {"listen", &ConfigServer::listenHostname},
@@ -287,10 +287,10 @@ void Parsing::readConfigFile(const char *input)
         ++lineNbr;
         if (isEmptyOrCommentLine(line, skipSpace) == true)
             continue; // Empty line, or #(comment)
-        line = line.substr(skipSpace);
+        line.erase(0, skipSpace);
         size_t commentIndex = line.find('#');
         if (commentIndex != string::npos)
-            line = line.substr(0, commentIndex); // remove comments after text
+            line.erase(commentIndex); // remove comments after text
         _lines.insert({lineNbr, line});
     }
     fs.close();

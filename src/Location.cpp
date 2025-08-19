@@ -36,7 +36,7 @@ void Location::getLocationPath(string &line)
 	if (len == string::npos)
 		len = line.length();
 	_locationPath = line.substr(0, len);
-    line = line.substr(len);
+    line.erase(0,len);
 
     // Location paths must start with '/'
 	if (_locationPath[0] != '/')
@@ -55,7 +55,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 		if (_allowedMethods == 0)
 			throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods specified for limit_except directive");
 
-		line = line.substr(expectedTokens[expectedTokenIndex].length());
+		line.erase(0, expectedTokens[expectedTokenIndex].length());
 		++expectedTokenIndex;
 
         // Check if we've found all expected tokens
@@ -102,7 +102,7 @@ bool Location::methods(string &line)
     if (_allowedMethods & method_bit)
         throw runtime_error(to_string(_lineNbr) + ": limit_except: Method '" + method + "' already specified");
     _allowedMethods |= method_bit;
-	line = line.substr(len);
+	line.erase(0, len);
 	return false;
 }
 
@@ -110,7 +110,7 @@ bool Location::indexPage(string &line)
 {
 	if (line[0] == ';')
 	{
-		line =  line.substr(1);
+		line.erase(0, 1);
 		return true;
 	}
 	size_t len = line.find_first_of(" \t\f\v\r;*?|><:\\");
@@ -120,7 +120,7 @@ bool Location::indexPage(string &line)
 		throw runtime_error("invalid character found in filename");
 	string indexPage = line.substr(0, len);
 	_indexPage.push_back(indexPage);
-	line = line.substr(len);
+	line.erase(0, len);
 	return false;
 }
 
@@ -150,7 +150,7 @@ bool Location::cgiExtensions(string &line)
 		len = line.length();
 	string extension = line.substr(0, len);
 	_cgiExtension.push_back(extension);
-	line = line.substr(len);
+	line.erase(0, len);
 	return false;
 }
 
