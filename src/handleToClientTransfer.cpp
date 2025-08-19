@@ -13,6 +13,7 @@ HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
 : HandleTransfer(client, -1, HANDLE_TO_CLIENT_TRANSFER)
 {
     _fileBuffer = response;
+    _bytesReadTotal = 0;
 }
 
 bool HandleToClientTransfer::sendToClientTransfer()
@@ -21,7 +22,7 @@ bool HandleToClientTransfer::sendToClientTransfer()
     if (sent <= 0)
     {
         if (sent == -1)
-            throw ErrorCodeClientException(_client, 500, "sending to Client failed: " + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, 500, "Send to client went wrong: " + string(strerror(errno)));
         std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         return true;
@@ -34,10 +35,8 @@ bool HandleToClientTransfer::sendToClientTransfer()
             RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
             return true;
         }
-        // _client.setDisconnectTime(RunServers::DISCONNECT_DELAY_SECONDS);
         std::cout << "sent " << sent << std::endl; //testcout
     }
-    // std::cout << "_FD = " << _fd << std::endl; //testcout
     return false;
 }
 
