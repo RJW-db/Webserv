@@ -66,7 +66,7 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
     std::vector<char> buff(1024 * 1024);
     ssize_t rd = read(_fd, buff.data(), buff.size());
-    if (rd <= 0)
+    if (rd <= 0 || buff[rd] == '\0')
     {
         RunServers::cleanupFD(_fd);
         if (rd == -1)
@@ -77,7 +77,6 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
         return true;
     }
-    
-    _fileBuffer.append(buff.data(), buff.size());
+    _fileBuffer.append(buff.data(), rd);
     return false;
 }

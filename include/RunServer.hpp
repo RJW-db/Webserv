@@ -74,7 +74,7 @@ class RunServers
 		static unique_ptr<Client> &getClient(int fd);
 
         static void parseHeaders(Client &client);
-        unordered_map<string, string_view> _headerFields;
+        // unordered_map<string, string_view> _headerFields;
 
         static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
         static void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle);
@@ -88,6 +88,7 @@ class RunServers
         static void checkClientDisconnects();
         static void checkCgiDisconnect();
         static void closeHandles(pid_t pid);
+        static void removeHandlesWithFD(int fd);
 
             static bool runHandleTransfer(struct epoll_event &currentEvent);
         static bool runCgiHandleTransfer(struct epoll_event &currentEvent);

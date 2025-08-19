@@ -17,7 +17,7 @@ HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
 
 bool HandleToClientTransfer::sendToClientTransfer()
 {
-    ssize_t sent = send(_client._fd, _fileBuffer.data(), _fileBuffer.size() - _bytesReadTotal, 0);
+    ssize_t sent = send(_client._fd, _fileBuffer.data() + _bytesReadTotal, _fileBuffer.size() - _bytesReadTotal, 0);
     if (sent <= 0)
     {
         if (sent == -1)

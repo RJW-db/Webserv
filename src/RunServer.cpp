@@ -179,6 +179,18 @@ void RunServers::checkClientDisconnects()
     }
 }
 
+void RunServers::removeHandlesWithFD(int fd)
+{
+    for(auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
+    {
+        if ((*it)->_fd == fd)
+        {
+            _handleCgi.erase(it);
+            return;
+        }
+    }
+}
+
 void RunServers::runServers()
 {
     while (g_signal_status == 0)
@@ -187,7 +199,7 @@ void RunServers::runServers()
 
         // cout << "Blocking and waiting for epoll event..." << endl;
         checkClientDisconnects();
-        // checkCgiDisconnect();
+        checkCgiDisconnect();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -286,7 +298,6 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
                     {
                         clientHttpCleanup(client);
                     }
-
                     _handleCgi.erase(it);
                 }
             }
@@ -337,8 +348,9 @@ void RunServers::handleEvents(size_t eventCount)
                 }
                 else
                 {
+                    removeHandlesWithFD(eventFD);
                     // Just cleanup the FD if no client exists
-                    cleanupFD(currentEvent.data.fd);
+                    cleanupFD(eventFD);
                 }
                 continue;
             }

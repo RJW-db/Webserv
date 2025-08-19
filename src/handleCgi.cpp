@@ -181,7 +181,6 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
     }
-
     FileDescriptor::setFD(fdWriteToCgi[0]);   // CGI reads from this (CGI's stdin)
     FileDescriptor::setFD(fdWriteToCgi[1]);   // Server writes to CGI's stdin
     Logger::log(INFO, client, "fdWriteToCgi[1]:", fdWriteToCgi[1]);
