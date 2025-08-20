@@ -168,7 +168,6 @@ int		server(void);
 void parseHttpRequest(string &request);
 std::string escapeSpecialChars(const std::string& input);
 
-void httpRequestLogger(string str);
 
 string  extractMethod(const string &header);
 string  extractHeader(const string &header, const string &key);

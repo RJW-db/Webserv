@@ -12,7 +12,7 @@ void RunServers::epollInit(ServerList &servers)
     if (_epfd == -1)
         Logger::logExit(ERROR, "Setup failed: Server epoll_create: ", strerror(errno));
     FileDescriptor::setFD(_epfd);
-    Logger::log(INFO, "Epoll fd created       epollFD:", _epfd);
+    Logger::log(INFO, "Epoll fd created", _epfd, ":epollFD");
 
 	map<pair<const string, string>, int> listenersMade;
     for (auto &server : servers)
@@ -93,9 +93,17 @@ void RunServers::acceptConnection(const int listener)
         _clients[infd] = std::make_unique<Client>(infd);
         setClientServerAddress(*_clients[infd], infd);
 
-        Logger::log(INFO, *_clients[infd], "Connected on: ",
-            NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
-            ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
+        // Logger::log(INFO, *_clients[infd], "Connected on: ",
+        //     NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)),
+        //     ":", ntohs(((sockaddr_in *)&in_addr)->sin_port));
+
+
+        Logger::log(INFO, *_clients[infd], 
+            "Connected on: " + NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)) + 
+            ":" + std::to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
+
+		// Logger::log(INFO, "Server created", _listener, ":listenFD",  "Successfuly bound to ", _hostName, ":", _port);
+
         _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
 }

@@ -83,7 +83,8 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 			continue;
 		}
 		FileDescriptor::setFD(_listener);
-		Logger::log(INFO, "Server created         listenFD:", _listener, " Successfuly bound to ", _hostName, ":", _port);
+		Logger::log(INFO, "Server created", _listener, ":listenFD",  "Successfuly bound to ", _hostName, ":", _port);
+
 		RunServers::setEpollEvents(_listener, EPOLL_CTL_ADD, EPOLLIN);
 		return;
 	}

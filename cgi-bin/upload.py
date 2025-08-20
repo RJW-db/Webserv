@@ -4,6 +4,7 @@ import sys
 import cgi
 import cgitb
 import shutil
+import time
 
 cgitb.enable()
 
@@ -27,6 +28,10 @@ def main():
     # print(f"DEBUG: contentlength = {os.environ.get('CONTENT_LENGTH')}", file=sys.stderr)
 
     # # === ACTUAL LOGIC ===
+
+
+    time.sleep(15)
+
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
     public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
 
@@ -52,7 +57,7 @@ def main():
     filename = os.path.basename(fileitem.filename)
     save_path = os.path.join(upload_dir, filename)
 
-    # sleep(5)
+    # time.sleep(15)
 
     try:
         with open(save_path, "wb") as f:

@@ -50,6 +50,7 @@ void	FileDescriptor::closeFD(int &fd)
             // throw something
         }
         _fds.erase(it);
+        Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
         fd = -1;
     }
     else

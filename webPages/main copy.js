@@ -17,9 +17,9 @@ window.addEventListener('DOMContentLoaded', function() {
         method: 'POST',
         body: formData
       })
-      .then(response => response.text().then(text => ({ok: response.ok, text})))
-      .then(({ok, text}) => {
-        if (ok && text && text !== 'Upload failed.' && !text.startsWith('<html')) {
+      .then(response => response.text())
+      .then(filename => {
+        if (filename && filename !== 'Upload failed.') {
           status.textContent = 'Upload successful!';
 
           // Create a wrapper div for filename, image, and delete button
@@ -30,14 +30,14 @@ window.addEventListener('DOMContentLoaded', function() {
 
           // Filename label above the image
           const label = document.createElement('div');
-          label.textContent = text.trim().split('/').pop();
+          label.textContent = filename.trim().split('/').pop();
           label.style.textAlign = 'center';
           label.style.marginBottom = '5px';
           label.style.fontSize = '16px';
 
           const img = document.createElement('img');
-          img.src = '/' + text.trim();
-          img.alt = text.trim();
+          img.src = '/' + filename.trim();
+          img.alt = filename.trim();
 
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';
@@ -45,7 +45,8 @@ window.addEventListener('DOMContentLoaded', function() {
           delBtn.style.top = '10px';
           delBtn.style.right = '10px';
           delBtn.onclick = function() {
-            const cleanFilename = text.trim().split('/').pop();
+            // Only use the filename, not the path
+            const cleanFilename = filename.trim().split('/').pop();
             fetch('/upload/' + encodeURIComponent(cleanFilename), {
               method: 'DELETE'
             })
@@ -59,37 +60,20 @@ window.addEventListener('DOMContentLoaded', function() {
             .catch(() => alert('Error deleting image.'));
           };
 
-          wrapper.appendChild(label);
+          wrapper.appendChild(label);   // Add label above image
           wrapper.appendChild(img);
           wrapper.appendChild(delBtn);
           gallery.appendChild(wrapper);
         } else {
-          status.textContent = '';
-          const errorBox = document.createElement('div');
-          errorBox.textContent = 'Upload failed: Server error or invalid response.';
-          errorBox.style.color = '#b00';
-          errorBox.style.background = '#fff0f0';
-          errorBox.style.border = '1px solid #b00';
-          errorBox.style.padding = '10px';
-          errorBox.style.margin = '10px';
-          errorBox.style.fontWeight = 'bold';
-          gallery.appendChild(errorBox);
+          status.textContent = 'Upload failed.';
         }
       })
       .catch(error => {
-        status.textContent = '';
-        const errorBox = document.createElement('div');
-        errorBox.textContent = 'Upload failed: ' + error;
-        errorBox.style.color = '#b00';
-        errorBox.style.background = '#fff0f0';
-        errorBox.style.border = '1px solid #b00';
-        errorBox.style.padding = '10px';
-        errorBox.style.margin = '10px';
-        errorBox.style.fontWeight = 'bold';
-        gallery.appendChild(errorBox);
+        status.textContent = 'Error: ' + error;
       });
     });
 
+    // Optionally clear the file input
     document.getElementById('fileInput').value = '';
   });
 
@@ -107,16 +91,17 @@ window.addEventListener('DOMContentLoaded', function() {
       formData.append('myfile', file);
 
       fetch('/cgi-bin/upload.py?upload_dir=upload&public_url_base=/upload', {
+      // fetch('/cgi-bin/cgi?upload_dir=upload&public_url_base=/upload', {
         method: 'POST',
         body: formData
       })
-      .then(response => response.text().then(text => ({ok: response.ok, text})))
-      .then(({ok, text}) => {
-        if (ok && text && text !== 'Upload failed.' && !text.startsWith('<html')) {
+      .then(response => response.text())
+      .then(result => {
+        if (result && result !== 'Upload failed.') {
           status.textContent = 'CGI Upload successful!';
           status.style.color = 'green';
 
-          const filename = text.trim();
+          const filename = result.trim();
           const cleanFilename = filename.split('/').pop();
 
           const wrapper = document.createElement('div');
@@ -159,34 +144,20 @@ window.addEventListener('DOMContentLoaded', function() {
           gallery.appendChild(wrapper);
 
         } else {
-          status.textContent = '';
-          const errorBox = document.createElement('div');
-          errorBox.textContent = 'CGI Upload failed: Server error or invalid response.';
-          errorBox.style.color = '#b00';
-          errorBox.style.background = '#fff0f0';
-          errorBox.style.border = '1px solid #b00';
-          errorBox.style.padding = '10px';
-          errorBox.style.margin = '10px';
-          errorBox.style.fontWeight = 'bold';
-          gallery.appendChild(errorBox);
+          status.textContent = 'CGI Upload failed.';
+          status.style.color = '#b00';
         }
       })
       .catch(error => {
-        status.textContent = '';
-        const errorBox = document.createElement('div');
-        errorBox.textContent = 'CGI Upload failed: ' + error;
-        errorBox.style.color = '#b00';
-        errorBox.style.background = '#fff0f0';
-        errorBox.style.border = '1px solid #b00';
-        errorBox.style.padding = '10px';
-        errorBox.style.margin = '10px';
-        errorBox.style.fontWeight = 'bold';
-        gallery.appendChild(errorBox);
+        status.textContent = 'CGI Error: ' + error;
+        status.style.color = '#b00';
       });
     });
 
+    // Clear the file input
     document.getElementById('cgiFileInput').value = '';
   });
+
 
   // Handle delete by filename
   document.getElementById('deletePathBtn').addEventListener('click', function() {

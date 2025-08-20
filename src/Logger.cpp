@@ -20,7 +20,7 @@ void Logger::initialize(const string &logDir, const string &filename)
         Logger::logExit(ERROR, "Couldn't open: \"", absoluteFilePath, "\" Reason: ", strerror(errno));
     
     FileDescriptor::setFD(_logFd);
-    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteFilePath);
+    log(INFO, "Log file initialized", _logFd, ":logFD", absoluteFilePath);
 }
 
 string Logger::initLogDirectory(const string &logDir)

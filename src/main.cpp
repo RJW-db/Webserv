@@ -44,6 +44,7 @@ namespace
     int runWebServer(int argc, char *argv[])
     {
         setupEnvironment();
+        Logger::log(INFO, "does", 4, "work", "aswell");
         setupSignalHandlers();
         configureServer(argc, argv);
         RunServers::setupEpoll();

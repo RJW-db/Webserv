@@ -193,11 +193,13 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
     }
     FileDescriptor::setFD(fdWriteToCgi[0]);   // CGI reads from this (CGI's stdin)
+    Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[0]:", fdWriteToCgi[0]);
     FileDescriptor::setFD(fdWriteToCgi[1]);   // Server writes to CGI's stdin
-    Logger::log(INFO, client, "fdWriteToCgi[1]:", fdWriteToCgi[1]);
+    Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[1]:", fdWriteToCgi[1]);
     FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
-    Logger::log(INFO, client, "fdReadfromCgi[0]:", fdReadfromCgi[0]);
+    Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[0]:", fdReadfromCgi[0]);
     FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
+    Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[1]:", fdReadfromCgi[1]);
 
     if (RunServers::makeSocketNonBlocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
         RunServers::makeSocketNonBlocking(fdReadfromCgi[0]) == false || // Server reads from CGI

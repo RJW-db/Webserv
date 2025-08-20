@@ -50,6 +50,8 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     ssize_t sent = write(_fd, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
     if (sent == -1)
     {
+        _client._cgiClosing = true;
+        // return true;
         throw ErrorCodeClientException(_client, 500, "Writing to CGI failed");
     }
     else if (sent > 0)

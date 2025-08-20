@@ -116,8 +116,8 @@ void RunServers::checkCgiDisconnect()
 
         if (client._cgiClosing == true)
         {
+            Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
             cleanupFD((*it)->_fd);
-            Logger::log(DEBUG, (*it)->_handleType, "Child process for client ", client._fd, " has closed its pipes"); //testlog
             it = _handleCgi.erase(it);
             continue ;
         }
@@ -128,25 +128,33 @@ void RunServers::checkCgiDisconnect()
         {
             if (client._disconnectTimeCgi <= chrono::steady_clock::now())
             {
-                cleanupFD((*it)->_fd);
-                it = _handleCgi.erase(it);
+                client._cgiClosing = true;
+                Logger::log(DEBUG, "client._pid: ", client._pid); //testlog
+                // if (client._cgiClosing == true)
                 kill(client._pid, SIGTERM);
                 Logger::log(DEBUG, "Killed child"); //testlog
+                Logger::log(DEBUG, "client._pid: ", client._pid); //testlog
+                cleanupFD((*it)->_fd);
+                it = _handleCgi.erase(it);
+                throw ErrorCodeClientException(client, 500, "Reading from CGI failed");
                 continue;
             }
             ++it;
         }
         else
         {
+            std::cout << "result: " << result << std::endl; //testcout
             if (WIFEXITED(exit_code))
             {
                 Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
                 HandleTransfer& currentTransfer = *(*it);
-                if (currentTransfer._handleType == HANDLE_WRITE_TO_CGI_TRANSFER)
+                // Logger::log(DEBUG, "handletype: ", currentTransfer._handleType); //testlog
+                if (currentTransfer._handleType == HANDLE_WRITE_TO_CGI_TRANSFER ||
+                    currentTransfer._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
                 {
                     cleanupFD(currentTransfer._fd);
                     client._cgiClosing = true;
-                    Logger::log(DEBUG, (*it)->_handleType, "Child process for client ", client._fd, " has closed its pipes"); //testlog
+                    Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
                     it = _handleCgi.erase(it);
                     continue ;
                 }
@@ -188,12 +196,15 @@ void RunServers::checkClientDisconnects()
                 // cout << "now: "
                 //         << chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()
                 //         << " ms" << endl;
+                client->_cgiClosing = true;
+                checkCgiDisconnect();
                 cleanupClient(*client);
             }
         }
     }
     catch (const std::exception &e)
     {
+        std::cout << "not here" << std::endl; //testcout
         Logger::log(ERROR, "Exception in checkClientDisconnects: ", e.what()); // testlog
     }
 }
@@ -217,8 +228,25 @@ void RunServers::runServers()
         int eventCount;
 
         // cout << "Blocking and waiting for epoll event..." << endl;
-        checkCgiDisconnect();
-        checkClientDisconnects();
+        try
+        {
+            checkCgiDisconnect();
+            checkClientDisconnects();
+        }
+        catch (const ErrorCodeClientException &e)
+        {
+            e.handleErrorClient();  //TODO anything throwing in here stops the server
+        }
+        catch(Logger::ErrorLogExit&)
+        {
+            Logger::logExit(ERROR, "Restart now or finish existing clients and exit");
+        }
+        catch(const exception& e)
+        {
+            Logger::log(ERROR, "Exception in handleEvents: ", e.what()); //testlog
+        }
+        
+
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) // only goes wrong with EINTR(signals)
         {
@@ -275,7 +303,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             {
                 if (client._keepAlive == false && client._isCgi == false)
                 {
-                    std::cout << "cleaning here" << std::endl; //testcout
                     cleanupClient(*_clients[(*it)->_client._fd]);
                 }
                 else
@@ -301,7 +328,7 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             {
                 if ((*it)->writeToCgiTransfer() == true)
                 {
-                    // _handleCgi.erase(it);
+                    _handleCgi.erase(it);
                 }
             }
             else if (currentEvent.events & EPOLLIN)
@@ -343,7 +370,7 @@ void RunServers::handleEvents(size_t eventCount)
                 {
                     buffer[bytesRead] = '\0';
                 }
-                int snooze = stoi(buffer, nullptr, 16);
+                int snooze = stoi(buffer, nullptr, 16); //TODO not protectect sam
                 if (snooze > 0 && snooze < 20)
                 {
                     this_thread::sleep_for(chrono::seconds(snooze));
@@ -354,12 +381,15 @@ void RunServers::handleEvents(size_t eventCount)
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
+                // Indicates a socket error (e.g. connection reset, write to closed socket, etc.)
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(WARN, "EPOLLERR detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN/*should be INFO*/, "EPOLLERR detected on    eventFD:", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ")");
+                // Indicates the socket was closed (the remote side hung up)
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(WARN, "EPOLLHUP detected on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(WARN/*should be INFO*/, "EPOLLHUP detected on    eventFD:", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ")");
+                // Indicates the socket is not ready for reading or writing (no EPOLLIN or EPOLLOUT set)
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-                    Logger::log(WARN, "Unexpected epoll event on fd ", static_cast<int>(eventFD), " (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+                    Logger::log(WARN, "Unexpected epoll event on                 eventFD: ", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
                 auto clientIt = _clients.find(eventFD);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
