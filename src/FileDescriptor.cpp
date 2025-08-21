@@ -55,7 +55,7 @@ void	FileDescriptor::closeFD(int &fd)
     }
     else
     {
-        Logger::log(WARN, "FileDescriptor::closeFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        Logger::log(WARN, "FileDescriptor error", fd, "Not in vector", "closeFD attempted");
     }
 }
 

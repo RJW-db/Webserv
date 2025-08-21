@@ -32,13 +32,15 @@ private:
     static string getTimeStamp();
     static string logLevelToString(uint8_t level, bool useColors);
 
-    static inline string padInfoField(const string& info, size_t width)
+    static inline string padRight(const string& s, size_t width)
     {
-        return (info.size() < width) ? info + string(width - info.size(), ' ') : info;
+        return (s.size() < width) ? s + string(width - s.size(), ' ') : s;
     }
-    static inline string padNumField(const string& num, size_t width)
+
+    // Left pad (for numbers, right-align)
+    static inline string padLeft(const string& s, size_t width)
     {
-        return (num.size() < width) ? string(width - num.size(), ' ') + num : num;
+        return (s.size() < width) ? string(width - s.size(), ' ') + s : s;
     }
 
     template<typename T>
@@ -47,6 +49,8 @@ private:
     template<typename Tuple, std::size_t... Is>
     static string processArgsToString(const Tuple& tup, std::index_sequence<Is...>);
 
+    template<typename Tuple, std::size_t... Is>
+    static string processErrorArgsToString(const Tuple& tup, std::index_sequence<Is...>);
 public:
     static void initialize(const string &logDir, const string &logFilename);
     static string initLogDirectory(const string &logDir);
@@ -86,10 +90,24 @@ std::string Logger::processArgsToString(const Tuple& tup, std::index_sequence<Is
 {
     std::string out;
     ((out += (
-        Is == 0 ? Logger::padInfoField(Logger::argToString(std::get<Is>(tup)), 24) : // message
-        Is == 1 ? Logger::padNumField(Logger::argToString(std::get<Is>(tup)), 6) :   // number (right-aligned)
-        Is == 2 ? Logger::padInfoField(Logger::argToString(std::get<Is>(tup)), 14) : // label (left-aligned, 14 chars)
+        Is == 0 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 24) : // left-aligned message
+        Is == 1 ? Logger::padLeft(Logger::argToString(std::get<Is>(tup)), 6) :   // right-aligned number/dash
+        Is == 2 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 14) : // left-aligned label/reason
         Logger::argToString(std::get<Is>(tup))                                       // rest (no padding)
+    )), ...);
+    return out;
+}
+
+// "ErrorType", "-", "Reason", "File"
+template<typename Tuple, std::size_t... Is>
+std::string Logger::processErrorArgsToString(const Tuple& tup, std::index_sequence<Is...>)
+{
+    std::string out;
+    ((out += (
+        Is == 0 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 24) : // message
+        Is == 1 ? Logger::padLeft(Logger::argToString(std::get<Is>(tup)), 6) :   // number (right-aligned)
+        Is == 2 ? string(14, ' ') + Logger::argToString(std::get<Is>(tup)) :      // always 6 spaces before reason
+        Logger::argToString(std::get<Is>(tup))                                      // rest (no padding)
     )), ...);
     return out;
 }
@@ -100,12 +118,24 @@ void Logger::log(int level, Args&&... args)
     (void)level;
     try
     {
-        // auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
-        // processArgs(tup, std::index_sequence_for<Args...>{});
-        // exit(0);
-
-        auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
-        std::string rawMessage = processArgsToString(tup, std::index_sequence_for<Args...>{});
+        std::string rawMessage;
+        if (level == INFO || level == CHILD_INFO)
+        {
+            auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
+            rawMessage = processArgsToString(tup, std::index_sequence_for<Args...>{});
+        }
+        if (level == WARN || level == ERROR || level == FATAL)
+        {
+            auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
+            rawMessage = processErrorArgsToString(tup, std::index_sequence_for<Args...>{});
+        }
+        if (level == DEBUG)
+        {
+            std::ostringstream oss;
+            (oss << ... << args);
+            rawMessage = oss.str();
+        }
+        
 
         std::string timeStamp = getTimeStamp();
         int lvlStr = (level == CHILD_INFO) ? level + 1 : level;

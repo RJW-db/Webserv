@@ -51,7 +51,7 @@ void trimLeadingWhitespace(string &line)
 void validateWhitespaceAfterCommand(const string& line, const char* whitespaceChars, int lineNumber)
 {
     if (line.empty() || string(whitespaceChars).find(line[0]) == std::string::npos)
-        Logger::logExit(ERROR, "Config error at line ", lineNumber, ": Missing whitespace after command - '", line, "'");
+        Logger::logExit(ERROR, "Config error at line", lineNumber, "Missing whitespace after command - '", line, "'");
 }
 
 /**
@@ -62,7 +62,7 @@ bool    Parsing::runReadblock()
 {
     size_t  skipSpace;
 	if (validSyntax == false)
-		Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": invalid syntax: ", _lines.begin()->second);
+		Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
 
     if (_lines.begin()->second[0] == '}')
     {
@@ -90,7 +90,7 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
     if (string::npos == skipSpace || forceSkip)
     {
         if (_lines.size() <= 1)
-            Logger::logExit(ERROR, "Missing closing bracket '}' for block starting at line ", _lines.begin()->first, ": ", _lines.begin()->second);
+            Logger::logExit(ERROR, "Config error", '-', "Missing bracket, line ", _lines.begin()->first, ": ", _lines.begin()->second);
         _lines.erase(_lines.begin());
         line = _lines.begin()->second;
         curConf.setLineNbr(_lines.begin()->first);
@@ -118,7 +118,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         location.getLocationPath(line);
         skipLine(line, false, block, true);
         if (line[0] != '{')
-            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": couldn't find opening curly bracket for location");
+            Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Couldn't find opening curly bracket for location");
         line = line.erase(0, 1);
         skipLine(line, false, block, false);
         const map<string, bool (Location::*)(string &)> cmds = {
@@ -140,7 +140,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
         validSyntax = true;
     }
     else
-        Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": location block can only be used in server block");
+        Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Location block can only be used in server block");
 }
 
 /**
@@ -165,7 +165,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 		if (foundSemicolon == true)
 		{
 			if (argumentCount == 1)
-                Logger::logExit(ERROR, "Config error: no arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
+                Logger::logExit(ERROR, "Config error", '-', "No arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
 			break;
 		}
 	}
@@ -190,7 +190,7 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
     {
         skipLine(line, true, block, false);
         if (line[0] != ';')
-            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": no semi colon found after input");
+            Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "No semi colon found after input");
         line = line.substr(1);
     }
     skipLine(line, false, block, false);
@@ -265,7 +265,7 @@ void Parsing::ServerCheck()
         _configs.push_back(curConf);
     }
     else
-        Logger::logExit(ERROR, "Config error at line ", curConf.getLineNbr(), ": Couldn't find opening curly bracket server block");
+        Logger::logExit(ERROR, "Config error at line", curConf.getLineNbr(), "Couldn't find opening curly bracket server block");
 }
 
 /**
@@ -277,7 +277,7 @@ void Parsing::readConfigFile(const char *input)
     fstream fs;
     fs.open(input, fstream::in);
     if (fs.is_open() == false)
-        Logger::logExit(ERROR, "Failed to open config file: ", input);
+        Logger::logExit(ERROR, "Config error", '-', "Failed to open ", input);
 
     string line;
     size_t skipSpace;
@@ -306,7 +306,7 @@ void Parsing::processServerBlocks()
         if (strncmp(_lines.begin()->second.c_str(), "server", SERVER_KEYWORD_LENGTH) == 0)
             ServerCheck();
         else
-            Logger::logExit(ERROR, "Config error at line ", _lines.begin()->first, ": ", _lines.begin()->second);
+            Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "invalid block ", _lines.begin()->second);
     }
 }
 

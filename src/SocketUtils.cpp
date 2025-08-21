@@ -10,7 +10,7 @@ void RunServers::epollInit(ServerList &servers)
 {
     _epfd = epoll_create(FD_LIMIT); // parameter must be bigger than 0, rtfm
     if (_epfd == -1)
-        Logger::logExit(ERROR, "Setup failed: Server epoll_create: ", strerror(errno));
+        Logger::logExit(ERROR, "Server error", "-", "Server epoll_create: ", strerror(errno));
     FileDescriptor::setFD(_epfd);
     Logger::log(INFO, "Epoll fd created", _epfd, ":epollFD");
 
@@ -83,7 +83,7 @@ void RunServers::acceptConnection(const int listener)
         if (infd == -1)
         {
             if (errno != EAGAIN)
-                Logger::log(ERROR, "Server accept: ", strerror(errno));
+                Logger::log(ERROR, "Server error", listener, "Accept failed", strerror(errno));
             break;
         }
 
@@ -115,9 +115,9 @@ bool RunServers::addFdToEpoll(int infd)
     current_event.events = EPOLLIN;
     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
     {
-        Logger::log(ERROR, "epoll_ctl: ", strerror(errno));
+        Logger::log(ERROR, "Server error", infd, "epoll_ctl failed: ", strerror(errno));
         if (FileDescriptor::safeCloseFD(infd) == false)
-            Logger::logExit(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", infd);
+            Logger::logExit(FATAL, "FileDescriptor error", infd, "safeCloseFD failed, FD not in vector");
         return false;
     }
     FileDescriptor::setFD(infd);
@@ -139,7 +139,7 @@ bool RunServers::makeSocketNonBlocking(int sfd)
     int currentFlags = fcntl(sfd, F_GETFL, 0);
     if (currentFlags == -1)
     {
-        Logger::log(ERROR, "fcntl: ", strerror(errno));
+        Logger::log(ERROR, "Server error", sfd, "fcntl F_GETFL failed", strerror(errno));
         return false;
     }
 
@@ -147,7 +147,7 @@ bool RunServers::makeSocketNonBlocking(int sfd)
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
     if (fcntlResult == -1)
     {
-        Logger::log(ERROR, "fcntl: ", strerror(errno));
+        Logger::log(ERROR, "Server error", sfd, "fcntl F_SETFL failed", strerror(errno));
         return false;
     }
     return true;
@@ -163,7 +163,7 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
     {
         if (_clients.count(fd) == 0 || !_clients[fd])
         {
-            Logger::log(ERROR, "setEpollEvents: invalid client FD ", fd);
+            Logger::log(ERROR, "Server Error", fd, "Invalid clientFD, setEpollEvents failed");
             throw std::runtime_error("epoll_ctl failed: " + string(strerror(errno)));
         }
         throw ErrorCodeClientException(*_clients[fd], 0, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));

@@ -213,7 +213,7 @@ void HttpRequest::findIndexFile(Client &client, struct stat &status)
             }
             if (access(indexPage.data(), R_OK) == -1)
             {
-                Logger::log(WARN, "access: ", strerror(errno));
+                Logger::log(WARN, "Access error", '-', "Access failed: ", strerror(errno));
                 continue;
             }
             client._filenamePath = indexPage;

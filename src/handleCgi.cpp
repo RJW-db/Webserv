@@ -166,7 +166,7 @@ bool setPipeBufferSize(int pipeFd)
 
     if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
     {
-        Logger::log(ERROR, "fcntl (set pipe size): ", strerror(errno));
+        Logger::log(ERROR, "CGI error", pipeFd, "fcntl (F_SETPIPE_SZ): ", strerror(errno));
         return false;
     }
     return true;
@@ -176,7 +176,7 @@ void sigtermHandler(int signum)
 {
     if (signum == SIGTERM)
     {
-        Logger::log(WARN, "SIGTERM received, CGI took too long to respond, exiting child process");
+        Logger::log(WARN, "CGI warning", "-", "SIGTERM, CGI timeout, exiting child process");
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
         exit(EXIT_FAILURE);
@@ -220,13 +220,12 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     if (client._pid == CHILD)
     {
         if (signal(SIGTERM, &sigtermHandler) == SIG_ERR)
-            Logger::logExit(ERROR, "Failed to set SIGTERM handler: ", strerror(errno));
+            Logger::logExit(ERROR, "Signal handler error", '-', "SIGTERM failed", strerror(errno));
         Logger::log(CHILD, client, "child ._pid ", client._pid); //testlog
         Logger::log(CHILD, "we got into child"); //testlog
         // sleep(10);
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
-
     if (client._pid >= PARENT)
     {
         Logger::log(CHILD, client, "parent ._pid ", client._pid); //testlog

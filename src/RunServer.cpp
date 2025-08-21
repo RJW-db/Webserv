@@ -84,13 +84,13 @@ void RunServers::addStdinToEpoll()
     int stdin_fd = 0;
 
     if (makeSocketNonBlocking(stdin_fd) == false)
-        Logger::logExit(ERROR, "Failed to set stdin to non-blocking mode");
+        Logger::logExit(ERROR, "Server error" , '-', "Failed to set stdin to non-blocking mode");
 
     struct epoll_event current_event;
     current_event.data.fd = stdin_fd;
     current_event.events = EPOLLIN;
     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
-        Logger::logExit(ERROR, "epoll_ctl (stdin): ", strerror(errno));
+        Logger::logExit(ERROR, "Server error" , '-', "epoll_ctl (stdin): ", strerror(errno));
 }
 
 void RunServers::closeHandles(pid_t pid)
@@ -205,7 +205,7 @@ void RunServers::checkClientDisconnects()
     catch (const std::exception &e)
     {
         std::cout << "not here" << std::endl; //testcout
-        Logger::log(ERROR, "Exception in checkClientDisconnects: ", e.what()); // testlog
+        Logger::log(ERROR, "Server error", '-', "Exception in checkClientDisconnects: ", e.what());
     }
 }
 
@@ -239,11 +239,11 @@ void RunServers::runServers()
         }
         catch(Logger::ErrorLogExit&)
         {
-            Logger::logExit(ERROR, "Restart now or finish existing clients and exit");
+            Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
         }
         catch(const exception& e)
         {
-            Logger::log(ERROR, "Exception in handleEvents: ", e.what()); //testlog
+            Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
         }
         
 
@@ -252,7 +252,7 @@ void RunServers::runServers()
         {
             if (errno == EINTR)
                 break ;
-            Logger::logExit(ERROR, "Server epoll_wait: ", strerror(errno));
+            Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));
         }
         try
         {
@@ -261,11 +261,11 @@ void RunServers::runServers()
         }
         catch(Logger::ErrorLogExit&)
         {
-            Logger::logExit(ERROR, "Restart now or finish existing clients and exit");
+            Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
         }
         catch(const exception& e)
         {
-            Logger::log(ERROR, "Exception in handleEvents: ", e.what()); //testlog
+            Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
         }
     }
     Logger::log(INFO, "Server shutting down gracefully...");
@@ -378,18 +378,21 @@ void RunServers::handleEvents(size_t eventCount)
                 // processStdinInput(); // Your function to handle terminal input
                 continue ;
             }
+            // Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
+            // Logger::log(WARN, "Epoll event", "     " + to_string(eventFD) + ":clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
                 // Indicates a socket error (e.g. connection reset, write to closed socket, etc.)
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(WARN/*should be INFO*/, "EPOLLERR detected on    eventFD:", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
                 // Indicates the socket was closed (the remote side hung up)
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(WARN/*should be INFO*/, "EPOLLHUP detected on    eventFD:", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ")");
+                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLHUP (events: ", static_cast<int>(currentEvent.events), ')');
                 // Indicates the socket is not ready for reading or writing (no EPOLLIN or EPOLLOUT set)
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-                    Logger::log(WARN, "Unexpected epoll event on                 eventFD: ", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+                    Logger::log(WARN, "Epoll event", to_string(eventFD) + ":clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+                    // Logger::log(WARN, "Unexpected epoll event on                 eventFD: ", static_cast<int>(eventFD), "  (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
                 auto clientIt = _clients.find(eventFD);
                 if (clientIt != _clients.end() && clientIt->second)
                 {
@@ -452,7 +455,7 @@ void RunServers::getExecutableDirectory()
         char buf[PATH_MAX];
         ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
         if (len == -1)
-            Logger::logExit(ERROR, "readlink failed: ", strerror(errno));
+            Logger::logExit(ERROR, "Server error", '-', "readlink failed: ", strerror(errno));
         buf[len] = '\0';
 
         std::filesystem::path exePath(buf);
@@ -460,6 +463,6 @@ void RunServers::getExecutableDirectory()
     }
     catch (const exception& e)
     {
-        Logger::logExit(ERROR, "Cannot determine executable directory: " + string(e.what()));
+        Logger::logExit(ERROR, "Server error", '-', "Cannot determine executable directory: " + string(e.what()));
     }
 }

@@ -44,7 +44,6 @@ namespace
     int runWebServer(int argc, char *argv[])
     {
         setupEnvironment();
-        Logger::log(INFO, "does", 4, "work", "aswell");
         setupSignalHandlers();
         configureServer(argc, argv);
         RunServers::setupEpoll();
@@ -62,7 +61,7 @@ namespace
     void setupSignalHandlers()
     {
         if (signal(SIGINT, &sigintHandler) == SIG_ERR)
-            Logger::logExit(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
+            Logger::logExit(ERROR, "Signal handler error", '-', "SIGINT failed", strerror(errno));
     }
 
     void sigintHandler(int signum)
@@ -82,7 +81,7 @@ namespace
             }
             catch(const std::exception& e)
             {
-                Logger::logExit(ERROR, "Failed to set client buffer size: ", e.what());
+                Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
             }
         }
         Parsing configFile(confFile);
