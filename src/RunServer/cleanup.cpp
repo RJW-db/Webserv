@@ -156,3 +156,40 @@ void RunServers::closeHandles(pid_t pid)
         ++it;
     }
 }
+
+void RunServers::clientHttpCleanup(Client &client)
+{
+    client._headerParseState = HEADER_AWAITING;
+    client._header.clear();
+    client._body.clear();
+    client._requestPath.clear();
+    client._queryString.clear();
+    client._method.clear();
+    client._useMethod = 0;
+    client._contentLength = 0;
+    client._headerFields.clear();
+    client._rootPath.clear();
+	client._filenamePath.clear();
+    client._name.clear();
+    client._version.clear();
+    client._bodyEnd = 0;
+    client._filename.clear();
+    client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+    client._isAutoIndex = false;
+    client._isCgi = false;
+}
+
+void RunServers::cleanupClient(Client &client)
+{
+    int clientFD = client._fd;
+    Logger::log(INFO, client, "Disconnected");
+    for (auto it = _handle.begin(); it != _handle.end();)
+    {
+        if ((*it)->_client._fd == clientFD)
+            it = _handle.erase(it);
+        else
+            ++it;
+    }
+    _clients.erase(clientFD);
+    FileDescriptor::cleanupFD(clientFD);
+}

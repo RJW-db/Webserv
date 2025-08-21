@@ -27,12 +27,12 @@ DOCKER_DIR		:=	testing/docker
 SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp \
-					RunServer/RunServer.cpp	RunServer/initialization.cpp	RunServer/acceptConnection.cpp	RunServer/cleanup.cpp	\
+					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp	\
 					Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
-					SocketUtils.cpp		ClientRequest.cpp		utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
+					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
 					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 

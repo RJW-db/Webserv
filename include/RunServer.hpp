@@ -36,32 +36,38 @@ class RunServers
 {
     public:
         // initialization
-        static void getExecutableDirectory();
-		static void createServers(vector<ConfigServer> &configs);
-        static void setupEpoll();
-        static void epollInit(ServerList &servers);
-        static void addStdinToEpoll();
+        static void   getExecutableDirectory();
+		static void   createServers(vector<ConfigServer> &configs);
+        static void   setupEpoll();
+        static void   epollInit(ServerList &servers);
+        static void   addStdinToEpoll();
+        // utils
+        static void   setEpollEvents(int fd, int option, uint32_t events);
+        static void   setServerFromListener(Client &client);
+        static void   setLocation(Client &state);
 
         // main loop
-        static void runServers();
-        static void handleEvents(size_t eventCount);
-        static bool handleEpollStdinEvents();
-        static bool handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD);
-        static void acceptConnection(const int listener);
-        static bool addFdToEpoll(int infd);
-        static void setClientServerAddress(Client &client, int infd);
-        static bool runHandleTransfer(struct epoll_event &currentEvent);
-        static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
-        static void processClientRequest(Client &client);
+        static void   runServers();
+        static void   handleEvents(size_t eventCount);
+        static bool   handleEpollStdinEvents();
+        static bool   handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD);
+        static void   acceptConnection(const int listener);
+        static bool   addFdToEpoll(int infd);
+        static void   setClientServerAddress(Client &client, int infd);
+        static bool   runHandleTransfer(struct epoll_event &currentEvent);
+        static bool   runCgiHandleTransfer(struct epoll_event &currentEvent);
+        static void   processClientRequest(Client &client);
+        static size_t receiveClientData(Client &client, char *buff);
 
         // cleanup
-        static void disconnectChecks();
-        static void checkCgiDisconnect();
-        static void checkClientDisconnects();
-        static void removeHandlesWithFD(int fd);
-        static void closeHandles(pid_t pid);
+        static void   disconnectChecks();
+        static void   checkCgiDisconnect();
+        static void   checkClientDisconnects();
+        static void   removeHandlesWithFD(int fd);
+        static void   closeHandles(pid_t pid);
+        static void   clientHttpCleanup(Client &client);
+        static void   cleanupClient(Client &client);
 
-        // client management
         static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle)
         {
             _handle.push_back(move(handle));
@@ -72,34 +78,6 @@ class RunServers
             _handleCgi.push_back(move(handle));
         }
 
-
-
-
-        static void setServerFromListener(Client &client);
-
-
-        static size_t receiveClientData(Client &client, char *buff);
-
-        static void serverMatchesPortHost(Server &Server, int fd);
-		static void setServerFromHost(Client &client);
-        static void setLocation(Client &state);
-
-
-        static void setEpollEvents(int fd, int option, uint32_t events);
-
-		static unique_ptr<Client> &getClient(int fd);
-
-        static void parseHeaders(Client &client);
-        // unordered_map<string, string_view> _headerFields;
-
-        static void clientHttpCleanup(Client &client);
-
-        static void cleanupServer();
-        static void cleanupClient(Client &client);
-
-
-
-
         static inline string &getServerRootDir()
         {
             return _serverRootDir;
@@ -108,7 +86,6 @@ class RunServers
         {
             _clientBufferSize = value;
         }
-
         static inline uint64_t getClientBufferSize()
         {
             return _clientBufferSize;
@@ -116,6 +93,10 @@ class RunServers
         static inline uint64_t getRamBufferLimit()
         {
             return _ramBufferLimit;
+        }
+        static inline int getEpollFD()
+        {
+            return _epfd;
         }
 
         class ClientException : public exception
@@ -136,44 +117,24 @@ class RunServers
                     : ClientException(message) {}
         };
 
-
-        static int getEpollFD()
-        {
-            return _epfd;
-        }
-
     private:
-        // string _serverName;
-        // int _listener; // moet weg
-
-		// static FileDescriptor _fds;
+        // --- Server configuration ---
         static string _serverRootDir;
+        static ServerList _servers;
+        static vector<int> _listenFDS;
 
+        // --- Epoll and event management ---
         static int _epfd;
         static array<struct epoll_event, FD_LIMIT> _events;
 
-		static ServerList _servers;
-        // static unordered_map<int, string> _fdBuffers;
-        // static unordered_map<int, ClientRequestState> _clientStates;
-        // static vector<int> _connectedClients;
-        // static vector<HandleTransfer> _handle;
+        // --- Client and handle management ---
+        static unordered_map<int, unique_ptr<Client>> _clients;
         static vector<unique_ptr<HandleTransfer>> _handle;
         static vector<unique_ptr<HandleTransfer>> _handleCgi;
-        static vector<int> _listenFDS;
-        static unordered_map<int, unique_ptr<Client>> _clients;
 
+        // --- Miscellaneous ---
         static int _level;
         static uint64_t _clientBufferSize;
         static uint64_t _ramBufferLimit;
 };
-
-
-void parseHttpRequest(string &request);
-std::string escapeSpecialChars(const std::string& input);
-
-
-string  extractMethod(const string &header);
-string  extractHeader(const string &header, const string &key);
-void    sendErrorResponse(int clientFD, const std::string &message);
-void    handleRequest(int clientFD, string &method, string &header, string &body);
 #endif
