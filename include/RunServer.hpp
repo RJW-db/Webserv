@@ -11,23 +11,20 @@
 
 #define EPOLL_DEL_EVENTS 0
 # define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
-#include <iostream>
 
-#include <memory>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <string_view>
+#include <signal.h> // sig_atomic_t
 
-#include <Server.hpp>
-#include <HandleTransfer.hpp>
-// #include <utils.hpp>
-#include <Client.hpp>
-#include <signal.h>
+// #include <memory>
+// #include <vector>
+// #include <array>
+// #include <unordered_map>
+// #include <string_view>
 
+#include "Server.hpp"
+#include "HandleTransfer.hpp"
+#include "Client.hpp"
 
 using namespace std;
-
 
 extern volatile sig_atomic_t g_signal_status;
 // #include <FileDescriptor.hpp>
@@ -38,36 +35,55 @@ using ServerList = vector<unique_ptr<Server>>;
 class RunServers
 {
     public:
-		RunServers() = default;
-        // RunServers(tmp_t *serverConf);
-        ~RunServers();
-
+        // initialization
         static void getExecutableDirectory();
+		static void createServers(vector<ConfigServer> &configs);
         static void setupEpoll();
-
         static void epollInit(ServerList &servers);
         static void addStdinToEpoll();
 
-		static void createServers(vector<ConfigServer> &configs);
-
+        // main loop
         static void runServers();
         static void handleEvents(size_t eventCount);
+        static bool handleEpollStdinEvents();
+        static bool handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD);
         static void acceptConnection(const int listener);
         static bool addFdToEpoll(int infd);
-
         static void setClientServerAddress(Client &client, int infd);
+        static bool runHandleTransfer(struct epoll_event &currentEvent);
+        static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
+        static void processClientRequest(Client &client);
+
+        // cleanup
+        static void disconnectChecks();
+        static void checkCgiDisconnect();
+        static void checkClientDisconnects();
+        static void removeHandlesWithFD(int fd);
+        static void closeHandles(pid_t pid);
+
+        // client management
+        static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle)
+        {
+            _handle.push_back(move(handle));
+        }
+
+        static inline void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle)
+        {
+            _handleCgi.push_back(move(handle));
+        }
+
+
+
 
         static void setServerFromListener(Client &client);
 
 
-        static void processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);
 
         static void serverMatchesPortHost(Server &Server, int fd);
 		static void setServerFromHost(Client &client);
         static void setLocation(Client &state);
 
-        static bool makeSocketNonBlocking(int sfd);
 
         static void setEpollEvents(int fd, int option, uint32_t events);
 
@@ -76,22 +92,13 @@ class RunServers
         static void parseHeaders(Client &client);
         // unordered_map<string, string_view> _headerFields;
 
-        static void insertHandleTransfer(unique_ptr<HandleTransfer> handle);
-        static void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle);
-
         static void clientHttpCleanup(Client &client);
 
         static void cleanupServer();
-        static void cleanupFD(int &fd);
         static void cleanupClient(Client &client);
 
-        static void checkClientDisconnects();
-        static void checkCgiDisconnect();
-        static void closeHandles(pid_t pid);
-        static void removeHandlesWithFD(int fd);
 
-            static bool runHandleTransfer(struct epoll_event &currentEvent);
-        static bool runCgiHandleTransfer(struct epoll_event &currentEvent);
+
 
         static inline string &getServerRootDir()
         {
@@ -160,10 +167,6 @@ class RunServers
         static uint64_t _ramBufferLimit;
 };
 
-void	poll_usages(void);
-void	epoll_usage(void);
-int		getaddrinfo_usage(void);
-int		server(void);
 
 void parseHttpRequest(string &request);
 std::string escapeSpecialChars(const std::string& input);

@@ -1,13 +1,26 @@
-#include <FileDescriptor.hpp>
-#include <RunServer.hpp>
-#include <Logger.hpp>
+#ifdef __linux__
+# include <sys/epoll.h> // EPOLL_CTL_DEL
+#endif
+#include <fcntl.h>
+#include "FileDescriptor.hpp"
+#include "RunServer.hpp"
+#include "Logger.hpp"
 
 // array<int, FD_LIMIT> FileDescriptor::_fds = {};
 // vector<int> FileDescriptor::_fds(FD_LIMIT);
 vector<int> FileDescriptor::_fds = {};
 // map<chrono::steady_clock::time_point, int> FileDescriptor::_clientFDS = {};
 
-void FileDescriptor::cleanupFD()
+void FileDescriptor::cleanupFD(int &fd)
+{
+    if (fd > 0)
+    {
+        RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+        FileDescriptor::closeFD(fd);
+    }
+}
+
+void FileDescriptor::cleanupAllFD()
 {
     while (!_fds.empty())
     {
@@ -15,7 +28,6 @@ void FileDescriptor::cleanupFD()
         closeFD(fd);
     }
 }
-
 
 void	FileDescriptor::setFD(int fd)
 {
@@ -70,6 +82,25 @@ bool    FileDescriptor::safeCloseFD(int fd)
     if (ret == -1 && errno == EIO)
     {
         // Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        return false;
+    }
+    return true;
+}
+
+bool FileDescriptor::setNonBlocking(int sfd)
+{
+    int currentFlags = fcntl(sfd, F_GETFL, 0);
+    if (currentFlags == -1)
+    {
+        Logger::log(ERROR, "Server error", sfd, "fcntl F_GETFL failed", strerror(errno));
+        return false;
+    }
+
+    currentFlags |= O_NONBLOCK;
+    int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
+    if (fcntlResult == -1)
+    {
+        Logger::log(ERROR, "Server error", sfd, "fcntl F_SETFL failed", strerror(errno));
         return false;
     }
     return true;

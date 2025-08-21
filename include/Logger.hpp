@@ -92,8 +92,8 @@ string Logger::processArgsToString(const Tuple& tup, index_sequence<Is...>)
     string out;
     ((out += (
         Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // left-aligned message
-        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) + ':' :   // right-aligned number/dash
-        Is == 2 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 14) : // left-aligned label/reason
+        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :   // right-aligned number/dash
+        Is == 2 ? ':' + Logger::padRight(Logger::argToString(get<Is>(tup)), 14) : // left-aligned label/reason
         Logger::argToString(get<Is>(tup))                                       // rest (no padding)
     )), ...);
     return out;

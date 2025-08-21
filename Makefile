@@ -26,7 +26,9 @@ DOCKER_DIR		:=	testing/docker
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp						RunServer.cpp		Server.cpp					serverListenFD.cpp		\
+MAIN			:=	main.cpp \
+					RunServer/RunServer.cpp	RunServer/initialization.cpp	RunServer/acceptConnection.cpp	RunServer/cleanup.cpp	\
+					Server.cpp					serverListenFD.cpp		\
 					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
 						loggingErrors.cpp					Location.cpp			\
@@ -81,7 +83,7 @@ test: all
 	./$(NAME)
 
 valgrind: all
-	valgrind --track-fds=yes ./$(NAME)
+	valgrind -s --track-fds=yes ./$(NAME)
 
 build:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')

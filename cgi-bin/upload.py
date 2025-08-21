@@ -5,6 +5,10 @@ import cgi
 import cgitb
 import shutil
 import time
+import signal
+
+# Ignore SIGPIPE so Python doesn't print BrokenPipeError to stderr
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 cgitb.enable()
 

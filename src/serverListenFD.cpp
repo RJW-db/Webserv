@@ -40,7 +40,7 @@ void ServerListenFD::createListenerSocket()
 	struct addrinfo *serverInfo = getServerAddrinfo();
 	bindToSocket(serverInfo);
 	freeaddrinfo(serverInfo);
-	if (RunServers::makeSocketNonBlocking(_listener) == false)
+	if (FileDescriptor::setNonBlocking(_listener) == false)
 		Logger::logExit(ERROR, "Server error", '-', "Non-blocking fail", _listener, ": ", strerror(errno));
 
 	if (listen(_listener, SOMAXCONN) == -1)

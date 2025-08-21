@@ -60,7 +60,7 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         if (_fileBuffer.size() == _bytesWrittenTotal)
         {
-            RunServers::cleanupFD(_fd);
+            FileDescriptor::cleanupFD(_fd);
             return true;
         }
     }
@@ -73,14 +73,14 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     ssize_t rd = read(_fd, buff.data(), buff.size());
     if (rd == -1)
     {
-        RunServers::cleanupFD(_fd);
+        FileDescriptor::cleanupFD(_fd);
         throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
     }
     _fileBuffer.append(buff.data(), rd);
 
     if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
-        RunServers::cleanupFD(_fd);
+        FileDescriptor::cleanupFD(_fd);
         auto handle = make_unique<HandleToClientTransfer>(_client, _fileBuffer);
         RunServers::insertHandleTransfer(move(handle));
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
