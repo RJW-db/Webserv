@@ -380,15 +380,16 @@ void RunServers::handleEvents(size_t eventCount)
             }
             // Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
             // Logger::log(WARN, "Epoll event", "     " + to_string(eventFD) + ":clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+            // Logger::log(IWARN, "Epoll event", eventFD, "clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
             if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
                 !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
             {
                 // Indicates a socket error (e.g. connection reset, write to closed socket, etc.)
                 if (currentEvent.events & EPOLLERR)
-                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
+                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), "clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
                 // Indicates the socket was closed (the remote side hung up)
                 if (currentEvent.events & EPOLLHUP)
-                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), ":clientFD", "EPOLLHUP (events: ", static_cast<int>(currentEvent.events), ')');
+                    Logger::log(INFO/*should be INFO*/, "Epoll event", static_cast<int>(eventFD), "clientFD", "EPOLLHUP (events: ", static_cast<int>(currentEvent.events), ')');
                 // Indicates the socket is not ready for reading or writing (no EPOLLIN or EPOLLOUT set)
                 if (!(currentEvent.events & (EPOLLIN | EPOLLOUT)))
                     Logger::log(WARN, "Epoll event", to_string(eventFD) + ":clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");

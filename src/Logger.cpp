@@ -22,7 +22,7 @@ void Logger::initialize(const string &logDir, const string &filename)
     }
 
     FileDescriptor::setFD(_logFd);
-    log(INFO, "Log file initialized", _logFd, ":logFD", absoluteFilePath);
+    log(INFO, "Log file initialized", _logFd, "logFD", absoluteFilePath);
 }
 
 string Logger::initLogDirectory(const string &logDir)

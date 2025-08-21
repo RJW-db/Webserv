@@ -19,10 +19,11 @@ enum LogLevel : uint8_t
 {
     CHILD_INFO = 0, // cout
     INFO       = 1, // cout
-    DEBUG      = 2, // cerr
+    IWARN      = 2, // cerr
     WARN       = 3, // cerr
     ERROR      = 4, // cerr
-    FATAL      = 5  // cerr
+    FATAL      = 5, // cerr
+    DEBUG      = 6  // cerr
 };
 
 class Logger {
@@ -46,11 +47,11 @@ private:
     template<typename T>
     static string argToString(const T& arg);
 
-    template<typename Tuple, std::size_t... Is>
-    static string processArgsToString(const Tuple& tup, std::index_sequence<Is...>);
+    template<typename Tuple, size_t... Is>
+    static string processArgsToString(const Tuple& tup, index_sequence<Is...>);
 
-    template<typename Tuple, std::size_t... Is>
-    static string processErrorArgsToString(const Tuple& tup, std::index_sequence<Is...>);
+    template<typename Tuple, size_t... Is>
+    static string processErrorArgsToString(const Tuple& tup, index_sequence<Is...>);
 public:
     static void initialize(const string &logDir, const string &logFilename);
     static string initLogDirectory(const string &logDir);
@@ -65,7 +66,7 @@ public:
     template<typename... Args>
     static void log(int level, Client &client, Args&&... args);
 
-    class ErrorLogExit : public std::exception
+    class ErrorLogExit : public exception
     {
     public:
         explicit ErrorLogExit() noexcept {}
@@ -79,35 +80,35 @@ public:
 template<typename T>
 string Logger::argToString(const T& arg)
 {
-    std::ostringstream oss;
+    ostringstream oss;
     oss << arg;
     return oss.str();
 }
 
 // Helper to process each argument by index
-template<typename Tuple, std::size_t... Is>
-std::string Logger::processArgsToString(const Tuple& tup, std::index_sequence<Is...>)
+template<typename Tuple, size_t... Is>
+string Logger::processArgsToString(const Tuple& tup, index_sequence<Is...>)
 {
-    std::string out;
+    string out;
     ((out += (
-        Is == 0 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 24) : // left-aligned message
-        Is == 1 ? Logger::padLeft(Logger::argToString(std::get<Is>(tup)), 6) :   // right-aligned number/dash
-        Is == 2 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 14) : // left-aligned label/reason
-        Logger::argToString(std::get<Is>(tup))                                       // rest (no padding)
+        Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // left-aligned message
+        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) + ':' :   // right-aligned number/dash
+        Is == 2 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 14) : // left-aligned label/reason
+        Logger::argToString(get<Is>(tup))                                       // rest (no padding)
     )), ...);
     return out;
 }
 
 // "ErrorType", "-", "Reason", "File"
-template<typename Tuple, std::size_t... Is>
-std::string Logger::processErrorArgsToString(const Tuple& tup, std::index_sequence<Is...>)
+template<typename Tuple, size_t... Is>
+string Logger::processErrorArgsToString(const Tuple& tup, index_sequence<Is...>)
 {
-    std::string out;
+    string out;
     ((out += (
-        Is == 0 ? Logger::padRight(Logger::argToString(std::get<Is>(tup)), 24) : // message
-        Is == 1 ? Logger::padLeft(Logger::argToString(std::get<Is>(tup)), 6) :   // number (right-aligned)
-        Is == 2 ? string(14, ' ') + Logger::argToString(std::get<Is>(tup)) :      // always 6 spaces before reason
-        Logger::argToString(std::get<Is>(tup))                                      // rest (no padding)
+        Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // message
+        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :   // number (right-aligned)
+        Is == 2 ? string(14, ' ') + Logger::argToString(get<Is>(tup)) :      // always 6 spaces before reason
+        Logger::argToString(get<Is>(tup))                                      // rest (no padding)
     )), ...);
     return out;
 }
@@ -118,32 +119,43 @@ void Logger::log(int level, Args&&... args)
     (void)level;
     try
     {
-        std::string rawMessage;
-        if (level == INFO || level == CHILD_INFO)
+        string rawMessage;
+        switch (level)
         {
-            auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
-            rawMessage = processArgsToString(tup, std::index_sequence_for<Args...>{});
-        }
-        if (level == WARN || level == ERROR || level == FATAL)
-        {
-            auto tup = std::forward_as_tuple(std::forward<Args>(args)...);
-            rawMessage = processErrorArgsToString(tup, std::index_sequence_for<Args...>{});
-        }
-        if (level == DEBUG)
-        {
-            std::ostringstream oss;
-            (oss << ... << args);
-            rawMessage = oss.str();
+            case CHILD_INFO:
+            case INFO:
+            case IWARN:
+            {
+                auto tup = forward_as_tuple(forward<Args>(args)...);
+                rawMessage = processArgsToString(tup, index_sequence_for<Args...>{});
+                // cout << rawMessage << endl; //testcout
+                break;
+            }
+            case WARN:
+            case ERROR:
+            case FATAL:
+            {
+                auto tup = forward_as_tuple(forward<Args>(args)...);
+                rawMessage = processErrorArgsToString(tup, index_sequence_for<Args...>{});
+                break;
+            }
+            default:
+            {
+                ostringstream oss;
+                (oss << ... << args);
+                rawMessage = oss.str();
+            }
         }
         
+        string timeStamp = getTimeStamp();
+        int lvlStr = (level == CHILD_INFO || level == IWARN) ? level + 1 : level;
+        // cout << "lvlstr "<<lvlStr << endl; //testcout
+        string levelStr = logLevelToString(lvlStr, LOGGER);
+        // cout << levelStr << endl; //testcout
 
-        std::string timeStamp = getTimeStamp();
-        int lvlStr = (level == CHILD_INFO) ? level + 1 : level;
-        std::string levelStr = logLevelToString(lvlStr, LOGGER);
-
-        std::ostringstream logMsg;
+        ostringstream logMsg;
         logMsg << timeStamp << levelStr << escapeSpecialChars(rawMessage, LOGGER) << "\n";
-        std::string logStr = logMsg.str();
+        string logStr = logMsg.str();
 
         if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
         {
@@ -152,7 +164,7 @@ void Logger::log(int level, Args&&... args)
             _logFd = -1;
         }
 
-        if (level >= DEBUG || (TERMINAL_DEBUG == true && level == INFO))
+        if (level >= IWARN || (TERMINAL_DEBUG == true && level == INFO))
         {
             levelStr = logLevelToString(lvlStr, TERMINAL);
             ostream& output = (level == INFO) ? cout : cerr;
@@ -170,7 +182,7 @@ void Logger::log(int level, Args&&... args)
 template<typename... Args>
 void Logger::logExit(int level, Args&&... args)
 {
-    log(level, std::forward<Args>(args)...);
+    log(level, forward<Args>(args)...);
     throw Logger::ErrorLogExit();
     // exit(EXIT_FAILURE);
 }
@@ -191,10 +203,10 @@ void Logger::log(int level, Client &client, Args&&... args)
             if (portHostInfo.length() < 21)
                 portHostInfo.append(21 - portHostInfo.length(), ' ');
             // log(level, portHostInfo, "  clientFD:", client._fd, "  ", args...);
-            log(level, portHostInfo, client._fd, ":clientFD", args...);
+            log(level, portHostInfo, client._fd, "clientFD", args...);
             return;
         }
-        Logger::log(level, client._fd, ":clientFD", args...);
+        Logger::log(level, client._fd, "clientFD", args...);
         // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
     catch(...)

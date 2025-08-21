@@ -12,7 +12,7 @@ void RunServers::epollInit(ServerList &servers)
     if (_epfd == -1)
         Logger::logExit(ERROR, "Server error", "-", "Server epoll_create: ", strerror(errno));
     FileDescriptor::setFD(_epfd);
-    Logger::log(INFO, "Epoll fd created", _epfd, ":epollFD");
+    Logger::log(INFO, "Epoll fd created", _epfd, "epollFD");
 
 	map<pair<const string, string>, int> listenersMade;
     for (auto &server : servers)
