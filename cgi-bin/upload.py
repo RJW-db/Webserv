@@ -34,7 +34,7 @@ def main():
     # # === ACTUAL LOGIC ===
 
 
-    time.sleep(15)
+    # time.sleep(15)
 
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
     public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')

@@ -87,21 +87,21 @@ void RunServers::handleEvents(size_t eventCount)
 
             if (eventFD == 0 && (currentEvent.events & EPOLLIN) &&
                 handleEpollStdinEvents())
-                continue ;
+                continue;
+
             if (handleEpollErrorEvents(currentEvent, eventFD))
                 continue;
+
             if (find(_listenFDS.begin(), _listenFDS.end(), eventFD) != _listenFDS.end())
                 acceptConnection(eventFD);
+
             if (runHandleTransfer(currentEvent) == true || \
                 runCgiHandleTransfer(currentEvent) == true)
                 continue;
 
             if ((_clients.find(eventFD) != _clients.end()) &&
                 (currentEvent.events == EPOLLIN))
-            {
                 processClientRequest(*_clients[eventFD].get());
-                continue;
-            }
         }
         catch (const ErrorCodeClientException &e)
         {

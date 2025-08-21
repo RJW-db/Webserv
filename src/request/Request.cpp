@@ -426,9 +426,11 @@ void HttpRequest::handleRequest(Client &client)
         if (remove(('.' + client._requestPath).data()) == 0)
         {
             string body = "File deleted";
-            string response = HttpRequest::HttpResponse(client, code, "txt", body.size());
+            string response = HttpRequest::HttpResponse(client, code, ".txt", body.size());
             response += body;
             send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
+            std::cout << escapeSpecialChars(response.c_str(), TERMINAL_DEBUG) << std::endl; //testcout
+            Logger::log(INFO, client, "DELETE ", client._rootPath);
             RunServers::clientHttpCleanup(client);
         }
         else
