@@ -23,7 +23,29 @@ bool HttpRequest::processHttpBody(Client &client)
     return true;
 }
 
-ContentType HttpRequest::getContentType(Client &client)
+void HttpRequest::getContentLength(Client &client)
+{
+    auto contentLength = client._headerFields.find("Content-Length");
+    if (contentLength == client._headerFields.end())
+        throw RunServers::ClientException("Broken POST request");
+
+    const string_view content = contentLength->second;
+    try
+    {
+        uint64_t value = stoullSafe(content);
+        if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
+            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
+        if (value == 0)
+            throw RunServers::ClientException("Content-Length cannot be zero.");
+        client._contentLength = static_cast<size_t>(value);
+    }
+    catch (const runtime_error &e)
+    {
+        throw RunServers::ClientException(e.what());
+    }
+}
+
+void HttpRequest::getContentType(Client &client)
 {
     auto it = client._headerFields.find("Content-Type");
     if (it == client._headerFields.end())
@@ -43,26 +65,15 @@ ContentType HttpRequest::getContentType(Client &client)
         }
         else
             throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
-        return MULTIPART;
     }
     else
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
     if (ct == "application/x-www-form-urlencoded")
-    {
         client._contentType = ct;
-        return FORM_URLENCODED;
-    }
     if (ct == "application/json")
-    {
         client._contentType = ct;
-        return JSON;
-    }
     if (ct == "text/plain")
-    {
         client._contentType = ct;
-        return TEXT;
-    }
-    return UNSUPPORTED;
 }
 
 void HttpRequest::getBodyInfo(Client &client, const string buff)

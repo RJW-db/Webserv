@@ -40,21 +40,9 @@ using namespace std;
 
 #include "Constants.hpp"
 
-
-enum ContentType
-{
-    UNSUPPORTED,
-    FORM_URLENCODED,
-    JSON,
-    TEXT,
-    MULTIPART
-};
-
 class HttpRequest
 {
     public:
-        // HttpRequest(unique_ptr<Server> &server, int clientFD, string &method, string &header, string &body);
-        // HttpRequest(unique_ptr<Server> &usedServer, Location &loc, int clientFD, Client &state);
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static bool processHttpBody(Client &client);
@@ -71,15 +59,12 @@ class HttpRequest
         static void validateHEAD(Client &client);
         static void	handleRequest(Client &client);
 
-        static void	parseHeaders(Client &client);
         static void	getBodyInfo(Client &client, const string buff);
         static void appendUuidToFilename(Client &client, string &filename);
 
         static void	POST(Client &client);
 
         static void	GET(Client &client);
-        static void    findIndexFile(Client &client, struct stat &status);
-        // static void    locateRequestedFile(Client &client);
         static void    SendAutoIndex(Client &client);
 
         static string getMimeType(string &path);
@@ -89,8 +74,7 @@ class HttpRequest
 
         static void getContentLength(Client &client);
 
-        static void decodeSafeFilenameChars(Client &client);
-        static ContentType getContentType(Client &client);
+        static void getContentType(Client &client);
 
         static bool handleCgi(Client &client, string &body);
         // static void handleChunks(Client &client);
