@@ -110,9 +110,12 @@ void initRandomSeed()
 
 string getExecutableDirectory()
 {
-    try {
+    try
+    {
         return filesystem::canonical("/proc/self/exe").parent_path().string();
-    } catch (const exception& e) {
+    }
+    catch (const exception& e)
+    {
         throw runtime_error("Cannot determine executable directory: " + string(e.what()));
     }
 }

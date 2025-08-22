@@ -32,7 +32,7 @@ bool ConfigServer::listenHostname(string &line)
     if (index == string::npos || line[index] == ';' )
     {
         if (line.find('.') < skipHostname)
-            Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": listen: invalid hostname - '", line, "'");
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid hostname - '", line, "'");
     }
     else if (line[index] == ':')
     {
@@ -40,15 +40,15 @@ bool ConfigServer::listenHostname(string &line)
         line.erase(0, skipHostname + 1);
     }
     else
-        Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": listen: invalid character found after hostname - '", line, "'");
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid character found after hostname - '", line, "'");
     uint32_t port = stoi(line, &index); // TODO not protected
     if (port == 0 || port > 65535)
-        Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": listen: invalid port entered for listen should be between 1 and 65535: ", to_string(port));
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid port entered for listen should be between 1 and 65535: ", +port);
     string strPort = line.substr(0, index);
     for (const auto& pair : _portHost)
     {
         if (pair.first == line.substr(0, index) && pair.second == hostname)
-            Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": listen: Parsing: tried setting same port and hostname twice: ", strPort, " ", hostname);
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: Parsing: tried setting same port and hostname twice: ", hostname, ':', strPort);
     }
     _portHost.insert({strPort, hostname});
     return (handleNearEndOfLine(line, index, "listen"));
@@ -59,7 +59,7 @@ bool ConfigServer::listenHostname(string &line)
 bool ConfigServer::serverName(string &line)
 {
     if (!_serverName.empty())
-        Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": server_name: Parsing: tried setting server_name twice");
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "server_name: Parsing: tried setting server_name twice");
     size_t len = line.find_first_of(" \t\f\v\r;");
     if (len == string::npos)
     {
@@ -121,7 +121,7 @@ void ConfigServer::addLocation(const Location &location, string path)
     {
         pair<string, Location> &val = *it;
         if (val.first == path)
-            Logger::logExit(ERROR, "Config error at line ", _lineNbr, ": addLocation: Parsing: tried adding location with same path twice: ", path);
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "addLocation: Parsing: tried adding location with same path twice: ", path);
         if (val.first.length() < path.length())
         {
             _locations.insert(it, {path, location});

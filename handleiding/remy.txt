@@ -81,3 +81,12 @@ create fd for log file, both parent and child can write there error messages for
 
 segmentation because of 983938893
 make && valgrind ./Webserv config/default.conf 983938893
+
+
+
+
+writetocgitransfer kan altijd sluiten, kan vastlopen als cgi nooit eindigt.
+als de write naar de pipe -1 gooit,
+
+readFromCgiTransfer moet de pid checken voor discconnect tijd, als over de tijd dan kill child,
+ als fout in write of exit code alle vectors doorkijken voor clients met matchend pid end daarna pid -1 zetten

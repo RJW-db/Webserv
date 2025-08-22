@@ -40,11 +40,11 @@ void ServerListenFD::createListenerSocket()
 	struct addrinfo *serverInfo = getServerAddrinfo();
 	bindToSocket(serverInfo);
 	freeaddrinfo(serverInfo);
-	if (RunServers::makeSocketNonBlocking(_listener) == false)
-		Logger::logExit(ERROR, "Server create_listener_socket: makeSocketNonBlocking failed");
+	if (FileDescriptor::setNonBlocking(_listener) == false)
+		Logger::logExit(ERROR, "Server error", '-', "Non-blocking fail", _listener, ": ", strerror(errno));
 
 	if (listen(_listener, SOMAXCONN) == -1)
-		Logger::logExit(ERROR, "Server create_listener_socket: listen failed");
+		Logger::logExit(ERROR, "Server error", '-', "Listen failed", _listener, ": ", strerror(errno));
 }
 
 struct addrinfo* ServerListenFD::getServerAddrinfo(void)
@@ -60,7 +60,7 @@ struct addrinfo* ServerListenFD::getServerAddrinfo(void)
 
 	errHndl = getaddrinfo(_hostName, _port, &serverSetup, &server);
 	if (errHndl != 0)
-		Logger::logExit(ERROR, "Server getaddrinfo: ", gai_strerror(errHndl));
+		Logger::logExit(ERROR, "Server error", '-', "Server getaddrinfo: ", gai_strerror(errHndl));
 	return server;
 }
 
@@ -79,16 +79,17 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 		if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1)
 		{
 			if (FileDescriptor::safeCloseFD(_listener) == false)
-				Logger::logExit(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", _listener);
+				Logger::logExit(FATAL, "Server error", _listener, "Attempted to close a file descriptor that is not in the vector");
 			continue;
 		}
 		FileDescriptor::setFD(_listener);
-		Logger::log(INFO, "Server created         listenFD:", _listener, " Successfuly bound to ", _hostName, ":", _port);
+		Logger::log(INFO, "Server created", _listener, "listenFD",  "Successfuly bound to ", _hostName, ':', _port);
+
 		RunServers::setEpollEvents(_listener, EPOLL_CTL_ADD, EPOLLIN);
 		return;
 	}
 	freeaddrinfo(server);
-	Logger::logExit(ERROR, "Server bindToSocket: ", strerror(errno));
+	Logger::logExit(ERROR, "Server error", '-', "Server bindToSocket: ", strerror(errno));
 }
 
 

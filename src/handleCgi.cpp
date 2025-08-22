@@ -166,10 +166,21 @@ bool setPipeBufferSize(int pipeFd)
 
     if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
     {
-        Logger::log(ERROR, "fcntl (set pipe size): ", strerror(errno));
+        Logger::log(ERROR, "CGI error", pipeFd, "fcntl (F_SETPIPE_SZ): ", strerror(errno));
         return false;
     }
     return true;
+}
+
+void sigtermHandler(int signum)
+{
+    if (signum == SIGTERM)
+    {
+        Logger::log(WARN, "CGI warning", "-", "SIGTERM, CGI timeout, exiting child process");
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        exit(EXIT_FAILURE);
+    }
 }
 
 bool HttpRequest::handleCgi(Client &client, string &body)
@@ -182,14 +193,16 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
     }
     FileDescriptor::setFD(fdWriteToCgi[0]);   // CGI reads from this (CGI's stdin)
+    Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[0]:", fdWriteToCgi[0]);
     FileDescriptor::setFD(fdWriteToCgi[1]);   // Server writes to CGI's stdin
-    Logger::log(INFO, client, "fdWriteToCgi[1]:", fdWriteToCgi[1]);
+    Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[1]:", fdWriteToCgi[1]);
     FileDescriptor::setFD(fdReadfromCgi[0]);  // Server reads from this
-    Logger::log(INFO, client, "fdReadfromCgi[0]:", fdReadfromCgi[0]);
+    Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[0]:", fdReadfromCgi[0]);
     FileDescriptor::setFD(fdReadfromCgi[1]);  // CGI writes to this (CGI's stdout)
+    Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[1]:", fdReadfromCgi[1]);
 
-    if (RunServers::makeSocketNonBlocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
-        RunServers::makeSocketNonBlocking(fdReadfromCgi[0]) == false || // Server reads from CGI
+    if (FileDescriptor::setNonBlocking(fdWriteToCgi[1]) == false ||  // Server writes to CGI
+        FileDescriptor::setNonBlocking(fdReadfromCgi[0]) == false || // Server reads from CGI
         setPipeBufferSize(fdWriteToCgi[1]) == false ||
         setPipeBufferSize(fdReadfromCgi[0]) == false)
     {
@@ -204,12 +217,15 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
     }
 
-    if (client._pid == CHILD) {
+    if (client._pid == CHILD)
+    {
+        if (signal(SIGTERM, &sigtermHandler) == SIG_ERR)
+            Logger::logExit(ERROR, "Signal handler error", '-', "SIGTERM failed", strerror(errno));
         Logger::log(CHILD, client, "child ._pid ", client._pid); //testlog
         Logger::log(CHILD, "we got into child"); //testlog
+        // sleep(10);
         child(client, fdWriteToCgi, fdReadfromCgi);
     }
-
     if (client._pid >= PARENT)
     {
         Logger::log(CHILD, client, "parent ._pid ", client._pid); //testlog
@@ -239,6 +255,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         //     throw e;
         //     std::cerr << e.what() << '\n';
         // }
+        client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);

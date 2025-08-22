@@ -37,6 +37,10 @@ class Client
 		{
 			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
 		};
+		void setDisconnectTimeCgi(uint16_t disconectTimeSeconds)
+		{
+			_disconnectTimeCgi = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
+		};
         // bool _finishedProcessClientRequest = false;
 		int _fd;
 
@@ -65,6 +69,10 @@ class Client
         string _filename;
         string _name;
         string_view _fileContent;
+
+        bool    _cgiClosing = false;
+        chrono::steady_clock::time_point _disconnectTimeCgi;
+
 
         bool _isAutoIndex = false;
 

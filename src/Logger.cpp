@@ -17,10 +17,12 @@ void Logger::initialize(const string &logDir, const string &filename)
 
     _logFd = open(absoluteFilePath.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (_logFd == -1)
-        Logger::logExit(ERROR, "Couldn't open: \"", absoluteFilePath, "\" Reason: ", strerror(errno));
-    
+    {
+        Logger::logExit(ERROR, "Log file error", '-', strerror(errno), ' ', absoluteFilePath);
+    }
+
     FileDescriptor::setFD(_logFd);
-    log(INFO, "Log file initialized   logFD:", _logFd, " ", absoluteFilePath);
+    log(INFO, "Log file initialized", _logFd, "logFD", absoluteFilePath);
 }
 
 string Logger::initLogDirectory(const string &logDir)
@@ -29,15 +31,11 @@ string Logger::initLogDirectory(const string &logDir)
     try
     {
         if (!std::filesystem::exists(absolutePath))
-            Logger::logExit(ERROR, "Log directory does not exist or is not accessible: ", absolutePath, " Reason: ", strerror(errno));
-        std::filesystem::create_directory(absolutePath);
+            std::filesystem::create_directory(absolutePath);
     }
     catch (const std::filesystem::filesystem_error &e)
     {
-        if (e.code() == std::errc::permission_denied)
-            Logger::logExit(ERROR, "Permission denied creating log directory: ", absolutePath);
-        else
-            Logger::logExit(ERROR, "Filesystem error creating log directory: ", e.what());
+        Logger::logExit(ERROR, "Log dir error", '-', "Filesystem error", absolutePath, " Details: ", e.what());
     }
     return absolutePath;
 }

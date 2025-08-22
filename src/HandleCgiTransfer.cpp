@@ -14,6 +14,7 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body,
 {
     _fileBuffer = body;
     // _isCgi = writeToCgi;
+    _handleType = HANDLE_WRITE_TO_CGI_TRANSFER;
     _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -22,6 +23,7 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 : HandleTransfer(client, fdReadfromCgi, HANDLE_READ_FROM_CGI_TRANSFER)
 {
     // _isCgi = writeToCgi;
+    _handleType = HANDLE_READ_FROM_CGI_TRANSFER;
     _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
 }
 
@@ -48,14 +50,17 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     ssize_t sent = write(_fd, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
     if (sent == -1)
     {
+        _client._cgiClosing = true;
+        // return true;
         throw ErrorCodeClientException(_client, 500, "Writing to CGI failed");
     }
     else if (sent > 0)
     {
         _bytesWrittenTotal += static_cast<size_t>(sent);
+        _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         if (_fileBuffer.size() == _bytesWrittenTotal)
         {
-            RunServers::cleanupFD(_fd);
+            FileDescriptor::cleanupFD(_fd);
             return true;
         }
     }
@@ -68,18 +73,18 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     ssize_t rd = read(_fd, buff.data(), buff.size());
     if (rd == -1)
     {
-        RunServers::cleanupFD(_fd);
+        FileDescriptor::cleanupFD(_fd);
         throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
     }
     _fileBuffer.append(buff.data(), rd);
 
-    if (rd == 0 || buff[rd] == '\0')
+    if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
-        RunServers::cleanupFD(_fd);
-        std::cout << "EOF reached, closing CGI read pipe" << std::endl; //testcout
+        FileDescriptor::cleanupFD(_fd);
         auto handle = make_unique<HandleToClientTransfer>(_client, _fileBuffer);
         RunServers::insertHandleTransfer(move(handle));
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
+        _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         return true;
     }
     return false;

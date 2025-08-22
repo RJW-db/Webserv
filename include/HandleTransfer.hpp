@@ -32,7 +32,6 @@ class HandleTransfer
         size_t  _bytesReadTotal;
         HandleTransferType _handleType;
 
-
         // Pure virtual functions for polymorphic behavior
 		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented"); }
 		virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented"); }

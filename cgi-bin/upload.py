@@ -4,6 +4,11 @@ import sys
 import cgi
 import cgitb
 import shutil
+import time
+import signal
+
+# Ignore SIGPIPE so Python doesn't print BrokenPipeError to stderr
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 cgitb.enable()
 
@@ -27,6 +32,10 @@ def main():
     # print(f"DEBUG: contentlength = {os.environ.get('CONTENT_LENGTH')}", file=sys.stderr)
 
     # # === ACTUAL LOGIC ===
+
+
+    # time.sleep(15)
+
     upload_dir = os.environ.get('UPLOAD_STORE', './upload')
     public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
 
@@ -51,6 +60,8 @@ def main():
 
     filename = os.path.basename(fileitem.filename)
     save_path = os.path.join(upload_dir, filename)
+
+    # time.sleep(15)
 
     try:
         with open(save_path, "wb") as f:

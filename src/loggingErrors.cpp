@@ -21,21 +21,6 @@ string timeDate(void)
     return _timeDate.str(); // Convert the stream to a string and return it
 }
 
-// if (!is_valid_http_request(request)) {
-//     std::ofstream log("error.log", std::ios::app);
-//     log << "[ERROR] Invalid HTTP request received:\n"
-//         << escapeSpecialChars(request) << "\n\n";
-// }
-void httpRequestLogger(string str)
-{
-    string result = timeDate();
-
-    result += "[client <ip>:<port>] " + escapeSpecialChars(str);
-    // std::cout << "\t>" << str << "<" << std::endl;
-    std::cout << "httprequestlogerr: " << result << std::endl;
-}
-
-
 std::string escapeSpecialChars(const std::string& input)
 {
     const std::string RED = "\033[31m";

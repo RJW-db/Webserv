@@ -55,13 +55,13 @@ namespace
     {
         RunServers::getExecutableDirectory();
         Logger::initialize(LOG_DIR, LOG);
-        atexit(FileDescriptor::cleanupFD);
+        atexit(FileDescriptor::cleanupAllFD);
     }
 
     void setupSignalHandlers()
     {
-        if (signal(SIGINT, &sigintHandler))
-            Logger::logExit(ERROR, "Failed to set SIGINT handler: ", strerror(errno));
+        if (signal(SIGINT, &sigintHandler) == SIG_ERR)
+            Logger::logExit(ERROR, "Signal handler error", '-', "SIGINT failed", strerror(errno));
     }
 
     void sigintHandler(int signum)
@@ -81,7 +81,7 @@ namespace
             }
             catch(const std::exception& e)
             {
-                Logger::logExit(ERROR, "Failed to set client buffer size: ", e.what());
+                Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
             }
         }
         Parsing configFile(confFile);
