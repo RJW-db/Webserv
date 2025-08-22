@@ -72,7 +72,7 @@ def main():
             content_length = len(response_body.encode('utf-8'))
             
             # Send proper HTTP headers with consistent \r\n line endings
-            print("HTTP/1.1 200 OK\r")
+            print("Status: 200 OK\r")
             print("Content-Type: text/plain\r")
             print("Connection: keep-alive\r")
             print(f"Content-Length: {content_length}\r")
@@ -95,29 +95,28 @@ def main():
         file_path = os.path.join(upload_dir, os.path.basename(filename))
 
         if not filename:
-            print("Status: 400 Bad Request")
-            print("Content-Type: text/plain\n")
+            print("Status: 400 Bad Request\r")
+            print("Content-Type: text/plain\r\n\r")
             print("No filename provided.")
             return
-
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
-                print("Status: 200 OK")
-                print("Content-Type: text/plain\n")
+                print("Status: 200 OK\r")
+                print("Content-Type: text/plain\r\n\r")
                 print("File deleted successfully.")
             except Exception as e:
-                print("Status: 500 Internal Server Error")
-                print("Content-Type: text/plain\n")
+                print("Status: 500 Internal Server Error\r")
+                print("Content-Type: text/plain\r\n\r")
                 print(f"Failed to delete file: {e}")
         else:
-            print("Status: 404 Not Found")
-            print("Content-Type: text/plain\n")
+            print("Status: 404 Not Found\r")
+            print("Content-Type: text/plain\r\n\r")
             print("File not found.")
         print(f"DEBUG: end of python", file=sys.stderr)
     else:
-        print("Status: 501 Not Implemented")
-        print("Content-Type: text/plain\n")
+        print("Status: 501 Not Implemented\r")
+        print("Content-Type: text/plain\r\n\r")
         print("This method is not implemented for this endpoint.")
 
 if __name__ == "__main__":

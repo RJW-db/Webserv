@@ -61,14 +61,13 @@ static uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
 
 static void parseRequestPath(Client &client)
 {
+    client._requestPath = percentDecode(client._requestPath);
     size_t queryPos = client._requestPath.find('?');
     if (queryPos != string::npos)
     {
         client._queryString = client._requestPath.substr(queryPos + 1);
         client._requestPath = client._requestPath.substr(0, queryPos);
     }
-    
-    client._requestPath = percentDecode(client._requestPath);
     
     if (isValidAndNormalizeRequestPath(client) == false)
         throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);

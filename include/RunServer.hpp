@@ -41,6 +41,7 @@ class RunServers
         static void   setupEpoll();
         static void   epollInit(ServerList &servers);
         static void   addStdinToEpoll();
+        
         // utils
         static void   setEpollEvents(int fd, int option, uint32_t events);
         static void   setServerFromListener(Client &client);
@@ -67,7 +68,7 @@ class RunServers
         static void   closeHandles(pid_t pid);
         static void   clientHttpCleanup(Client &client);
         static void   cleanupClient(Client &client);
-        static void   cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
+        static vector<std::unique_ptr<HandleTransfer>>::iterator   cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
 
         static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle)
         {

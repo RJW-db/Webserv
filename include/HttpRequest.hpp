@@ -84,6 +84,7 @@ class HttpRequest
 
         static string getMimeType(string &path);
         static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
+        static string createResponseCgi(Client &client, string &input);
         static void   redirectRequest(Client &client);
 
         static void getContentLength(Client &client);

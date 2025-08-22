@@ -15,6 +15,7 @@ HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
     _fileBuffer = response;
     _bytesReadTotal = 0;
     _handleType = HANDLE_TO_CLIENT_TRANSFER;
+    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
 bool HandleToClientTransfer::sendToClientTransfer()
