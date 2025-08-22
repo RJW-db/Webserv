@@ -33,14 +33,14 @@ class HandleTransfer
         HandleTransferType _handleType;
 
         // Pure virtual functions for polymorphic behavior
-		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented"); }
-		virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented"); }
-		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented"); }
-		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented"); }
-		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented"); }
-        virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
-        virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported"); }
-        virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported"); }
+		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
+		virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
+		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
+		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
+		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
+        virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
         virtual ~HandleTransfer() = default;
 
     protected :

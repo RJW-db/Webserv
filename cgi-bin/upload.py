@@ -61,7 +61,6 @@ def main():
     filename = os.path.basename(fileitem.filename)
     save_path = os.path.join(upload_dir, filename)
 
-    # time.sleep(15)
 
     try:
         with open(save_path, "wb") as f:
@@ -71,7 +70,8 @@ def main():
         content_length = len(response_body.encode('utf-8'))
         
         # Send proper HTTP headers with consistent \r\n line endings
-        print("HTTP/1.1 200 OK\r")
+        # print("HTTP/1.1 200 OK\r")
+        print("Status: 201 Created\r")
         print("Content-Type: text/plain\r")
         print("Connection: keep-alive\r")
         print(f"Content-Length: {content_length}\r")
@@ -85,4 +85,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    sys.exit(1)

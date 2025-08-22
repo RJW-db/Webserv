@@ -3,6 +3,7 @@
 #endif
 #include <sys/wait.h>
 #include <RunServer.hpp>
+#include <HttpRequest.hpp>
 #include <ErrorCodeClientException.hpp>
 // #include <HttpRequest.hpp>
 // #include <iostream>
@@ -31,7 +32,7 @@ void RunServers::disconnectChecks()
     }
 }
 
-void RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
+vector<std::unique_ptr<HandleTransfer>>::iterator RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
 {
     vector<std::unique_ptr<HandleTransfer>>::iterator lastAfter = it;
     if (it != _handleCgi.begin())
@@ -47,7 +48,9 @@ void RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::itera
         }
         ++it;
     }
+    return lastAfter;
 }
+
 
 void RunServers::checkCgiDisconnect()
 {
@@ -56,14 +59,14 @@ void RunServers::checkCgiDisconnect()
         int exit_code;
         Client &client = (*it)->_client;
 
-        if (client._cgiClosing == true) //TODO check maybe problem with this only running after client has received all data and clientHttpCleanup running after ErrorCodeClientException
-        {
-            Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
-            FileDescriptor::cleanupFD((*it)->_fd);
-            // cleanupHandleCgi(--it, client._pid);
-            it = _handleCgi.erase(it);
-            continue ;
-        }
+        // if (client._cgiClosing == true) //TODO check maybe problem with this only running after client has received all data and clientHttpCleanup running after ErrorCodeClientException
+        // {
+        //     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
+        //     // FileDescriptor::cleanupFD((*it)->_fd);
+        //     it = cleanupHandleCgi(it, client._pid);
+        //     // it = _handleCgi.erase(it);
+        //     continue ;
+        // }
         // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
         // Logger::log(DEBUG, "result: ", result); //testlog
@@ -75,10 +78,10 @@ void RunServers::checkCgiDisconnect()
                 kill(client._pid, SIGTERM);
                 Logger::log(DEBUG, "Killed child"); //testlog
                 FileDescriptor::cleanupFD((*it)->_fd);
-                // cleanupHandleCgi(it, client._pid);
-                it = _handleCgi.erase(it);
+                it = cleanupHandleCgi(it, client._pid);
+                // it = _handleCgi.erase(it);
                 RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
-                throw ErrorCodeClientException(client, 500, "Reading from CGI failed");
+                throw ErrorCodeClientException(client, 500, "Reading from CGI failed because it took too long");
                 // continue;
             }
             ++it;
@@ -88,36 +91,33 @@ void RunServers::checkCgiDisconnect()
             if (WIFEXITED(exit_code))
             {
                 Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
-                HandleTransfer& currentTransfer = *(*it);
-                // Logger::log(DEBUG, "handletype: ", currentTransfer._handleType); //testlog
-                if (currentTransfer._handleType == HANDLE_WRITE_TO_CGI_TRANSFER ||
-                    currentTransfer._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+                HandleTransfer& handle = *(*it);
+                // Logger::log(DEBUG, "handletype: ", handle._handleType); //testlog
+                if (handle._handleType == HANDLE_WRITE_TO_CGI_TRANSFER ||
+                    handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
                 {
-                    FileDescriptor::cleanupFD(currentTransfer._fd);
+                    FileDescriptor::cleanupFD(handle._fd);
+                    if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+                    {
+                        string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
+                        Logger::log(DEBUG, "Created CGI response for client ", client._fd, ": ", clientResponse); //testlog
+                        auto handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
+                        RunServers::insertHandleTransfer(move(handleClient));
+                    }
                     client._cgiClosing = true;
                     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
-                    it = _handleCgi.erase(it);
-                    // cleanupHandleCgi(it, client._pid);
-                    continue ;
+                    it = cleanupHandleCgi(it, client._pid);
+                    // it = _handleCgi.erase(it);
+                    // continue ;
+                }
+                else
+                {
+                    ++it;
                 }
                 if (WEXITSTATUS(exit_code) > 0) // Client has already received the error code
                     throw ErrorCodeClientException(client, 500, "Cgi error");
-                // bool finished = currentTransfer.readFromCgiTransfer();
-                // if (finished)
-                // {
-                //     it = _handleCgi.erase(it);
-                //     if (client._keepAlive == false)
-                //         cleanupClient(client);
-                //     else
-                //         clientHttpCleanup(client);
-                // }
-                // else
-                //     ++it;
             }
-            else
-            {
-                ++it;
-            }
+
         }
     }
 }

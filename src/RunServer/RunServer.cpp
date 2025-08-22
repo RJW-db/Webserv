@@ -132,12 +132,12 @@ bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, 
         !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
     {
         if (currentEvent.events & EPOLLERR)
-            Logger::log(INFO, "Epoll event", eventFD, "clientFD", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
+            Logger::log(INFO, "Epoll event", eventFD, "", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
         if (currentEvent.events & EPOLLHUP)
-            Logger::log(INFO, "Epoll event", eventFD, "clientFD", "EPOLLHUP (events: ", static_cast<int>(currentEvent.events), ')');
+            Logger::log(INFO, "Epoll event", eventFD, "", "EPOLLHUP (events: ", static_cast<int>(currentEvent.events), ')');
         if (!(currentEvent.events & (EPOLLERR | EPOLLHUP)) &&
             !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-            Logger::log(IWARN, "Epoll event", eventFD, ":clientFD", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
+            Logger::log(IWARN, "Epoll event", eventFD, "", "Unexpected (events: ", static_cast<int>(currentEvent.events), ") - no EPOLLIN or EPOLLOUT");
 
         auto clientIt = _clients.find(eventFD);
         if (clientIt != _clients.end() && clientIt->second)
@@ -207,26 +207,10 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             if (currentEvent.events & EPOLLOUT)
             {
                 if ((*it)->writeToCgiTransfer() == true)
-                {
                     _handleCgi.erase(it);
-                }
             }
             else if (currentEvent.events & EPOLLIN)
-            {
-                if ((*it)->readFromCgiTransfer() == true)
-                {
-                    Client &client = (*it)->_client;
-                    // if (client._keepAlive == false)
-                    // {
-                    //     cleanupClient(client);
-                    // }
-                    // else
-                    // {
-                        clientHttpCleanup(client);
-                    // }
-                    // _handleCgi.erase(it);
-                }
-            }
+                (*it)->readFromCgiTransfer();
             return true;
         }
     }

@@ -329,7 +329,7 @@ void HttpRequest::getContentLength(Client &client)
             throw RunServers::ClientException("Content-Length cannot be zero.");
         client._contentLength = static_cast<size_t>(value);
     }
-    catch (const std::runtime_error &e)
+    catch (const runtime_error &e)
     {
         throw RunServers::ClientException(e.what());
     }
@@ -354,7 +354,7 @@ void HttpRequest::handleRequest(Client &client)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._location.getReturnRedirect().first > 0)
     {
-        // std::cout << "entered return redirect: " << client._location.getReturnRedirect().first << std::endl; //testcout
+        // cout << "entered return redirect: " << client._location.getReturnRedirect().first << endl; //testcout
         redirectRequest(client);
         RunServers::clientHttpCleanup(client);
         return ;
@@ -429,7 +429,7 @@ void HttpRequest::handleRequest(Client &client)
             string response = HttpRequest::HttpResponse(client, code, ".txt", body.size());
             response += body;
             send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
-            std::cout << escapeSpecialChars(response.c_str(), TERMINAL_DEBUG) << std::endl; //testcout
+            cout << escapeSpecialChars(response.c_str(), TERMINAL_DEBUG) << endl; //testcout
             Logger::log(INFO, client, "DELETE ", client._rootPath);
             RunServers::clientHttpCleanup(client);
         }
@@ -503,5 +503,54 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
     response << "Content-Length: " << fileSize << "\r\n";
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
     response << "\r\n";
+    return response.str();
+}
+
+string HttpRequest::createResponseCgi(Client &client, string &input)
+{
+    size_t headerSize = input.find(CRLF2);
+
+    map<string_view, string_view> headerFields;
+    size_t pos = 0;
+    while (pos < headerSize)
+    {
+        size_t end = input.find(CRLF, pos);
+        if (end == string::npos) 
+            break;
+        string_view line(input.data() + pos, end - pos);
+        size_t colon = line.find(':');
+        if (colon != string_view::npos) {
+            string_view key = line.substr(0, colon);
+            string_view value = line.substr(colon + 1);
+            size_t firstNonSpace = value.find_first_not_of(" ");
+            if (firstNonSpace != string_view::npos)
+                value = value.substr(firstNonSpace);
+            headerFields[key] = value;
+        }
+        pos = end + CRLF_LEN;
+    }
+    ostringstream response;
+    if (headerFields["Status"].empty())
+        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
+    response << "HTTP/1.1 " << headerFields["Status"] << "\r\n";
+    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
+    if (input.size() > headerSize + CRLF2_LEN)
+    {
+        if (headerFields["Content-Type"].empty())
+            throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
+        response << "Content-Type: " << headerFields["Content-Type"] << "\r\n";
+        if (headerFields["Content-Length"].empty() > 0)
+            response << "Content-Length: " << headerFields["Content-Length"] << "\r\n";
+        else
+        {
+            Logger::log(DEBUG, "content length set by server"); //testlog
+            response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << "\r\n";
+        }
+            
+        response << "\r\n";
+        response << input.substr(headerSize + CRLF2_LEN);
+    }
+    else
+        response << "\r\n";
     return response.str();
 }

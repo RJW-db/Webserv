@@ -81,9 +81,9 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
         FileDescriptor::cleanupFD(_fd);
-        auto handle = make_unique<HandleToClientTransfer>(_client, _fileBuffer);
-        RunServers::insertHandleTransfer(move(handle));
-        RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
+        // auto handle = make_unique<HandleToClientTransfer>(_client, _fileBuffer);
+        // RunServers::insertHandleTransfer(move(handle));
+        // RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         return true;
     }
