@@ -259,8 +259,8 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        Logger::log(DEBUG, "created cgi process"); //testlog
-
+        
+        // Logger::log(DEBUG, "created cgi process"); //testlog
         return true;
     }
     return false;

@@ -33,7 +33,7 @@ void RunServers::disconnectChecks()
 
 void RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
 {
-    vector<std::unique_ptr<HandleTransfer>>::iterator
+    vector<std::unique_ptr<HandleTransfer>>::iterator lastAfter = it;
     if (it != _handleCgi.begin())
         --it;
     while (it != _handleCgi.end())
@@ -42,6 +42,7 @@ void RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::itera
         {
             FileDescriptor::cleanupFD((*it)->_fd);
             it = _handleCgi.erase(it);
+            lastAfter = it;
             continue ;
         }
         ++it;
@@ -74,8 +75,8 @@ void RunServers::checkCgiDisconnect()
                 kill(client._pid, SIGTERM);
                 Logger::log(DEBUG, "Killed child"); //testlog
                 FileDescriptor::cleanupFD((*it)->_fd);
-                cleanupHandleCgi(it, client._pid);
-                // it = _handleCgi.erase(it);
+                // cleanupHandleCgi(it, client._pid);
+                it = _handleCgi.erase(it);
                 RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
                 throw ErrorCodeClientException(client, 500, "Reading from CGI failed");
                 // continue;
@@ -95,8 +96,8 @@ void RunServers::checkCgiDisconnect()
                     FileDescriptor::cleanupFD(currentTransfer._fd);
                     client._cgiClosing = true;
                     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
-                    // it = _handleCgi.erase(it);
-                    cleanupHandleCgi(it, client._pid);
+                    it = _handleCgi.erase(it);
+                    // cleanupHandleCgi(it, client._pid);
                     continue ;
                 }
                 if (WEXITSTATUS(exit_code) > 0) // Client has already received the error code
