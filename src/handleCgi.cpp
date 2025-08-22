@@ -150,7 +150,7 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     // printVecArray(envp);
     char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
     execve(filePath, argv.data(), envp.data());
-    perror("execve failed");
+    Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     std::exit(EXIT_FAILURE);

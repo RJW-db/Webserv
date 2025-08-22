@@ -72,6 +72,13 @@
         <div id="deletePathStatus" style="color: #b00; margin-top: 5px;"></div>
       </div>
 
+      <!-- Add below your existing delete section -->
+      <div style="margin-top: 20px;">
+        <input type="text" id="cgiDeleteFileInput" placeholder="Enter filename to delete via CGI" style="width: 90%;" />
+        <button id="cgiDeletePathBtn" style="margin-top: 5px;">Delete by Filename via CGI</button>
+        <div id="cgiDeletePathStatus" style="color: #b00; margin-top: 5px;"></div>
+      </div>
+
       <h2>Upload Files via CGI</h2>
       <form id="cgiUploadForm" enctype="multipart/form-data">
         <input type="file" id="cgiFileInput" name="myfile" accept="image/*" multiple required />

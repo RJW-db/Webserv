@@ -93,6 +93,45 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('fileInput').value = '';
   });
 
+  // Handle CGI delete by filename
+  document.getElementById('cgiDeletePathBtn').addEventListener('click', function() {
+    const filename = document.getElementById('cgiDeleteFileInput').value.trim();
+    const statusDiv = document.getElementById('cgiDeletePathStatus');
+    statusDiv.textContent = '';
+    if (!filename) {
+      statusDiv.textContent = 'Please enter a filename.';
+      return;
+    }
+    fetch('/cgi-bin/upload.py?filename=' + encodeURIComponent(filename), {
+      method: 'DELETE'
+    })
+    .then(res => {
+      if (res.ok) {
+        statusDiv.style.color = 'green';
+        statusDiv.textContent = 'CGI Delete successful!';
+
+        // Remove the image from the gallery if present
+        const gallery = document.getElementById('gallery');
+        const wrappers = gallery.children;
+        const filenameToDelete = filename.split('/').pop();
+        for (let i = wrappers.length - 1; i >= 0; i--) {
+          const label = wrappers[i].querySelector('div');
+          if (label && label.textContent === filenameToDelete) {
+            gallery.removeChild(wrappers[i]);
+            break;
+          }
+        }
+      } else {
+        statusDiv.style.color = '#b00';
+        statusDiv.textContent = 'CGI Delete failed.';
+      }
+    })
+    .catch(() => {
+      statusDiv.style.color = '#b00';
+      statusDiv.textContent = 'Error sending CGI delete request.';
+    });
+  });
+
   // Handle CGI file upload
   document.getElementById('cgiUploadForm').addEventListener('submit', function(e) {
     e.preventDefault();

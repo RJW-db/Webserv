@@ -36,53 +36,90 @@ def main():
 
     # time.sleep(15)
 
-    upload_dir = os.environ.get('UPLOAD_STORE', './upload')
-    public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
+    if os.environ.get('REQUEST_METHOD', '') == 'POST':
+        upload_dir = os.environ.get('UPLOAD_STORE', './upload')
+        public_url_base = os.environ.get('PUBLIC_URL_BASE', '/upload')
 
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
 
-    form = cgi.FieldStorage()
+        form = cgi.FieldStorage()
 
-    if "myfile" not in form:
-        print("Status: 400 Bad Request")
+        if "myfile" not in form:
+            print("Status: 400 Bad Request")
+            print("Content-Type: text/plain\n")
+            print("No file uploaded.")
+            return
+
+        fileitem = form["myfile"]
+
+        if not fileitem.file or not fileitem.filename:
+            print("Status: 400 Bad Request")
+            print("Content-Type: text/plain\n")
+            print("No valid file uploaded.")
+            return
+
+        filename = os.path.basename(fileitem.filename)
+        save_path = os.path.join(upload_dir, filename)
+
+        # time.sleep(15)
+
+        try:
+            with open(save_path, "wb") as f:
+                shutil.copyfileobj(fileitem.file, f)
+
+            response_body = f".{public_url_base}/{filename}"
+            content_length = len(response_body.encode('utf-8'))
+            
+            # Send proper HTTP headers with consistent \r\n line endings
+            print("HTTP/1.1 200 OK\r")
+            print("Content-Type: text/plain\r")
+            print("Connection: keep-alive\r")
+            print(f"Content-Length: {content_length}\r")
+            print("\r")  # Empty line to end headers
+            print(response_body, end="\n")
+
+        except Exception as e:
+            print("Status: 500 Internal Server Error")
+            print("Content-Type: text/plain\n")
+            print("Upload failed:", str(e))
+    elif os.environ.get('REQUEST_METHOD', '') == 'GET':
+        print("Status: 405 Method Not Allowed")
         print("Content-Type: text/plain\n")
-        print("No file uploaded.")
-        return
-
-    fileitem = form["myfile"]
-
-    if not fileitem.file or not fileitem.filename:
-        print("Status: 400 Bad Request")
-        print("Content-Type: text/plain\n")
-        print("No valid file uploaded.")
-        return
-
-    filename = os.path.basename(fileitem.filename)
-    save_path = os.path.join(upload_dir, filename)
-
-    # time.sleep(15)
-
-    try:
-        with open(save_path, "wb") as f:
-            shutil.copyfileobj(fileitem.file, f)
-
-        response_body = f".{public_url_base}/{filename}"
-        content_length = len(response_body.encode('utf-8'))
+        print("GET method is not allowed for this endpoint.")
+    elif os.environ.get('REQUEST_METHOD', '') == 'DELETE':
+        print(f"DEBUG: this works", file=sys.stderr)
         
-        # Send proper HTTP headers with consistent \r\n line endings
-        print("HTTP/1.1 200 OK\r")
-        print("Content-Type: text/plain\r")
-        print("Connection: keep-alive\r")
-        print(f"Content-Length: {content_length}\r")
-        print("\r")  # Empty line to end headers
-        print(response_body, end="\n")
+        filename = os.environ.get('QUERY_STRING', '').replace('filename=', '')
+        upload_dir = os.environ.get('UPLOAD_STORE', './upload')
+        file_path = os.path.join(upload_dir, os.path.basename(filename))
 
-    except Exception as e:
-        print("Status: 500 Internal Server Error")
+        if not filename:
+            print("Status: 400 Bad Request")
+            print("Content-Type: text/plain\n")
+            print("No filename provided.")
+            return
+
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print("Status: 200 OK")
+                print("Content-Type: text/plain\n")
+                print("File deleted successfully.")
+            except Exception as e:
+                print("Status: 500 Internal Server Error")
+                print("Content-Type: text/plain\n")
+                print(f"Failed to delete file: {e}")
+        else:
+            print("Status: 404 Not Found")
+            print("Content-Type: text/plain\n")
+            print("File not found.")
+        print(f"DEBUG: end of python", file=sys.stderr)
+    else:
+        print("Status: 501 Not Implemented")
         print("Content-Type: text/plain\n")
-        print("Upload failed:", str(e))
+        print("This method is not implemented for this endpoint.")
 
 if __name__ == "__main__":
     main()
-    sys.exit(1)
+    sys.exit(0)

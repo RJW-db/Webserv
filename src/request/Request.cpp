@@ -360,12 +360,12 @@ void HttpRequest::handleRequest(Client &client)
         return ;
     }
 
-    // if (client._isCgi)
-    // {
-    //     handleCgi(client);
-    //     RunServers::clientHttpCleanup(client);
-    //     return;
-    // }
+    if (client._isCgi && client._useMethod != 2)
+    {
+        handleCgi(client, client._body); // for GET second parameter will be unused
+        RunServers::clientHttpCleanup(client);
+        return;
+    }
     switch (client._useMethod)
     {
     case 1: // HEAD
