@@ -11,7 +11,7 @@ COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
-# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow
+CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
 ifdef BUFFER

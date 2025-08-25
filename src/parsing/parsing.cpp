@@ -75,29 +75,29 @@ void Parsing::readBlock(T &block,
     string line = _lines.begin()->second;
     do
     {
-		validSyntax = false;
+		_validSyntax = false;
         trimLeadingWhitespace(line);
         for (const auto& cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
 			{
-    			validSyntax = true;
+    			_validSyntax = true;
                 cmdCheck(line, block, cmd);
 			}
         }
-		if (validSyntax == false)
+		if (_validSyntax == false)
 		{
 			for (const auto& whileCmd : whileCmds)
 			{
 				if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
 				{
 					whileCmdCheck(line, block, whileCmd);
-					validSyntax = true;
+					_validSyntax = true;
 				}
 			}
 		}
-        if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && validSyntax == false)
-            LocationCheck(line, block, validSyntax);
+        if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && _validSyntax == false)
+            LocationCheck(line, block);
     }
 	while (checkParseSyntax() == true);
 }
@@ -194,7 +194,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
  * @param cmd Function to run using line
  */
 template <typename T>
-void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
+void Parsing::LocationCheck(string &line, T &block)
 {
     if constexpr (std::is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
     {
@@ -225,7 +225,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 		readBlock(location, cmds, whileCmds);
 		line = _lines.begin()->second;
         block.addLocation(location, location.getPath());
-        validSyntax = true;
+        _validSyntax = true;
     }
     else
         Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Location block can only be used in server block");
@@ -238,7 +238,7 @@ void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 bool    Parsing::checkParseSyntax()
 {
     size_t  skipSpace;
-	if (validSyntax == false)
+	if (_validSyntax == false)
 		Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
 
     if (_lines.begin()->second[0] == '}')

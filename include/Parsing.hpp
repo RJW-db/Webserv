@@ -34,7 +34,7 @@ class Parsing
         template <typename T>
             void whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd);
         template <typename T>
-            void LocationCheck(string &line, T &block, bool &validSyntax);
+            void LocationCheck(string &line, T &block);
         bool    checkParseSyntax(void);
 
 
@@ -50,7 +50,7 @@ class Parsing
 
         //util variables
 		map<int, string> _lines;
-		bool validSyntax;
+		bool _validSyntax;
 
     public:
         // getters
