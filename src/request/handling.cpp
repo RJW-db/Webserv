@@ -173,9 +173,8 @@ void HttpRequest::SendAutoIndex(Client &client)
     string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
     client._filenamePath.clear();
     closedir(dr); // TODO not protected
-    int sent = send(client._fd, response.data(), response.size(), 0);
-    if (sent == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to send autoindex response: " + string(strerror(errno)));
+    auto handleClient = make_unique<HandleToClientTransfer>(client, response);
+    RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
     if (client._keepAlive == false)
         RunServers::cleanupClient(client);
