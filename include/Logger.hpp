@@ -1,10 +1,12 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
+#include <utils.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cstring>
 #include "Client.hpp"
 
 #ifndef TERMINAL_DEBUG

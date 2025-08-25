@@ -1,5 +1,5 @@
 #include <HandleTransfer.hpp>
-#include "Logger.hpp"
+#include <Logger.hpp>
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <sys/epoll.h>
@@ -12,19 +12,29 @@ HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHea
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
-HandleGetTransfer &HandleGetTransfer::operator=(const HandleGetTransfer &other)
+bool HandleGetTransfer::handleGetTransfer()
 {
-    if (this != &other) {
-        // _client is a reference and cannot be assigned
-        _fd = other._fd;
-        _fileBuffer = other._fileBuffer;
-        _fileSize = other._fileSize;
-        _offset = other._offset;
-        _bytesReadTotal = other._bytesReadTotal;
-        _headerSize = other._headerSize;
+    readToBuf();
+    ssize_t sent = send(_client._fd, _fileBuffer.data() + _offset, _fileBuffer.size() - _offset, MSG_NOSIGNAL);
+    if (sent == -1)
+        throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+    size_t _sent = static_cast<size_t>(sent);
+    _offset += _sent;
+    _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+    if (_bytesReadTotal >= _fileSize)
+    {
+        RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        Logger::log(INFO, _client, "GET    ", _client._filenamePath);
+        return true;
     }
-    return *this;
+    if (_fileBuffer.size() > RunServers::getRamBufferLimit())
+    {
+        _fileBuffer = _fileBuffer.erase(0, _offset);
+        _offset = 0;
+    }
+    return false;
 }
+
 void HandleGetTransfer::readToBuf()
 {
     if (_fd != -1)
@@ -42,28 +52,6 @@ void HandleGetTransfer::readToBuf()
         if (_bytesRead == 0 || _bytesReadTotal >= _fileSize)
         {
             FileDescriptor::closeFD(_fd);
-            _fd = -1;
         }
     }
-}
-
-bool HandleGetTransfer::handleGetTransfer()
-{
-    readToBuf();
-    ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), MSG_NOSIGNAL);
-    if (sent == -1)
-    {
-        throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
-    }
-    size_t _sent = static_cast<size_t>(sent);
-    _offset += _sent;
-    _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-    if (_offset >= _fileSize + _headerSize) // TODO only between boundary is the filesize
-    {
-        RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-        Logger::log(INFO, _client, "GET    ", _client._filenamePath);
-        return true;
-    }
-    _fileBuffer = _fileBuffer.erase(0, _sent);
-    return false;
 }

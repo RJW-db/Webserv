@@ -2,6 +2,7 @@
 # include <sys/epoll.h>
 #endif
 #include <sys/wait.h>
+#include <unordered_map>
 #include <limits.h> // PATH_MAX
 #include <filesystem> // std::filesystem::path
 #include <RunServer.hpp>

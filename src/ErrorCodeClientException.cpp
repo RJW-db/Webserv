@@ -83,6 +83,7 @@ void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPag
 
 void ErrorCodeClientException::handleErrorClient() const
 {
+    
     Logger::log(IWARN, _client, _message);
     if (_errorCode == 0)
     {

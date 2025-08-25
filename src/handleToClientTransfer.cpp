@@ -1,4 +1,5 @@
 #include <sys/epoll.h>
+#include <cstring>
 #include "RunServer.hpp"
 #include "HandleTransfer.hpp"
 #include "ErrorCodeClientException.hpp"

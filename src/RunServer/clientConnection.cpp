@@ -11,7 +11,6 @@
 namespace
 {
     string NumIpToString(uint32_t num);
-    void sendErrorResponse(int clientFD, const string &message);
 }
 
 void RunServers::acceptConnection(const int listener)
@@ -63,7 +62,7 @@ void    RunServers::setClientServerAddress(Client &client, int infd)
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr); 
     if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
-        throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info"); //TODO not protected
+        throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info");
     client._ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     client._ipPort.second = to_string(ntohs(serverAddr.sin_port));
 }
@@ -85,11 +84,9 @@ void RunServers::processClientRequest(Client &client)
         // client._finishedProcessClientRequest = true;
         HttpRequest::handleRequest(client);
     }
-    catch(const exception& e)   // if catch we don't handle well // todo why did we have this?
+    catch(const exception& e)
     {
-        Logger::log(ERROR, client, "Error processing client request: ", e.what());
-        string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
-        sendErrorResponse(client._fd, msgToClient);
+        throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }
     // catch (const LengthRequiredException &e)
     // {
@@ -115,13 +112,11 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
     {
-        cerr << "recv: " << strerror(errno);
-        RunServers::cleanupClient(client);
-        throw runtime_error("something"); // TODO need new exception. send no response, just cleanup and maybe log
+        throw ErrorCodeClientException(client, 0, "Recv failed from client with error: " + string(strerror(errno)));
     }
     if (bytesReceived == 0)
     {
-        throw ErrorCodeClientException(client, 0, "kicking out client after read of 0"); // todo find different solution maybe
+        throw ErrorCodeClientException(client, 0, "kicking out client after read of 0");
     }
     return (0); // You never get here
 }
@@ -140,12 +135,6 @@ namespace
                to_string(bytes[1]) + "." +
                to_string(bytes[2]) + "." +
                to_string(bytes[3]);
-    }
-
-    void sendErrorResponse(int clientFD, const string &message)
-    {
-        string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
-        send(clientFD, response.c_str(), response.size(), MSG_NOSIGNAL);
     }
 }
 
