@@ -2,9 +2,6 @@
 #include <sstream>  // For std::ostringstream
 #include <iomanip> // For std::setw and std::setfill
 
-// [Wed May 21 13:15:01.234567 2025] [core:error] [pid 1234] [client 192.168.1.100:56789] AH00526: Syntax error in request: GET /favicon.ico HTTP/1.1\r\n
-
-
 string timeDate(void)
 {
     time_t now = time(0);

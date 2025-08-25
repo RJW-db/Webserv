@@ -4,6 +4,13 @@
 #include <HandleTransfer.hpp>
 #include <utils.hpp>
 
+namespace
+{
+    string extractContentDispositionLine(Client &client, const string &buff);
+    string extractFilenameFromContentDisposition(Client &client, const string &cdLine);
+    void validateMultipartContentType(Client &client, const string &buff, const string &filename);
+}
+
 bool HttpRequest::processHttpBody(Client &client)
 {
     HttpRequest::getContentLength(client);
@@ -14,9 +21,7 @@ bool HttpRequest::processHttpBody(Client &client)
         if (client._keepAlive == false && client._isCgi == false)
             RunServers::cleanupClient(client);
         else
-        {
             RunServers::clientHttpCleanup(client);
-        }
         return false;
     }
     RunServers::insertHandleTransfer(move(handle));
@@ -66,54 +71,22 @@ void HttpRequest::getContentType(Client &client)
         else
             throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
     }
+    else if (ct == "application/x-www-form-urlencoded")
+        client._contentType = ct;
+    else if (ct == "application/json")
+        client._contentType = ct;
+    else if (ct == "text/plain")
+        client._contentType = ct;
     else
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
-    if (ct == "application/x-www-form-urlencoded")
-        client._contentType = ct;
-    if (ct == "application/json")
-        client._contentType = ct;
-    if (ct == "text/plain")
-        client._contentType = ct;
 }
 
 void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
-    string contentDisposition = "Content-Disposition:";
-    size_t cdPos = buff.find(contentDisposition);
-    if (cdPos == string::npos)
-        throw RunServers::ClientException("Content-Disposition header not found in multipart body");
-    size_t formDataPos = buff.find("form-data", cdPos);
-    
-    // Find the amount of whitespace between "Content-Disposition:" and the next character
-    size_t wsStart = cdPos + contentDisposition.size();
-    size_t wsEnd = buff.find_first_not_of(" \t", wsStart);
-    if (wsEnd == string::npos)
-        throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: only whitespace found");
-    if (formDataPos != wsEnd)
-        throw ErrorCodeClientException(client, 400, "Content-Disposition is not form-data");
-    // Extract the Content-Disposition line
-    size_t cdEnd = buff.find("\r\n", cdPos);
-    // string_view cdLine = string_view(buff).substr(cdPos, cdEnd - cdPos);
-    // string_view cdLine(buff.data(), cdEnd - cdPos);
-    string cdLine = buff.substr(cdPos, cdEnd - cdPos);
-
-    string filenameKey = "filename=\"";
-    size_t fnPos = cdLine.find(filenameKey);
-    if (fnPos != string::npos)
-    {
-        size_t fnStart = fnPos + filenameKey.size();
-        size_t fnEnd = cdLine.find("\"", fnStart);
-        client._filename = string(cdLine).substr(fnStart, fnEnd - fnStart);
-        if (client._filename.empty())
-            throw ErrorCodeClientException(client, 400, "Filename is empty in Content-Disposition header");
-        appendUuidToFilename(client, client._filename);
-    }
-    else
-        throw ErrorCodeClientException(client, 400, "Filename not found in Content-Disposition header");
-    const string contentType = "Content-Type: ";
-    size_t position = buff.find(contentType); //TODO should we do something with contentType here?
-    if (position == string::npos && !client._filename.empty())
-        throw ErrorCodeClientException(client, 400, "Content-Type header not found in multipart body");
+    string cdLine = extractContentDispositionLine(client, buff);
+    client._filename = extractFilenameFromContentDisposition(client, cdLine);
+    appendUuidToFilename(client, client._filename);
+    validateMultipartContentType(client, buff, client._filename);
 }
 
 void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
@@ -133,17 +106,57 @@ void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
 
     size_t lastDotIndex = filename.find_last_of('.');
     if (lastDotIndex != string::npos && lastDotIndex > 0)
-    {
         filename.insert(lastDotIndex, uuid);
-    }
     else
-    {
         filename += uuid;
-    }
 
     client._filenamePath = client._rootPath + "/" + client._filename; // here to append filename for post
     if (client._filenamePath.size() > PATH_MAX)
-    {
         throw ErrorCodeClientException(client, 413, "Full path to create file is too long");
+}
+
+namespace
+{
+    string extractContentDispositionLine(Client &client, const string &buff)
+    {
+        const string contentDisposition = "Content-Disposition:";
+        size_t cdPos = buff.find(contentDisposition);
+        if (cdPos == string::npos)
+            throw RunServers::ClientException("Content-Disposition header not found in multipart body");
+
+        size_t wsStart = cdPos + contentDisposition.size();
+        size_t wsEnd = buff.find_first_not_of(" \t", wsStart);
+        if (wsEnd == string::npos)
+            throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: only whitespace found");
+
+        size_t formDataPos = buff.find("form-data", cdPos);
+        if (formDataPos != wsEnd)
+            throw ErrorCodeClientException(client, 400, "Content-Disposition is not form-data");
+
+        size_t cdEnd = buff.find(CRLF, cdPos);
+        return buff.substr(cdPos, cdEnd - cdPos);
+    }
+
+    string extractFilenameFromContentDisposition(Client &client, const string &cdLine)
+    {
+        const string filenameKey = "filename=\"";
+        size_t fnPos = cdLine.find(filenameKey);
+        if (fnPos == string::npos)
+            throw ErrorCodeClientException(client, 400, "Filename not found in Content-Disposition header");
+
+        size_t fnStart = fnPos + filenameKey.size();
+        size_t fnEnd = cdLine.find("\"", fnStart);
+        string filename = cdLine.substr(fnStart, fnEnd - fnStart);
+        if (filename.empty())
+            throw ErrorCodeClientException(client, 400, "Filename is empty in Content-Disposition header");
+        return filename;
+    }
+
+    void validateMultipartContentType(Client &client, const string &buff, const string &filename)
+    {
+        const string contentType = "Content-Type: ";
+        size_t position = buff.find(contentType);
+        if (position == string::npos && !filename.empty())
+            throw ErrorCodeClientException(client, 400, "Content-Type header not found in multipart body");
     }
 }

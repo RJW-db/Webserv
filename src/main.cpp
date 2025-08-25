@@ -53,6 +53,7 @@ namespace
 
     void setupEnvironment()
     {
+        initRandomSeed();
         RunServers::getExecutableDirectory();
         Logger::initialize(LOG_DIR, LOG);
         atexit(FileDescriptor::cleanupAllFD);

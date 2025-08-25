@@ -33,16 +33,13 @@ void    HttpRequest::validateHEAD(Client &client)
     RunServers::setLocation(client);
 
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
-    if (client._useMethod == 0)
+    if (client._useMethod == METHOD_INVALID)
         throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
 
     if (client._version != "HTTP/1.1")
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     
-    if (client._location.getRoot().back() == '/')
-        client._rootPath = client._location.getRoot() + string(client._requestPath).substr(1);
-    else
-        client._rootPath = client._location.getRoot() + string(client._requestPath);
+    client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
     validateResourceAccess(client);
 }
@@ -52,14 +49,14 @@ namespace
     uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
     {
         if (method == "HEAD" && allowedMethods & METHOD_HEAD)
-            return 1;
+            return METHOD_HEAD;
         if (method == "GET" && allowedMethods & METHOD_GET)
-            return 2;
+            return METHOD_GET;
         if (method == "POST" && allowedMethods & METHOD_POST)
-            return 4;
+            return METHOD_POST;
         if (method == "DELETE" && allowedMethods & METHOD_DELETE)
-            return 8;
-        return 0;
+            return METHOD_DELETE;
+        return METHOD_INVALID;
     }
 
     void parseRequestPath(Client &client)
@@ -74,6 +71,10 @@ namespace
         
         if (isValidAndNormalizeRequestPath(client) == false)
             throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
+
+        size_t faviconIndex = client._requestPath.find("/favicon.ico");
+        if (faviconIndex != string::npos)
+            client._requestPath = client._requestPath.substr(0, faviconIndex) + "/favicon.svg";
     }
 
     string percentDecode(const string& input)
@@ -175,12 +176,8 @@ namespace
             throw ErrorCodeClientException(client, 414, "URI too long");
 
         for (auto segment : segments)
-        {
             if (segment.size() > NAME_MAX)
-            {
                 throw ErrorCodeClientException(client, 414, "URI too long");
-            }
-        }
     }
 
     void decodeSafeFilenameChars(Client &client)
@@ -191,6 +188,7 @@ namespace
             {"%24", "$"},
             {"%25", "%"},
             {"%26", "&"}};
+
         for (pair<string, string> pair : specialChars)
         {
             size_t pos;
@@ -225,9 +223,7 @@ namespace
                 throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
             detectCgiRequest(client);
             if (client._useMethod & (METHOD_HEAD | METHOD_GET))
-            {
                 client._filenamePath = reqPath;
-            }
         }
         else
             throw ErrorCodeClientException(client, 404, "Not a regular file or directory");
@@ -241,9 +237,7 @@ namespace
             {
                 if (S_ISDIR(status.st_mode) == true ||
                     S_ISREG(status.st_mode) == false)
-                {
                     continue;
-                }
                 if (access(indexPage.data(), R_OK) == -1)
                 {
                     Logger::log(WARN, "Access error", '-', "Access failed: ", strerror(errno));
@@ -255,13 +249,9 @@ namespace
         }
 
         if (client._location.getAutoIndex() == true)
-        {
             client._isAutoIndex = true;
-        }
         else
-        {
             throw ErrorCodeClientException(client, 404, "couldn't find index page");
-        }
     }
 
     void detectCgiRequest(Client &client)
@@ -269,12 +259,8 @@ namespace
         size_t filenamePos = client._requestPath.find_last_of('/');
         string_view filename(client._requestPath.data() + filenamePos + 1);
         if (client._location.isCgiFile(filename) == true)
-        {
             client._isCgi = true;
-        }
         else if (!client._location.getExtension().empty())
-        {
             throw ErrorCodeClientException(client, 400, "request without correct cgi extension");
-        }
     }
 }

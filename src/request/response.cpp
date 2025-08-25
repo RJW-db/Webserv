@@ -1,8 +1,5 @@
 #include "HttpRequest.hpp"
 
-
-
-
 string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
 {
     static const map<uint16_t, string> responseCodes = {
@@ -24,19 +21,20 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
         {501, "Not Implemented"},
         {502, "Bad Gateway"},
         {503, "Service Unavailable"},
-        {504, "Gateway Timeout"}};
+        {504, "Gateway Timeout"}
+    };
 
     map<uint16_t, string>::const_iterator it = responseCodes.find(code);
     if (it == responseCodes.end())
         throw runtime_error("Couldn't find code");
 
     ostringstream response;
-    response << "HTTP/1.1 " << to_string(it->first) << ' ' << it->second << "\r\n";
+    response << "HTTP/1.1 " << to_string(it->first) << ' ' << it->second << CRLF;
     if (!path.empty())
-        response << "Content-Type: " << getMimeType(path) << "\r\n";
-    response << "Content-Length: " << fileSize << "\r\n";
-    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
-    response << "\r\n";
+        response << "Content-Type: " << getMimeType(path) << CRLF;
+    response << "Content-Length: " << fileSize << CRLF;
+    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
+    response << CRLF;
     return response.str();
 }
 
@@ -73,9 +71,7 @@ string HttpRequest::getMimeType(string &path)
 
 string HttpRequest::createResponseCgi(Client &client, string &input)
 {
-    Logger::log(DEBUG, "input received:", input); //testlog
     size_t headerSize = input.find(CRLF2);
-
     map<string_view, string_view> headerFields;
     size_t pos = 0;
     while (pos < headerSize)
@@ -98,25 +94,25 @@ string HttpRequest::createResponseCgi(Client &client, string &input)
     ostringstream response;
     // if (headerFields["Status"].empty())
     //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
-    response << "HTTP/1.1 " << headerFields["Status"] << "\r\n";
-    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
+    response << "HTTP/1.1 " << headerFields["Status"] << CRLF;
+    response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
     if (input.size() > headerSize + CRLF2_LEN)
     {
         // if (headerFields.count("Content-Type") < 1)
         //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
-        response << "Content-Type: " << headerFields["Content-Type"] << "\r\n";
+        response << "Content-Type: " << headerFields["Content-Type"] << CRLF;
         if (headerFields.count("Content-Length") > 0)
-            response << "Content-Length: " << headerFields["Content-Length"] << "\r\n";
+            response << "Content-Length: " << headerFields["Content-Length"] << CRLF;
         else
         {
             Logger::log(DEBUG, "content length set by server"); //testlog
-            response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << "\r\n";
+            response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << CRLF;
         }
             
-        response << "\r\n";
+        response << CRLF;
         response << input.substr(headerSize + CRLF2_LEN);
     }
     else
-        response << "\r\n";
+        response << CRLF;
     return response.str();
 }

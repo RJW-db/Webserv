@@ -58,7 +58,7 @@ bool RunServers::addFdToEpoll(int infd)
     return true;
 }
 
-void    RunServers::setClientServerAddress(Client &client, int infd)
+void RunServers::setClientServerAddress(Client &client, int infd)
 {
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr); 
@@ -83,25 +83,15 @@ void RunServers::processClientRequest(Client &client)
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;
         // client._finishedProcessClientRequest = true;
-        HttpRequest::handleRequest(client);
+        HttpRequest::processRequest(client);
     }
-    catch(const exception& e)   // if catch we don't handle well // todo why did we have this?
+    catch(const exception& e)
     {
         Logger::log(ERROR, client, "Error processing client request: ", e.what());
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";
         sendErrorResponse(client._fd, msgToClient);
     }
-    // catch (const LengthRequiredException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "411 Length Required");
-    // }
-    // catch (const ClientException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "400 Bad Request");
-    // }
-    // cleanupClient(clientFD);
+
 }
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
@@ -144,7 +134,7 @@ namespace
 
     void sendErrorResponse(int clientFD, const string &message)
     {
-        string response = "HTTP/1.1 " + message + "\r\nContent-Length: 0\r\n\r\n";
+        string response = "HTTP/1.1 " + message + CRLF + "Content-Length: 0" + CRLF2;
         send(clientFD, response.c_str(), response.size(), MSG_NOSIGNAL);
     }
 }
