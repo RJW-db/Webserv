@@ -60,7 +60,8 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
         message = HttpRequest::HttpResponse(_client, _errorCode, ".html", body.size());
     }
     message += body;
-    send(_client._fd, message.data(), message.size(), MSG_NOSIGNAL);
+    auto handleClient = make_unique<HandleToClientTransfer>(_client, message);
+    RunServers::insertHandleTransfer(move(handleClient));
     RunServers::cleanupClient(_client);
 }
 

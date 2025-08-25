@@ -151,16 +151,17 @@ bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, 
     }
     return false;
 }
+
 bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
 {
     int eventFD = currentEvent.data.fd;
-    for (auto it = _handle.begin(); it != _handle.end(); ++it)
+    for (size_t idx = 0; idx < _handle.size(); ++idx)
     {
-        if ((*it)->_client._fd == eventFD)
+        if (_handle[idx]->_client._fd == eventFD)
         {
-            HandleTransfer &handle = **it;
+            HandleTransfer &handle = *_handle[idx];
             Client &client = handle._client;
-            _clients[client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+            client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
             if (currentEvent.events & EPOLLOUT)
             {
@@ -171,7 +172,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             else if (currentEvent.events & EPOLLIN)
             {
-                if ((*it)->getIsChunk() == false)
+                if (handle.getIsChunk() == false)
                     finished = handle.handlePostTransfer(true);
                 else
                 {
@@ -183,11 +184,11 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             {
                 if (client._keepAlive == false && client._isCgi == false)
                 {
-                    cleanupClient(*_clients[(*it)->_client._fd]);
+                    cleanupClient(client);
                 }
                 else
                 {
-                    _handle.erase(it);
+                    _handle.erase(_handle.begin() + idx);
                     clientHttpCleanup(client);
                 }
             }
@@ -196,6 +197,52 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     }
     return false;
 }
+
+// bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
+// {
+//     int eventFD = currentEvent.data.fd;
+//     for (auto it = _handle.begin(); it != _handle.end(); ++it)
+//     {
+//         if ((*it)->_client._fd == eventFD)
+//         {
+//             HandleTransfer &handle = **it;
+//             Client &client = handle._client;
+//             _clients[client._fd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+//             bool finished = false;
+//             if (currentEvent.events & EPOLLOUT)
+//             {
+//                 if (handle._handleType == HANDLE_GET_TRANSFER)
+//                     finished = handle.handleGetTransfer();
+//                 else
+//                     finished = handle.sendToClientTransfer();
+//             }
+//             else if (currentEvent.events & EPOLLIN)
+//             {
+//                 if ((*it)->getIsChunk() == false)
+//                     finished = handle.handlePostTransfer(true);
+//                 else
+//                 {
+//                     handle.appendToBody();
+//                     finished = handle.handleChunkTransfer();
+//                 }
+//             }
+//             if (finished == true)
+//             {
+//                 if (client._keepAlive == false && client._isCgi == false)
+//                 {
+//                     cleanupClient(*_clients[(*it)->_client._fd]);
+//                 }
+//                 else
+//                 {
+//                     _handle.erase(it);
+//                     clientHttpCleanup(client);
+//                 }
+//             }
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
 {

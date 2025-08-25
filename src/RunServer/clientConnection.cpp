@@ -85,7 +85,7 @@ void RunServers::processClientRequest(Client &client)
         // client._finishedProcessClientRequest = true;
         HttpRequest::handleRequest(client);
     }
-    catch(const exception& e)   // if catch we don't handle well
+    catch(const exception& e)   // if catch we don't handle well // todo why did we have this?
     {
         Logger::log(ERROR, client, "Error processing client request: ", e.what());
         string msgToClient = "400 Bad Request, <html><body><h1>400 Bad Request</h1></body></html>";

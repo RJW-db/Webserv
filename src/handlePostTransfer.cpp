@@ -219,6 +219,23 @@ bool HandlePostTransfer::searchContentDisposition()
 /* helper functions */
 
 /**
+ * Sends a successful HTTP response after POST transfer completion
+ * Constructs and sends HTTP 201 Created response with the uploaded file path
+ */
+void HandlePostTransfer::sendSuccessResponse()
+{
+    size_t absolutePathSize = RunServers::getServerRootDir().size();
+    string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
+    string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
+    
+    // TODO: check if send is successful and handle errors
+    auto handleClient = make_unique<HandleToClientTransfer>(_client, headers);
+    RunServers::insertHandleTransfer(move(handleClient));
+    // send(_client._fd, headers.data(), headers.size(), MSG_NOSIGNAL);
+    Logger::log(INFO, _client, "POST   ", _client._filenamePath);
+}
+
+/**
  * Handles error cleanup and throws an exception for POST transfer errors
  * Closes file descriptors, removes temporary files, and formats error messages
  * @param client Reference to the client connection
@@ -238,21 +255,6 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
             cout << "remove failed on file: " << filePath << endl;
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + " " + strerror(errno));
-}
-
-/**
- * Sends a successful HTTP response after POST transfer completion
- * Constructs and sends HTTP 201 Created response with the uploaded file path
- */
-void HandlePostTransfer::sendSuccessResponse()
-{
-    size_t absolutePathSize = RunServers::getServerRootDir().size();
-    string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
-    string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
-    
-    // TODO: check if send is successful and handle errors
-    send(_client._fd, headers.data(), headers.size(), 0);
-    Logger::log(INFO, _client, "POST   ", _client._filenamePath);
 }
 
 /* cgi handling and checking if correct syntax */

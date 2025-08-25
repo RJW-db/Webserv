@@ -24,7 +24,7 @@ bool HandleToClientTransfer::sendToClientTransfer()
     if (sent <= 0)
     {
         if (sent == -1)
-            throw ErrorCodeClientException(_client, 500, "Send to client went wrong: " + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, 0, "Send to client went wrong: " + string(strerror(errno)));
         RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
         return true;
     }

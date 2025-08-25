@@ -90,6 +90,8 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
+                if (WEXITSTATUS(exit_code) > 0) // Client has already received the error code
+                    throw ErrorCodeClientException(client, 500, "Cgi error exited with status: " + to_string(WEXITSTATUS(exit_code)));
                 Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
                 HandleTransfer& handle = *(*it);
                 // Logger::log(DEBUG, "handletype: ", handle._handleType); //testlog
@@ -114,8 +116,7 @@ void RunServers::checkCgiDisconnect()
                 {
                     ++it;
                 }
-                if (WEXITSTATUS(exit_code) > 0) // Client has already received the error code
-                    throw ErrorCodeClientException(client, 500, "Cgi error");
+
             }
 
         }

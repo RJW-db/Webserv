@@ -53,7 +53,7 @@ bool HandleGetTransfer::handleGetTransfer()
     ssize_t sent = send(_client._fd, _fileBuffer.c_str(), _fileBuffer.size(), MSG_NOSIGNAL);
     if (sent == -1)
     {
-        throw ErrorCodeClientException(_client, 500, string("handlingTransfer send: ") + strerror(errno) + ", fd: " + to_string(_client._fd) + ", on file: " + _client._filenamePath);
+        throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;

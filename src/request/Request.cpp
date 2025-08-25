@@ -190,9 +190,8 @@ void HttpRequest::SendAutoIndex(Client &client)
     string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
     client._filenamePath.clear();
     closedir(dr);
-    int sent = send(client._fd, response.data(), response.size(), 0);
-    if (sent == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to send autoindex response: " + string(strerror(errno)));
+    auto handleClient = make_unique<HandleToClientTransfer>(client, response);
+    RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
     if (client._keepAlive == false)
         RunServers::cleanupClient(client);
@@ -342,9 +341,7 @@ void HttpRequest::redirectRequest(Client &client)
     size_t index = response.find_first_of(CRLF);
     string locationHeader = "Location: " + redirectPair.second + CRLF;
     response.insert(index + CRLF_LEN, locationHeader);
-    int sent = send(client._fd, response.data(), response.size(), 0);
-    if (sent == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to send redirect response: " + string(strerror(errno)));
+    
     
 }
 
@@ -354,7 +351,6 @@ void HttpRequest::handleRequest(Client &client)
         client._rootPath = client._rootPath.substr(0, client._rootPath.find("/favicon.ico")) + "/favicon.svg";
     if (client._location.getReturnRedirect().first > 0)
     {
-        // cout << "entered return redirect: " << client._location.getReturnRedirect().first << endl; //testcout
         redirectRequest(client);
         RunServers::clientHttpCleanup(client);
         return ;
@@ -372,7 +368,8 @@ void HttpRequest::handleRequest(Client &client)
     {
         // locateRequestedFile(client);
         string response = HttpRequest::HttpResponse(client, 200, "txt", 0);
-        send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
+        auto handleClient = make_unique<HandleToClientTransfer>(client, response);
+        RunServers::insertHandleTransfer(move(handleClient));
         break;
     }
     case 2: // GET
@@ -428,10 +425,11 @@ void HttpRequest::handleRequest(Client &client)
             string body = "File deleted";
             string response = HttpRequest::HttpResponse(client, code, ".txt", body.size());
             response += body;
-            send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
-            cout << escapeSpecialChars(response.c_str(), TERMINAL_DEBUG) << endl; //testcout
-            Logger::log(INFO, client, "DELETE ", client._rootPath);
-            RunServers::clientHttpCleanup(client);
+             auto handleClient = make_unique<HandleToClientTransfer>(client, response);
+             RunServers::insertHandleTransfer(move(handleClient));
+             cout << escapeSpecialChars(response.c_str(), TERMINAL_DEBUG) << endl; // testcout
+             Logger::log(INFO, client, "DELETE ", client._rootPath);
+             RunServers::clientHttpCleanup(client);
         }
         else
         {
@@ -506,12 +504,11 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
     return response.str();
 }
 
-string HttpRequest::createResponseCgi(Client &client, string &input)
+map<string_view, string_view> parseCgiHeaderFields(string &input, size_t headerSize)
 {
-    Logger::log(DEBUG, "input received:", input); //testlog
-    size_t headerSize = input.find(CRLF2);
 
     map<string_view, string_view> headerFields;
+
     size_t pos = 0;
     while (pos < headerSize)
     {
@@ -530,28 +527,35 @@ string HttpRequest::createResponseCgi(Client &client, string &input)
         }
         pos = end + CRLF_LEN;
     }
+    return headerFields;
+}
+
+string HttpRequest::createResponseCgi(Client &client, string &input)
+{
+    Logger::log(DEBUG, "input received:", input); //testlog
+    size_t headerSize = input.find(CRLF2);
+
+    map<string_view, string_view> headerFields = parseCgiHeaderFields(input, headerSize);
+    
     ostringstream response;
-    // if (headerFields["Status"].empty())
-    //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
+    if (headerFields.count("Status") < 0)
+        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
     response << "HTTP/1.1 " << headerFields["Status"] << "\r\n";
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + "\r\n";
     if (input.size() > headerSize + CRLF2_LEN)
     {
-        // if (headerFields.count("Content-Type") < 1)
-        //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
+        if (headerFields.count("Content-Type") < 1)
+            throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
         response << "Content-Type: " << headerFields["Content-Type"] << "\r\n";
         if (headerFields.count("Content-Length") > 0)
             response << "Content-Length: " << headerFields["Content-Length"] << "\r\n";
         else
-        {
-            Logger::log(DEBUG, "content length set by server"); //testlog
             response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << "\r\n";
-        }
-            
         response << "\r\n";
-        response << input.substr(headerSize + CRLF2_LEN);
+        response << input.substr(headerSize + CRLF2_LEN); // for body
     }
     else
         response << "\r\n";
     return response.str();
 }
+
