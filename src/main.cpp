@@ -74,17 +74,17 @@ namespace
     void configureServer(int argc, char *argv[])
     {
         const char *confFile = (argc >= 2) ? argv[1] : DEFAULT_CONFIG;
-        if (argc == 3)
-        {
-            try
-            {
-                RunServers::setClientBufferSize(stoullSafe(argv[2]));
-            }
-            catch(const std::exception& e)
-            {
-                Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
-            }
-        }
+        // if (argc == 3)
+        // {
+        //     try
+        //     {
+        //         RunServers::setClientBufferSize(stoullSafe(argv[2]));
+        //     }
+        //     catch(const std::exception& e)
+        //     {
+        //         Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
+        //     }
+        // }
         Parsing configFile(confFile);
         RunServers::createServers(configFile.getConfigs());
     }

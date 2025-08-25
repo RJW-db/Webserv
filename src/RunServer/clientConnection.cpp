@@ -8,6 +8,10 @@
 #include "Logger.hpp"
 #include "ErrorCodeClientException.hpp"
 
+#ifndef CLIENT_BUFFER_SIZE
+# define CLIENT_BUFFER_SIZE 8192 // 8KB
+#endif
+
 namespace
 {
     string NumIpToString(uint32_t num);
@@ -71,7 +75,7 @@ void RunServers::processClientRequest(Client &client)
 {
     try
     {
-        char   buff[_clientBufferSize];
+        char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
@@ -93,10 +97,10 @@ void RunServers::processClientRequest(Client &client)
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
-    // buff[_clientBufferSize] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
+    // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     // errno = 0;
-    ssize_t bytesReceived = recv(client._fd, buff, _clientBufferSize, 0);
+    ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
     // std::cout << "received: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //testcout
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);

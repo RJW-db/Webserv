@@ -19,20 +19,18 @@ void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
     FileDescriptor::closeFD(fdReadfromCgi[1]);
 }
 
-void setupChildPipes(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
+void setupChildPipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
     if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
-        std::exit(1);
-        throw ErrorCodeClientException(client, 500, "Failed to dup2 inpipe to stdin for CGI handling");
+        std::exit(EXIT_FAILURE);
     }
     if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         close(STDIN_FILENO);
-        std::exit(1);
-        throw ErrorCodeClientException(client, 500, "Failed to dup2 outpipe to stdout for CGI handling");
+        std::exit(EXIT_FAILURE);
     }
 }
 
@@ -43,9 +41,6 @@ bool endsWith(const string &str, const string &suffix)
 
 vector<string> createArgv(Client &client)
 {
-    // argv[0] = "/usr/bin/python3" or "python3"
-    // argv[1] = "./cgi-bin/upload.py"
-
     vector<string> argvString;
     if (!client._location.getCgiPath().empty())
     {
@@ -53,12 +48,9 @@ vector<string> createArgv(Client &client)
         argvString.push_back(client._location.getCgiPath());
     }
     else if (endsWith(client._requestPath, ".py"))
-    {
         argvString.push_back("python3");
-    } else if (endsWith(client._requestPath, ".php"))
-    {
+    else if (endsWith(client._requestPath, ".php"))
         argvString.push_back("php");
-    }
 
     argvString.push_back('.' + client._requestPath);
     return argvString;
@@ -129,19 +121,30 @@ void printVecArray(vector<char *> &args)
 
 void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
 {
-    setupChildPipes(client, fdWriteToCgi, fdReadfromCgi);
-    closing_pipes(fdWriteToCgi, fdReadfromCgi);
-
-    vector<string> argvString = createArgv(client);
-    vector<char *> argv = convertToCharArray(argvString);
-    // printVecArray(argv);
-
-    vector<string> envpString = createEnvp(client);
-    vector<char *> envp= convertToCharArray(envpString);
-    // printVecArray(envp);
-    char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
-    execve(filePath, argv.data(), envp.data());
-    Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
+    try
+    {
+        setupChildPipes(fdWriteToCgi, fdReadfromCgi);
+        closing_pipes(fdWriteToCgi, fdReadfromCgi);
+    
+        vector<string> argvString = createArgv(client);
+        vector<char *> argv = convertToCharArray(argvString);
+        // printVecArray(argv);
+    
+        vector<string> envpString = createEnvp(client);
+        vector<char *> envp= convertToCharArray(envpString);
+        // printVecArray(envp);
+        char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
+        execve(filePath, argv.data(), envp.data());
+        Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    catch(...)
+    {
+        std::cerr << "Unknown exception caught in child process\n";
+    }
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     std::exit(EXIT_FAILURE);
@@ -204,8 +207,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     client._pid = fork();
     if (client._pid == -1) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
-        std::exit(1);
-        throw ErrorCodeClientException(client, 500, "Failed to fork for CGI handling");
+        std::exit(EXIT_FAILURE);
     }
 
     if (client._pid == CHILD)

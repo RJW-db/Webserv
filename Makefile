@@ -10,9 +10,13 @@ PRINT_NO_DIR	:=	--no-print-directory
 COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
-# CCPFLAGS		+=	-Werror
+CCPFLAGS		+=	-Werror
+# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow
 CCPFLAGS		+=	-MMD -MP
+ifdef BUFFER
+CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
+endif
 CCPFLAGS		+=	-g
 CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
@@ -27,12 +31,13 @@ DOCKER_DIR		:=	testing/docker
 SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp \
-					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp	\
-					Server.cpp					serverListenFD.cpp		\
-					parsing/parsing.cpp						parsing/ConfigServer.cpp			parsing/Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
-					request/parsingReq.cpp request/processReq.cpp request/response.cpp request/validation.cpp		request/Post.cpp			\
-						loggingErrors.cpp					parsing/Location.cpp			\
+					parsing/parsing.cpp		parsing/Aconfig.cpp			parsing/ConfigServer.cpp		parsing/Location.cpp						\
+					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp						\
+					request/parsingReq.cpp	request/processReq.cpp		request/response.cpp			request/validation.cpp	request/Post.cpp	\
 					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
+					FileDescriptor.cpp	  Client.cpp			\
+					Server.cpp					serverListenFD.cpp		\
+						loggingErrors.cpp								\
 					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 
@@ -46,11 +51,9 @@ OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
 DEPS			:=	$(OBJS:.o=.d)
 
 #		HEADERS
-INCS			:=	RunServer.hpp			Parsing.hpp		ConfigServer.hpp		Location.hpp		Aconfig.hpp		HttpRequest.hpp  utils.hpp ServerListenFD.hpp 	ErrorCodeClientException.hpp Logger.hpp
-HEADERS			:=	$(addprefix $(INCD), $(INCS))
-INCLUDE_WEB		:=	-I $(INCD)
+INCLUDE			:=	-I $(INCD)
 
-BUILD			:=	$(COMPILER) $(INCLUDE_WEB) $(CCPFLAGS)
+BUILD			:=	$(COMPILER) $(INCLUDE) $(CCPFLAGS)
 
 #		Remove these created files
 DELETE			:=	*.out			**/*.out			.DS_Store												\
@@ -63,9 +66,9 @@ $(NAME): $(OBJS)
 	$(BUILD) $(OBJS) -o $(NAME)
 	@printf "$(CREATED)" $@ $(CUR_DIR)
 
-$(BUILD_DIR)%.o: %.cpp $(HEADERS)
+$(BUILD_DIR)%.o: %.cpp
 	@mkdir -p $(@D)
-	$(BUILD) $(INCLUDE_WEB) -c $< -o $@
+	$(BUILD) $(INCLUDE) -c $< -o $@
 
 clean:
 	@$(RM) $(BUILD_DIR) $(DELETE)

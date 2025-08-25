@@ -15,7 +15,7 @@ HandleChunkTransfer::HandleChunkTransfer(Client &client)
 
 void HandleChunkTransfer::appendToBody()
 {
-    char   buff[RunServers::getClientBufferSize()];
+    char   buff[CLIENT_BUFFER_SIZE];
     size_t bytesReceived = RunServers::receiveClientData(_client, buff);
     _client._body.append(buff, bytesReceived);
 }

@@ -74,23 +74,13 @@ class RunServers
         {
             _handle.push_back(move(handle));
         }
-
         static inline void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle)
         {
             _handleCgi.push_back(move(handle));
         }
-
         static inline string &getServerRootDir()
         {
             return _serverRootDir;
-        }
-        static void setClientBufferSize(uint64_t value)
-        {
-            _clientBufferSize = value;
-        }
-        static inline uint64_t getClientBufferSize()
-        {
-            return _clientBufferSize;
         }
         static inline uint64_t getRamBufferLimit()
         {
@@ -136,7 +126,6 @@ class RunServers
 
         // --- Miscellaneous ---
         static int _level;
-        static uint64_t _clientBufferSize;
         static uint64_t _ramBufferLimit;
 };
 #endif

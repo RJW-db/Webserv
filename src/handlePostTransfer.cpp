@@ -83,7 +83,7 @@ bool HandlePostTransfer::handlePostTransfer(bool readData)
  */
 void HandlePostTransfer::ReadIncomingData()
 {
-    char buff[RunServers::getClientBufferSize()];
+    char buff[CLIENT_BUFFER_SIZE];
     size_t bytesReceived = RunServers::receiveClientData(_client, buff);
     _bytesReadTotal += bytesReceived;
     _fileBuffer.append(buff, bytesReceived);

@@ -56,7 +56,7 @@ void	FileDescriptor::closeFD(int &fd)
     if (it != _fds.end())
 	{
         // std::cerr << "closing fd " << fd << std::endl; //testcout
-        if (fd != -1 && safeCloseFD(fd) == false)
+        if (fd != -1 && safeCloseFD(fd) == false) // TODO EIO, how to resove for parent and child
         {
             // finishes up clients and restart webserv
             // throw something

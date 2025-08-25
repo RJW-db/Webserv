@@ -8,6 +8,10 @@
 
 using namespace std;
 
+#ifndef CLIENT_BUFFER_SIZE
+# define CLIENT_BUFFER_SIZE 8192 // 8KB
+#endif
+
 enum HandleTransferType {
     HANDLE_GET_TRANSFER = 1,
     HANDLE_POST_TRANSFER = 2,

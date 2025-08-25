@@ -10,9 +10,6 @@ namespace {
     constexpr const char *WHITESPACE_WITH_NEWLINE = " \t\f\v\r\n";
     constexpr size_t SERVER_KEYWORD_LENGTH = 6;
     constexpr size_t LOCATION_KEYWORD_LENGTH = 8;
-}
-
-namespace {
 
     bool isEmptyOrCommentLine(string &line, size_t &skipSpace);
     void trimLeadingWhitespace(string &line);
@@ -199,7 +196,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 template <typename T>
 void Parsing::LocationCheck(string &line, T &block, bool &validSyntax)
 {
-    if constexpr (std::is_same<T, ConfigServer>::value) // checks if block == Configserver
+    if constexpr (std::is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
     {
         Location location;
         location.setLineNbr(_lines.begin()->first);
