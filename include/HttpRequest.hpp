@@ -43,41 +43,41 @@ using namespace std;
 class HttpRequest
 {
     public:
+        // --- Parsing ---
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static bool processHttpBody(Client &client);
-        static bool processHttpChunkBody(Client &client, int targetFilePathFD);
-
-        static void getInfoPost(Client &client, string &content, size_t &totalWriteSize);
-
         static inline bool appendToBody(Client &client, const char *buff, size_t receivedBytes)
         {
             client._body.append(buff, receivedBytes);
             return (true);
         }
-
         static void validateHEAD(Client &client);
-        static void	handleRequest(Client &client);
-
         static void	getBodyInfo(Client &client, const string buff);
+        static void getContentLength(Client &client);
+        static void getContentType(Client &client);
+
+        // --- Request Processing ---
+        static void	processRequest(Client &client);
+        static bool checkAndRedirect(Client &client);
+        static void redirectRequest(Client &client);
+        static bool checkAndRunCgi(Client &client);
+        static bool handleCgi(Client &client, string &body);
+
+        // --- HTTP Methods ---
+        static void processHead(Client &client);
+        static void processGet(Client &client);
+        static void processPost(Client &client);
+        static void processDelete(Client &client);
+        
+        // --- File Operations ---
+        static void	GET(Client &client);
+        static void	POST(Client &client);
+        static void SendAutoIndex(Client &client);
         static void appendUuidToFilename(Client &client, string &filename);
 
-        static void	POST(Client &client);
-
-        static void	GET(Client &client);
-        static void    SendAutoIndex(Client &client);
-
+        // --- Response Generation ---
         static string getMimeType(string &path);
         static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
         static string createResponseCgi(Client &client, string &input);
-        static void   redirectRequest(Client &client);
-
-        static void getContentLength(Client &client);
-
-        static void getContentType(Client &client);
-
-        static bool handleCgi(Client &client, string &body);
-        // static void handleChunks(Client &client);
-
-
 };

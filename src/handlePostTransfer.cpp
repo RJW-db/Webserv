@@ -6,7 +6,8 @@
 #include "Logger.hpp"
 
 
-namespace {
+namespace
+{
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
     constexpr size_t TERMINATOR_SIZE = 4;    // for --\r\n
     constexpr int FILE_PERMISSIONS = 0700;

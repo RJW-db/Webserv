@@ -8,15 +8,6 @@
 #include <HttpRequest.hpp>
 #include <Logger.hpp>
 
-#define PASS_TO_CGI "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" \
-    "Content-Disposition: form-data; name=\"file\"; filename=\"chunk_test1.txt\"\r\n" \
-    "Content-Type: text/plain\r\n" \
-    "\r\n" \
-    "This is the content of the file.\n" \
-    "Second line of text.\n" \
-    "third line of text\n" \
-    "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"
-
 #define PARENT 1
 #define CHILD 0
 

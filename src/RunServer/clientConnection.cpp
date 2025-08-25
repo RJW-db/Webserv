@@ -57,7 +57,7 @@ bool RunServers::addFdToEpoll(int infd)
     return true;
 }
 
-void    RunServers::setClientServerAddress(Client &client, int infd)
+void RunServers::setClientServerAddress(Client &client, int infd)
 {
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr); 
@@ -82,23 +82,13 @@ void RunServers::processClientRequest(Client &client)
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;
         // client._finishedProcessClientRequest = true;
-        HttpRequest::handleRequest(client);
+        HttpRequest::processRequest(client);
     }
     catch(const exception& e)
     {
         throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }
-    // catch (const LengthRequiredException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "411 Length Required");
-    // }
-    // catch (const ClientException &e)
-    // {
-    //     cerr << e.what() << endl;
-    //     sendErrorResponse(clientFD, "400 Bad Request");
-    // }
-    // cleanupClient(clientFD);
+
 }
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
