@@ -59,7 +59,7 @@ void RunServers::checkCgiDisconnect()
         int exit_code;
         Client &client = (*it)->_client;
 
-        // if (client._cgiClosing == true) //TODO check maybe problem with this only running after client has received all data and clientHttpCleanup running after ErrorCodeClientException
+        // if (client._cgiClosing == true)
         // {
         //     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
         //     // FileDescriptor::cleanupFD((*it)->_fd);

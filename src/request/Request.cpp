@@ -57,8 +57,8 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     if (client._header.find('\0') != string::npos)
         throw ErrorCodeClientException(client, 400, "Null terminator found in header request at index: " + to_string(client._header.find('\0')));
 
-    HttpRequest::parseHeaders(client); // TODO cleanupClient
-    HttpRequest::validateHEAD(client); // TODO cleanupClient
+    HttpRequest::parseHeaders(client);
+    HttpRequest::validateHEAD(client);
     
 
     // Handle Connection header properly
@@ -82,7 +82,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     {
         
         // HttpRequest::getContentLength(client);
-        HttpRequest::getContentType(client); // TODO return isn't used at all
+        HttpRequest::getContentType(client);
         auto transferEncodingHeader = client._headerFields.find("Transfer-Encoding");
         if (transferEncodingHeader != client._headerFields.end() && transferEncodingHeader->second == "chunked")
         {
@@ -532,7 +532,6 @@ map<string_view, string_view> parseCgiHeaderFields(string &input, size_t headerS
 
 string HttpRequest::createResponseCgi(Client &client, string &input)
 {
-    Logger::log(DEBUG, "input received:", input); //testlog
     size_t headerSize = input.find(CRLF2);
 
     map<string_view, string_view> headerFields = parseCgiHeaderFields(input, headerSize);

@@ -45,7 +45,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
             handlePostTransfer(false);
         else
         {
-            validateMultipartPostSyntax(_client, _fileBuffer);
+            MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer);
             HttpRequest::handleCgi(_client, _fileBuffer);
         }
         return true;

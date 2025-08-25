@@ -228,7 +228,6 @@ void HandlePostTransfer::sendSuccessResponse()
     string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
     string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
     
-    // TODO: check if send is successful and handle errors
     auto handleClient = make_unique<HandleToClientTransfer>(_client, headers);
     RunServers::insertHandleTransfer(move(handleClient));
     // send(_client._fd, headers.data(), headers.size(), MSG_NOSIGNAL);
@@ -269,7 +268,7 @@ bool HandlePostTransfer::handlePostCgi()
     if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
         return false;
 
-    if (validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
     {
         HttpRequest::handleCgi(_client, _fileBuffer);
         return true;
@@ -286,7 +285,7 @@ bool HandlePostTransfer::handlePostCgi()
  * @param input String containing the complete multipart data to validate
  * @return true if syntax is valid, throws exception if invalid
  */
-bool HandlePostTransfer::validateMultipartPostSyntax(Client &client, string &input)
+bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
         throw ErrorCodeClientException(client, 400, "Content-Length does not match body size, " + string("content_length: ") + to_string(client._contentLength) + ", input size: " + to_string(input.size()));
@@ -325,7 +324,7 @@ bool HandlePostTransfer::validateMultipartPostSyntax(Client &client, string &inp
  * @param client Reference to the client connection
  * @param buffer Reference to the string_view buffer being processed
  */
-void HandlePostTransfer::parseContentDisposition(Client &client, string_view &buffer)
+void MultipartParser::parseContentDisposition(Client &client, string_view &buffer)
 {
     size_t bodyEnd = buffer.find(CRLF2);
     if (bodyEnd == string_view::npos)
@@ -343,7 +342,7 @@ void HandlePostTransfer::parseContentDisposition(Client &client, string_view &bu
  * @param needsContentDisposition Reference to flag indicating if content disposition is needed
  * @return true if end of multipart data is reached, false otherwise
  */
-bool HandlePostTransfer::validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
+bool MultipartParser::validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition)
 {
     size_t crlfPos = buffer.find(CRLF);
     

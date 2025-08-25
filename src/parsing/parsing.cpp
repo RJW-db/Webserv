@@ -101,8 +101,6 @@ void Parsing::readBlock(T &block,
 		}
         if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && validSyntax == false)
             LocationCheck(line, block, validSyntax);
-		if (validSyntax == false) //TODO must be deleted?
-			std::cout << "line:" << line << ":" << _lines.begin()->second << std::endl;
     }
 	while (checkParseSyntax() == true);
 }

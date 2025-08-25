@@ -2,7 +2,7 @@
 #define HANDLETRANSFER_HPP
 
 #include <Client.hpp>
-#include "Constants.hpp"
+#include <Constants.hpp>
 #include <string>
 #include <stdexcept>
 
@@ -50,69 +50,60 @@ class HandleTransfer
 class HandleGetTransfer : public HandleTransfer
 {
     public :
+    // initialization
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        HandleGetTransfer(const HandleGetTransfer &other) = default;
-        HandleGetTransfer &operator=(const HandleGetTransfer &other);
         ~HandleGetTransfer() = default;
 
-        void readToBuf();
+        //logic functions
         bool handleGetTransfer();
+        void readToBuf();
 
+        //variables needed
         size_t  _fileSize;
         size_t _offset;
         size_t  _headerSize;
-
-        // Pure virtual function implementations - throw errors for unsupported operations
-        virtual bool handlePostTransfer(bool readData) {(void)readData; throw std::runtime_error("handlePostTransfer not supported for HandleGetTransfer");}
-        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not supported for HandleGetTransfer");}
-        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not supported for HandleGetTransfer");}
-        virtual void appendToBody() { throw std::runtime_error("appendToBody not supported for HandleGetTransfer");}
 };
 
 class HandlePostTransfer : public HandleTransfer
 {
-public:
-    HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
-    HandlePostTransfer(const HandlePostTransfer &other) = default;
-    HandlePostTransfer &operator=(const HandlePostTransfer &other);
-    ~HandlePostTransfer() = default;
+    public:
+        HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
+        HandlePostTransfer(const HandlePostTransfer &other) = default;
+        HandlePostTransfer &operator=(const HandlePostTransfer &other);
+        ~HandlePostTransfer() = default;
 
         inline bool getIsChunk() const
         {
             return _isChunked;
         }
 
-    bool _isChunked = false;
+        bool _isChunked = false;
 
 
-    // HandlePostTransfer specific members
-    size_t _bytesWrittenTotal;
+        // HandlePostTransfer specific members
+        size_t _bytesWrittenTotal;
 
-    bool _foundBoundary = false;
-    bool _searchContentDisposition = false;
+        bool _foundBoundary = false;
+        bool _searchContentDisposition = false;
 
-    vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
+        vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
-    bool handlePostTransfer(bool ReadData);
+        bool handlePostTransfer(bool ReadData);
 
-    void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
 
-    bool validateMultipartPostSyntax(Client &client, string &input);
-    bool handlePostCgi();
+        bool handlePostCgi();
 
-protected:
-    HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
+    protected:
+        HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
 
-private:
-    ValidationResult validateFinalCRLF();
-    size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
-    bool searchContentDisposition();
-    void ReadIncomingData();
-    bool processMultipartData();
-    void sendSuccessResponse();
-
-    bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
-    static void parseContentDisposition(Client &client, string_view &buffer);
+    private:
+        ValidationResult validateFinalCRLF();
+        size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
+        bool searchContentDisposition();
+        void ReadIncomingData();
+        bool processMultipartData();
+        void sendSuccessResponse();
 };
 
 class HandleChunkTransfer : public HandlePostTransfer
@@ -138,7 +129,6 @@ class HandleChunkTransfer : public HandlePostTransfer
 
     protected:
         // Helper function to send data over a socket
-
 };
 
 class HandleWriteToCgiTransfer : public HandleTransfer
@@ -170,4 +160,16 @@ class HandleToClientTransfer : public HandleTransfer
         bool sendToClientTransfer();
         // string &response;
 };
+
+class MultipartParser
+{
+public:
+    static bool validateMultipartPostSyntax(Client &client, string &input);
+    static bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
+    static void parseContentDisposition(Client &client, string_view &buffer);
+
+private:
+    MultipartParser() = default; // Prevent instantiation since this is a utility class
+};
+
 #endif
