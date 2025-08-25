@@ -18,6 +18,7 @@
 #endif
 #include <signal.h>
 #include <sys/wait.h>
+#include <array>
 
 #include "RunServer.hpp"
 #include "ErrorCodeClientException.hpp"

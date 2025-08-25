@@ -29,9 +29,9 @@ SRC_DIR			:=	src/
 MAIN			:=	main.cpp \
 					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp	\
 					Server.cpp					serverListenFD.cpp		\
-					parsing.cpp						ConfigServer.cpp			Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
+					parsing/parsing.cpp						parsing/ConfigServer.cpp			parsing/Aconfig.cpp		FileDescriptor.cpp	  Client.cpp			\
 					request/Request.cpp		request/RequestValidation.cpp		request/Post.cpp			\
-						loggingErrors.cpp					Location.cpp			\
+						loggingErrors.cpp					parsing/Location.cpp			\
 					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
 					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp

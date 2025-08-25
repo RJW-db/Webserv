@@ -48,13 +48,11 @@ bool ConfigServer::listenHostname(string &line)
     for (const auto& pair : _portHost)
     {
         if (pair.first == line.substr(0, index) && pair.second == hostname)
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: Parsing: tried setting same port and hostname twice: ", hostname, ':', strPort);
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: tried setting same port and hostname twice: ", hostname, ':', strPort);
     }
     _portHost.insert({strPort, hostname});
     return (handleNearEndOfLine(line, index, "listen"));
 }
-
-// UTILITY FUNCTION
 
 bool ConfigServer::serverName(string &line)
 {
@@ -69,7 +67,27 @@ bool ConfigServer::serverName(string &line)
     _serverName = line.substr(0, len);
     return (handleNearEndOfLine(line, len, "server_name"));
 }
-// /sgoinfre/rde-brui/sandbox/Webserv
+
+string &ConfigServer::getServerName() { return _serverName; }
+
+void ConfigServer::addLocation(const Location &location, string path)
+{
+    for (auto it = _locations.begin(); it != _locations.end(); ++it)
+    {
+        pair<string, Location> &val = *it;
+        if (val.first == path)
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "addLocation: Parsing: tried adding location with same path twice: ", path);
+        if (val.first.length() < path.length())
+        {
+            _locations.insert(it, {path, location});
+            return;
+        }
+    }
+    _locations.insert(_locations.end(), {path, location});
+}
+
+int ConfigServer::getLineNbr() const { return _lineNbr; }
+
 void ConfigServer::setDefaultConf()
 {
     // what to do with no error pages? do we create our own or just have one
@@ -95,38 +113,40 @@ void ConfigServer::setDefaultConf()
     {
         Location &location = val.second;
         location.SetDefaultLocation(*this);
-	}
-	//check if / path exists in locations if not create it
-	bool found = false;
-	for (auto it = _locations.begin(); it != _locations.end(); ++it)
-	{
-		if (it->first == "/")
-		{
-			found = true;
-			break;
-		}
-	}
-	if (!found)
-	{
-		Location location;
-		location.SetDefaultLocation(*this);
-		_locations.insert(_locations.begin(), {"/", location});
-	}
+    }
+    //check if / path exists in locations if not create it
+    bool found = false;
+    for (auto it = _locations.begin(); it != _locations.end(); ++it)
+    {
+        if (it->first == "/")
+        {
+            found = true;
+            break;
+        }
+    }
+    if (!found)
+    {
+        Location location;
+        location.SetDefaultLocation(*this);
+        _locations.insert(_locations.begin(), {"/", location});
+    }
     setDefaultErrorPages();
 }
 
-void ConfigServer::addLocation(const Location &location, string path)
-{
-    for (auto it = _locations.begin(); it != _locations.end(); ++it)
-    {
-        pair<string, Location> &val = *it;
-        if (val.first == path)
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "addLocation: Parsing: tried adding location with same path twice: ", path);
-        if (val.first.length() < path.length())
-        {
-            _locations.insert(it, {path, location});
-            return;
-        }
+/* Aconfigserv class for helper funcs */
+
+AconfigServ::AconfigServ(const AconfigServ &other) : Aconfig(other) { *this = other; }
+
+AconfigServ &AconfigServ::operator=(const AconfigServ &other) {
+    if (this != &other) {
+        Aconfig::operator=(other);
+        _portHost = other._portHost;
+        _locations = other._locations;
+        _serverName = other._serverName;
     }
-    _locations.insert(_locations.end(), {path, location});
+    return *this;
 }
+
+unordered_multimap<string, string> &AconfigServ::getPortHost() { return _portHost; }
+vector<pair<string, Location>> &AconfigServ::getLocations() { return _locations; }
+string &AconfigServ::getServerName() { return _serverName; }
