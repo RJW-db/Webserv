@@ -70,14 +70,15 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
     std::vector<char> buff(1024 * 1024);
-    ssize_t rd = read(_fd, buff.data(), buff.size());
-    if (rd == -1)
+    
+    ssize_t bytesRead = read(_fd, buff.data(), buff.size());
+    if (bytesRead == -1)
     {
         FileDescriptor::cleanupFD(_fd);
         throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
     }
+    size_t rd = static_cast<size_t>(bytesRead);
     _fileBuffer.append(buff.data(), rd);
-
     if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
         FileDescriptor::cleanupFD(_fd);

@@ -60,13 +60,13 @@ public:
 
 
     template<typename... Args>
-    static void log(int level, Args&&... args);
+    static void log(uint8_t level, Args&&... args);
 
     template<typename... Args>
-    static void logExit(int level, Args&&... args);
+    static void logExit(uint8_t level, Args&&... args);
 
     template<typename... Args>
-    static void log(int level, Client &client, Args&&... args);
+    static void log(uint8_t level, Client &client, Args&&... args);
 
     class ErrorLogExit : public exception
     {
@@ -116,9 +116,8 @@ string Logger::processErrorArgsToString(const Tuple& tup, index_sequence<Is...>)
 }
 
 template<typename... Args>
-void Logger::log(int level, Args&&... args)
+void Logger::log(uint8_t level, Args&&... args)
 {
-    (void)level;
     try
     {
         string rawMessage;
@@ -150,9 +149,8 @@ void Logger::log(int level, Args&&... args)
         }
         
         string timeStamp = getTimeStamp();
-        int lvlStr = (level == CHILD_INFO || level == IWARN) ? level + 1 : level;
         // cout << "lvlstr "<<lvlStr << endl; //testcout
-        string levelStr = logLevelToString(lvlStr, LOGGER);
+        string levelStr = logLevelToString(level, LOGGER);
         // cout << levelStr << endl; //testcout
 
         ostringstream logMsg;
@@ -168,7 +166,7 @@ void Logger::log(int level, Args&&... args)
 
         if (level >= IWARN || (TERMINAL_DEBUG == true && level == INFO))
         {
-            levelStr = logLevelToString(lvlStr, TERMINAL);
+            levelStr = logLevelToString(level, TERMINAL);
             ostream& output = (level == INFO) ? cout : cerr;
             output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
         }
@@ -182,7 +180,7 @@ void Logger::log(int level, Args&&... args)
 }
 
 template<typename... Args>
-void Logger::logExit(int level, Args&&... args)
+void Logger::logExit(uint8_t level, Args&&... args)
 {
     log(level, forward<Args>(args)...);
     throw Logger::ErrorLogExit();
@@ -190,7 +188,7 @@ void Logger::logExit(int level, Args&&... args)
 }
 
 template<typename... Args>
-void Logger::log(int level, Client &client, Args&&... args)
+void Logger::log(uint8_t level, Client &client, Args&&... args)
 {
     try
     {

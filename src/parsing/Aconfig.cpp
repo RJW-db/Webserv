@@ -83,7 +83,7 @@ bool Aconfig::error_page(string &line)
     
     // Parse error code
     size_t pos;
-    size_t error_num = stoi(line, &pos);
+    uint16_t error_num = static_cast<uint16_t>(stoul(line, &pos));
     if (error_num < MIN_ERROR_CODE || error_num > MAX_ERROR_CODE)
         Logger::logExit(ERROR, "Config error at line", _lineNbr,
             "error_page: error code invalid must be between ", MIN_ERROR_CODE, " and ", MAX_ERROR_CODE);
@@ -189,8 +189,8 @@ bool Aconfig::returnRedirect(string &line)
     
     if (isdigit(line[0]) != 0)
     {
-        size_t errorCode = stoi(line, &len);
-        
+        uint16_t errorCode = static_cast<uint16_t>(stoul(line, &len));
+
         if ((errorCode < 301 || errorCode > 303) && (errorCode < 307 || errorCode > 308))
             Logger::logExit(ERROR, "Config error at line", _lineNbr, "Invalid error code in 'return' directive. Line: ", line);
         if (!_returnRedirect.second.empty())

@@ -1,10 +1,11 @@
 #ifndef HANDLETRANSFER_HPP
 #define HANDLETRANSFER_HPP
 
-#include <Client.hpp>
-#include <Constants.hpp>
 #include <string>
 #include <stdexcept>
+#include "Client.hpp"
+#include "Constants.hpp"
+#include "ErrorCodeClientException.hpp"
 
 using namespace std;
 
@@ -60,7 +61,7 @@ class HandleGetTransfer : public HandleTransfer
 
         //logic functions
         bool handleGetTransfer();
-        void readToBuf();
+        void fileReadToBuff();
 
         //variables needed
         size_t  _fileSize;
@@ -103,7 +104,7 @@ class HandlePostTransfer : public HandleTransfer
 
     private:
         ValidationResult validateFinalCRLF();
-        size_t FindBoundaryAndWrite(ssize_t &bytesWritten);
+        size_t FindBoundaryAndWrite(size_t &bytesWritten);
         bool searchContentDisposition();
         void ReadIncomingData();
         bool processMultipartData();

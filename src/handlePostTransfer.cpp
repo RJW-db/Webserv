@@ -109,7 +109,7 @@ bool HandlePostTransfer::processMultipartData()
                 continue;
             return (result == FINISHED); // if result is true, then we are done with the post transfer
         }
-        ssize_t bytesWritten = 0;
+        size_t bytesWritten = 0;
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);
         if (boundaryPos != string::npos)
         {
@@ -164,7 +164,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
  * @param bytesWritten Reference to store the number of bytes written to file
  * @return Position of the boundary in the buffer, or string::npos if not found
  */
-size_t HandlePostTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
+size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
 {
     size_t boundaryBufferSize = _client._bodyBoundary.size() + BOUNDARY_PADDING; 
     size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
@@ -182,9 +182,10 @@ size_t HandlePostTransfer::FindBoundaryAndWrite(ssize_t &bytesWritten)
     }
     if (writeSize > 0)
     {
-        bytesWritten = write(_fd, _fileBuffer.data(), writeSize);
-        if (bytesWritten == -1)
+        ssize_t written = write(_fd, _fileBuffer.data(), writeSize);
+        if (written == -1)
             ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
+        bytesWritten = static_cast<size_t>(written);
         _fileBuffer = _fileBuffer.erase(0, bytesWritten);
     }
     return boundaryPos;

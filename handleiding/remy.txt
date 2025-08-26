@@ -90,3 +90,7 @@ als de write naar de pipe -1 gooit,
 
 readFromCgiTransfer moet de pid checken voor discconnect tijd, als over de tijd dan kill child,
  als fout in write of exit code alle vectors doorkijken voor clients met matchend pid end daarna pid -1 zetten
+
+
+
+ RunServers::ClientException >> ErrorCodeClientException

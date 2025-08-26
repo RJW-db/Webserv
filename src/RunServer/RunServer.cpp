@@ -188,7 +188,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 }
                 else
                 {
-                    _handle.erase(_handle.begin() + idx);
+                    _handle.erase(_handle.begin() + static_cast<long>(idx));
                     clientHttpCleanup(client);
                 }
             }

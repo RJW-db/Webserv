@@ -151,7 +151,7 @@ void HttpRequest::processPost(Client &client)
 
 void HttpRequest::processDelete(Client &client)
 {
-    int code = 200;
+    uint16_t code = 200;
     if (remove(('.' + client._requestPath).data()) == 0)
     {
         string body = "File deleted";

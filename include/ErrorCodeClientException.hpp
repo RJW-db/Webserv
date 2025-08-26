@@ -19,7 +19,7 @@ class ErrorCodeClientException
         map<uint16_t, string> _errorPages;
 
     void handleDefaultErrorPage() const;
-    void handleCustomErrorPage(const string &errorPagePath, int errorCode) const;
+    void handleCustomErrorPage(const string &errorPagePath, uint16_t errorCode) const;
 
 
 public:

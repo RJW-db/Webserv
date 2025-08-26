@@ -22,7 +22,7 @@
 </html>"
 
 ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message)
-: _client(client), _errorCode(errorCode), _message(message)
+: _client(client), _errorCode(static_cast<uint16_t>(errorCode)), _message(message)
 {
     _errorPages = client._location.getErrorCodesWithPage();
 }
@@ -65,7 +65,7 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     RunServers::cleanupClient(_client);
 }
 
-void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPagePath, int errorCode) const
+void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPagePath, uint16_t errorCode) const
 {
     int fd = open(errorPagePath.c_str(), O_RDONLY);
     if (fd == -1)
