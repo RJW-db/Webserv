@@ -22,7 +22,7 @@ namespace
  * @param buffer Initial buffer containing received data
  */
 HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
-: HandleTransfer(client, -1, HANDLE_POST_TRANSFER), /* _isChunked(false), */ _foundBoundary(false), _searchContentDisposition(false)
+: HandleTransfer(client, -1, HANDLE_POST_TRANSFER), _foundBoundary(false), _searchContentDisposition(false)
 {
     _bytesReadTotal = bytesRead;
     _fileBuffer = buffer;

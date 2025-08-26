@@ -7,7 +7,6 @@
 HandleChunkTransfer::HandleChunkTransfer(Client &client)
 : HandlePostTransfer(client, -1)
 {
-    // _isChunked = true;
     _bytesReadTotal = 0;
     _handleType = HANDLE_CHUNK_TRANSFER;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
@@ -39,7 +38,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     
-    if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
+    if (_completedRequest == true)
     {
         if (_client._isCgi == false)
             postTransfer(false);
