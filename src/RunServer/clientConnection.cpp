@@ -119,10 +119,10 @@ namespace
     string NumIpToString(uint32_t addr)
     {
         unsigned char bytes[4];
-        bytes[0] = (addr >> 24) & 0xFF;
-        bytes[1] = (addr >> 16) & 0xFF;
-        bytes[2] = (addr >> 8) & 0xFF;
-        bytes[3] = addr & 0xFF;
+        bytes[0] = static_cast<unsigned char>((addr >> 24) & 0xFF);
+        bytes[1] = static_cast<unsigned char>((addr >> 16) & 0xFF);
+        bytes[2] = static_cast<unsigned char>((addr >> 8) & 0xFF);
+        bytes[3] = static_cast<unsigned char>(addr & 0xFF);
     
         return to_string(bytes[0]) + "." +
                to_string(bytes[1]) + "." +

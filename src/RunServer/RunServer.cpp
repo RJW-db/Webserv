@@ -184,7 +184,6 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             {
                 if (client._keepAlive == false && client._isCgi == false && currentEvent.events & EPOLLOUT) // check if not cgi or post
                 {
-                    Logger::log(DEBUG, "hier met event: ", currentEvent.events); //testlog
                     cleanupClient(client);
                 }
                 else
