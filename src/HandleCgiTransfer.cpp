@@ -15,7 +15,6 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body,
     _fileBuffer = body;
     // _isCgi = writeToCgi;
     _handleType = HANDLE_WRITE_TO_CGI_TRANSFER;
-    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
@@ -24,7 +23,6 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 {
     // _isCgi = writeToCgi;
     _handleType = HANDLE_READ_FROM_CGI_TRANSFER;
-    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
 }
 
 

@@ -5,6 +5,7 @@ services:
     container_name: webserv
     command: sleep infinity
     volumes:
-      - ./:/workspace
+    - /home/saleunin/Desktop/Webserv/testing/docker:/Webserv
+    - /home/saleunin/Desktop/Webserv/testing/docker:/workspace
     extra_hosts:
       - "host.docker.internal:host-gateway"

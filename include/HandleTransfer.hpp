@@ -141,12 +141,10 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
+        
+        bool writeToCgiTransfer();
 
         size_t _bytesWrittenTotal;
-
-
-        bool writeToCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
 };
 
 class HandleReadFromCgiTransfer : public HandleTransfer
@@ -155,7 +153,6 @@ class HandleReadFromCgiTransfer : public HandleTransfer
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
 
         bool readFromCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
 };
 
 class HandleToClientTransfer : public HandleTransfer
@@ -164,7 +161,6 @@ class HandleToClientTransfer : public HandleTransfer
         HandleToClientTransfer(Client &client, string &response);
 
         bool sendToClientTransfer();
-        // string &response;
 };
 
 class MultipartParser
