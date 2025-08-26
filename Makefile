@@ -11,8 +11,7 @@ COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
-CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow
-# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wconversion -Wshadow #-Wsign-conversion
+CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
 ifdef BUFFER
 CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>

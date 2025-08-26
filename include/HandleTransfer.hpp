@@ -32,12 +32,6 @@ enum ValidationResult {
 class HandleTransfer
 {
     public :
-        Client &_client;
-        int _fd;
-        string _fileBuffer;
-        size_t  _bytesReadTotal;
-        HandleTransferType _handleType;
-
         // Pure virtual functions for polymorphic behavior
 		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
 		virtual bool postTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
@@ -49,6 +43,12 @@ class HandleTransfer
         virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
         virtual ~HandleTransfer() = default;
 
+        Client &_client;
+        int _fd;
+        string _fileBuffer;
+        size_t  _bytesReadTotal = 0;
+        HandleTransferType _handleType;
+
     protected :
         HandleTransfer(Client &client, int fd, HandleTransferType handleType) : _client(client), _fd(fd), _handleType(handleType) {};
 };
@@ -56,17 +56,13 @@ class HandleTransfer
 class HandleGetTransfer : public HandleTransfer
 {
     public :
-    // initialization
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        ~HandleGetTransfer() {
-            FileDescriptor::closeFD(_fd);
-        };
+        ~HandleGetTransfer() { FileDescriptor::closeFD(_fd); };
 
-        //logic functions
+        // Main logic
         bool handleGetTransfer();
         void fileReadToBuff();
 
-        //variables needed
         size_t  _fileSize;
         size_t _offset;
         size_t  _headerSize;
@@ -75,66 +71,54 @@ class HandleGetTransfer : public HandleTransfer
 class HandlePostTransfer : public HandleTransfer
 {
     public:
-        //initialization
         HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
         ~HandlePostTransfer() = default;
 
-        // handle function
+        // Main logic
         virtual bool postTransfer(bool readData);
 
-        // HandlePostTransfer specific members
-        size_t _bytesWrittenTotal;
+        size_t _bytesWrittenTotal = 0;
         bool _foundBoundary = false;
         bool _searchContentDisposition = false;
         vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
+
+    protected:
+        // Protected constructor for derived classes
+        HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
+
+        // Utility
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
 
     private:
         // recv incoming
         void ReadIncomingData();
 
-        //process
+        // process
         bool processMultipartData();
         size_t FindBoundaryAndWrite(size_t &bytesWritten);
         bool searchContentDisposition();
         ValidationResult validateFinalCRLF();
-
-        // success
         void sendSuccessResponse();
-
-        // cgi
         bool handlePostCgi();
-
-    protected:
-        // HandlePostTransfer specific constructor for derived classes
-        HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
-
-        //util function
-        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
 };
 
 class HandleChunkTransfer : public HandlePostTransfer
 {
     public :
-        HandleChunkTransfer(Client &client); // chunked
+        HandleChunkTransfer(Client &client);
 
-        size_t _bodyPos = 0;
-        bool _completedRequest = false;
-
-        // inline void setBoolToChunk()
-        // {
-        //     _isChunked = true;
-        // }
-
+        // Logic functions
         virtual void appendToBody();
         virtual bool handleChunkTransfer();
         bool decodeChunk(size_t &chunkTargetSize);
 
+        // Chunk parsing helpers
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
         void validateChunkSizeLine(string_view chunkSizeLine);
         uint64_t parseChunkSize(string_view chunkSizeLine);
-
-    protected:
-        // Helper function to send data over a socket
+        
+        size_t _bodyPos = 0;
+        bool _completedRequest = false;
 };
 
 class HandleWriteToCgiTransfer : public HandleTransfer
@@ -142,11 +126,9 @@ class HandleWriteToCgiTransfer : public HandleTransfer
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
 
-        size_t _bytesWrittenTotal;
-
-
         bool writeToCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
+
+        size_t _bytesWrittenTotal = 0;
 };
 
 class HandleReadFromCgiTransfer : public HandleTransfer
@@ -155,7 +137,6 @@ class HandleReadFromCgiTransfer : public HandleTransfer
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
 
         bool readFromCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
 };
 
 class HandleToClientTransfer : public HandleTransfer
@@ -164,18 +145,17 @@ class HandleToClientTransfer : public HandleTransfer
         HandleToClientTransfer(Client &client, string &response);
 
         bool sendToClientTransfer();
-        // string &response;
 };
 
 class MultipartParser
 {
-public:
-    static bool validateMultipartPostSyntax(Client &client, string &input);
-    static bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
-    static void parseContentDisposition(Client &client, string_view &buffer);
+    public:
+        static bool validateMultipartPostSyntax(Client &client, string &input);
+        static bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
+        static void parseContentDisposition(Client &client, string_view &buffer);
 
-private:
-    MultipartParser() = default; // Prevent instantiation since this is a utility class
+    private:
+        MultipartParser() = default; // Prevent instantiation since this is a utility class
 };
 
 #endif
