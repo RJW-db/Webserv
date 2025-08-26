@@ -7,7 +7,7 @@
 HandleChunkTransfer::HandleChunkTransfer(Client &client)
 : HandlePostTransfer(client, -1)
 {
-    _isChunked = true;
+    // _isChunked = true;
     _bytesReadTotal = 0;
     _handleType = HANDLE_CHUNK_TRANSFER;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
@@ -42,7 +42,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
     if (_completedRequest == true) // doing it this way check _fileBuffer.size() < MAX ALLOWED SIZE
     {
         if (_client._isCgi == false)
-            handlePostTransfer(false);
+            postTransfer(false);
         else
         {
             MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer);
@@ -87,7 +87,7 @@ bool    HandleChunkTransfer::decodeChunk(size_t &targetSize)
             if (_client._isCgi == true && exceedsMaxSize == true)
                 throw ErrorCodeClientException(_client, 413, "Chunk data missing CRLF ");
             else if (exceedsMaxSize == true)
-                handlePostTransfer(false);
+                postTransfer(false);
         }
         else
             return false;

@@ -2,6 +2,7 @@
 #define HANDLETRANSFER_HPP
 
 #include <string>
+#include <Logger.hpp>
 #include <stdexcept>
 #include "Client.hpp"
 #include "Constants.hpp"
@@ -39,7 +40,7 @@ class HandleTransfer
 
         // Pure virtual functions for polymorphic behavior
 		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool handlePostTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
+		virtual bool postTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
 		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
 		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
 		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
@@ -57,7 +58,9 @@ class HandleGetTransfer : public HandleTransfer
     public :
     // initialization
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        ~HandleGetTransfer() = default;
+        ~HandleGetTransfer() {
+            FileDescriptor::closeFD(_fd);
+        };
 
         //logic functions
         bool handleGetTransfer();
@@ -72,43 +75,41 @@ class HandleGetTransfer : public HandleTransfer
 class HandlePostTransfer : public HandleTransfer
 {
     public:
+        //initialization
         HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
-        HandlePostTransfer(const HandlePostTransfer &other) = default;
-        HandlePostTransfer &operator=(const HandlePostTransfer &other);
         ~HandlePostTransfer() = default;
 
-        inline bool getIsChunk() const
-        {
-            return _isChunked;
-        }
-
-        bool _isChunked = false;
-
+        // handle function
+        virtual bool postTransfer(bool readData);
 
         // HandlePostTransfer specific members
         size_t _bytesWrittenTotal;
-
         bool _foundBoundary = false;
         bool _searchContentDisposition = false;
-
         vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
-        bool handlePostTransfer(bool ReadData);
+    private:
+        // recv incoming
+        void ReadIncomingData();
 
-        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
+        //process
+        bool processMultipartData();
+        size_t FindBoundaryAndWrite(size_t &bytesWritten);
+        bool searchContentDisposition();
+        ValidationResult validateFinalCRLF();
 
+        // success
+        void sendSuccessResponse();
+
+        // cgi
         bool handlePostCgi();
 
     protected:
+        // HandlePostTransfer specific constructor for derived classes
         HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
 
-    private:
-        ValidationResult validateFinalCRLF();
-        size_t FindBoundaryAndWrite(size_t &bytesWritten);
-        bool searchContentDisposition();
-        void ReadIncomingData();
-        bool processMultipartData();
-        void sendSuccessResponse();
+        //util function
+        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
 };
 
 class HandleChunkTransfer : public HandlePostTransfer
@@ -119,10 +120,10 @@ class HandleChunkTransfer : public HandlePostTransfer
         size_t _bodyPos = 0;
         bool _completedRequest = false;
 
-        inline void setBoolToChunk()
-        {
-            _isChunked = true;
-        }
+        // inline void setBoolToChunk()
+        // {
+        //     _isChunked = true;
+        // }
 
         virtual void appendToBody();
         virtual bool handleChunkTransfer();

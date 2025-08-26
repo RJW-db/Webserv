@@ -16,12 +16,9 @@ bool HttpRequest::processHttpBody(Client &client)
     HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
-    if (handle->handlePostTransfer(false) == true)
+    if (handle->postTransfer(false) == true)
     {
-        if (client._keepAlive == false && client._isCgi == false)
-            RunServers::cleanupClient(client);
-        else
-            RunServers::clientHttpCleanup(client);
+        RunServers::clientHttpCleanup(client);
         return false;
     }
     RunServers::insertHandleTransfer(move(handle));

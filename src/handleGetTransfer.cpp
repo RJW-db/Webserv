@@ -42,7 +42,7 @@ void HandleGetTransfer::fileReadToBuff()
         char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
-            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._filenamePath);
+            throw ErrorCodeClientException(_client, 500, "read on file: " + _client._filenamePath + ", failed because" + string(strerror(errno)));
         size_t rd = static_cast<size_t>(bytesRead);
         _bytesReadTotal += rd;
         if (rd > 0)

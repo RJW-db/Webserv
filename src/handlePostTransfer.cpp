@@ -22,31 +22,11 @@ namespace
  * @param buffer Initial buffer containing received data
  */
 HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string buffer)
-: HandleTransfer(client, -1, HANDLE_POST_TRANSFER), _isChunked(false), _foundBoundary(false), _searchContentDisposition(false)
+: HandleTransfer(client, -1, HANDLE_POST_TRANSFER), /* _isChunked(false), */ _foundBoundary(false), _searchContentDisposition(false)
 {
     _bytesReadTotal = bytesRead;
     _fileBuffer = buffer;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
-}
-
-/**
- * Assignment operator for HandlePostTransfer
- * Copies all member variables except the client reference (which cannot be reassigned)
- * @param other The HandlePostTransfer object to copy from
- * @return Reference to this object
- */
-HandlePostTransfer &HandlePostTransfer::operator=(const HandlePostTransfer &other)
-{
-    if (this != &other) {
-        // _client is a reference and cannot be assigned
-        _fd = other._fd;
-        _fileBuffer = other._fileBuffer;
-        _fileNamePaths = other._fileNamePaths;
-        _bytesReadTotal = other._bytesReadTotal;
-        _foundBoundary = other._foundBoundary;
-        _searchContentDisposition = other._searchContentDisposition;
-    }
-    return *this;
 }
 
 /**
@@ -55,7 +35,7 @@ HandlePostTransfer &HandlePostTransfer::operator=(const HandlePostTransfer &othe
  * @param readData Flag indicating whether to read new data from the client
  * @return true if the transfer is complete or an error occurred, false if more data is needed
  */
-bool HandlePostTransfer::handlePostTransfer(bool readData)
+bool HandlePostTransfer::postTransfer(bool readData)
 {
     try
     {
@@ -123,46 +103,12 @@ bool HandlePostTransfer::processMultipartData()
 }
 
 
-/**
- * Validates the final CRLF sequence after a boundary in multipart data
- * Handles different states: empty line (signals new content), terminator (end of data), or invalid format
- * @return ValidationResult indicating whether to continue reading, finish, or rerun without reading
- */
-// return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
-ValidationResult HandlePostTransfer::validateFinalCRLF()
-{
-    size_t foundReturn = _fileBuffer.find(CRLF);
-    if (foundReturn == 0)
-    {
-        _fileBuffer.erase(0, CRLF_LEN);
-        _searchContentDisposition = true;
-        if (_fd != -1)
-            FileDescriptor::closeFD(_fd);
-        _fd = -1;
-        _foundBoundary = false;
-        return RERUN_WITHOUT_READING;
-    }
-    if (foundReturn == BOUNDARY_PREFIX_LEN && strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 && _fileBuffer.size() <= BOUNDARY_PADDING)
-    {
-        if (_fd != -1)
-            FileDescriptor::closeFD(_fd);
-        _fd = -1;
-        sendSuccessResponse();
-        return FINISHED;
-    }
-    if (_fileBuffer.size() > TERMINATOR_SIZE)
-    {
-        std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
-        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
-    }
-    return CONTINUE_READING;
-}
 
 /**
  * Finds boundary markers in the buffer and writes content to file
  * Handles different boundary formats and writes safe amounts of data to avoid corruption
  * @param bytesWritten Reference to store the number of bytes written to file
- * @return Position of the boundary in the buffer, or string::npos if not found
+ * @return writeSize you can write without risking writing part of boundary
  */
 size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
 {
@@ -218,6 +164,64 @@ bool HandlePostTransfer::searchContentDisposition()
     return true;
 }
 
+
+/**
+ * Validates the final CRLF sequence after a boundary in multipart data
+ * Handles different states: empty line (signals new content), terminator (end of data), or invalid format
+ * @return ValidationResult indicating whether to continue reading, finish, or rerun without reading
+ */
+// return 0 if should continue reading, 1 if should stop reading and finished 2 if should rerun without reading
+ValidationResult HandlePostTransfer::validateFinalCRLF()
+{
+    size_t foundReturn = _fileBuffer.find(CRLF);
+    if (foundReturn == 0)
+    {
+        _fileBuffer.erase(0, CRLF_LEN);
+        _searchContentDisposition = true;
+        if (_fd != -1)
+            FileDescriptor::closeFD(_fd);
+        _fd = -1;
+        _foundBoundary = false;
+        return RERUN_WITHOUT_READING;
+    }
+    if (foundReturn == BOUNDARY_PREFIX_LEN && strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 && _fileBuffer.size() <= BOUNDARY_PADDING)
+    {
+        if (_fd != -1)
+            FileDescriptor::closeFD(_fd);
+        _fd = -1;
+        sendSuccessResponse();
+        return FINISHED;
+    }
+    if (_fileBuffer.size() > TERMINATOR_SIZE)
+    {
+        std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
+        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
+    }
+    return CONTINUE_READING;
+}
+
+/* cgi handling and checking if correct syntax */
+
+/**
+ * Handles CGI POST requests
+ * Validates that the multipart data is complete and processes it for CGI execution
+ * @return true if CGI processing is successful, false if more data is needed
+ */
+bool HandlePostTransfer::handlePostCgi()
+{
+    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
+        return false;
+
+    if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
+    {
+        HttpRequest::handleCgi(_client, _fileBuffer);
+        return true;
+    }
+    else
+        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
+    return false;
+}
+
 /* helper functions */
 
 /**
@@ -230,7 +234,7 @@ void HandlePostTransfer::sendSuccessResponse()
     string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
     string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
     
-    auto handleClient = make_unique<HandleToClientTransfer>(_client, headers);
+    unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, headers);
     RunServers::insertHandleTransfer(move(handleClient));
     // send(_client._fd, headers.data(), headers.size(), MSG_NOSIGNAL);
     Logger::log(INFO, _client, "POST   ", _client._filenamePath);
@@ -258,27 +262,9 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     throw ErrorCodeClientException(client, errorCode, errMsg + " " + strerror(errno));
 }
 
-/* cgi handling and checking if correct syntax */
 
-/**
- * Handles CGI POST requests
- * Validates that the multipart data is complete and processes it for CGI execution
- * @return true if CGI processing is successful, false if more data is needed
- */
-bool HandlePostTransfer::handlePostCgi()
-{
-    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
-        return false;
 
-    if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
-    {
-        HttpRequest::handleCgi(_client, _fileBuffer);
-        return true;
-    }
-    else
-        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
-    return false;
-}
+
 
 /**
  * Validates the syntax of multipart POST data for CGI processing
