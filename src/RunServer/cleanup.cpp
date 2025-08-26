@@ -69,7 +69,6 @@ void RunServers::checkCgiDisconnect()
         // }
         // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
-        // Logger::log(DEBUG, "result: ", result); //testlog
         if (result == 0)
         {
             if (client._disconnectTimeCgi <= chrono::steady_clock::now())
@@ -102,7 +101,6 @@ void RunServers::checkCgiDisconnect()
                     if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
                     {
                         string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
-                        Logger::log(DEBUG, "Created CGI response for client ", client._fd, ": ", clientResponse); //testlog
                         unique_ptr handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
                         RunServers::insertHandleTransfer(move(handleClient));
                     }
@@ -210,6 +208,13 @@ void RunServers::cleanupClient(Client &client)
     {
         if ((*it)->_client._fd == clientFD)
             it = _handle.erase(it);
+        else
+            ++it;
+    }
+    for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
+    {
+        if ((*it)->_client._fd == clientFD)
+            it = _handleCgi.erase(it);
         else
             ++it;
     }

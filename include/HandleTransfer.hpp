@@ -1,12 +1,12 @@
 #ifndef HANDLETRANSFER_HPP
 #define HANDLETRANSFER_HPP
 
-#include <string>
 #include <Logger.hpp>
+#include <Client.hpp>
+#include <Constants.hpp>
+#include <ErrorCodeClientException.hpp>
 #include <stdexcept>
-#include "Client.hpp"
-#include "Constants.hpp"
-#include "ErrorCodeClientException.hpp"
+#include <string>
 
 using namespace std;
 
@@ -59,7 +59,8 @@ class HandleGetTransfer : public HandleTransfer
     // initialization
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
         ~HandleGetTransfer() {
-            FileDescriptor::closeFD(_fd);
+            if (_fd != -1)
+                FileDescriptor::closeFD(_fd);
         };
 
         //logic functions
@@ -142,11 +143,9 @@ class HandleWriteToCgiTransfer : public HandleTransfer
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
 
-        size_t _bytesWrittenTotal;
-
-
         bool writeToCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
+        
+        size_t _bytesWrittenTotal;
 };
 
 class HandleReadFromCgiTransfer : public HandleTransfer
@@ -155,7 +154,6 @@ class HandleReadFromCgiTransfer : public HandleTransfer
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
 
         bool readFromCgiTransfer();
-        chrono::steady_clock::time_point _cgiDisconnectTime;
 };
 
 class HandleToClientTransfer : public HandleTransfer
@@ -164,7 +162,6 @@ class HandleToClientTransfer : public HandleTransfer
         HandleToClientTransfer(Client &client, string &response);
 
         bool sendToClientTransfer();
-        // string &response;
 };
 
 class MultipartParser

@@ -104,11 +104,7 @@ string HttpRequest::createResponseCgi(Client &client, string &input)
         if (headerFields.count("Content-Length") > 0)
             response << "Content-Length: " << headerFields["Content-Length"] << CRLF;
         else
-        {
-            Logger::log(DEBUG, "content length set by server"); //testlog
             response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << CRLF;
-        }
-            
         response << CRLF;
         response << input.substr(headerSize + CRLF2_LEN);
     }

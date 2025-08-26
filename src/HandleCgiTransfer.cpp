@@ -1,13 +1,12 @@
-#include <RunServer.hpp>
 #include <HandleTransfer.hpp>
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
-#include <HttpRequest.hpp>
-#include <Client.hpp>
-
 #include <sys/epoll.h>
-
 #define CGI_DISCONNECT_TIME_SECONDS 30
+
+
+
+/* WriteToCgiTransfer */
 
 HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
 : HandleTransfer(client, fdWriteToCgi, HANDLE_WRITE_TO_CGI_TRANSFER), _bytesWrittenTotal(0)
@@ -15,35 +14,9 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body,
     _fileBuffer = body;
     // _isCgi = writeToCgi;
     _handleType = HANDLE_WRITE_TO_CGI_TRANSFER;
-    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
-HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi)
-: HandleTransfer(client, fdReadfromCgi, HANDLE_READ_FROM_CGI_TRANSFER)
-{
-    // _isCgi = writeToCgi;
-    _handleType = HANDLE_READ_FROM_CGI_TRANSFER;
-    _cgiDisconnectTime = chrono::steady_clock::now() + chrono::seconds(CGI_DISCONNECT_TIME_SECONDS);
-}
-
-
-
-// HandleTransfer &HandleTransfer::operator=(const HandleTransfer& other)
-// {
-//     if (this != &other) {
-        
-//         // _client is a reference and cannot be assigned
-//         _fd = other._fd;
-//         _fileBuffer = other._fileBuffer;
-//         // _fileSize = other._fileSize;
-//         // _offset = other._offset;
-//         // _bytesReadTotal = other._bytesReadTotal;
-//         // _headerSize = other._headerSize;
-// 		// _bytesWrittenTotal = other._bytesWrittenTotal;
-//     }
-//     return *this;
-// }
 
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
@@ -67,6 +40,16 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     return false;
 }
 
+
+/* ReadFromCgiTransfer */
+
+HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi)
+: HandleTransfer(client, fdReadfromCgi, HANDLE_READ_FROM_CGI_TRANSFER)
+{
+    // _isCgi = writeToCgi;
+    _handleType = HANDLE_READ_FROM_CGI_TRANSFER;
+}
+
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
     std::vector<char> buff(1024 * 1024);
@@ -82,9 +65,6 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
         FileDescriptor::cleanupFD(_fd);
-        // auto handle = make_unique<HandleToClientTransfer>(_client, _fileBuffer);
-        // RunServers::insertHandleTransfer(move(handle));
-        // RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         return true;
     }

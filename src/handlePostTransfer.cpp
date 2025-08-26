@@ -126,6 +126,8 @@ size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
             throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
         }
     }
+    else if (writeSize < RunServers::getRamBufferLimit())
+        writeSize = 0;
     if (writeSize > 0)
     {
         ssize_t written = write(_fd, _fileBuffer.data(), writeSize);
