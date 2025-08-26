@@ -103,7 +103,7 @@ void RunServers::checkCgiDisconnect()
                     {
                         string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
                         Logger::log(DEBUG, "Created CGI response for client ", client._fd, ": ", clientResponse); //testlog
-                        auto handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
+                        unique_ptr handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
                         RunServers::insertHandleTransfer(move(handleClient));
                     }
                     client._cgiClosing = true;

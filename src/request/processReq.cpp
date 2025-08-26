@@ -43,10 +43,8 @@ void HttpRequest::redirectRequest(Client &client)
     size_t index = response.find_first_of(CRLF);
     string locationHeader = "Location: " + redirectPair.second + CRLF;
     response.insert(index + CRLF_LEN, locationHeader);
-    int sent = send(client._fd, response.data(), response.size(), 0);
-    if (sent == -1)
-        throw ErrorCodeClientException(client, 500, "Failed to send redirect response: " + string(strerror(errno)));
-    
+    unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
+    RunServers::insertHandleTransfer(move(handleClient));
 }
 
 bool HttpRequest::checkAndRunCgi(Client &client)
@@ -117,7 +115,7 @@ void HttpRequest::SendAutoIndex(Client &client)
     string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
     client._filenamePath.clear();
     closedir(dr); // TODO not protected
-    auto handleClient = make_unique<HandleToClientTransfer>(client, response);
+    unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
     if (client._keepAlive == false)

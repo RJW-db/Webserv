@@ -173,8 +173,8 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             else if (currentEvent.events & EPOLLIN)
             {
-                if (handle.getIsChunk() == false)
-                    finished = handle.handlePostTransfer(true);
+                if (handle._handleType == HANDLE_POST_TRANSFER)
+                    finished = handle.postTransfer(true);
                 else
                 {
                     handle.appendToBody();
@@ -183,8 +183,9 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
-                if (client._keepAlive == false && client._isCgi == false)
+                if (client._keepAlive == false && client._isCgi == false && !(currentEvent.events & EPOLLIN))
                 {
+                    Logger::log(DEBUG, "hier met event: ", currentEvent.events); //testlog
                     cleanupClient(client);
                 }
                 else

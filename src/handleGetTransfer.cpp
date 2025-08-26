@@ -14,7 +14,7 @@ HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHea
 
 bool HandleGetTransfer::handleGetTransfer()
 {
-    readToBuf();
+    fileReadTobuff();
     ssize_t sent = send(_client._fd, _fileBuffer.data() + _offset, _fileBuffer.size() - _offset, MSG_NOSIGNAL);
     if (sent == -1)
         throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
@@ -35,21 +35,21 @@ bool HandleGetTransfer::handleGetTransfer()
     return false;
 }
 
-void HandleGetTransfer::readToBuf()
+void HandleGetTransfer::fileReadTobuff()
 {
     if (_fd != -1)
     {
         char buff[RunServers::getClientBufferSize()];
         ssize_t bytesRead = read(_fd, buff, RunServers::getClientBufferSize());
         if (bytesRead == -1)
-            throw RunServers::ClientException(string("handlingTransfer read: ") + strerror(errno) + ", fd: " + to_string(_fd) + ", on file: " + _client._filenamePath);
+            throw ErrorCodeClientException(_client, 500, "read on file: " + _client._filenamePath + ", failed because" + string(strerror(errno)));
         size_t _bytesRead = static_cast<size_t>(bytesRead);
         _bytesReadTotal += _bytesRead;
         if (_bytesRead > 0)
         {
             _fileBuffer.append(buff, _bytesRead);
         }
-        if (_bytesRead == 0 || _bytesReadTotal >= _fileSize)
+        if ( _bytesReadTotal >= _fileSize)
         {
             FileDescriptor::closeFD(_fd);
         }
