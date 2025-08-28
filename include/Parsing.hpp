@@ -38,12 +38,9 @@ class Parsing
         bool    checkParseSyntax(void);
 
 
-
         //line handling functions
 		template <typename T>
 		void skipLine(string &line, bool forceSkip, T &curConf, bool skipSpace);
-		
-
 
         //stored variables
 		vector<ConfigServer> _configs;
@@ -54,7 +51,6 @@ class Parsing
 
     public:
         // getters
-        vector<Server> &getServers(void) const;
 		vector<ConfigServer> &getConfigs();
 
         //utils

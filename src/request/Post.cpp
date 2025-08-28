@@ -81,9 +81,10 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
 {
     string cdLine = extractContentDispositionLine(client, buff);
     client._filename = extractFilenameFromContentDisposition(client, cdLine);
-    Logger::log(DEBUG, "filename", client._filename); //testlog
     appendUuidToFilename(client, client._filename);
     validateMultipartContentType(client, buff, client._filename);
+    if (client._filenamePath.empty())
+        throw ErrorCodeClientException(client, 400, "Filename path is empty after processing Content-Disposition");
 }
 
 void    HttpRequest::appendUuidToFilename(Client &client, string &filename)

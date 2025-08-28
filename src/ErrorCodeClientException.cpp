@@ -27,11 +27,23 @@ ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode
     _errorPages = client._location.getErrorCodesWithPage();
 }
 
-const char *ErrorCodeClientException::what() const throw()
+void ErrorCodeClientException::handleErrorClient() const
 {
-    return _message.c_str();
+    
+    Logger::log(IWARN, _client, _message);
+    if (_errorCode == 0)
+    {
+        RunServers::cleanupClient(_client);
+        return;
+    }
+    auto it = _errorPages.find(_errorCode);
+    if (it == _errorPages.end())
+    {
+        handleDefaultErrorPage();
+        return;
+    }
+    handleCustomErrorPage(it->second, it->first);
 }
-
 
 void ErrorCodeClientException::handleDefaultErrorPage() const
 {
@@ -81,22 +93,9 @@ void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPag
     RunServers::insertHandleTransfer(move(transfer));
 }
 
-void ErrorCodeClientException::handleErrorClient() const
+const char *ErrorCodeClientException::what() const throw()
 {
-    
-    Logger::log(IWARN, _client, _message);
-    if (_errorCode == 0)
-    {
-        RunServers::cleanupClient(_client);
-        return;
-    }
-    auto it = _errorPages.find(_errorCode);
-    if (it == _errorPages.end())
-    {
-        handleDefaultErrorPage();
-        return;
-    }
-    handleCustomErrorPage(it->second, it->first);
+    return _message.c_str();
 }
 
 uint16_t ErrorCodeClientException::getErrorCode() const { return _errorCode; }

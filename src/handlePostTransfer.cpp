@@ -91,7 +91,6 @@ bool HandlePostTransfer::processMultipartData()
         }
         size_t bytesWritten = 0;
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);
-        Logger::log(DEBUG, "bodyboundary:", _client._bodyBoundary); //testlog
         if (boundaryPos != string::npos)
         {
             _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryPos - bytesWritten);
@@ -150,7 +149,6 @@ bool HandlePostTransfer::searchContentDisposition()
     size_t bodyEnd = _fileBuffer.find(CRLF2);
     if (bodyEnd == string::npos)
         return false;
-    Logger::log(DEBUG, "content disposition: " + string(_fileBuffer)); //testlog
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer.erase(0, bodyEnd + BOUNDARY_PADDING);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, FILE_PERMISSIONS);
@@ -196,9 +194,6 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         sendSuccessResponse();
         return FINISHED;
     }
-    Logger::log(DEBUG, "na de boundary:", foundReturn); //testlog
-    Logger::log(DEBUG, "in de buffer: ", _fileBuffer); //testlog
-    Logger::log(DEBUG, "boundary is: ", _client._bodyBoundary); //testlog
     if (_fileBuffer.size() > TERMINATOR_SIZE)
     {
         std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
@@ -238,7 +233,6 @@ bool HandlePostTransfer::handlePostCgi()
 void HandlePostTransfer::sendSuccessResponse()
 {
     size_t absolutePathSize = RunServers::getServerRootDir().size();
-    Logger::log(DEBUG, "filenamepath: ", _client._filenamePath); //testlog
     // string_view test(_client._filenamePath.data() + absolutePathSize);
     // string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
     string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
