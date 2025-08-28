@@ -29,20 +29,28 @@ ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode
 
 void ErrorCodeClientException::handleErrorClient() const
 {
-    
-    Logger::log(IWARN, _client, _message);
-    if (_errorCode == 0)
+    try
+    {
+        Logger::log(IWARN, _client, _message);
+        _client._keepAlive = false;
+        if (_errorCode == 0)
+        {
+            RunServers::cleanupClient(_client);
+            return;
+        }
+        auto it = _errorPages.find(_errorCode);
+        if (it == _errorPages.end())
+        {
+            handleDefaultErrorPage();
+            return;
+        }
+        handleCustomErrorPage(it->second, it->first);
+    }
+    catch(const std::exception& e)
     {
         RunServers::cleanupClient(_client);
-        return;
+        Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
     }
-    auto it = _errorPages.find(_errorCode);
-    if (it == _errorPages.end())
-    {
-        handleDefaultErrorPage();
-        return;
-    }
-    handleCustomErrorPage(it->second, it->first);
 }
 
 void ErrorCodeClientException::handleDefaultErrorPage() const

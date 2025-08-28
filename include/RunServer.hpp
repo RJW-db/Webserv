@@ -46,6 +46,9 @@ class RunServers
         static void   setEpollEvents(int fd, int option, uint32_t events);
         static void   setServerFromListener(Client &client);
         static void   setLocation(Client &state);
+        static inline void   fatalErrorShutdown() {
+            _fatalErrorOccurred = true;
+        };
 
         // main loop
         static void   runServers();
@@ -69,6 +72,7 @@ class RunServers
         static void   clientHttpCleanup(Client &client);
         static void   cleanupClient(Client &client);
         static vector<std::unique_ptr<HandleTransfer>>::iterator   cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
+        static vector<std::unique_ptr<HandleTransfer>>::iterator   killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
 
         static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle)
         {
@@ -127,5 +131,6 @@ class RunServers
         // --- Miscellaneous ---
         static int _level;
         static uint64_t _ramBufferLimit;
+        static bool _fatalErrorOccurred;
 };
 #endif

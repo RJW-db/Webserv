@@ -32,16 +32,15 @@ void RunServers::disconnectChecks()
     }
 }
 
-vector<std::unique_ptr<HandleTransfer>>::iterator RunServers::cleanupHandleCgi(vector<std::unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
+vector<unique_ptr<HandleTransfer>>::iterator RunServers::cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
 {
-    vector<std::unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
     if (it != _handleCgi.begin())
         --it;
     while (it != _handleCgi.end())
     {
         if ((*it)->_client._pid == pid)
         {
-            FileDescriptor::cleanupFD((*it)->_fd);
             it = _handleCgi.erase(it);
             lastAfter = it;
             continue ;
@@ -69,15 +68,19 @@ void RunServers::checkCgiDisconnect()
         // }
         // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
-        // Logger::log(DEBUG, "result:", result, "client pid:", client._pid); //testlog
+        if (result == -1)
+        {
+            Logger::log(ERROR, "Server error", '-', "waitpid failed for client ", client._fd, ": ", strerror(errno));
+            // it = cleanupHandleCgi(it, client._pid);
+            it = _handleCgi.erase(it);
+            continue ;
+        }
         if (result == 0)
         {
             if (client._disconnectTimeCgi <= chrono::steady_clock::now())
             {
                 client._cgiClosing = true;
                 kill(client._pid, SIGTERM);
-                Logger::log(DEBUG, "Killed child"); //testlog
-                FileDescriptor::cleanupFD((*it)->_fd);
                 it = cleanupHandleCgi(it, client._pid);
                 // it = _handleCgi.erase(it);
                 RunServers::setEpollEvents(client._fd, EPOLL_CTL_MOD, EPOLLIN);
@@ -90,37 +93,83 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
-                Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
-                HandleTransfer& handle = *(*it);
-                // Logger::log(DEBUG, "handletype: ", handle._handleType); //testlog
-                if (handle._handleType == HANDLE_WRITE_TO_CGI_TRANSFER ||
-                    handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
-                {
-                    FileDescriptor::cleanupFD(handle._fd);
-                    if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
-                    {
-                        if (handle._fd == -1 || handle.readFromCgiTransfer() == true)
-                        {
-                            string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
-                            unique_ptr<HandleToClientTransfer> handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
-                            RunServers::insertHandleTransfer(move(handleClient));
-                        }
-                    }
-                    client._cgiClosing = true;
-                    Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
-                    it = cleanupHandleCgi(it, client._pid);
-                    // it = _handleCgi.erase(it);
-                    // continue ;
-                }
-                else
-                {
-                    ++it;
-                }
+                it = killCgiPipes(_handleCgi.begin(), client._pid);
+                // Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
+                // HandleTransfer& handle = *(*it);
+                // // Logger::log(DEBUG, "handletype: ", handle._handleType); //testlog
+                // if (handle._handleType == HANDLE_WRITE_TO_CGI_TRANSFER ||
+                //     handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+                // {
+                //     if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+                //     {
+                //         if (handle._fd == -1 || handle.readFromCgiTransfer() == true)
+                //         {
+                //             Logger::log(DEBUG, "creating response"); //testlog
+                //             string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
+                //             unique_ptr<HandleToClientTransfer> handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
+                //             RunServers::insertHandleTransfer(move(handleClient));
+                //         }
+                //         it = cleanupHandleCgi(it, client._pid);
+                //     }
+                //     client._cgiClosing = true;
+                //     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
+                //     it = _handleCgi.erase(it);
+                //     // it = _handleCgi.erase(it);
+                //     // continue ;
+                // }
+                // else
+                // {
+                //     ++it;
+                // }
 
             }
 
         }
     }
+}
+
+vector<unique_ptr<HandleTransfer>>::iterator RunServers::killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
+{
+    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    while (it != _handleCgi.end())
+    {
+        try
+        {
+            if ((*it)->_client._pid == pid)
+            {
+                HandleTransfer &handle = *(*it);
+                if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+                {
+                    while (handle._fd != -1)
+                    {
+                        if (handle.readFromCgiTransfer() == false)
+                            continue;
+                        else
+                            break;
+                    }
+                    string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
+                    unique_ptr<HandleToClientTransfer> handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
+                    RunServers::insertHandleTransfer(move(handleClient));
+                }
+                it = _handleCgi.erase(it);
+                lastAfter = it;
+                continue;
+            }
+            ++it;
+        }
+        catch(ErrorCodeClientException& e)
+        {
+            e.handleErrorClient();
+            return cleanupHandleCgi(it, pid);
+        }
+        catch(const std::exception& e)
+        {
+            Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
+            cleanupClient((*it)->_client);
+            return _handleCgi.begin();
+        }
+    }
+    return lastAfter;
 }
 
 void RunServers::checkClientDisconnects()
@@ -142,7 +191,6 @@ void RunServers::checkClientDisconnects()
                 client->_cgiClosing = true;
                 checkCgiDisconnect();
                 cleanupClient(*client);
-                Logger::log(DEBUG, "_handleCgi.size()  ", _handleCgi.size()); //testlog
 
             }
         }
@@ -164,7 +212,9 @@ void RunServers::removeHandlesWithFD(int fd)
                 FileDescriptor::cleanupFD((*it)->_fd);
             }
             else
+            {
                 _handleCgi.erase(it);
+            }
             return;
         }
     }
@@ -204,7 +254,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     client._isAutoIndex = false;
     client._isCgi = false;
-    client._pid = 0;
+    client._pid = -1;
 }
 
 void RunServers::cleanupClient(Client &client)

@@ -42,6 +42,7 @@ unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 int RunServers::_level = -1;
 
 uint64_t RunServers::_ramBufferLimit = 65536;
+bool RunServers::_fatalErrorOccurred = false;
 
 void RunServers::runServers()
 {
@@ -145,7 +146,6 @@ bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, 
         else
         {
             removeHandlesWithFD(eventFD);
-            FileDescriptor::cleanupFD(eventFD);
         }
         return true;
     }
@@ -184,7 +184,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             {
                 if ( currentEvent.events & EPOLLOUT) // has to be send to client for cleanup
                 {
-                    if (client._keepAlive == false && client._isCgi == false) // check if not cgi or post
+                    if (client._keepAlive == false)
                     {
                         cleanupClient(client);
                         return true;
@@ -210,7 +210,9 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
             if (currentEvent.events & EPOLLOUT)
             {
                 if ((*it)->writeToCgiTransfer() == true)
+                {
                     _handleCgi.erase(it);
+                }
             }
             else if (currentEvent.events & EPOLLIN)
                 (*it)->readFromCgiTransfer();

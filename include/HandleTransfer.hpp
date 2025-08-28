@@ -145,6 +145,7 @@ class HandleToClientTransfer : public HandleTransfer
 {
     public:
         HandleToClientTransfer(Client &client, string &response);
+        ~HandleToClientTransfer() { FileDescriptor::cleanupFD(_fd); };
 
         bool sendToClientTransfer();
 };

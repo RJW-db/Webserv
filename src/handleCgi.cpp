@@ -134,17 +134,16 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
         vector<char *> envp= convertToCharArray(envpString);
         // printVecArray(envp);
         char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
-        throw bad_alloc();
         execve(filePath, argv.data(), envp.data());
         Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
     }
     catch(const std::exception& e)
     {
-        std::cerr << "error occured in child: " << e.what() << '\n';
+        Logger::log(ERROR, "CGI error", '-', "Exception in child process: ", e.what());
     }
     catch(...)
     {
-        std::cerr << "Unknown exception caught in child process\n";
+        Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in child process");
     }
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -253,7 +252,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        
+        Logger::log(DEBUG, "child pid: ", client._pid); //testlog
         // Logger::log(DEBUG, "created cgi process"); //testlog
         return true;
     }
