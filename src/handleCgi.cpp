@@ -145,8 +145,8 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     {
         Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in child process");
     }
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
+    FileDescriptor::safeCloseFD(STDIN_FILENO);
+    FileDescriptor::safeCloseFD(STDOUT_FILENO);
     std::exit(EXIT_FAILURE);
 }
 
