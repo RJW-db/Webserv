@@ -100,7 +100,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    // std::cout << "received: " << escape_special_chars(string(buff, bytesReceived)) << std::endl; //testcout
+    std::cout << "received: " << escapeSpecialChars(string(buff, bytesReceived), TERMINAL) << std::endl; //testcout
+    // exit(0);
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)

@@ -1,0 +1,15 @@
+POST /upload HTTP/1.1
+Host: 192.168.122.1:8080
+Accept: */*
+Accept-Encoding: *
+User-Agent: Mozilla/5.0 (pc-x86_64-linux-gnu) Siege/4.2.0-b2
+Connection: close
+Content-Type: multipart/form-data; boundary=boundary123
+Content-Length: 145
+
+--boundary123
+Content-Disposition: form-data; name=myfile; filename="test.txt"
+Content-Type: text/plain
+
+hello from siege
+--boundary123--
