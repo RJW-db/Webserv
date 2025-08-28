@@ -1,5 +1,6 @@
 #include <Aconfig.hpp>
 #include <Logger.hpp>
+#include <unistd.h>
 
 // Constants for better readability
 namespace {

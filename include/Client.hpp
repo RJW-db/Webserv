@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <string_view>
 
-#include <Server.hpp>
+#include <ConfigServer.hpp>
 #include <Location.hpp>
 #include <chrono>
 
@@ -45,7 +45,7 @@ class Client
         // bool _finishedProcessClientRequest = false;
 		int _fd;
 
-        unique_ptr<Server> _usedServer;
+        unique_ptr<AconfigServ> _usedServer;
         pair<string, string> _ipPort;
         Location _location;
         string_view _uploadPath;

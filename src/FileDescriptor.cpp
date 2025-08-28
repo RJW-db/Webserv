@@ -50,17 +50,16 @@ void FileDescriptor::printAllFDs()
     }
 }
 
-void	FileDescriptor::closeFD(int &fd)
+bool	FileDescriptor::closeFD(int &fd)
 {
+    if (fd == -1)
+        return true;
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
     if (it != _fds.end())
 	{
         // std::cerr << "closing fd " << fd << std::endl; //testcout
-        if (fd != -1 && safeCloseFD(fd) == false) // TODO EIO, how to resove for parent and child
-        {
-            // finishes up clients and restart webserv
-            // throw something
-        }
+        if (safeCloseFD(fd) == false) // TODO EIO, how to resove for parent and child
+            return false;
         _fds.erase(it);
         Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
         fd = -1;
@@ -70,8 +69,10 @@ void	FileDescriptor::closeFD(int &fd)
         if (fd != -1)
         Logger::log(WARN, "FileDescriptor error", fd, "Not in vector", "closeFD attempted");
     }
+    return true;
 }
 
+// bool only used for child with return false
 bool    FileDescriptor::safeCloseFD(int fd)
 {
     int ret;
@@ -82,7 +83,8 @@ bool    FileDescriptor::safeCloseFD(int fd)
 
     if (ret == -1 && errno == EIO)
     {
-        // Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        RunServers::fatalErrorShutdown();
         return false;
     }
     return true;

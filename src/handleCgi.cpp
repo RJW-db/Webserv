@@ -139,11 +139,11 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        Logger::log(ERROR, "CGI error", '-', "Exception in child process: ", e.what());
     }
     catch(...)
     {
-        std::cerr << "Unknown exception caught in child process\n";
+        Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in child process");
     }
     FileDescriptor::safeCloseFD(STDIN_FILENO);
     FileDescriptor::safeCloseFD(STDOUT_FILENO);
@@ -252,7 +252,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         
         RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
         RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        
+        Logger::log(DEBUG, "child pid: ", client._pid); //testlog
         // Logger::log(DEBUG, "created cgi process"); //testlog
         return true;
     }

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <FileDescriptor.hpp>
-#include <Server.hpp>
+#include <ConfigServer.hpp>
 
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
@@ -79,5 +79,11 @@ class HttpRequest
         // --- Response Generation ---
         static string getMimeType(string &path);
         static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
+
+        // -- cgi response generation ---
         static string createResponseCgi(Client &client, string &input);
+        static map<string_view, string_view> parseCgiHeaders(const string &input, map<string_view,string_view> &headerfields, size_t headerSize);
+        static void validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody);
+        static string buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
+                                   const string &input, size_t headerSize, bool hasBody);
 };

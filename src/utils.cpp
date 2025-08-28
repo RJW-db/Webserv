@@ -1,6 +1,7 @@
 #include <utils.hpp>
 #include <RunServer.hpp>
 #include <cstring>
+#include <algorithm>
 #include "Logger.hpp"
 
 #include <dirent.h>

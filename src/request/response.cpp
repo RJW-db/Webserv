@@ -72,7 +72,15 @@ string HttpRequest::getMimeType(string &path)
 string HttpRequest::createResponseCgi(Client &client, string &input)
 {
     size_t headerSize = input.find(CRLF2);
+    bool hasBody = (input.size() > headerSize + CRLF2_LEN);
     map<string_view, string_view> headerFields;
+    parseCgiHeaders(input, headerFields, headerSize);
+    validateCgiHeaders(client, headerFields, hasBody);
+    return buildCgiResponse(client, headerFields, input, headerSize, hasBody);
+}
+
+map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string_view, string_view> &headerFields, size_t headerSize)
+{
     size_t pos = 0;
     while (pos < headerSize)
     {
@@ -91,18 +99,30 @@ string HttpRequest::createResponseCgi(Client &client, string &input)
         }
         pos = end + CRLF_LEN;
     }
+    return headerFields;
+}
+
+void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody)
+{
+    if (headerFields.find("Status") == headerFields.end() || headerFields.at("Status").empty())
+        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
+    
+    if (hasBody && headerFields.count("Content-Type") < 1)
+        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
+}
+
+string HttpRequest::buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
+                                   const string &input, size_t headerSize, bool hasBody)
+{
     ostringstream response;
-    // if (headerFields["Status"].empty())
-    //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
-    response << "HTTP/1.1 " << headerFields["Status"] << CRLF;
+    response << "HTTP/1.1 " << headerFields.at("Status") << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
-    if (input.size() > headerSize + CRLF2_LEN)
+    
+    if (hasBody)
     {
-        // if (headerFields.count("Content-Type") < 1)
-        //     throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
-        response << "Content-Type: " << headerFields["Content-Type"] << CRLF;
+        response << "Content-Type: " << headerFields.at("Content-Type") << CRLF;
         if (headerFields.count("Content-Length") > 0)
-            response << "Content-Length: " << headerFields["Content-Length"] << CRLF;
+            response << "Content-Length: " << headerFields.at("Content-Length") << CRLF;
         else
             response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << CRLF;
         response << CRLF;
@@ -110,5 +130,6 @@ string HttpRequest::createResponseCgi(Client &client, string &input)
     }
     else
         response << CRLF;
+    
     return response.str();
 }

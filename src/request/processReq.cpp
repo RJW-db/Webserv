@@ -77,8 +77,8 @@ void HttpRequest::processGet(Client &client)
 
 void HttpRequest::GET(Client &client)
 {
-    Logger::log(DEBUG, client._rootPath); //testlog
-    Logger::log(DEBUG, client._filenamePath); //testlog
+    // Logger::log(DEBUG, client._rootPath); //testlog
+    // Logger::log(DEBUG, client._filenamePath); //testlog
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
         throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
@@ -118,8 +118,6 @@ void HttpRequest::SendAutoIndex(Client &client)
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
-    if (client._keepAlive == false)
-        RunServers::cleanupClient(client);
 }
 
 void HttpRequest::processPost(Client &client)
@@ -133,12 +131,8 @@ void HttpRequest::processPost(Client &client)
         {
             client._contentLength = 0;
             unique_ptr<HandleTransfer> handle = make_unique<HandleChunkTransfer>(client);
-            if (handle->handleChunkTransfer())
+            if (handle->handleChunkTransfer() == true)
             {
-                if (!client._keepAlive)
-                    RunServers::cleanupClient(client);
-                else
-                    RunServers::clientHttpCleanup(client);
                 return;
             }
             RunServers::insertHandleTransfer(move(handle));
@@ -155,9 +149,10 @@ void HttpRequest::processDelete(Client &client)
         string body = "File deleted";
         string response = HttpRequest::HttpResponse(client, code, ".txt", body.size());
         response += body;
-        send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
+        unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
+        RunServers::insertHandleTransfer(move(handleClient));
         Logger::log(INFO, client, "DELETE ", client._rootPath);
-        RunServers::clientHttpCleanup(client);
+        // RunServers::clientHttpCleanup(client);
     }
     else
     {

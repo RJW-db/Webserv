@@ -5,6 +5,7 @@
 #include <Client.hpp>
 #include <Constants.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <FileDescriptor.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -72,7 +73,6 @@ class HandlePostTransfer : public HandleTransfer
 {
     public:
         HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
-        ~HandlePostTransfer() = default;
 
         // Main logic
         virtual bool postTransfer(bool readData);
@@ -125,6 +125,7 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
+        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
 
         bool writeToCgiTransfer();
 
@@ -135,6 +136,7 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 {
     public:
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
+        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
 
         bool readFromCgiTransfer();
 };
@@ -143,6 +145,7 @@ class HandleToClientTransfer : public HandleTransfer
 {
     public:
         HandleToClientTransfer(Client &client, string &response);
+        ~HandleToClientTransfer() { FileDescriptor::cleanupFD(_fd); };
 
         bool sendToClientTransfer();
 };

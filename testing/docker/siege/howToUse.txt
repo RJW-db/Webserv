@@ -6,6 +6,7 @@ Terminal 1
 
 Terminal 2
 2.  docker exec -it webserv bash
+
     to change files:
         echo -en "http://<hostname -I - second parameter>:8080/upload POST < body.txt" > urls.txt
         echo -en "POST /upload HTTP/1.1\r\nHost: 192.168.122.1:8080\r\nAccept: */*\r\nAccept-Encoding: *\r\nUser-Agent: Mozilla/5.0 (pc-x86_64-linux-gnu) Siege/4.2.0-b2\r\nConnection: close\r\nContent-Type: multipart/form-data; boundary=boundary123\r\nContent-Length: 145\r\n\r\n--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nhello from siege\r\n--boundary123--\r\n" > body.txt

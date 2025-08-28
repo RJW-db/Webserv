@@ -18,7 +18,6 @@ bool HttpRequest::processHttpBody(Client &client)
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->postTransfer(false) == true)
     {
-        RunServers::clientHttpCleanup(client);
         return false;
     }
     RunServers::insertHandleTransfer(move(handle));
@@ -84,6 +83,8 @@ void HttpRequest::getBodyInfo(Client &client, const string buff)
     client._filename = extractFilenameFromContentDisposition(client, cdLine);
     appendUuidToFilename(client, client._filename);
     validateMultipartContentType(client, buff, client._filename);
+    if (client._filenamePath.empty())
+        throw ErrorCodeClientException(client, 400, "Filename path is empty after processing Content-Disposition");
 }
 
 void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
