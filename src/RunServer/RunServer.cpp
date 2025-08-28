@@ -182,15 +182,17 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
             }
             if (finished == true)
             {
-                if (client._keepAlive == false && client._isCgi == false && currentEvent.events & EPOLLOUT) // check if not cgi or post
+                if ( currentEvent.events & EPOLLOUT) // has to be send to client for cleanup
                 {
-                    cleanupClient(client);
+                    if (client._keepAlive == false && client._isCgi == false) // check if not cgi or post
+                    {
+                        cleanupClient(client);
+                        return true;
+                    }
+                    else
+                        clientHttpCleanup(client);
                 }
-                else
-                {
-                    _handle.erase(_handle.begin() + static_cast<long>(idx));
-                    clientHttpCleanup(client);
-                }
+                _handle.erase(_handle.begin() + static_cast<long>(idx));
             }
             return true;
         }

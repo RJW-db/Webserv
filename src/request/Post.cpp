@@ -18,7 +18,6 @@ bool HttpRequest::processHttpBody(Client &client)
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->postTransfer(false) == true)
     {
-        RunServers::clientHttpCleanup(client);
         return false;
     }
     RunServers::insertHandleTransfer(move(handle));

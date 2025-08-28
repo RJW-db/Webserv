@@ -118,8 +118,6 @@ void HttpRequest::SendAutoIndex(Client &client)
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
-    if (client._keepAlive == false)
-        RunServers::cleanupClient(client);
 }
 
 void HttpRequest::processPost(Client &client)
@@ -135,10 +133,6 @@ void HttpRequest::processPost(Client &client)
             unique_ptr<HandleTransfer> handle = make_unique<HandleChunkTransfer>(client);
             if (handle->handleChunkTransfer())
             {
-                if (!client._keepAlive)
-                    RunServers::cleanupClient(client);
-                else
-                    RunServers::clientHttpCleanup(client);
                 return;
             }
             RunServers::insertHandleTransfer(move(handle));
