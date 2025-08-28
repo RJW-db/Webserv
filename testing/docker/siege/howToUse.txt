@@ -1,7 +1,7 @@
 Terminal 1
 1.  cd ./testing/docker
-    export WEBSERV_HOST_IP=$(hostname -I | awk '{print $2}')
-    docker compose build
+    export WEBSERV_HOST_IP=$(hostname -I | awk '{print $2}') && \
+    docker compose build && \
     docker compose up -d
 
 Terminal 2
