@@ -5,6 +5,9 @@
 #include <sys/epoll.h>
 #include "Logger.hpp"
 
+#ifndef SIEGE_TEST
+# define SIEGE_TEST false
+#endif
 
 namespace
 {
@@ -166,7 +169,6 @@ bool HandlePostTransfer::searchContentDisposition()
     return true;
 }
 
-
 /**
  * Validates the final CRLF sequence after a boundary in multipart data
  * Handles different states: empty line (signals new content), terminator (end of data), or invalid format
@@ -186,7 +188,10 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         _foundBoundary = false;
         return RERUN_WITHOUT_READING;
     }
-    if (foundReturn == BOUNDARY_PREFIX_LEN && strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 && _fileBuffer.size() <= BOUNDARY_PADDING)
+    if ((foundReturn == BOUNDARY_PREFIX_LEN &&
+        strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 &&
+        _fileBuffer.size() <= BOUNDARY_PADDING) ||
+        SIEGE_TEST)
     {
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);

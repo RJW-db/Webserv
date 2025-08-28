@@ -1,11 +1,14 @@
 services:
   webserv:
-    build: .
+    build:
+      context: .
+      args:
+        WEBSERV_HOST_IP: "${WEBSERV_HOST_IP}"
     image: myimage
     container_name: webserv
     command: sleep infinity
     volumes:
-    # - /home/saleunin/Desktop/Webserv/testing/docker:/Webserv
-    - ./:/workspace
+      # - /home/saleunin/Desktop/Webserv/testing/docker:/Webserv
+      - ./:/workspace
     extra_hosts:
       - "host.docker.internal:host-gateway"
