@@ -1,7 +1,7 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
-Content-Length: 2453
-Connection: close
+Content-Length: 2862
+Connection: keep-alive
 
 <!DOCTYPE html>
 <html lang="en">
@@ -75,6 +75,13 @@ Connection: close
         <input type="text" id="deleteFileInput" placeholder="Enter filename to delete" style="width: 90%;" />
         <button id="deletePathBtn" style="margin-top: 5px;">Delete by Filename</button>
         <div id="deletePathStatus" style="color: #b00; margin-top: 5px;"></div>
+      </div>
+
+      <!-- Add below your existing delete section -->
+      <div style="margin-top: 20px;">
+        <input type="text" id="cgiDeleteFileInput" placeholder="Enter filename to delete via CGI" style="width: 90%;" />
+        <button id="cgiDeletePathBtn" style="margin-top: 5px;">Delete by Filename via CGI</button>
+        <div id="cgiDeletePathStatus" style="color: #b00; margin-top: 5px;"></div>
       </div>
 
       <h2>Upload Files via CGI</h2>

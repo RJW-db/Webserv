@@ -149,3 +149,19 @@ void    RunServers::setLocation(Client &client)
     }
     throw ErrorCodeClientException(client, 400, "Couldn't find location block: malformed request");
 }
+
+void RunServers::cleanupEpoll()
+{
+    for (auto it = _listenFDS.begin(); it != _listenFDS.end(); ++it)
+    {
+        FileDescriptor::cleanupFD(*it);
+        _listenFDS.erase(it);
+    }
+    for (auto it = _clients.begin(); it != _clients.end();)
+    {
+        unique_ptr<Client> &client = it->second;
+        cleanupClient(*client);
+        it = _clients.erase(it);
+    }
+    FileDescriptor::cleanupFD(_epfd);
+}

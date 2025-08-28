@@ -266,7 +266,7 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     for (const auto &filePath : _fileNamePaths)
     {
         if (remove(filePath.data()) != 0)
-            cout << "remove failed on file: " << filePath << endl;
+            Logger::log(WARN, "remove failed on file: ", filePath);
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
 }

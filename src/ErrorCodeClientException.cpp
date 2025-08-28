@@ -38,18 +38,26 @@ void ErrorCodeClientException::handleErrorClient() const
             RunServers::cleanupClient(_client);
             return;
         }
-        auto it = _errorPages.find(_errorCode);
+        map<uint16_t, std::string>::const_iterator it = _errorPages.find(_errorCode);
         if (it == _errorPages.end())
         {
             handleDefaultErrorPage();
             return;
         }
-        handleCustomErrorPage(it->second, it->first);
+        int fd = open(it->second.c_str(), O_RDONLY);
+        if (fd == -1)
+        {
+            Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", it->second);
+            handleDefaultErrorPage();
+            return;
+        }
+        handleCustomErrorPage(it, fd);
     }
     catch(const std::exception& e)
     {
         RunServers::cleanupClient(_client);
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
+        
     }
 }
 
@@ -82,21 +90,15 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     message += body;
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, message);
     RunServers::insertHandleTransfer(move(handleClient));
-    RunServers::cleanupClient(_client);
 }
 
-void ErrorCodeClientException::handleCustomErrorPage(const std::string& errorPagePath, uint16_t errorCode) const
+void ErrorCodeClientException::handleCustomErrorPage(map<uint16_t, std::string>::const_iterator it, int fd) const
 {
-    int fd = open(errorPagePath.c_str(), O_RDONLY);
-    if (fd == -1)
-    {
-        RunServers::cleanupClient(_client);
-        throw runtime_error("Couldn't open errorpage: " + errorPagePath);
-    }
+    FileDescriptor::setFD(fd);
+    string errorPagePath = it->second;
     size_t fileSize = getFileLength(errorPagePath.c_str());
     _client._filenamePath = errorPagePath;
-    FileDescriptor::setFD(fd);
-    string response = HttpRequest::HttpResponse(_client, errorCode, errorPagePath, fileSize);
+    string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);
     auto transfer = make_unique<HandleGetTransfer>(_client, fd, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
 }

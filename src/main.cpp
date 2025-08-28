@@ -57,6 +57,7 @@ namespace
         RunServers::getExecutableDirectory();
         Logger::initialize(LOG_DIR, LOG);
         atexit(FileDescriptor::cleanupAllFD);
+        atexit(RunServers::cleanupEpoll);
     }
 
     void setupSignalHandlers()
