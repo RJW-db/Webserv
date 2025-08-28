@@ -16,12 +16,11 @@ RUN apt-get update && apt-get upgrade -y && \
 # Clone Siege into /opt/siege
 RUN git clone https://github.com/JoeDog/siege.git /opt/siege
 
-# HOST_IP = $(shell hostname -I | awk '{print $1}')
-ARG HOST_IP
-ENV HOST_IP=${HOST_IP}
+ARG WEBSERV_HOST_IP
+ENV WEBSERV_HOST_IP=${WEBSERV_HOST_IP}
 RUN mkdir -p /opt/postRequest && \
-    # echo "http://${HOST_IP}:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
-    echo "http://localhost:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
+    echo "http://${WEBSERV_HOST_IP}:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
+    # echo "http://localhost:8080/upload POST < body.txt" > /opt/postRequest/urls.txt && \
     # echo -en "POST /upload HTTP/1.1\r\nHost: 192.168.122.1:8080\r\nAccept: */*\r\nAccept-Encoding: *\r\nUser-Agent: Mozilla/5.0 (pc-x86_64-linux-gnu) Siege/4.2.0-b2\r\nConnection: close\r\nContent-Type: multipart/form-data; boundary=boundary123\r\nContent-Length: 145\r\n\r\n--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nhello from siege\r\n--boundary123--\r\n" > /opt/postRequest/body.txt
     # printf -- '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nhello from siege\r\n--boundary123--\r\n' > /opt/postRequest/body.txt
     printf -- '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\nhello from siege!\r\n--boundary123--\r\n' > /opt/postRequest/body.txt
@@ -37,9 +36,12 @@ RUN chmod +x ./utils/bootstrap && \
     make install
 
 # GET and POST
-RUN echo '#!/bin/sh\nsiege -c1 -t1s http://$HOST_IP:8080/' > /usr/local/bin/get && \
+RUN echo '#!/bin/sh\nsiege -c1 -t1s http://$WEBSERV_HOST_IP:8080/' > /usr/local/bin/get && \
     chmod +x /usr/local/bin/get && \
     echo '#!/bin/sh\nsiege -c2 -t10s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls.txt' > /usr/local/bin/post && \
-    chmod +x /usr/local/bin/post
+    chmod +x /usr/local/bin/post && \
+    printf -- '--boundary123\r\nContent-Disposition: form-data; name="myfile"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\n' > /opt/postRequest/body8MB.txt && \
+    yes "hello from siege!" | head -c 8388608 >> /opt/postRequest/body8MB.txt && \
+    printf -- '\r\n--boundary123--\r\n' >> /opt/postRequest/body8MB.txt
 
 WORKDIR /opt/postRequest

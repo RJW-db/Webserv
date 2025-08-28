@@ -16,6 +16,9 @@ CCPFLAGS		+=	-MMD -MP
 ifdef BUFFER
 CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
 endif
+ifdef SIEGE_TEST
+CCPFLAGS += -D SIEGE_TEST=true
+endif
 CCPFLAGS		+=	-g
 CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
@@ -86,6 +89,9 @@ test: all
 
 valgrind: all
 	valgrind -s --track-fds=yes ./$(NAME)
+
+siege:
+	$(MAKE) SIEGE_TEST=true
 
 build:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
