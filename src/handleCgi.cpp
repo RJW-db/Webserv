@@ -134,12 +134,13 @@ void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
         vector<char *> envp= convertToCharArray(envpString);
         // printVecArray(envp);
         char *filePath = (argv[1] != NULL) ? argv[1] : argv[0];
+        throw bad_alloc();
         execve(filePath, argv.data(), envp.data());
         Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "error occured in child: " << e.what() << '\n';
     }
     catch(...)
     {

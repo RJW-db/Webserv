@@ -20,7 +20,7 @@ void RunServers::disconnectChecks()
     }
     catch (const ErrorCodeClientException &e)
     {
-        e.handleErrorClient();  //TODO anything throwing in here stops the server
+        e.handleErrorClient();  //TODO anything throwing in here stops the server?
     }
     catch(Logger::ErrorLogExit&)
     {
@@ -28,7 +28,7 @@ void RunServers::disconnectChecks()
     }
     catch(const exception& e)
     {
-        Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
+        Logger::log(ERROR, "Server error", '-', "Exception in disconnectChecks: ", e.what());
     }
 }
 
@@ -69,6 +69,7 @@ void RunServers::checkCgiDisconnect()
         // }
         // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
+        // Logger::log(DEBUG, "result:", result, "client pid:", client._pid); //testlog
         if (result == 0)
         {
             if (client._disconnectTimeCgi <= chrono::steady_clock::now())
@@ -89,8 +90,6 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
-                if (WEXITSTATUS(exit_code) > 0) // Client has already received the error code
-                    throw ErrorCodeClientException(client, 500, "Cgi error exited with status: " + to_string(WEXITSTATUS(exit_code)));
                 Logger::log(INFO, "cgi process with pid: ", client._pid, " exited with status: ", WEXITSTATUS(exit_code)); //testlog
                 HandleTransfer& handle = *(*it);
                 // Logger::log(DEBUG, "handletype: ", handle._handleType); //testlog
@@ -100,9 +99,12 @@ void RunServers::checkCgiDisconnect()
                     FileDescriptor::cleanupFD(handle._fd);
                     if (handle._handleType == HANDLE_READ_FROM_CGI_TRANSFER)
                     {
-                        string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
-                        unique_ptr handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
-                        RunServers::insertHandleTransfer(move(handleClient));
+                        if (handle._fd == -1 || handle.readFromCgiTransfer() == true)
+                        {
+                            string clientResponse = HttpRequest::createResponseCgi(handle._client, handle._fileBuffer);
+                            unique_ptr<HandleToClientTransfer> handleClient = make_unique<HandleToClientTransfer>(handle._client, clientResponse);
+                            RunServers::insertHandleTransfer(move(handleClient));
+                        }
                     }
                     client._cgiClosing = true;
                     Logger::log(DEBUG, +(*it)->_handleType, ", Child process for client ", client._fd, " has closed its pipes"); //testlog
@@ -157,7 +159,12 @@ void RunServers::removeHandlesWithFD(int fd)
     {
         if ((*it)->_fd == fd)
         {
-            _handleCgi.erase(it);
+            if ((*it)->_handleType == HANDLE_READ_FROM_CGI_TRANSFER)
+            {
+                FileDescriptor::cleanupFD((*it)->_fd);
+            }
+            else
+                _handleCgi.erase(it);
             return;
         }
     }
@@ -197,7 +204,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     client._isAutoIndex = false;
     client._isCgi = false;
-    // client._pid = 0;
+    client._pid = 0;
 }
 
 void RunServers::cleanupClient(Client &client)
@@ -211,13 +218,7 @@ void RunServers::cleanupClient(Client &client)
         else
             ++it;
     }
-    for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
-    {
-        if ((*it)->_client._fd == clientFD)
-            it = _handleCgi.erase(it);
-        else
-            ++it;
-    }
+    cleanupHandleCgi(_handleCgi.begin(), client._pid);
     _clients.erase(clientFD);
     FileDescriptor::cleanupFD(clientFD);
 }
