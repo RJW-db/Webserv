@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <string>
 #include <stdint.h>	// uint16_t, cstdint doesn't exist in std=98
+#include <memory>
+#include <vector>
 
 using namespace std;
 
@@ -12,22 +14,20 @@ class AconfigServ : public Aconfig
 {
     public:
         //initialization
+        AconfigServ() = default;
+        AconfigServ(const AconfigServ &other);
         AconfigServ &operator=(const AconfigServ &other);
 
         //getters
         unordered_multimap<string, string> &getPortHost(void);
         vector<pair<string, Location>> &getLocations(void);
         string &getServerName(void);
-
+        
     protected:
         //values to be stored
         unordered_multimap<string, string> _portHost;
         vector<pair<string, Location>> _locations;
         string _serverName; // if not found acts as default
-
-        //initializtion for inheritance
-        AconfigServ() = default;
-        AconfigServ(const AconfigServ &other);
 };
 
 class ConfigServer : public AconfigServ

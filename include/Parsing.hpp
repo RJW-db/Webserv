@@ -1,7 +1,7 @@
 #ifndef PARSING_HPP
 # define PARSING_HPP
 
-#include <Server.hpp>
+#include <ConfigServer.hpp>
 #include <string>
 #include <vector>
 using namespace std;

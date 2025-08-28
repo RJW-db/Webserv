@@ -35,7 +35,7 @@ MAIN			:=	main.cpp \
 					request/parsingReq.cpp	request/processReq.cpp		request/response.cpp			request/validation.cpp	request/Post.cpp	\
 					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
 					FileDescriptor.cpp	  Client.cpp			\
-					Server.cpp					serverListenFD.cpp		\
+					serverListenFD.cpp		\
 						loggingErrors.cpp								\
 					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp

@@ -1,4 +1,5 @@
 #include <sys/epoll.h>
+#include <sys/socket.h>
 #include <cstring>
 #include "RunServer.hpp"
 #include "HandleTransfer.hpp"

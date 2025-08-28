@@ -7,11 +7,14 @@
 #include <filesystem> // std::filesystem::path
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <FileDescriptor.hpp>
 // #include <HttpRequest.hpp>
 // #include <iostream>
 // #include <FileDescriptor.hpp>
 // #include <HandleTransfer.hpp>
 #include "Logger.hpp"
+#include <ConfigServer.hpp>
+#include <ServerListenFD.hpp>
 
 void RunServers::getExecutableDirectory()
 {
@@ -36,9 +39,9 @@ void RunServers::createServers(vector<ConfigServer> &configs)
 {
     for (ConfigServer &config : configs)
     {
-        _servers.push_back(make_unique<Server>(Server(config)));
-    }
-    // Server::createListeners(_servers);
+        _servers.push_back(make_unique<AconfigServ>(AconfigServ(config)));
+    }   
+    // AconfigServ::createListeners(_servers);
 }
 
 void RunServers::setupEpoll()
@@ -109,16 +112,16 @@ void RunServers::setServerFromListener(Client &client)
     if (hostHeader == client._headerFields.end()) {
         throw ErrorCodeClientException(client, 400, "Missing required Host header");
     }
-    Server *tmpServer = nullptr;
+    AconfigServ *tmpServer = nullptr;
     // Find the matching server
-    for (unique_ptr<Server> &server : _servers) {
+    for (unique_ptr<AconfigServ> &server : _servers) {
         for (pair<const string, string> &porthost : server->getPortHost()) {
             if (porthost.first == client._ipPort.second && 
                 (porthost.second == client._ipPort.first || porthost.second == "0.0.0.0"))
             {
                 if (server->getServerName() == hostHeader->second)
                 {
-                    client._usedServer = make_unique<Server>(*server);
+                    client._usedServer = make_unique<AconfigServ>(*server);
                     return;
                 }
                 if (tmpServer == nullptr)
@@ -127,7 +130,7 @@ void RunServers::setServerFromListener(Client &client)
         }
     }
     if (tmpServer != nullptr)
-        client._usedServer = make_unique<Server>(*tmpServer);
+        client._usedServer = make_unique<AconfigServ>(*tmpServer);
     else
         throw ErrorCodeClientException(client, 0, "No matching server configuration found");
 }

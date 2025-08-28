@@ -20,7 +20,7 @@
 // #include <unordered_map>
 // #include <string_view>
 
-#include "Server.hpp"
+#include "ConfigServer.hpp"
 #include "HandleTransfer.hpp"
 #include "Client.hpp"
 
@@ -30,7 +30,7 @@ extern volatile sig_atomic_t g_signal_status;
 // #include <FileDescriptor.hpp>
 class FileDescriptor;
 
-using ServerList = vector<unique_ptr<Server>>;
+using ServerList = vector<unique_ptr<AconfigServ>>;
 
 class RunServers
 {

@@ -3,6 +3,7 @@
 #include <RunServer.hpp>
 #include <ErrorCodeClientException.hpp>
 #include <sys/epoll.h>
+#include <sys/socket.h>
 
 HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
 : HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())

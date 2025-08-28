@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include <unistd.h>
 #include "Client.hpp"
 
 #ifndef TERMINAL_DEBUG

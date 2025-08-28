@@ -5,6 +5,7 @@
 #include <Client.hpp>
 #include <Constants.hpp>
 #include <ErrorCodeClientException.hpp>
+#include <FileDescriptor.hpp>
 #include <stdexcept>
 #include <string>
 
