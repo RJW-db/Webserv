@@ -163,5 +163,5 @@ void RunServers::cleanupEpoll()
         cleanupClient(*client);
         it = _clients.erase(it);
     }
-    FileDescriptor::cleanupFD(_epfd);
+    FileDescriptor::closeFD(_epfd);
 }

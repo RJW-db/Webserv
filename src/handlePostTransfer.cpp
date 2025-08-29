@@ -162,9 +162,9 @@ bool HandlePostTransfer::searchContentDisposition()
         else
             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
+    Logger::log(INFO, "POST file added", _fd, "POSTfile", _client._filenamePath);
     _fileNamePaths.push_back(_client._filenamePath);
     FileDescriptor::setFD(_fd);
-    _fileNamePaths.push_back(_client._filenamePath);
     _searchContentDisposition = false;
     return true;
 }
@@ -266,7 +266,7 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     for (const auto &filePath : _fileNamePaths)
     {
         if (remove(filePath.data()) != 0)
-            Logger::log(WARN, "remove failed on file: ", filePath);
+            Logger::log(WARN, "remove failed on file: ", filePath, " because: ", strerror(errno));
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
 }
