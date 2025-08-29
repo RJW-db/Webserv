@@ -20,7 +20,7 @@ ifdef SIEGE_TEST
 CCPFLAGS += -D SIEGE_TEST=true
 endif
 CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 

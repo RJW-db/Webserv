@@ -9,6 +9,8 @@ services:
     command: sleep infinity
     volumes:
       # - /home/saleunin/Desktop/Webserv/testing/docker:/Webserv
-      - ./:/workspace
+      # - ./:/workspace
+      - ./siege:/opt/share
+      # - ./Webserv/testing/docker/siege:/opt/share
     extra_hosts:
       - "host.docker.internal:host-gateway"

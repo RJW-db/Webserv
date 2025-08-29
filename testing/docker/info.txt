@@ -26,3 +26,16 @@ getent hosts host.docker.internal
 
 file check for  \r \n
 od -c body.txt
+
+
+
+in docker update the github:
+rm -rf /opt/siege && \
+git clone https://github.com/RJW-db/siege.git /opt/siege && \
+cd /opt/siege && \
+chmod +x ./utils/bootstrap && \
+./utils/bootstrap && \
+./configure && \
+make -j && \
+make install && \
+cd -
