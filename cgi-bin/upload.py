@@ -46,16 +46,16 @@ def main():
         form = cgi.FieldStorage()
 
         if "myfile" not in form:
-            print("Status: 400 Bad Request")
-            print("Content-Type: text/plain\n")
+            print("Status: 400 Bad Request\r")
+            print("Content-Type: text/plain\r\n\r")
             print("No file uploaded.")
             return
 
         fileitem = form["myfile"]
 
         if not fileitem.file or not fileitem.filename:
-            print("Status: 400 Bad Request")
-            print("Content-Type: text/plain\n")
+            print("Status: 400 Bad Request\r")
+            print("Content-Type: text/plain\r\n\r")
             print("No valid file uploaded.")
             return
 
@@ -80,12 +80,12 @@ def main():
             print(response_body, end="\n")
 
         except Exception as e:
-            print("Status: 500 Internal Server Error")
-            print("Content-Type: text/plain\n")
+            print("Status: 500 Internal Server Error\r")
+            print("Content-Type: text/plain\r\n\r")
             print("Upload failed:", str(e))
     elif os.environ.get('REQUEST_METHOD', '') == 'GET':
-        print("Status: 405 Method Not Allowed")
-        print("Content-Type: text/plain\n")
+        print("Status: 405 Method Not Allowed\r")
+        print("Content-Type: text/plain\r\n\r")
         print("GET method is not allowed for this endpoint.")
     elif os.environ.get('REQUEST_METHOD', '') == 'DELETE':
         print(f"DEBUG: this works", file=sys.stderr)

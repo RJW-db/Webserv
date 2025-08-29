@@ -90,6 +90,7 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
+                Logger::log(DEBUG, "Child process for client ", client._fd, " exited with status ", WEXITSTATUS(exit_code));
                 it = killCgiPipes(_handleCgi.begin(), client._pid);
             }
 

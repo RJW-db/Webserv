@@ -10,7 +10,31 @@ constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 volatile sig_atomic_t g_signal_status = 0;
 
 
-namespace {
+// Helper to map signal numbers to names
+std::string signalName(int signum) {
+    static std::map<int, std::string> names = {
+        {SIGINT, "SIGINT"},
+        {SIGTERM, "SIGTERM"},
+        {SIGHUP, "SIGHUP"},
+        {SIGQUIT, "SIGQUIT"},
+        {SIGUSR1, "SIGUSR1"},
+        {SIGUSR2, "SIGUSR2"},
+        {SIGPIPE, "SIGPIPE"},
+        {SIGALRM, "SIGALRM"},
+        {SIGCHLD, "SIGCHLD"},
+        {SIGCONT, "SIGCONT"},
+        {SIGSTOP, "SIGSTOP"},
+        {SIGTSTP, "SIGTSTP"},
+        {SIGTTIN, "SIGTTIN"},
+        {SIGTTOU, "SIGTTOU"},
+        // Add more as needed
+    };
+    auto it = names.find(signum);
+    return it != names.end() ? it->second : "UNKNOWN";
+}
+
+namespace
+{
     int  runWebServer(int argc, char *argv[]);
     void setupEnvironment();
     void setupSignalHandlers();
@@ -75,17 +99,6 @@ namespace
     void configureServer(int argc, char *argv[])
     {
         const char *confFile = (argc >= 2) ? argv[1] : DEFAULT_CONFIG;
-        // if (argc == 3)
-        // {
-        //     try
-        //     {
-        //         RunServers::setClientBufferSize(stoullSafe(argv[2]));
-        //     }
-        //     catch(const std::exception& e)
-        //     {
-        //         Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
-        //     }
-        // }
         Parsing configFile(confFile);
         RunServers::createServers(configFile.getConfigs());
     }

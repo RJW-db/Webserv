@@ -5,10 +5,6 @@
 #include <sys/epoll.h>
 #include "Logger.hpp"
 
-#ifndef SIEGE_TEST
-# define SIEGE_TEST false
-#endif
-
 namespace
 {
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
@@ -105,8 +101,6 @@ bool HandlePostTransfer::processMultipartData()
     }
 }
 
-
-
 /**
  * Finds boundary markers in the buffer and writes content to file
  * Handles different boundary formats and writes safe amounts of data to avoid corruption
@@ -188,10 +182,9 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         _foundBoundary = false;
         return RERUN_WITHOUT_READING;
     }
-    if ((foundReturn == BOUNDARY_PREFIX_LEN &&
+    if (foundReturn == BOUNDARY_PREFIX_LEN &&
         strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 &&
-        _fileBuffer.size() <= BOUNDARY_PADDING) ||
-        SIEGE_TEST)
+        _fileBuffer.size() <= BOUNDARY_PADDING)
     {
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);
@@ -271,10 +264,6 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
 }
 
-
-
-
-
 /**
  * Validates the syntax of multipart POST data for CGI processing
  * Parses boundaries, headers, and ensures proper multipart format compliance
@@ -313,7 +302,6 @@ bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
     }
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }
-
 
 /**
  * Parses Content-Disposition header from multipart data
@@ -358,5 +346,3 @@ bool MultipartParser::validateBoundaryTerminator(Client &client, string_view &bu
         return true;
     throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
 }
-
-

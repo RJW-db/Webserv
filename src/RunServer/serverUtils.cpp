@@ -157,11 +157,10 @@ void RunServers::cleanupEpoll()
         FileDescriptor::cleanupFD(*it);
         _listenFDS.erase(it);
     }
-    for (auto it = _clients.begin(); it != _clients.end();)
+    while (_clients.size() > 0)
     {
-        unique_ptr<Client> &client = it->second;
-        cleanupClient(*client);
-        it = _clients.erase(it);
+        cleanupClient(*_clients.begin()->second);
     }
     FileDescriptor::closeFD(_epfd);
+    FileDescriptor::cleanupAllFD(); // left overs like fd for files
 }

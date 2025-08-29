@@ -44,6 +44,7 @@ int RunServers::_level = -1;
 uint64_t RunServers::_ramBufferLimit = 65536;
 bool RunServers::_fatalErrorOccurred = false;
 
+
 void RunServers::runServers()
 {
     while (g_signal_status == 0)
@@ -53,11 +54,13 @@ void RunServers::runServers()
         disconnectChecks();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
 
-        // only goes wrong with EINTR(signals)
         if (eventCount == -1)
         {
             if (errno == EINTR)
-                break ;
+            {
+                Logger::log(WARN, "epoll_wait interrupted by signal: ", g_signal_status);
+                continue;
+            }
             Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));
         }
         try

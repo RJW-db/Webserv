@@ -16,11 +16,8 @@ CCPFLAGS		+=	-MMD -MP
 ifdef BUFFER
 CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
 endif
-ifdef SIEGE_TEST
-CCPFLAGS += -D SIEGE_TEST=true
-endif
 CCPFLAGS		+=	-g
-# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 
@@ -36,7 +33,9 @@ MAIN			:=	main.cpp \
 					parsing/parsing.cpp		parsing/Aconfig.cpp			parsing/ConfigServer.cpp		parsing/Location.cpp						\
 					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp						\
 					request/parsingReq.cpp	request/processReq.cpp		request/response.cpp			request/validation.cpp	request/Post.cpp	\
-					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
+					HandleTransfer/cgi.cpp  HandleTransfer/chunk.cpp HandleTransfer/get.cpp HandleTransfer/post.cpp  HandleTransfer/toClient.cpp	\
+					utils.cpp		\
+					handleCgi.cpp	\
 					FileDescriptor.cpp	  Client.cpp			\
 					serverListenFD.cpp		\
 						loggingErrors.cpp								\
@@ -89,9 +88,6 @@ test: all
 
 valgrind: all
 	valgrind -s --track-fds=yes ./$(NAME)
-
-siege:
-	$(MAKE) SIEGE_TEST=true
 
 build:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
