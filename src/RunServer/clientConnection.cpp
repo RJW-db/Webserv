@@ -88,7 +88,7 @@ void RunServers::processClientRequest(Client &client)
         // client._finishedProcessClientRequest = true;
         HttpRequest::processRequest(client);
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }

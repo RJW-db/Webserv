@@ -44,7 +44,7 @@ bool HandlePostTransfer::postTransfer(bool readData)
             return handlePostCgi();
         return processMultipartData();        
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));

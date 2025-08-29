@@ -35,6 +35,7 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
+vector<int> RunServers::_epollAddedFds;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 vector<unique_ptr<HandleTransfer>> RunServers::_handleCgi;
 // vector<int> RunServers::_connectedClients;
@@ -68,11 +69,11 @@ void RunServers::runServers()
             // cout << "event count "<<  eventCount << endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch(Logger::ErrorLogExit&)
+        catch (Logger::ErrorLogExit&)
         {
             Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
         }
-        catch(const exception& e)
+        catch (const exception& e)
         {
             Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
         }

@@ -11,11 +11,17 @@
 vector<int> FileDescriptor::_fds = {};
 // map<chrono::steady_clock::time_point, int> FileDescriptor::_clientFDS = {};
 
-void FileDescriptor::cleanupFD(int &fd)
+void FileDescriptor::cleanupEpollFd(int &fd)
 {
     if (fd > 0)
     {
-        RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+        vector<int> &fds = RunServers::getEpollAddedFds();
+        auto it = find(fds.begin(), fds.end(), fd);
+        if (it != fds.end())
+        {
+            RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+            fds.erase(it);
+        }
         FileDescriptor::closeFD(fd);
     }
 }

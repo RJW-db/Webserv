@@ -53,7 +53,7 @@ void ErrorCodeClientException::handleErrorClient() const
         }
         handleCustomErrorPage(it, fd);
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         RunServers::cleanupClient(_client);
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());

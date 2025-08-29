@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     {
         Logger::log(ERROR, "An error occurred: ", e.what());
     }
-    catch(...)
+    catch (...)
     {
         Logger::log(ERROR, "An error occurred");
     }

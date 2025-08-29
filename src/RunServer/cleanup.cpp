@@ -22,11 +22,11 @@ void RunServers::disconnectChecks()
     {
         e.handleErrorClient();  //TODO anything throwing in here stops the server?
     }
-    catch(Logger::ErrorLogExit&)
+    catch (Logger::ErrorLogExit&)
     {
         Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         Logger::log(ERROR, "Server error", '-', "Exception in disconnectChecks: ", e.what());
     }
@@ -125,12 +125,12 @@ vector<unique_ptr<HandleTransfer>>::iterator RunServers::killCgiPipes(vector<uni
             }
             ++it;
         }
-        catch(ErrorCodeClientException& e)
+        catch (ErrorCodeClientException& e)
         {
             e.handleErrorClient();
             return cleanupHandleCgi(it, pid);
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
             cleanupClient((*it)->_client);
@@ -177,7 +177,7 @@ void RunServers::removeHandlesWithFD(int fd)
         {
             if ((*it)->_handleType == HANDLE_READ_FROM_CGI_TRANSFER)
             {
-                FileDescriptor::cleanupFD((*it)->_fd);
+                FileDescriptor::cleanupEpollFd((*it)->_fd);
             }
             else
             {
@@ -194,7 +194,7 @@ void RunServers::closeHandles(pid_t pid)
     {
         if ((*it)->_client._pid == pid)
         {
-            FileDescriptor::cleanupFD((*it)->_fd);
+            FileDescriptor::cleanupEpollFd((*it)->_fd);
             it =_handleCgi.erase(it);
             continue ;
         }
@@ -238,5 +238,5 @@ void RunServers::cleanupClient(Client &client)
     }
     cleanupHandleCgi(_handleCgi.begin(), clientFD);
     _clients.erase(clientFD);
-    FileDescriptor::cleanupFD(clientFD);
+    FileDescriptor::cleanupEpollFd(clientFD);
 }

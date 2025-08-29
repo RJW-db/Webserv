@@ -33,7 +33,7 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         if (_fileBuffer.size() == _bytesWrittenTotal)
         {
-            FileDescriptor::cleanupFD(_fd);
+            FileDescriptor::cleanupEpollFd(_fd);
             return true;
         }
     }
@@ -57,14 +57,14 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     ssize_t bytesRead = read(_fd, buff.data(), buff.size());
     if (bytesRead == -1)
     {
-        FileDescriptor::cleanupFD(_fd);
+        FileDescriptor::cleanupEpollFd(_fd);
         throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
     }
     size_t rd = static_cast<size_t>(bytesRead);
     _fileBuffer.append(buff.data(), rd);
     if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
     {
-        FileDescriptor::cleanupFD(_fd);
+        FileDescriptor::cleanupEpollFd(_fd);
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         return true;
     }

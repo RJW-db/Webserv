@@ -96,22 +96,46 @@ namespace
 
         FileDescriptor::closeFD(fdWriteToCgi[0]);
         FileDescriptor::closeFD(fdReadfromCgi[1]);
-        
-        unique_ptr<HandleTransfer> handle;
-        if (client._useMethod & METHOD_POST)
+
+        unique_ptr<HandleTransfer> handleWrite = nullptr;
+        unique_ptr<HandleTransfer> handleRead = nullptr;
+
+        try
         {
-            handle = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
-            RunServers::insertHandleTransferCgi(move(handle));
+            RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
+            RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
+                    
+            if (client._useMethod & METHOD_POST)
+            {
+                handleWrite = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
+                RunServers::insertHandleTransferCgi(move(handleWrite));
+            }
+            handleRead = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
+            RunServers::insertHandleTransferCgi(move(handleRead));
+
+            client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
+            return;
+        }
+        catch (const ErrorCodeClientException &e)
+        {
+            Logger::log(ERROR, "CGI error", '-', "ErrorCodeClientException in parent process: ", e.what());
+        }
+        catch (const std::exception& e)
+        {
+            Logger::log(ERROR, "CGI error", '-', "Exception in parent process: ", e.what());
+        }
+        catch (...)
+        {
+            Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in parent process");
         }
 
-        handle = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
-        RunServers::insertHandleTransferCgi(move(handle));
-
-        client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
-        
-        RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
-        RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
-        Logger::log(DEBUG, "child pid: ", client._pid);
+        FileDescriptor::cleanupEpollFd(fdWriteToCgi[1]);
+        FileDescriptor::cleanupEpollFd(fdReadfromCgi[0]);
+        if (handleWrite)
+            handleWrite->_fd = -1;
+        if (handleRead)
+            handleRead->_fd = -1;
+        throw ErrorCodeClientException(client, 500, "CGI setup failed");
     }
     /**
      * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.

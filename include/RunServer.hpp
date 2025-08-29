@@ -114,11 +114,17 @@ class RunServers
                     : ClientException(message) {}
         };
 
+        static vector<int> &getEpollAddedFds()
+        {
+            return _epollAddedFds;
+        }
+
     private:
         // --- Server configuration ---
         static string _serverRootDir;
         static ServerList _servers;
         static vector<int> _listenFDS;
+        static vector<int> _epollAddedFds;
 
         // --- Epoll and event management ---
         static int _epfd;

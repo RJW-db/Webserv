@@ -210,7 +210,7 @@ void Logger::log(uint8_t level, Client &client, Args&&... args)
         Logger::log(level, client._fd, "clientFD", args...);
         // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
     }
-    catch(...)
+    catch (...)
     {
         if (_logFd != -1)
             write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);

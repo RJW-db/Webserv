@@ -125,7 +125,7 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
-        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool writeToCgiTransfer();
 
@@ -136,7 +136,7 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 {
     public:
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
-        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool readFromCgiTransfer();
 };
@@ -145,7 +145,7 @@ class HandleToClientTransfer : public HandleTransfer
 {
     public:
         HandleToClientTransfer(Client &client, string &response);
-        ~HandleToClientTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleToClientTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool sendToClientTransfer();
 };

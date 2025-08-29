@@ -56,7 +56,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 alert('Failed to delete image.');
               }
             })
-            .catch(() => alert('Error deleting image.'));
+            .catch (() => alert('Error deleting image.'));
           };
 
           wrapper.appendChild(label);
@@ -76,7 +76,7 @@ window.addEventListener('DOMContentLoaded', function() {
           gallery.appendChild(errorBox);
         }
       })
-      .catch(error => {
+      .catch (error => {
         status.textContent = '';
         const errorBox = document.createElement('div');
         errorBox.textContent = 'Upload failed: ' + error;
@@ -126,7 +126,7 @@ window.addEventListener('DOMContentLoaded', function() {
         statusDiv.textContent = 'CGI Delete failed.';
       }
     })
-    .catch(() => {
+    .catch (() => {
       statusDiv.style.color = '#b00';
       statusDiv.textContent = 'Error sending CGI delete request.';
     });
@@ -189,7 +189,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 alert('Failed to delete image.');
               }
             })
-            .catch(() => alert('Error deleting image.'));
+            .catch (() => alert('Error deleting image.'));
           };
 
           wrapper.appendChild(label);
@@ -210,7 +210,7 @@ window.addEventListener('DOMContentLoaded', function() {
           gallery.appendChild(errorBox);
         }
       })
-      .catch(error => {
+      .catch (error => {
         status.textContent = '';
         const errorBox = document.createElement('div');
         errorBox.textContent = 'CGI Upload failed: ' + error;
@@ -260,7 +260,7 @@ window.addEventListener('DOMContentLoaded', function() {
         statusDiv.textContent = 'Delete failed.';
       }
     })
-    .catch(() => {
+    .catch (() => {
       statusDiv.style.color = '#b00';
       statusDiv.textContent = 'Error sending delete request.';
     });

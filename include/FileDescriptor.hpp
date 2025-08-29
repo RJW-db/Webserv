@@ -17,7 +17,7 @@ using namespace std;
 class FileDescriptor
 {
 	public:
-        static void cleanupFD(int &fd);
+        static void cleanupEpollFd(int &fd);
         static void cleanupAllFD();
 
 		static void	setFD(int fd);

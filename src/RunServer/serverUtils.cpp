@@ -99,11 +99,13 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
     {
         if (_clients.count(fd) == 0 || !_clients[fd])
         {
-            Logger::log(ERROR, "Server Error", fd, "Invalid clientFD, setEpollEvents failed");
+            Logger::log(ERROR, "Server Error", fd, "Invalid FD, setEpollEvents failed");
             throw std::runtime_error("epoll_ctl failed: " + string(strerror(errno)));
         }
         throw ErrorCodeClientException(*_clients[fd], 0, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
     }
+    if (option == EPOLL_CTL_ADD)
+        _epollAddedFds.push_back(fd);
 }
 
 void RunServers::setServerFromListener(Client &client)
@@ -154,7 +156,7 @@ void RunServers::cleanupEpoll()
 {
     for (auto it = _listenFDS.begin(); it != _listenFDS.end(); ++it)
     {
-        FileDescriptor::cleanupFD(*it);
+        FileDescriptor::cleanupEpollFd(*it);
         _listenFDS.erase(it);
     }
     while (_clients.size() > 0)
