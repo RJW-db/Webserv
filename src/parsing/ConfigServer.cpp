@@ -89,7 +89,6 @@ int ConfigServer::getLineNbr() const { return _lineNbr; }
 
 void ConfigServer::setDefaultConf()
 {
-    // what to do with no error pages? do we create our own or just have one
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
         _root = _root.substr(0, _root.size() - 1);
@@ -113,7 +112,6 @@ void ConfigServer::setDefaultConf()
         Location &location = val.second;
         location.SetDefaultLocation(*this);
     }
-    //check if / path exists in locations if not create it
     bool found = false;
     for (auto it = _locations.begin(); it != _locations.end(); ++it)
     {
@@ -131,8 +129,6 @@ void ConfigServer::setDefaultConf()
     }
     setDefaultErrorPages();
 }
-
-/* Aconfigserv class for helper funcs */
 
 AconfigServ::AconfigServ(const AconfigServ &other) : Aconfig(other) { *this = other; }
 

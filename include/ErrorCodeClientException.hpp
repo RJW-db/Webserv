@@ -1,17 +1,17 @@
 #ifndef ERRORCODECLIENTEXCEPTION_HPP
 #define ERRORCODECLIENTEXCEPTION_HPP
 #include <string>
-#include "utils.hpp"
 #include <fcntl.h>
 #include <map>
 #include "Client.hpp"
 #include "Logger.hpp"
+#include "utils.hpp"
 using namespace std;
 
 class ErrorCodeClientException
 {
     public:
-        //initialization
+        // Initialization
         explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
 
         //handle error page
@@ -32,7 +32,7 @@ class ErrorCodeClientException
         // utility function
         const char *what() const throw();
 
-        //getters
+        // Getters
         uint16_t getErrorCode() const;
         string getMessage() const;
 };

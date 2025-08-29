@@ -1,5 +1,4 @@
 #include "HttpRequest.hpp"
-
 namespace
 {
     void appendToHeader(Client &client, const char *buff, size_t receivedBytes);

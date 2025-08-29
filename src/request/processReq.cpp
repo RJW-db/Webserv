@@ -176,4 +176,3 @@ void HttpRequest::processDelete(Client &client)
         throw ErrorCodeClientException(client, code, string("Remove failed: ") + strerror(errno));
     }
 }
-

@@ -1,9 +1,8 @@
+#include <unistd.h>
 #include "Aconfig.hpp"
 #include "Logger.hpp"
-#include <unistd.h>
-
-// Constants for better readability
-namespace {
+namespace
+{
     const char* WHITESPACE_SEMICOLON = " \t\f\v\r;";
     const char* WHITESPACE_ONLY = " \t\f\v\r";
     const char* INVALID_PATH_CHARS = " \t\f\v\r;#?&%=+\\:";

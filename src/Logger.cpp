@@ -1,9 +1,9 @@
-#include "RunServer.hpp" // escape_special_char   should be utils.hpp
-#include "Logger.hpp"
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
+#include <iostream>
 #include <fcntl.h>
+#include "RunServer.hpp"
+#include "Logger.hpp"
 
 int Logger::_logFd = -1;
 

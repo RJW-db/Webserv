@@ -43,6 +43,9 @@ class Logger
         template<typename... Args>
         static void log(uint8_t level, Client &client, Args&&... args);
 
+        template<typename... Args>
+        static string makeRawMessage(uint8_t level, Args&&... args);
+
         class ErrorLogExit : public exception
         {
         public:
@@ -56,14 +59,12 @@ class Logger
         static string getTimeStamp();
         static string logLevelToString(uint8_t level, bool useColors);
 
-        static inline string padRight(const string& s, size_t width)
-        {
+        static inline string padRight(const string& s, size_t width) {
             return (s.size() < width) ? s + string(width - s.size(), ' ') : s;
         }
 
         // Left pad (for numbers, right-align)
-        static inline string padLeft(const string& s, size_t width)
-        {
+        static inline string padLeft(const string& s, size_t width) {
             return (s.size() < width) ? string(width - s.size(), ' ') + s : s;
         }
 
@@ -78,6 +79,100 @@ class Logger
 
         static int _logFd;
 };
+
+template<typename... Args>
+void Logger::log(uint8_t level, Args&&... args)
+{
+    try
+    {
+        string rawMessage = makeRawMessage(level, forward<Args>(args)...);
+        
+        string timeStamp = getTimeStamp();
+        string levelStr = logLevelToString(level, LOGGER);
+        ostringstream logMsg;
+        logMsg << timeStamp << levelStr << escapeSpecialChars(rawMessage, LOGGER) << "\n";
+        string logStr = logMsg.str();
+
+        if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
+        {
+            if (_logFd != 3)
+                cerr << getTimeStamp() << logLevelToString(ERROR, TERMINAL) << "Writing to log file failed: " << strerror(errno) << endl;
+            _logFd = -1;
+        }
+
+        if (level >= IWARN || (TERMINAL_DEBUG == true && level == INFO))
+        {
+            levelStr = logLevelToString(level, TERMINAL);
+            ostream& output = (level == INFO) ? cout : cerr;
+            output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
+        }
+    }
+    catch (...)
+    {
+        if (_logFd != -1)
+            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+    }
+}
+
+template<typename... Args>
+void Logger::logExit(uint8_t level, Args&&... args)
+{
+    log(level, forward<Args>(args)...);
+    throw Logger::ErrorLogExit();
+}
+
+template<typename... Args>
+void Logger::log(uint8_t level, Client &client, Args&&... args)
+{
+    try
+    {
+        if (!client._ipPort.first.empty())
+        {
+            string portHostInfo = client._ipPort.first + ":" + client._ipPort.second;
+
+            if (portHostInfo.length() < 21)
+                portHostInfo.append(21 - portHostInfo.length(), ' ');
+            log(level, portHostInfo, client._fd, "clientFD", args...);
+            return;
+        }
+        Logger::log(level, client._fd, "clientFD", args...);
+    }
+    catch (...)
+    {
+        if (_logFd != -1)
+            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
+    }
+}
+
+template<typename... Args>
+string Logger::makeRawMessage(uint8_t level, Args&&... args)
+{
+    switch (level)
+    {
+        case CHILD_INFO:
+        case INFO:
+        case IWARN:
+        {
+            auto tup = forward_as_tuple(forward<Args>(args)...);
+            return processArgsToString(tup, index_sequence_for<Args...>{});
+        }
+        case WARN:
+        case ERROR:
+        case FATAL:
+        {
+            auto tup = forward_as_tuple(forward<Args>(args)...);
+            return processErrorArgsToString(tup, index_sequence_for<Args...>{});
+        }
+        default:
+        {
+            ostringstream oss;
+            (oss << ... << args);
+            return oss.str();
+        }
+    }
+}
 
 // Helper to convert any type to string
 template<typename T>
@@ -114,107 +209,5 @@ string Logger::processErrorArgsToString(const Tuple& tup, index_sequence<Is...>)
         Logger::argToString(get<Is>(tup))                                   // rest (no padding)
     )), ...);
     return out;
-}
-
-template<typename... Args>
-void Logger::log(uint8_t level, Args&&... args)
-{
-    try
-    {
-        string rawMessage;
-        switch (level)
-        {
-            case CHILD_INFO:
-            case INFO:
-            case IWARN:
-            {
-                auto tup = forward_as_tuple(forward<Args>(args)...);
-                rawMessage = processArgsToString(tup, index_sequence_for<Args...>{});
-                // cout << rawMessage << endl; //testcout
-                break;
-            }
-            case WARN:
-            case ERROR:
-            case FATAL:
-            {
-                auto tup = forward_as_tuple(forward<Args>(args)...);
-                rawMessage = processErrorArgsToString(tup, index_sequence_for<Args...>{});
-                break;
-            }
-            default:
-            {
-                ostringstream oss;
-                (oss << ... << args);
-                rawMessage = oss.str();
-            }
-        }
-        
-        string timeStamp = getTimeStamp();
-        // cout << "lvlstr "<<lvlStr << endl; //testcout
-        string levelStr = logLevelToString(level, LOGGER);
-        // cout << levelStr << endl; //testcout
-
-        ostringstream logMsg;
-        logMsg << timeStamp << levelStr << escapeSpecialChars(rawMessage, LOGGER) << "\n";
-        string logStr = logMsg.str();
-
-        if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
-        {
-            if (_logFd != 3)
-                cerr << getTimeStamp() << logLevelToString(ERROR, TERMINAL) << "Writing to log file failed: " << strerror(errno) << endl;
-            _logFd = -1;
-        }
-
-        if (level >= IWARN || (TERMINAL_DEBUG == true && level == INFO))
-        {
-            levelStr = logLevelToString(level, TERMINAL);
-            ostream& output = (level == INFO) ? cout : cerr;
-            output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
-        }
-    }
-    catch (...)
-    {
-        if (_logFd != -1)
-            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-    }
-}
-
-template<typename... Args>
-void Logger::logExit(uint8_t level, Args&&... args)
-{
-    log(level, forward<Args>(args)...);
-    throw Logger::ErrorLogExit();
-    // exit(EXIT_FAILURE);
-}
-
-template<typename... Args>
-void Logger::log(uint8_t level, Client &client, Args&&... args)
-{
-    try
-    {
-        if (!client._ipPort.first.empty())
-        {
-
-            // auto portHostMap = client._usedServer->getPortHost().begin();
-            string portHostInfo = client._ipPort.first + ":" + client._ipPort.second;
-            // string portHostInfo = "255.255.255.255:65535";
-            
-            // max size 255.255.255.255:65535
-            if (portHostInfo.length() < 21)
-                portHostInfo.append(21 - portHostInfo.length(), ' ');
-            // log(level, portHostInfo, "  clientFD:", client._fd, "  ", args...);
-            log(level, portHostInfo, client._fd, "clientFD", args...);
-            return;
-        }
-        Logger::log(level, client._fd, "clientFD", args...);
-        // log(level, client._usedServer->getServerName(), "  FD:", client._fd, "  ", args...);
-    }
-    catch (...)
-    {
-        if (_logFd != -1)
-            write(_logFd, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-        write(STDERR_FILENO, LOG_ERROR, sizeof(LOG_ERROR) - 1);
-    }
 }
 #endif

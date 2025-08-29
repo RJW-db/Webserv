@@ -26,13 +26,10 @@ namespace
     };
 }
 
-
 class Client
 {
     public:
-            // Add more fields as needed
         Client(int fd);
-        // Client &operator=(const Client &other);
 
         void resetRequestState();
 
@@ -44,7 +41,6 @@ class Client
         {
             _disconnectTimeCgi = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
         };
-        // bool _finishedProcessClientRequest = false;
         int _fd;
 
         unique_ptr<AconfigServ> _usedServer;

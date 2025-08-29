@@ -1,15 +1,12 @@
+#include <fcntl.h>
 #ifdef __linux__
 # include <sys/epoll.h> // EPOLL_CTL_DEL
 #endif
-#include <fcntl.h>
 #include "FileDescriptor.hpp"
 #include "RunServer.hpp"
 #include "Logger.hpp"
 
-// array<int, FD_LIMIT> FileDescriptor::_fds = {};
-// vector<int> FileDescriptor::_fds(FD_LIMIT);
 vector<int> FileDescriptor::_fds = {};
-// map<chrono::steady_clock::time_point, int> FileDescriptor::_clientFDS = {};
 
 void FileDescriptor::cleanupEpollFd(int &fd)
 {

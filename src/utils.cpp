@@ -1,11 +1,9 @@
+#include <algorithm>
 #include <dirent.h>
 #include <cstring>
-#include <algorithm>
-#include "utils.hpp"
 #include "RunServer.hpp"
 #include "Logger.hpp"
-
-
+#include "utils.hpp"
 namespace
 {
     void insertUuidSegment(int8_t amount, char *uuidIndex);

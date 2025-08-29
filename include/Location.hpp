@@ -17,7 +17,7 @@ class Alocation : public Aconfig
 		string getCgiPath() const;
 		string getPath() const;
 
-        // helper function
+        // Helper function
         bool isCgiFile(string_view &filename) const;
 
 	protected:
@@ -32,7 +32,6 @@ class Alocation : public Aconfig
 		string _cgiPath;
 		string _locationPath; // includes root + path;
 };
-
 
 class Location : public Alocation
 {

@@ -1,16 +1,17 @@
+
+#include <unordered_map>
+#include <sys/wait.h>
+#include <filesystem> // std::filesystem::path
+#include <limits.h>   // PATH_MAX
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <sys/wait.h>
-#include <unordered_map>
-#include <limits.h> // PATH_MAX
-#include <filesystem> // std::filesystem::path
-#include "RunServer.hpp"
 #include "ErrorCodeClientException.hpp"
 #include "FileDescriptor.hpp"
-#include "Logger.hpp"
+#include "ServerListenFD.hpp"
 #include "ConfigServer.hpp"
-#include <ServerListenFD.hpp>
+#include "RunServer.hpp"
+#include "Logger.hpp"
 
 void RunServers::getExecutableDirectory()
 {
@@ -34,10 +35,7 @@ void RunServers::getExecutableDirectory()
 void RunServers::createServers(vector<ConfigServer> &configs)
 {
     for (ConfigServer &config : configs)
-    {
         _servers.push_back(make_unique<AconfigServ>(AconfigServ(config)));
-    }   
-    // AconfigServ::createListeners(_servers);
 }
 
 void RunServers::setupEpoll()
@@ -132,7 +130,6 @@ void RunServers::setServerFromListener(Client &client)
     else
         throw ErrorCodeClientException(client, 0, "No matching server configuration found");
 }
-
 
 void    RunServers::setLocation(Client &client)
 {

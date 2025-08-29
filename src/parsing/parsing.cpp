@@ -1,10 +1,7 @@
-#include <Parsing.hpp>
 #include "ConfigServer.hpp"
+#include "Parsing.hpp"
 #include "Logger.hpp"
-
 using namespace std;
-
-// Constants for better readability
 namespace
 {
     constexpr const char *WHITESPACE_CHARS = " \t\f\v\r";
@@ -274,79 +271,6 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
     }
     if (shouldSkipSpace == true)
         trimLeadingWhitespace(line);
-}
-
-/**
- * prints all values stored in servers and locations
- */
-void Parsing::printAll() const
-{
-    for (ConfigServer config : _configs)
-    {
-        cout << "Server Name: " << config.getServerName() << endl;
-        cout << "Port and Host:" << endl;
-        for (const auto &portHost : config.getPortHost())
-        {
-            cout << "  Port: " << portHost.first << endl << ", Host: " << portHost.second << endl;
-        }
-            cout << "  Root: " << config.getRoot() << endl;
-            cout << "  Client Max Body Size: " << config.getClientMaxBodySize() << endl;
-            cout << "  Auto Index: " << (config.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-
-            // cout << "  Error Pages: ";
-            // for (const auto &errorPage : config.getErrorCodesWithPage())
-            // {
-            // 	cout << errorPage.first << " -> " << errorPage.second << ", ";
-            // }
-            // cout << endl;
-
-            cout << "  Return Redirect: " << config.getReturnRedirect().first << " -> " << config.getReturnRedirect().second << endl;
-            cout << "  Index Pages: ";
-            for (const string &index : config.getIndexPage())
-            {
-                cout << index << " ";
-            }
-            cout << endl;
-        for (auto pair : config.getLocations())
-        {
-            Alocation &location = pair.second;
-            cout << "location: " << "Path: " << pair.first << endl;
-            cout << "  Root: " << location.getRoot() << endl;
-            cout << "  Client Max Body Size: " << location.getClientMaxBodySize() << endl;
-            cout << "  Auto Index: " << (location.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-
-            // cout << "  Error Pages: ";
-            // for (const auto &errorPage : location.getErrorCodesWithPage())
-            // {
-            // 	cout << errorPage.first << " -> " << errorPage.second << ", ";
-            // }
-            // cout << endl;
-
-            cout << "  Return Redirect: " << location.getReturnRedirect().first << " -> " << location.getReturnRedirect().second << endl;
-            cout << "  Index Pages: ";
-            for (const string &index : location.getIndexPage())
-            {
-                cout << index << " ";
-            }
-            cout << endl;
-            cout << "  Methods: ";
-            if (location.getAllowedMethods() & 1)
-                cout << "HEAD ";
-            if (location.getAllowedMethods() & 2)
-                cout << "GET ";
-            if (location.getAllowedMethods() & 4)
-                cout << "POST ";
-            if (location.getAllowedMethods() & 8)
-                cout << "DELETE ";
-
-            cout << endl;
-            cout << "  Upload Store: " << location.getUploadStore() << endl;
-            std::cout << "cgi extensions: ";
-            for (string extension : location.getExtension())
-                std::cout << extension;
-            cout << endl << "  CGI Path: " << location.getCgiPath() << endl;
-        }
-    }
 }
 
 vector<ConfigServer> &Parsing::getConfigs() {return _configs;}

@@ -8,27 +8,28 @@
 #include "Logger.hpp"
 #include "Client.hpp"
 using namespace std;
-
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
-
-enum HandleTransferType
+namespace
 {
-    HANDLE_GET_TRANSFER = 1,
-    HANDLE_POST_TRANSFER = 2,
-    HANDLE_CHUNK_TRANSFER = 3,
-    HANDLE_WRITE_TO_CGI_TRANSFER = 4,
-    HANDLE_READ_FROM_CGI_TRANSFER = 5,
-    HANDLE_TO_CLIENT_TRANSFER = 6
-};
-
-enum ValidationResult
-{
-    CONTINUE_READING = 0,
-    FINISHED = 1,
-    RERUN_WITHOUT_READING = 2
-};
+    enum HandleTransferType : uint8_t
+    {
+        HANDLE_GET_TRANSFER = 1,
+        HANDLE_POST_TRANSFER = 2,
+        HANDLE_CHUNK_TRANSFER = 3,
+        HANDLE_WRITE_TO_CGI_TRANSFER = 4,
+        HANDLE_READ_FROM_CGI_TRANSFER = 5,
+        HANDLE_TO_CLIENT_TRANSFER = 6
+    };
+    
+    enum ValidationResult : uint8_t
+    {
+        CONTINUE_READING = 0,
+        FINISHED = 1,
+        RERUN_WITHOUT_READING = 2
+    };
+}
 
 class HandleTransfer
 {
@@ -80,7 +81,7 @@ class HandlePostTransfer : public HandleTransfer
         size_t _bytesWrittenTotal = 0;
         bool _foundBoundary = false;
         bool _searchContentDisposition = false;
-        vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
+        vector<string> _fileNamePaths; // For post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
     protected:
         // Protected constructor for derived classes
@@ -93,7 +94,7 @@ class HandlePostTransfer : public HandleTransfer
         // recv incoming
         void ReadIncomingData();
 
-        // process
+        // Process
         bool processMultipartData();
         size_t FindBoundaryAndWrite(size_t &bytesWritten);
         bool searchContentDisposition();
@@ -160,5 +161,4 @@ class MultipartParser
     private:
         MultipartParser() = default; // Prevent instantiation since this is a utility class
 };
-
 #endif

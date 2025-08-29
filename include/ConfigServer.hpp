@@ -11,18 +11,17 @@ using namespace std;
 class AconfigServ : public Aconfig
 {
     public:
-        //initialization
+        // Initialization
         AconfigServ() = default;
         AconfigServ(const AconfigServ &other);
         AconfigServ &operator=(const AconfigServ &other);
 
-        //getters
+        // Getters
         unordered_multimap<string, string> &getPortHost(void);
         vector<pair<string, Location>> &getLocations(void);
         string &getServerName(void);
         
     protected:
-        //values to be stored
         unordered_multimap<string, string> _portHost;
         vector<pair<string, Location>> _locations;
         string _serverName; // if not found acts as default
@@ -31,22 +30,22 @@ class AconfigServ : public Aconfig
 class ConfigServer : public AconfigServ
 {
     public:
-        //initialization
+        // Initialization
         ConfigServer();
         ConfigServer(const ConfigServer &other);
         virtual ~ConfigServer();
         ConfigServer &operator=(const ConfigServer &other);
 
-        //parsing logic
+        // Parsing logic
         bool listenHostname(string &line);
         bool serverName(string &line);
         string &getServerName(void);
 
-        //utils
+        // Utils
         void addLocation(const Location &location, string path);
         int getLineNbr(void) const;
 
-        //default setting
+        // Default setting
         void setDefaultConf(void);
 };
 #endif

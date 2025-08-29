@@ -1,8 +1,6 @@
-#include "RunServer.hpp"
-#include "ConfigServer.hpp"
 #include <cstring>
-
-// Constants for better readability
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
 namespace
 {
     const char *WHITESPACE_SEMICOLON = " \t\f\v\r;";
@@ -15,8 +13,6 @@ namespace
     const uint8_t DELETE_METHOD_BIT = 8;
     const uint8_t ALL_METHODS = HEAD_METHOD_BIT | GET_METHOD_BIT | POST_METHOD_BIT | DELETE_METHOD_BIT;
 }
-
-// Location class functions (in header order)
 
 Location::Location(const Location &other) : Alocation(other)
 {

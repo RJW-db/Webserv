@@ -7,7 +7,6 @@
 #include <chrono>
 #include <vector>
 #include <map>
-
 using namespace std;
 
 class FileDescriptor
@@ -32,7 +31,6 @@ class FileDescriptor
 	private:
 		static vector<int> _fds;
 		FileDescriptor() = delete;
-		// static std::vector<int>& getFds();
 };
 
 

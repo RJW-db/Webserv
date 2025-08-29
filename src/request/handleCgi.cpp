@@ -1,13 +1,11 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/wait.h>
-
+#include "ErrorCodeClientException.hpp"
+#include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Client.hpp"
-#include "ErrorCodeClientException.hpp"
-#include <HttpRequest.hpp>
 #include "Logger.hpp"
-
 namespace
 {
     constexpr int PARENT = 1;
@@ -26,7 +24,6 @@ namespace
     vector<string> createArgv(Client &client);
     vector<string> createEnvp(Client &client);
     vector<char *> convertToCharArray(const vector<string> &argvString);
-    void printVecArray(vector<char *> &args);
 }
 
 bool HttpRequest::handleCgi(Client &client, string &body)
@@ -280,11 +277,11 @@ namespace
         return argv;
     }
 
-    void printVecArray(vector<char *> &args)
-    {
-        for (auto it = args.begin(); it != args.end() && *it != NULL; ++it)
-        {
-            cerr << *it << endl; // optional debug output
-        }
-    }
+    // void printVecArray(vector<char *> &args)
+    // {
+    //     for (auto it = args.begin(); it != args.end() && *it != NULL; ++it)
+    //     {
+    //         cerr << *it << endl; // optional debug output
+    //     }
+    // }
 }

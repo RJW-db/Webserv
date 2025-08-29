@@ -37,7 +37,7 @@ using namespace std;
 class HttpRequest
 {
     public:
-        // --- Parsing ---
+        // Parsing
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
         static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static bool processHttpBody(Client &client);
@@ -51,30 +51,30 @@ class HttpRequest
         static void getContentLength(Client &client);
         static void getContentType(Client &client);
 
-        // --- Request Processing ---
+        // Request Processing
         static void	processRequest(Client &client);
         static bool checkAndRedirect(Client &client);
         static void redirectRequest(Client &client);
         static bool checkAndRunCgi(Client &client);
         static bool handleCgi(Client &client, string &body);
 
-        // --- HTTP Methods ---
+        // HTTP Methods
         static void processHead(Client &client);
         static void processGet(Client &client);
         static void processPost(Client &client);
         static void processDelete(Client &client);
         
-        // --- File Operations ---
+        // File Operations
         static void	GET(Client &client);
         static void	POST(Client &client);
         static void SendAutoIndex(Client &client);
         static void appendUuidToFilename(Client &client, string &filename);
 
-        // --- Response Generation ---
+        // Response Generation
         static string getMimeType(string &path);
         static string HttpResponse(Client &client, uint16_t code, string path, size_t fileSize);
 
-        // -- cgi response generation ---
+        // Cgi response generation
         static string createResponseCgi(Client &client, string &input);
         static map<string_view, string_view> parseCgiHeaders(const string &input, map<string_view,string_view> &headerfields, size_t headerSize);
         static void validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody);

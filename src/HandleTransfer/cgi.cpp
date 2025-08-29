@@ -1,20 +1,16 @@
-#include <HandleTransfer.hpp>
-#include "RunServer.hpp"
-#include "ErrorCodeClientException.hpp"
 #include <sys/epoll.h>
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "RunServer.hpp"
 #define CGI_DISCONNECT_TIME_SECONDS 30
-
-/* WriteToCgiTransfer */
 
 HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
 : HandleTransfer(client, fdWriteToCgi, HANDLE_WRITE_TO_CGI_TRANSFER), _bytesWrittenTotal(0)
 {
     _fileBuffer = body;
-    // _isCgi = writeToCgi;
     _handleType = HANDLE_WRITE_TO_CGI_TRANSFER;
     RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
-
 
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
@@ -22,7 +18,6 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     if (sent == -1)
     {
         _client._cgiClosing = true;
-        // return true;
         throw ErrorCodeClientException(_client, 500, "Writing to CGI failed");
     }
     else if (sent > 0)
@@ -38,13 +33,9 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     return false;
 }
 
-
-/* ReadFromCgiTransfer */
-
 HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi)
 : HandleTransfer(client, fdReadfromCgi, HANDLE_READ_FROM_CGI_TRANSFER)
 {
-    // _isCgi = writeToCgi;
     _handleType = HANDLE_READ_FROM_CGI_TRANSFER;
 }
 

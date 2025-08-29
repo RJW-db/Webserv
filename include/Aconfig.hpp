@@ -18,11 +18,11 @@ namespace
 class Aconfig
 {
     public:
-        //initialization
+        // Initialization
         virtual ~Aconfig() = default; // Ensures proper cleanup of derived classes
         Aconfig &operator=(const Aconfig &other);
         
-        //parsing logic
+        // Parsing
         bool root(string &line);
         bool error_page(string &line);
         bool ClientMaxBodysize(string &line);
@@ -30,7 +30,7 @@ class Aconfig
         bool autoIndex(string &line);
         bool returnRedirect(string &line);
 
-        //getters
+        // Getters
         size_t getClientMaxBodySize() const;
         string getRoot() const;
         int8_t getAutoIndex() const;
@@ -38,31 +38,30 @@ class Aconfig
         map<uint16_t, string> getErrorCodesWithPage() const;
         vector<string> getIndexPage() const;
         
-        //set default
+        // Set default
         void setDefaultErrorPages();
 
-        //utils
+        // utils
         void setLineNbr(int num);
 
     protected:
-        //initialization for inheriting classes
+        // Initialization for inheriting classes
         Aconfig();
         Aconfig(const Aconfig &other);
 
-        //stored variables
+        // Util functions
+        bool setErrorPage(string &line, bool &foundPage);
+        bool handleNearEndOfLine(string &line, size_t pos, string err);
+
         int8_t _autoIndex;
         size_t _clientMaxBodySize;
         string _root;
         pair<uint16_t, string> _returnRedirect;
         map<uint16_t, string> ErrorCodesWithPage;
         vector<string> _indexPage;
-
-        //util variables
         vector<uint16_t> ErrorCodesWithoutPage;
         int _lineNbr;
         
-        //util functions
-        bool setErrorPage(string &line, bool &foundPage);
-        bool handleNearEndOfLine(string &line, size_t pos, string err);
+
 };
 #endif

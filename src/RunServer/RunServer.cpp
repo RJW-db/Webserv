@@ -1,16 +1,15 @@
+#include <sys/wait.h>
+#include <signal.h>
 #include <thread>
+#include <array>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <signal.h>
-#include <sys/wait.h>
-#include <array>
-
-#include "RunServer.hpp"
 #include "ErrorCodeClientException.hpp"
-#include "HttpRequest.hpp"
 #include "FileDescriptor.hpp"
 #include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
 
 // Static member variables

@@ -94,3 +94,9 @@ readFromCgiTransfer moet de pid checken voor discconnect tijd, als over de tijd 
 
 
  RunServers::ClientException >> ErrorCodeClientException
+
+
+ client.hpp has to be cleaned up
+
+ #define FD_LIMIT 1024    needs too check for another solution
+ #define EPOLL_DEL_EVENTS 0  same problem

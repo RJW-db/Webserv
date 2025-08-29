@@ -1,13 +1,12 @@
+#include <netinet/in.h>   // sockaddr_in, ntohl, ntohs
+#include <sys/socket.h>   // socket functions, accept
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <netinet/in.h>   // sockaddr_in, ntohl, ntohs
-#include <sys/socket.h>   // socket functions, accept
-#include "RunServer.hpp"
-#include "HttpRequest.hpp"
-#include "Logger.hpp"
 #include "ErrorCodeClientException.hpp"
-
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Logger.hpp"
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
@@ -130,4 +129,3 @@ namespace
             to_string(bytes[3]);
     }
 }
-

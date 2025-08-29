@@ -1,10 +1,9 @@
-#include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <cstring>
-#include "RunServer.hpp"
-#include "HandleTransfer.hpp"
 #include "ErrorCodeClientException.hpp"
-
+#include "HandleTransfer.hpp"
+#include "RunServer.hpp"
 
 HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
 : HandleTransfer(client, -1, HANDLE_TO_CLIENT_TRANSFER)

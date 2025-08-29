@@ -1,14 +1,13 @@
-#include <HandleTransfer.hpp>
-#include "RunServer.hpp"
-#include "ErrorCodeClientException.hpp"
-#include <HttpRequest.hpp>
 #include <sys/epoll.h>
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
-
 namespace
 {
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
-    constexpr size_t TERMINATOR_SIZE = 4;    // for --\r\n
+    constexpr size_t TERMINATOR_SIZE = 4;   // for --\r\n
     constexpr int FILE_PERMISSIONS = 0700;
     constexpr uint16_t HTTP_CREATED = 201;
 }

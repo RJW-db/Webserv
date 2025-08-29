@@ -1,25 +1,23 @@
-#include <ServerListenFD.hpp>
-#include "RunServer.hpp"
-#include "Logger.hpp"
-#include <iostream>
-
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <arpa/inet.h>
+#include <iostream>
+#include <string.h>
 #include <cstring>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <poll.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h> // close
-#include <stdlib.h>	// callod
+#include <unistd.h>
+#include <stdlib.h>
+#include <poll.h>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
+#include "ServerListenFD.hpp"
+#include "RunServer.hpp"
+#include "Logger.hpp"
 
 ServerListenFD::ServerListenFD(const char *port, const char *hostName)
 : _port(port), _hostName(hostName)
@@ -92,5 +90,3 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 	freeaddrinfo(server);
 	Logger::logExit(ERROR, "Server error", '-', "Server bindToSocket: ", strerror(errno));
 }
-
-
