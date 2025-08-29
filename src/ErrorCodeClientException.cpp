@@ -38,20 +38,13 @@ void ErrorCodeClientException::handleErrorClient() const
             RunServers::cleanupClient(_client);
             return;
         }
-        map<uint16_t, std::string>::const_iterator it = _errorPages.find(_errorCode);
-        if (it == _errorPages.end())
+        map<uint16_t, std::string>::const_iterator errorPageIt = _errorPages.find(_errorCode);
+        if (errorPageIt == _errorPages.end())
         {
             handleDefaultErrorPage();
             return;
         }
-        int fd = open(it->second.c_str(), O_RDONLY);
-        if (fd == -1)
-        {
-            Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", it->second);
-            handleDefaultErrorPage();
-            return;
-        }
-        handleCustomErrorPage(it, fd);
+        handleCustomErrorPage(errorPageIt->second);
     }
     catch(const std::exception& e)
     {
@@ -67,15 +60,9 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     string body;
     _client._keepAlive = false;
     if (_errorCode == 400)
-    {
         body = ERR400;
-        message = HttpRequest::HttpResponse(_client, 400, ".html", body.size());
-    }
     else if (_errorCode == 500)
-    {
         body = ERR500;
-        message = HttpRequest::HttpResponse(_client, 500, ".html", body.size());
-    }
     else
     {
         body = "<html>\n"
@@ -85,18 +72,24 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
             "    <p>An error occurred (" + std::to_string(_errorCode) + ").</p>\n"
             "  </body>\n"
             "</html>";
-        message = HttpRequest::HttpResponse(_client, _errorCode, ".html", body.size());
     }
+    message = HttpRequest::HttpResponse(_client, _errorCode, ".html", body.size());
     message += body;
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, message);
     RunServers::insertHandleTransfer(move(handleClient));
 }
 
-void ErrorCodeClientException::handleCustomErrorPage(map<uint16_t, std::string>::const_iterator it, int fd) const
+void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath) const
 {
+    int fd = open(errorPagePath.c_str(), O_RDONLY);
+    if (fd == -1)
+    {
+        Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", errorPagePath);
+        handleDefaultErrorPage();
+        return;
+    }
     FileDescriptor::setFD(fd);
-    string errorPagePath = it->second;
-    size_t fileSize = getFileLength(errorPagePath.c_str());
+    size_t fileSize = getFileLength(_client, errorPagePath.c_str());
     _client._filenamePath = errorPagePath;
     string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);
     auto transfer = make_unique<HandleGetTransfer>(_client, fd, response, fileSize);

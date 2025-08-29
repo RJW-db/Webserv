@@ -21,9 +21,10 @@ void	 initRandomSeed();
  * 3fb17ebc-bc38-4939-bc8b-74f2443281d4
  * 8 dash 4 dash 4 dash 4 dash 12
  */
+class Client;
 void 	 generateUuid(char uuid[UUID_SIZE]);
 bool	 directoryCheck(string &path);
-size_t	 getFileLength(const string_view filename);
+size_t	 getFileLength(Client &client, const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
 void     throwTesting();

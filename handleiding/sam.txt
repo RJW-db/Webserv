@@ -2,25 +2,6 @@
 dingen die nog moeten worden geimplementeerd: upload_store, autoindex, return (redirect)
 zorgen dat voor chunked max_body_size wordt gechecked
 
-voor upload store implementeren voor post
-
-afhandeling sluiten cgi
-pid in client
-
-pid en disconnectTime in handle
-
-door handleCgi heen loopen om te kijken of cgi klaar is of tijd op
-
-als client disconnect door alle handleCgi heen loopen voor matchende pids en dan afsluiten pipes en verwijderen handle
-
-als pid klaar is door alle handleCgi heen loopen voor matchende pids en dan afsluiten pipes en verwijderen handle
-
-
-
-probleem als lange tijd tussen process beindiging en lezen van pipe kan process sluiten en handle read sluiten
-
-
-
 tests te maken
 
 get

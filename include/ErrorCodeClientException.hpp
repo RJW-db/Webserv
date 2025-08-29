@@ -29,7 +29,7 @@ private:
 
     //helper functions
     void handleDefaultErrorPage() const;
-    void handleCustomErrorPage(map<uint16_t, std::string>::const_iterator it, int fd) const;
+    void handleCustomErrorPage(const string &errorPagePath) const;
 public:
     // utility function
     const char *what() const throw();

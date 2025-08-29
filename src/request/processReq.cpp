@@ -81,10 +81,16 @@ void HttpRequest::GET(Client &client)
     // Logger::log(DEBUG, client._filenamePath); //testlog
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
-        throw RunServers::ClientException("open failed on file: " + client._filenamePath + ", because: " + string(strerror(errno)));
-
+    {
+        if (errno == EACCES)
+            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+        else if (errno == ENOENT)
+            throw ErrorCodeClientException(client, 404, "file not found: " + client._filenamePath);
+        else
+            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+    }
     FileDescriptor::setFD(fd);
-    size_t fileSize = getFileLength(client._filenamePath);
+    size_t fileSize = getFileLength(client, client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
     RunServers::insertHandleTransfer(move(handle));

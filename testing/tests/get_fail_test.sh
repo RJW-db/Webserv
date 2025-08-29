@@ -108,11 +108,11 @@ cmp -s expectedResults/get_fail/fail12.txt results/get_fail/fail12.txt && echo "
 cmp -s expectedResults/get_fail/fail13.txt results/get_fail/fail13.txt && echo "get_fail test 13 completed successfully" || echo "get_fail test 13 failed because there is difference in expected output"
 cmp -s expectedResults/get_fail/fail14.txt results/get_fail/fail14.txt && echo "get_fail test 14 completed successfully" || echo "get_fail test 14 failed because there is difference in expected output"
 
-echo ""
-echo "=== Summary ==="
-echo "These tests verify proper error handling for various malformed GET requests."
-echo "Expected responses: 400 (Bad Request), 405 (Method Not Allowed), 414 (URI Too Long), etc."
-echo "Check individual result files in results/get_fail/ for detailed responses."
+# echo ""
+# echo "=== Summary ==="
+# echo "These tests verify proper error handling for various malformed GET requests."
+# echo "Expected responses: 400 (Bad Request), 405 (Method Not Allowed), 414 (URI Too Long), etc."
+# echo "Check individual result files in results/get_fail/ for detailed responses."
 
 } > results/get_fail/summary.txt 2>&1
 

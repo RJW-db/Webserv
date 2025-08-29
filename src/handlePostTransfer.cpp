@@ -184,7 +184,6 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         _searchContentDisposition = true;
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);
-        _fd = -1;
         _foundBoundary = false;
         return RERUN_WITHOUT_READING;
     }
@@ -195,7 +194,6 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
     {
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);
-        _fd = -1;
         sendSuccessResponse();
         return FINISHED;
     }
@@ -259,10 +257,8 @@ void HandlePostTransfer::sendSuccessResponse()
 void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
 {
     if (_fd != -1)
-    {
         FileDescriptor::closeFD(_fd);
-        _fd = -1;
-    }
+
     for (const auto &filePath : _fileNamePaths)
     {
         if (remove(filePath.data()) != 0)

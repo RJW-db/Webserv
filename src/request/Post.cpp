@@ -28,22 +28,15 @@ void HttpRequest::getContentLength(Client &client)
 {
     auto contentLength = client._headerFields.find("Content-Length");
     if (contentLength == client._headerFields.end())
-        throw RunServers::ClientException("Broken POST request");
+        throw ErrorCodeClientException(client, 400, "Content-Length header not found");
 
     const string_view content = contentLength->second;
-    try
-    {
-        uint64_t value = stoullSafe(content);
-        if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
-            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
-        if (value == 0)
-            throw RunServers::ClientException("Content-Length cannot be zero.");
-        client._contentLength = static_cast<size_t>(value);
-    }
-    catch (const runtime_error &e)
-    {
-        throw RunServers::ClientException(e.what());
-    }
+    uint64_t value = stoullSafe(content);
+    if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
+        throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
+    if (value == 0)
+        throw ErrorCodeClientException(client, 400, "Content-Length cannot be zero.");
+    client._contentLength = static_cast<size_t>(value);
 }
 
 void HttpRequest::getContentType(Client &client)
@@ -62,10 +55,10 @@ void HttpRequest::getContentType(Client &client)
             if (boundaryPos != string_view::npos)
                 client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
-                throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
+                throw ErrorCodeClientException(client, 400, "Boundary not found in Content-Type header");
         }
         else
-            throw RunServers::ClientException("Malformed HTTP header line: " + string(ct));
+            throw ErrorCodeClientException(client, 400, "Malformed HTTP header line: " + string(ct));
     }
     else if (ct == "application/x-www-form-urlencoded")
         client._contentType = ct;
@@ -120,7 +113,7 @@ namespace
         const string contentDisposition = "Content-Disposition:";
         size_t cdPos = buff.find(contentDisposition);
         if (cdPos == string::npos)
-            throw RunServers::ClientException("Content-Disposition header not found in multipart body");
+            throw ErrorCodeClientException(client, 400, "Content-Disposition header not found in multipart body");
 
         size_t wsStart = cdPos + contentDisposition.size();
         size_t wsEnd = buff.find_first_not_of(" \t", wsStart);

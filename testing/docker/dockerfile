@@ -42,7 +42,7 @@ RUN echo '#!/bin/sh\nsiege -c1 -t1s http://$WEBSERV_HOST_IP:8080/' > /usr/local/
     chmod +x /usr/local/bin/get && \
     echo '#!/bin/sh\nsiege -c2 -t10s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls.txt' > /usr/local/bin/post && \
     chmod +x /usr/local/bin/post && \
-    echo '#!/bin/sh\nsiege -c111 -t10s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls8MB.txt' > /usr/local/bin/post2 && \
+    echo '#!/bin/sh\nsiege -c40 -t10s --content-type "multipart/form-data; boundary=boundary123" --file=/opt/postRequest/urls8MB.txt' > /usr/local/bin/post2 && \
     chmod +x /usr/local/bin/post2
 
 WORKDIR /opt/postRequest

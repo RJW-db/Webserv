@@ -60,17 +60,16 @@ bool directoryCheck(string &path)
     // return (false);
 }
 
-size_t getFileLength(const string_view filename)
+size_t getFileLength(Client &client, const string_view filename)
 {
     struct stat status;
     if (stat(filename.data(), &status) == -1)
     {
-        throw RunServers::ClientException("text");
+        throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "Couldn't get info because" + strerror(errno));
     }
 
     if (status.st_size < 0)
-        throw RunServers::ClientException("Invalid file size");
-
+        throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "invalid file size" + strerror(errno));
     return static_cast<size_t>(status.st_size);;
 }
 

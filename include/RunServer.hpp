@@ -96,24 +96,6 @@ class RunServers
             return _epfd;
         }
 
-        class ClientException : public exception
-		{
-            private:
-                string _message;
-			public:
-                explicit ClientException(const string &message) : _message(message) {}
-                virtual const char* what() const throw() {
-                    return _message.c_str();
-                }
-		};
-
-        class LengthRequiredException : public ClientException
-        {
-            public:
-                explicit LengthRequiredException(const std::string &message)
-                    : ClientException(message) {}
-        };
-
     private:
         // --- Server configuration ---
         static string _serverRootDir;
