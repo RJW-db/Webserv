@@ -1,10 +1,10 @@
-#include <RunServer.hpp> // escape_special_char   should be utils.hpp
+#include "RunServer.hpp" // escape_special_char   should be utils.hpp
 #include "Logger.hpp"
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <fcntl.h>
-// Static member definitions
+
 int Logger::_logFd = -1;
 
 void Logger::initialize(const string &logDir, const string &filename)
@@ -57,15 +57,15 @@ string Logger::getTimeStamp()
     if (currentDay != lastDay)
     {
         timeStamp << "\n--- " << ltm->tm_year + 1900 << '-'
-                  << setw(2) << setfill('0') << 1 + ltm->tm_mon << '-'
-                  << setw(2) << setfill('0') << ltm->tm_mday << " ---\n";
+                << setw(2) << setfill('0') << 1 + ltm->tm_mon << '-'
+                << setw(2) << setfill('0') << ltm->tm_mday << " ---\n";
         lastDay = currentDay;
     }
     
     // Just time for each log entry
     timeStamp << '[' << setw(2) << setfill('0') << ltm->tm_hour << ':'
-              << setw(2) << setfill('0') << ltm->tm_min << ':'
-              << setw(2) << setfill('0') << ltm->tm_sec << "] ";
+            << setw(2) << setfill('0') << ltm->tm_min << ':'
+            << setw(2) << setfill('0') << ltm->tm_sec << "] ";
     
     return timeStamp.str();
 }

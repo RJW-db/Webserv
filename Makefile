@@ -31,14 +31,14 @@ SRC_DIR			:=	src/
 
 MAIN			:=	main.cpp \
 					parsing/parsing.cpp		parsing/Aconfig.cpp			parsing/ConfigServer.cpp		parsing/Location.cpp						\
-					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp						\
-					request/parsingReq.cpp	request/processReq.cpp		request/response.cpp			request/validation.cpp	request/Post.cpp	\
-					HandleTransfer/cgi.cpp  HandleTransfer/chunk.cpp HandleTransfer/get.cpp HandleTransfer/post.cpp  HandleTransfer/toClient.cpp	\
+					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/serverListenFD.cpp	RunServer/clientConnection.cpp				\
+					RunServer/cleanup.cpp																											\
+					request/parsingReq.cpp	request/processReq.cpp		request/validation.cpp			request/Post.cpp							\
+					request/response.cpp	request/handleCgi.cpp																					\
+					HandleTransfer/get.cpp 	HandleTransfer/post.cpp		HandleTransfer/toClient.cpp		HandleTransfer/cgi.cpp						\
+					HandleTransfer/chunk.cpp																										\
 					utils.cpp		\
-					handleCgi.cpp	\
 					FileDescriptor.cpp	  Client.cpp			\
-					serverListenFD.cpp		\
-						loggingErrors.cpp								\
 					ErrorCodeClientException.cpp  Logger.cpp
 # PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
 

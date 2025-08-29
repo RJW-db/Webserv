@@ -1,19 +1,19 @@
 #ifndef ACONFIG_HPP
 #define ACONFIG_HPP
-
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
-#include <cstdint>
-
 using namespace std;
-    
-enum AUTOINDEX
+namespace
 {
-    autoIndexNotFound = -1,
-    autoIndexFalse = 0, 
-    autoIndexTrue = 1
-};
+    enum AUTOINDEX
+    {
+        autoIndexNotFound = -1,
+        autoIndexFalse = 0, 
+        autoIndexTrue = 1
+    };
+}
 
 class Aconfig
 {
@@ -65,5 +65,4 @@ class Aconfig
         bool setErrorPage(string &line, bool &foundPage);
         bool handleNearEndOfLine(string &line, size_t pos, string err);
 };
-
 #endif

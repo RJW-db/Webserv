@@ -1,82 +1,82 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
-
-#include <utils.hpp>
 #include <iostream>
-#include <fstream>
-#include <string>
+#include <unistd.h>
 #include <sstream>
 #include <cstring>
-#include <unistd.h>
+#include <fstream>
+#include <string>
 #include "Client.hpp"
-
+#include "utils.hpp"
 #ifndef TERMINAL_DEBUG
 # define TERMINAL_DEBUG true
 #endif
-
 using namespace std;
-constexpr char LOG_ERROR[] = "Logger error occurred\n";
-
-
-enum LogLevel : uint8_t
+namespace
 {
-    CHILD_INFO = 0, // cout
-    INFO       = 1, // cout
-    IWARN      = 2, // cerr
-    WARN       = 3, // cerr
-    ERROR      = 4, // cerr
-    FATAL      = 5, // cerr
-    DEBUG      = 6  // cerr
-};
-
-class Logger {
-private:
-    static int _logFd;
-
-    static string getTimeStamp();
-    static string logLevelToString(uint8_t level, bool useColors);
-
-    static inline string padRight(const string& s, size_t width)
+    constexpr char LOG_ERROR[] = "Logger error occurred\n";
+    
+    enum LogLevel : uint8_t
     {
-        return (s.size() < width) ? s + string(width - s.size(), ' ') : s;
-    }
-
-    // Left pad (for numbers, right-align)
-    static inline string padLeft(const string& s, size_t width)
-    {
-        return (s.size() < width) ? string(width - s.size(), ' ') + s : s;
-    }
-
-    template<typename T>
-    static string argToString(const T& arg);
-
-    template<typename Tuple, size_t... Is>
-    static string processArgsToString(const Tuple& tup, index_sequence<Is...>);
-
-    template<typename Tuple, size_t... Is>
-    static string processErrorArgsToString(const Tuple& tup, index_sequence<Is...>);
-public:
-    static void initialize(const string &logDir, const string &logFilename);
-    static string initLogDirectory(const string &logDir);
-
-
-    template<typename... Args>
-    static void log(uint8_t level, Args&&... args);
-
-    template<typename... Args>
-    static void logExit(uint8_t level, Args&&... args);
-
-    template<typename... Args>
-    static void log(uint8_t level, Client &client, Args&&... args);
-
-    class ErrorLogExit : public exception
-    {
-    public:
-        explicit ErrorLogExit() noexcept {}
-        const char *what() const noexcept override {
-            return "Exiting";
-        }
+        CHILD_INFO = 0, // cout
+        INFO       = 1, // cout
+        IWARN      = 2, // cerr
+        WARN       = 3, // cerr
+        ERROR      = 4, // cerr
+        FATAL      = 5, // cerr
+        DEBUG      = 6  // cerr
     };
+}
+
+class Logger
+{
+    public:
+        static void initialize(const string &logDir, const string &logFilename);
+        static string initLogDirectory(const string &logDir);
+
+        template<typename... Args>
+        static void log(uint8_t level, Args&&... args);
+
+        template<typename... Args>
+        static void logExit(uint8_t level, Args&&... args);
+
+        template<typename... Args>
+        static void log(uint8_t level, Client &client, Args&&... args);
+
+        class ErrorLogExit : public exception
+        {
+        public:
+            explicit ErrorLogExit() noexcept {}
+            const char *what() const noexcept override {
+                return "Exiting";
+            }
+        };
+
+    private:
+        static string getTimeStamp();
+        static string logLevelToString(uint8_t level, bool useColors);
+
+        static inline string padRight(const string& s, size_t width)
+        {
+            return (s.size() < width) ? s + string(width - s.size(), ' ') : s;
+        }
+
+        // Left pad (for numbers, right-align)
+        static inline string padLeft(const string& s, size_t width)
+        {
+            return (s.size() < width) ? string(width - s.size(), ' ') + s : s;
+        }
+
+        template<typename T>
+        static string argToString(const T& arg);
+
+        template<typename Tuple, size_t... Is>
+        static string processArgsToString(const Tuple& tup, index_sequence<Is...>);
+
+        template<typename Tuple, size_t... Is>
+        static string processErrorArgsToString(const Tuple& tup, index_sequence<Is...>);
+
+        static int _logFd;
 };
 
 // Helper to convert any type to string
@@ -94,10 +94,10 @@ string Logger::processArgsToString(const Tuple& tup, index_sequence<Is...>)
 {
     string out;
     ((out += (
-        Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // left-aligned message
-        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :   // right-aligned number/dash
+        Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) :       // left-aligned message
+        Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :         // right-aligned number/dash
         Is == 2 ? ':' + Logger::padRight(Logger::argToString(get<Is>(tup)), 14) : // left-aligned label/reason
-        Logger::argToString(get<Is>(tup))                                       // rest (no padding)
+        Logger::argToString(get<Is>(tup))                                         // rest (no padding)
     )), ...);
     return out;
 }
@@ -110,8 +110,8 @@ string Logger::processErrorArgsToString(const Tuple& tup, index_sequence<Is...>)
     ((out += (
         Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // message
         Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :   // number (right-aligned)
-        Is == 2 ? string(14, ' ') + Logger::argToString(get<Is>(tup)) :      // always 6 spaces before reason
-        Logger::argToString(get<Is>(tup))                                      // rest (no padding)
+        Is == 2 ? string(14, ' ') + Logger::argToString(get<Is>(tup)) :     // always 6 spaces before reason
+        Logger::argToString(get<Is>(tup))                                   // rest (no padding)
     )), ...);
     return out;
 }

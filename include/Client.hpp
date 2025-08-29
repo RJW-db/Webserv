@@ -1,29 +1,31 @@
 #ifndef CLIENT_HPP
-# define CLIENT_HPP
-#include <string>
+#define CLIENT_HPP
 #include <unordered_map>
 #include <string_view>
-
-#include <ConfigServer.hpp>
-#include <Location.hpp>
+#include <string>
 #include <chrono>
-
-enum HeaderParseState
+#include "ConfigServer.hpp"
+#include "Location.hpp"
+namespace
 {
-    HEADER_AWAITING = 0,
-    BODY_CHUNKED = 1,
-    BODY_AWAITING = 2,
-    REQUEST_READY = 3
-};
+    enum HeaderParseState : uint8_t
+    {
+        HEADER_AWAITING = 0,
+        BODY_CHUNKED = 1,
+        BODY_AWAITING = 2,
+        REQUEST_READY = 3
+    };
 
-enum HttpMethod : uint8_t
-{
-    METHOD_INVALID = 0,
-    METHOD_HEAD    = 1,
-    METHOD_GET     = 2,
-    METHOD_POST    = 4,
-    METHOD_DELETE  = 8
-};
+    enum HttpMethod : uint8_t
+    {
+        METHOD_INVALID = 0,
+        METHOD_HEAD = 1,
+        METHOD_GET = 2,
+        METHOD_POST = 4,
+        METHOD_DELETE = 8
+    };
+}
+
 
 class Client
 {
@@ -34,16 +36,16 @@ class Client
 
         void resetRequestState();
 
-		void setDisconnectTime(uint16_t disconectTimeSeconds)
-		{
-			_disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
-		};
-		void setDisconnectTimeCgi(uint16_t disconectTimeSeconds)
-		{
-			_disconnectTimeCgi = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
-		};
+        void setDisconnectTime(uint16_t disconectTimeSeconds)
+        {
+            _disconnectTime = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
+        };
+        void setDisconnectTimeCgi(uint16_t disconectTimeSeconds)
+        {
+            _disconnectTimeCgi = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
+        };
         // bool _finishedProcessClientRequest = false;
-		int _fd;
+        int _fd;
 
         unique_ptr<AconfigServ> _usedServer;
         pair<string, string> _ipPort;
@@ -51,7 +53,7 @@ class Client
         string_view _uploadPath;
         bool _isCgi = false;
 
-        int8_t _headerParseState;
+        uint8_t _headerParseState;
         string _header;
         string _body;
         string _method;
@@ -59,7 +61,7 @@ class Client
         string _requestPath;
         string _queryString;
         string _rootPath; // root + requestpath
-		string _filenamePath; // rootpath + filename
+        string _filenamePath; // rootpath + filename
         string _version;
         size_t _contentLength;
         size_t _bodyEnd;
@@ -79,28 +81,7 @@ class Client
 
 
         chrono::steady_clock::time_point _disconnectTime;
-		bool _keepAlive;
+        bool _keepAlive;
         unordered_map<string, string_view> _headerFields;
 };
-
-
-
-// Client &Client::operator=(const Client &other)
-// {
-//     if (this != &other)
-//     {
-//         _fd = other._fd;
-//         _usedServer = move(other._usedServer);
-//         _location = other._location;
-//         _headerParseState = other._headerParseState;
-//         _header = other._header;
-//         _body = other._body;
-//         _path = other._path;
-//         _method = other._method;
-//         _contentLength = other._contentLength;
-//         _headerFields = other._headerFields;
-//     }
-//     return *this;
-// }
-
 #endif

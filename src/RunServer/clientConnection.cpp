@@ -125,9 +125,9 @@ namespace
         bytes[3] = static_cast<unsigned char>(addr & 0xFF);
     
         return to_string(bytes[0]) + "." +
-               to_string(bytes[1]) + "." +
-               to_string(bytes[2]) + "." +
-               to_string(bytes[3]);
+            to_string(bytes[1]) + "." +
+            to_string(bytes[2]) + "." +
+            to_string(bytes[3]);
     }
 }
 

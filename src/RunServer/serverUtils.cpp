@@ -5,15 +5,11 @@
 #include <unordered_map>
 #include <limits.h> // PATH_MAX
 #include <filesystem> // std::filesystem::path
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <FileDescriptor.hpp>
-// #include <HttpRequest.hpp>
-// #include <iostream>
-// #include <FileDescriptor.hpp>
-// #include <HandleTransfer.hpp>
+#include "RunServer.hpp"
+#include "ErrorCodeClientException.hpp"
+#include "FileDescriptor.hpp"
 #include "Logger.hpp"
-#include <ConfigServer.hpp>
+#include "ConfigServer.hpp"
 #include <ServerListenFD.hpp>
 
 void RunServers::getExecutableDirectory()
@@ -59,7 +55,7 @@ void RunServers::epollInit(ServerList &servers)
     FileDescriptor::setFD(_epfd);
     Logger::log(INFO, "Epoll fd created", _epfd, "epollFD");
 
-	map<pair<const string, string>, int> listenersMade;
+    map<pair<const string, string>, int> listenersMade;
     for (auto &server : servers)
     {
         for (pair<const string, string> &hostPort : server->getPortHost())
@@ -140,11 +136,11 @@ void RunServers::setServerFromListener(Client &client)
 
 void    RunServers::setLocation(Client &client)
 {
-	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
-	{
-		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
+    for (pair<string, Location> &locationPair : client._usedServer->getLocations())
+    {
+        if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
-		{
+        {
             client._location = locationPair.second;
             return;
         }

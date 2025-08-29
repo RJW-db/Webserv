@@ -1,17 +1,3 @@
-// #include <chrono>
-// #include <ctime>
-// #include <iostream>
-// #include <arpa/inet.h>
-// #include <cstring>
-// #include <errno.h>
-// #include <fcntl.h>
-// #include <netdb.h>
-// #include <netinet/in.h>
-// #include <stdio.h>
-// #include <sys/socket.h>
-// #include <sys/types.h>
-// #include <stdlib.h>	// callod
-// #include <filesystem> // canonical()
 #include <thread>
 #ifdef __linux__
 # include <sys/epoll.h>

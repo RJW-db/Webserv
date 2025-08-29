@@ -1,13 +1,11 @@
 #ifndef CONFIGSERVER_HPP
 #define CONFIGSERVER_HPP
-
-#include <Location.hpp>
 #include <unordered_map>
+#include <cstdint>
 #include <string>
-#include <stdint.h>	// uint16_t, cstdint doesn't exist in std=98
 #include <memory>
 #include <vector>
-
+#include "Location.hpp"
 using namespace std;
 
 class AconfigServ : public Aconfig
@@ -50,12 +48,5 @@ class ConfigServer : public AconfigServ
 
         //default setting
         void setDefaultConf(void);
-
-        // map<uint16_t, string> ErrorCodesWithPage;
 };
-
-
-
-
-
 #endif

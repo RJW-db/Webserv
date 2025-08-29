@@ -1,31 +1,27 @@
 #ifndef PARSING_HPP
-# define PARSING_HPP
-
-#include <ConfigServer.hpp>
+#define PARSING_HPP
 #include <string>
 #include <vector>
+#include "ConfigServer.hpp"
 using namespace std;
 
 class Parsing
 {
-	public:
+    public:
     //initialization
-		Parsing(const char *input);
-		~Parsing() = default;
+        Parsing(const char *input);
+        ~Parsing() = default;
         
-
-
-		
-	private:
-		// Helper methods for better organization
-		void readConfigFile(const char *input);
+    private:
+        // Helper methods for better organization
+        void readConfigFile(const char *input);
 
         //parsing logic
         void processServerBlocks();
-		template <typename T>
-		    void readBlock(T &block, 
-			    const map<string, bool (T::*)(string&)> &cmds, 
-			    const map<string, bool (T::*)(string &)> &whileCmds);
+        template <typename T>
+            void readBlock(T &block, 
+                const map<string, bool (T::*)(string&)> &cmds, 
+                const map<string, bool (T::*)(string &)> &whileCmds);
 
         //checking correct syntax functions
         void ServerCheck();
@@ -39,23 +35,21 @@ class Parsing
 
 
         //line handling functions
-		template <typename T>
-		void skipLine(string &line, bool forceSkip, T &curConf, bool skipSpace);
+        template <typename T>
+        void skipLine(string &line, bool forceSkip, T &curConf, bool skipSpace);
 
         //stored variables
-		vector<ConfigServer> _configs;
+        vector<ConfigServer> _configs;
 
         //util variables
-		map<int, string> _lines;
-		bool _validSyntax;
+        map<int, string> _lines;
+        bool _validSyntax;
 
     public:
         // getters
-		vector<ConfigServer> &getConfigs();
+        vector<ConfigServer> &getConfigs();
 
         //utils
-		void printAll() const;
+        void printAll() const;
 };
-
-
 #endif

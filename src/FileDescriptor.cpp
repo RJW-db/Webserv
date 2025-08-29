@@ -35,16 +35,6 @@ void FileDescriptor::cleanupAllFD()
     }
 }
 
-void	FileDescriptor::setFD(int fd)
-{
-	// if (_fds.size() >= FD_LIMIT)
-	// {
-	// 	cerr << "File descriptor limit reached" << endl;
-	// 	return;
-	// }
-	_fds.push_back(fd);
-}
-
 void FileDescriptor::printAllFDs()
 {
     Logger::log(DEBUG, "Current tracked FDs (", _fds.size(), " total):");
@@ -62,7 +52,7 @@ bool	FileDescriptor::closeFD(int &fd)
         return true;
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
     if (it != _fds.end())
-	{
+    {
         // std::cerr << "closing fd " << fd << std::endl; //testcout
         if (safeCloseFD(fd) == false) // TODO EIO, how to resove for parent and child
             return false;
@@ -114,4 +104,3 @@ bool FileDescriptor::setNonBlocking(int sfd)
     }
     return true;
 }
-

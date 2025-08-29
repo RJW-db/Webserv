@@ -27,7 +27,7 @@
 using namespace std;
 
 extern volatile sig_atomic_t g_signal_status;
-// #include <FileDescriptor.hpp>
+// #include "FileDescriptor.hpp"
 class FileDescriptor;
 
 using ServerList = vector<unique_ptr<AconfigServ>>;
@@ -37,7 +37,7 @@ class RunServers
     public:
         // initialization
         static void   getExecutableDirectory();
-		static void   createServers(vector<ConfigServer> &configs);
+        static void   createServers(vector<ConfigServer> &configs);
         static void   setupEpoll();
         static void   epollInit(ServerList &servers);
         static void   addStdinToEpoll();
@@ -97,15 +97,15 @@ class RunServers
         }
 
         class ClientException : public exception
-		{
+        {
             private:
                 string _message;
-			public:
+            public:
                 explicit ClientException(const string &message) : _message(message) {}
                 virtual const char* what() const throw() {
                     return _message.c_str();
                 }
-		};
+        };
 
         class LengthRequiredException : public ClientException
         {

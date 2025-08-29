@@ -1,10 +1,9 @@
-#include <ConfigServer.hpp>
-#include <RunServer.hpp>
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
 
 ConfigServer::ConfigServer()
 {
-    
 }
 
 ConfigServer::ConfigServer(const ConfigServer &other) : AconfigServ(other)

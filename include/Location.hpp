@@ -1,33 +1,31 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
-
-#include <Aconfig.hpp>
 #include <string>
-
+#include "Aconfig.hpp"
 using namespace std;
 
 class Alocation : public Aconfig
 {
 	public:
-    //initialization
+    	// Initialization
 		Alocation &operator=(const Alocation &other);
 
-        //getters
+        // Getters
         uint8_t getAllowedMethods() const;
 		string getUploadStore() const;
 		vector<string> getExtension() const;
 		string getCgiPath() const;
 		string getPath() const;
 
-        //helper function
+        // helper function
         bool isCgiFile(string_view &filename) const;
 
 	protected:
-        //initialization for inheritance
+        // Initialization for inheritance
     	Alocation() = default;
 		Alocation(const Alocation &other);
 
-        //values to be stored
+        // Values to be stored
         uint8_t _allowedMethods = 0;
 		string _upload_store;
 		vector<string> _cgiExtension;
@@ -39,30 +37,29 @@ class Alocation : public Aconfig
 class Location : public Alocation
 {
 	public:
-        //initialization
+        // Initialization
 		Location() = default;
 		Location(string &path);
 		Location(const Location &other);
 		Location &operator=(const Location &other);
 		~Location() = default;
 
-        //getpath
+        // Getters
 		void getLocationPath(string &line);
 
-        //parsing logic
+        // Parsing logic
 		bool methods(string &line);
 		bool indexPage(string &line);
 		bool uploadStore(string &line);
 		bool cgiExtensions(string &line);
 		bool cgiPath(string &line);
 
-        //default setting
+        // Default setting
 		void SetDefaultLocation(Aconfig &curConf);
 
 
 	private:
-        //helper
+        // Helper
 		bool checkMethodEnd(bool &findColon, string &line);
 };
-
 #endif

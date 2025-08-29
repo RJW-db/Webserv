@@ -1,11 +1,15 @@
-#include <utils.hpp>
-#include <RunServer.hpp>
+#include <dirent.h>
 #include <cstring>
 #include <algorithm>
+#include "utils.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
 
-#include <dirent.h>
-static inline void insertUuidSegment(int8_t amount, char *uuidIndex);
+
+namespace
+{
+    void insertUuidSegment(int8_t amount, char *uuidIndex);
+}
 
 void initRandomSeed()
 {
@@ -15,32 +19,12 @@ void initRandomSeed()
     srand(static_cast<unsigned int>(seed));
 }
 
-void generateUuid(char uuid[UUID_SIZE])
-{
-    uuid[0] = '-';
-    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
-    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
-    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
-    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
-    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
-    uuid[UUID_SIZE - 1] = '\0';
-}
-
-static inline void insertUuidSegment(int8_t amount, char *uuidIndex)
-{
-    const char *hexCharacters = "0123456789abcdef";
-    int8_t i;
-    for (i = 0; i < amount; ++i) {
-        uuidIndex[i] = hexCharacters[rand() % 16];
-    }
-    uuidIndex[i] = '-';
-}
-
 bool directoryCheck(string &path)
 {
-	// std::cout << "\t" << path << std::endl;
+    // std::cout << "\t" << path << std::endl;
     DIR *d = opendir(path.c_str());	// path = rde-brui
-    if (d == NULL) {
+    if (d == NULL)
+    {
         perror("opendir");
         return false;
     }
@@ -64,9 +48,7 @@ size_t getFileLength(const string_view filename)
 {
     struct stat status;
     if (stat(filename.data(), &status) == -1)
-    {
         throw RunServers::ClientException("text");
-    }
 
     if (status.st_size < 0)
         throw RunServers::ClientException("Invalid file size");
@@ -77,13 +59,10 @@ size_t getFileLength(const string_view filename)
 uint64_t stoullSafe(string_view stringValue)
 {
     if (stringValue.empty())
-    {
         throw runtime_error("Given value is \"\"");
-    }
     if (all_of(stringValue.begin(), stringValue.end(), ::isdigit) == false)
-    {
         throw runtime_error("Given value contains non-digit characters: " + string(stringValue));
-    }
+
     unsigned long long value;
     try
     {
@@ -130,5 +109,29 @@ void throwTesting()
     {
         throw bad_alloc();
         // throw runtime_error("Throw test");
+    }
+}
+
+void generateUuid(char uuid[UUID_SIZE])
+{
+    uuid[0] = '-';
+    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
+    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
+    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
+    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
+    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
+    uuid[UUID_SIZE - 1] = '\0';
+}
+
+namespace
+{
+    inline void insertUuidSegment(int8_t amount, char *uuidIndex)
+    {
+        const char *hexCharacters = "0123456789abcdef";
+        int8_t i;
+        for (i = 0; i < amount; ++i) {
+            uuidIndex[i] = hexCharacters[rand() % 16];
+        }
+        uuidIndex[i] = '-';
     }
 }

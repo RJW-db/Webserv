@@ -1,21 +1,20 @@
 #ifndef HANDLETRANSFER_HPP
 #define HANDLETRANSFER_HPP
-
-#include <Logger.hpp>
-#include <Client.hpp>
-#include <Constants.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <FileDescriptor.hpp>
 #include <stdexcept>
 #include <string>
-
+#include "ErrorCodeClientException.hpp"
+#include "FileDescriptor.hpp"
+#include "Constants.hpp"
+#include "Logger.hpp"
+#include "Client.hpp"
 using namespace std;
 
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
 
-enum HandleTransferType {
+enum HandleTransferType
+{
     HANDLE_GET_TRANSFER = 1,
     HANDLE_POST_TRANSFER = 2,
     HANDLE_CHUNK_TRANSFER = 3,
@@ -24,7 +23,8 @@ enum HandleTransferType {
     HANDLE_TO_CLIENT_TRANSFER = 6
 };
 
-enum ValidationResult {
+enum ValidationResult
+{
     CONTINUE_READING = 0,
     FINISHED = 1,
     RERUN_WITHOUT_READING = 2
@@ -32,13 +32,13 @@ enum ValidationResult {
 
 class HandleTransfer
 {
-    public :
+    public:
         // Pure virtual functions for polymorphic behavior
-		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool postTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
-		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
+        virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool postTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
+        virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
         virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
         virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
         virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
@@ -50,13 +50,13 @@ class HandleTransfer
         size_t  _bytesReadTotal = 0;
         HandleTransferType _handleType;
 
-    protected :
+    protected:
         HandleTransfer(Client &client, int fd, HandleTransferType handleType) : _client(client), _fd(fd), _handleType(handleType) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
 {
-    public :
+    public:
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
         ~HandleGetTransfer() { FileDescriptor::closeFD(_fd); };
 
@@ -104,7 +104,7 @@ class HandlePostTransfer : public HandleTransfer
 
 class HandleChunkTransfer : public HandlePostTransfer
 {
-    public :
+    public:
         HandleChunkTransfer(Client &client);
 
         // Logic functions

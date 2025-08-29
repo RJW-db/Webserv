@@ -112,7 +112,7 @@ void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, stri
 }
 
 string HttpRequest::buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
-                                   const string &input, size_t headerSize, bool hasBody)
+                                const string &input, size_t headerSize, bool hasBody)
 {
     ostringstream response;
     response << "HTTP/1.1 " << headerFields.at("Status") << CRLF;

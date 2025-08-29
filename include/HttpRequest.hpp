@@ -1,10 +1,6 @@
+#ifndef HTTPREQUEST_HPP
+#define HTTPREQUEST_HPP
 #include <iostream>
-#include <FileDescriptor.hpp>
-#include <ConfigServer.hpp>
-
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-
 #include <unordered_set>
 #include <arpa/inet.h>
 #include <cstring>
@@ -21,24 +17,22 @@
 #include <unistd.h> // close
 #include <stdlib.h>	// callod
 #ifdef __linux__
-#include <sys/epoll.h>
+# include <sys/epoll.h>
 #endif
 #include <sys/socket.h>
-
 #include <dirent.h>
-
 #include <signal.h>
-
 #include <fstream>
 #include <sstream>
-#include <utils.hpp>
+#include "utils.hpp"
 #include <sys/stat.h>
-// #include <utils.hpp>
-#include <Client.hpp>
-
-using namespace std;
-
+#include "ErrorCodeClientException.hpp"
+#include "FileDescriptor.hpp"
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
 #include "Constants.hpp"
+#include "Client.hpp"
+using namespace std;
 
 class HttpRequest
 {
@@ -85,5 +79,6 @@ class HttpRequest
         static map<string_view, string_view> parseCgiHeaders(const string &input, map<string_view,string_view> &headerfields, size_t headerSize);
         static void validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody);
         static string buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
-                                   const string &input, size_t headerSize, bool hasBody);
+                                const string &input, size_t headerSize, bool hasBody);
 };
+#endif

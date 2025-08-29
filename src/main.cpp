@@ -1,40 +1,16 @@
 #include <sys/stat.h>
-#include <RunServer.hpp>
+#include "RunServer.hpp"
 #include <Parsing.hpp>
-#include <FileDescriptor.hpp>
-#include <Logger.hpp>
+#include "FileDescriptor.hpp"
+#include "Logger.hpp"
 
-constexpr char LOG_DIR[] = "log";
-constexpr char LOG[] = "webserv.log";
-constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 volatile sig_atomic_t g_signal_status = 0;
-
-
-// Helper to map signal numbers to names
-std::string signalName(int signum) {
-    static std::map<int, std::string> names = {
-        {SIGINT, "SIGINT"},
-        {SIGTERM, "SIGTERM"},
-        {SIGHUP, "SIGHUP"},
-        {SIGQUIT, "SIGQUIT"},
-        {SIGUSR1, "SIGUSR1"},
-        {SIGUSR2, "SIGUSR2"},
-        {SIGPIPE, "SIGPIPE"},
-        {SIGALRM, "SIGALRM"},
-        {SIGCHLD, "SIGCHLD"},
-        {SIGCONT, "SIGCONT"},
-        {SIGSTOP, "SIGSTOP"},
-        {SIGTSTP, "SIGTSTP"},
-        {SIGTTIN, "SIGTTIN"},
-        {SIGTTOU, "SIGTTOU"},
-        // Add more as needed
-    };
-    auto it = names.find(signum);
-    return it != names.end() ? it->second : "UNKNOWN";
-}
-
 namespace
 {
+    constexpr char LOG_DIR[] = "log";
+    constexpr char LOG[] = "webserv.log";
+    constexpr char DEFAULT_CONFIG[] = "config/default.conf";
+
     int  runWebServer(int argc, char *argv[]);
     void setupEnvironment();
     void setupSignalHandlers();
