@@ -61,7 +61,5 @@ class Aconfig
         vector<string> _indexPage;
         vector<uint16_t> ErrorCodesWithoutPage;
         int _lineNbr;
-        
-
 };
 #endif

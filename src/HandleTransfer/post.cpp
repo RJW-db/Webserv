@@ -1,8 +1,10 @@
 #include <sys/epoll.h>
+#include <fcntl.h>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 namespace
 {

@@ -1,4 +1,7 @@
+#include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
 namespace
 {
     void appendToHeader(Client &client, const char *buff, size_t receivedBytes);

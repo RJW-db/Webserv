@@ -4,6 +4,7 @@
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "RunServer.hpp"
+#include "Client.hpp"
 
 HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
 : HandleTransfer(client, -1, HANDLE_TO_CLIENT_TRANSFER)

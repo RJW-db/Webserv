@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fcntl.h>
 #ifdef __linux__
 # include <sys/epoll.h> // EPOLL_CTL_DEL

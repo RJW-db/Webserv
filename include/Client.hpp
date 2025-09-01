@@ -3,9 +3,10 @@
 #include <unordered_map>
 #include <string_view>
 #include <string>
+#include <memory>
 #include <chrono>
 #include "ConfigServer.hpp"
-#include "Location.hpp"
+using namespace std;
 namespace
 {
     enum HeaderParseState : uint8_t
@@ -41,8 +42,8 @@ class Client
         {
             _disconnectTimeCgi = chrono::steady_clock::now() + chrono::seconds(disconectTimeSeconds);
         };
-        int _fd;
 
+        int _fd;
         unique_ptr<AconfigServ> _usedServer;
         pair<string, string> _ipPort;
         Location _location;
@@ -72,9 +73,7 @@ class Client
         bool    _cgiClosing = false;
         chrono::steady_clock::time_point _disconnectTimeCgi;
 
-
         bool _isAutoIndex = false;
-
 
         chrono::steady_clock::time_point _disconnectTime;
         bool _keepAlive;

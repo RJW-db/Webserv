@@ -3,6 +3,7 @@
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 
 HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)

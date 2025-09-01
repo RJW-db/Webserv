@@ -5,6 +5,7 @@
 #include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 
 void RunServers::disconnectChecks()
@@ -28,9 +29,9 @@ void RunServers::disconnectChecks()
     }
 }
 
-vector<unique_ptr<HandleTransfer>>::iterator RunServers::cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, int clientfd)
+HandleTransferIter RunServers::cleanupHandleCgi(HandleTransferIter it, int clientfd)
 {
-    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    HandleTransferIter lastAfter = it;
     if (it != _handleCgi.begin())
         --it;
     while (it != _handleCgi.end())
@@ -94,9 +95,9 @@ void RunServers::checkCgiDisconnect()
     }
 }
 
-vector<unique_ptr<HandleTransfer>>::iterator RunServers::killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
+HandleTransferIter RunServers::killCgiPipes(HandleTransferIter it, pid_t pid)
 {
-    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    HandleTransferIter lastAfter = it;
     while (it != _handleCgi.end())
     {
         try

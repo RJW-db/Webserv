@@ -1,8 +1,11 @@
+#include <algorithm>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Client.hpp"
+#include "Logger.hpp"
 
 HandleChunkTransfer::HandleChunkTransfer(Client &client)
 : HandlePostTransfer(client, -1)

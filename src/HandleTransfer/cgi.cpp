@@ -2,7 +2,8 @@
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "RunServer.hpp"
-#define CGI_DISCONNECT_TIME_SECONDS 30
+#include "Constants.hpp"
+#include "Logger.hpp"
 
 HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
 : HandleTransfer(client, fdWriteToCgi, HANDLE_WRITE_TO_CGI_TRANSFER), _bytesWrittenTotal(0)

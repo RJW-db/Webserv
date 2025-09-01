@@ -1,25 +1,31 @@
 #include <sys/epoll.h>
+#include <fcntl.h>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "FileDescriptor.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
-#define ERR400 \
-"<html>\n\
-<head><title>400 Bad Request</title></head>\n\
-<body>\n\
-    <h1>400 Bad Request</h1>\n\
-    <p>Your browser sent a request that this server could not understand.</p>\n\
-</body>\n\
-</html>"
-#define ERR500 \
-"<html>\n\
-<head><title>500 Internal Server Error</title></head>\n\
-<body>\n\
-    <h1>500 Internal Server Error</h1>\n\
-    <p>The server encountered an internal error and was unable to complete your request.</p>\n\
-</body>\n\
-</html>"
+#include "Logger.hpp"
+namespace
+{
+    constexpr const char ERR400[] =
+    "<html>\n"
+    "<head><title>400 Bad Request</title></head>\n"
+    "<body>\n"
+    "    <h1>400 Bad Request</h1>\n"
+    "    <p>Your browser sent a request that this server could not understand.</p>\n"
+    "</body>\n"
+    "</html>";
+
+    constexpr const char ERR500[] =
+    "<html>\n"
+    "<head><title>500 Internal Server Error</title></head>\n"
+    "<body>\n"
+    "    <h1>500 Internal Server Error</h1>\n"
+    "    <p>The server encountered an internal error and was unable to complete your request.</p>\n"
+    "</body>\n"
+    "</html>";
+}
 
 ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message)
 : _client(client), _errorCode(static_cast<uint16_t>(errorCode)), _message(message)

@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 #include <algorithm>
 #include <dirent.h>
 #include <cstring>

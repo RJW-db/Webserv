@@ -1,9 +1,7 @@
 #ifndef CONFIGSERVER_HPP
 #define CONFIGSERVER_HPP
 #include <unordered_map>
-#include <cstdint>
 #include <string>
-#include <memory>
 #include <vector>
 #include "Location.hpp"
 using namespace std;

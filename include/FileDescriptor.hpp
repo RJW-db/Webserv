@@ -1,12 +1,6 @@
 #ifndef FILEDESCRIPTOR
 #define FILEDESCRIPTOR
-#include <algorithm>
-#include <unistd.h>
-#include <iostream>
-#include <cstdint>
-#include <chrono>
 #include <vector>
-#include <map>
 using namespace std;
 
 class FileDescriptor
@@ -32,6 +26,4 @@ class FileDescriptor
 		static vector<int> _fds;
 		FileDescriptor() = delete;
 };
-
-
 #endif

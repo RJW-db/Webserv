@@ -1,4 +1,5 @@
 #include <sys/wait.h>
+#include <algorithm>
 #include <signal.h>
 #include <thread>
 #include <array>
@@ -10,6 +11,7 @@
 #include "HandleTransfer.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 
 // Static member variables

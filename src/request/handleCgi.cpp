@@ -1,9 +1,11 @@
-#include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Client.hpp"
 #include "Logger.hpp"
 namespace

@@ -1,17 +1,17 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 #include <signal.h>
+#include <memory>
 #include "HandleTransfer.hpp"
 #include "ConfigServer.hpp"
-#include "Client.hpp"
-#define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
-
+#define _XOPEN_SOURCE 700  // VSC related, make signal and struct visible
 #define FD_LIMIT 1024
 #define EPOLL_DEL_EVENTS 0
 using namespace std;
-extern volatile sig_atomic_t g_signal_status;
-class FileDescriptor;
 using ServerList = vector<unique_ptr<AconfigServ>>;
+using HandleTransferIter = std::vector<std::unique_ptr<HandleTransfer>>::iterator;
+extern volatile sig_atomic_t g_signal_status;
+class Client;
 
 class RunServers
 {
@@ -53,8 +53,8 @@ class RunServers
         static void   closeHandles(pid_t pid);
         static void   clientHttpCleanup(Client &client);
         static void   cleanupClient(Client &client);
-        static vector<std::unique_ptr<HandleTransfer>>::iterator   cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, int clientFD);
-        static vector<std::unique_ptr<HandleTransfer>>::iterator   killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
+        static HandleTransferIter cleanupHandleCgi(HandleTransferIter it, int clientFD);
+        static HandleTransferIter killCgiPipes(HandleTransferIter it, pid_t pid);
 
         static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle) {
             _handle.push_back(move(handle));

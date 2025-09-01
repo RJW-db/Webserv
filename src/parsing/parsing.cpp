@@ -1,3 +1,4 @@
+#include <map>
 #include "ConfigServer.hpp"
 #include "Parsing.hpp"
 #include "Logger.hpp"

@@ -6,6 +6,7 @@
 #include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB

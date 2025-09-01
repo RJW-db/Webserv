@@ -1,12 +1,9 @@
 #ifndef ERRORCODECLIENTEXCEPTION_HPP
 #define ERRORCODECLIENTEXCEPTION_HPP
 #include <string>
-#include <fcntl.h>
 #include <map>
-#include "Client.hpp"
-#include "Logger.hpp"
-#include "utils.hpp"
 using namespace std;
+class Client;
 
 class ErrorCodeClientException
 {

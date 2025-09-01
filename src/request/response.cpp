@@ -1,4 +1,8 @@
+#include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "Logger.hpp"
 
 string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
 {
