@@ -26,10 +26,9 @@ void HttpRequest::getContentLength(Client &client)
     if (contentLength == client._headerFields.end())
         throw RunServers::ClientException("Broken POST request");
 
-    const string_view content = contentLength->second;
     try
     {
-        uint64_t value = stoullSafe(content);
+        uint64_t value = stoullSafe(contentLength->second);
         if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
             throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
         if (value == 0)
@@ -47,7 +46,7 @@ void HttpRequest::getContentType(Client &client)
     auto it = client._headerFields.find("Content-Type");
     if (it == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
-    const string_view ct = it->second;
+    const string_view ct(it->second);
     if (ct.find("multipart/form-data") == 0)
     {
         size_t semi = ct.find(';');

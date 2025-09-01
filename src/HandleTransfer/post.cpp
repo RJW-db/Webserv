@@ -232,9 +232,8 @@ bool HandlePostTransfer::handlePostCgi()
 void HandlePostTransfer::sendSuccessResponse()
 {
     size_t absolutePathSize = RunServers::getServerRootDir().size();
-    // string_view test(_client._filenamePath.data() + absolutePathSize);
-    // string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
-    string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
+    string_view relativeView(_client._filenamePath.data() + absolutePathSize, _client._filenamePath.size() - absolutePathSize);
+    string relativePath = "." + string(relativeView) + '\n';
     string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
     
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, headers);

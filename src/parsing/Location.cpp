@@ -234,7 +234,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 bool Alocation::isCgiFile(string_view &filename) const
 {
     size_t extensionPos = filename.find_last_of('.');
-    string_view fileExtension = filename.data() + extensionPos;
+    string_view fileExtension(filename.data() + extensionPos);
     for(const string &cgiExtension : _cgiExtension)
     {
         if (filename == cgiExtension || fileExtension == cgiExtension)

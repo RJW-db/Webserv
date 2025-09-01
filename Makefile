@@ -13,8 +13,8 @@ CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
 CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
-CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+# CCPFLAGS		+=	-g
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 
@@ -33,22 +33,18 @@ DOCKER_DIR		:=	testing/docker
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp \
-					parsing/parsing.cpp		parsing/Aconfig.cpp			parsing/ConfigServer.cpp		parsing/Location.cpp						\
-					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/serverListenFD.cpp	RunServer/clientConnection.cpp				\
-					RunServer/cleanup.cpp																											\
-					request/parsingReq.cpp	request/processReq.cpp		request/validation.cpp			request/Post.cpp							\
-					request/response.cpp	request/handleCgi.cpp																					\
-					HandleTransfer/get.cpp 	HandleTransfer/post.cpp		HandleTransfer/toClient.cpp		HandleTransfer/cgi.cpp						\
-					HandleTransfer/chunk.cpp																										\
-					utils.cpp		\
-					FileDescriptor.cpp	  Client.cpp			\
-					ErrorCodeClientException.cpp  Logger.cpp
-# PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
+MAIN			:=	main.cpp
+PARSE			:=	parsing.cpp		Aconfig.cpp			ConfigServer.cpp		Location.cpp
+RUNSERVER		:=	RunServer.cpp	serverUtils.cpp		serverListenFD.cpp		cleanup.cpp   	clientConnection.cpp
+REQUEST			:=	parsingReq.cpp	processReq.cpp		validation.cpp			Post.cpp		response.cpp			handleCgi.cpp
+TRANSFER		:=	get.cpp 		post.cpp			toClient.cpp			cgi.cpp			chunk.cpp
+MISC			:=	utils.cpp		Client.cpp			FileDescriptor.cpp		Logger.cpp		ErrorCodeClientException.cpp
+
+SRC_ALL			:=	$(MAIN) $(addprefix parsing/, $(PARSE))		$(addprefix RunServer/, $(RUNSERVER))	$(addprefix request/, $(REQUEST))	\
+					$(addprefix HandleTransfer/, $(TRANSFER))	$(MISC)
 
 #		Find all .c files in the specified directories
-SRCP			:=	$(addprefix $(SRC_DIR), $(MAIN))
-# $(addprefix $(SRC_DIR)parsing/, $(PARSE))
+SRCP			:=	$(addprefix $(SRC_DIR), $(SRC_ALL))
 
 #		Generate object file names
 OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
@@ -61,8 +57,8 @@ INCLUDE			:=	-I $(INCD)
 BUILD			:=	$(COMPILER) $(INCLUDE) $(CCPFLAGS)
 
 #		Remove these created files
-DELETE			:=	*.out			**/*.out			.DS_Store												\
-					**/.DS_Store	.dSYM/				**/.dSYM/
+DELETE			:=	*.out			**/*.out		.DS_Store	\
+					**/.DS_Store	.dSYM/			**/.dSYM/
 
 #		RECIPES
 all:	$(NAME)
