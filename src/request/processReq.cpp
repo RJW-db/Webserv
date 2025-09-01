@@ -128,7 +128,7 @@ void HttpRequest::processPost(Client &client)
     switch (client._headerParseState)
     {
         case REQUEST_READY:
-            processHttpBody(client);
+            POST(client);
             break;
         case BODY_CHUNKED:
         {

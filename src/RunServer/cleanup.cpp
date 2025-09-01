@@ -63,7 +63,7 @@ void RunServers::checkCgiDisconnect()
         //     // it = _handleCgi.erase(it);
         //     continue ;
         // }
-        // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
+        // cout << "_handleType " << +((*it)->_handleType) << endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
 
         if (result == 0)
@@ -127,7 +127,7 @@ HandleTransferIter RunServers::killCgiPipes(HandleTransferIter it, pid_t pid)
             e.handleErrorClient();
             return cleanupHandleCgi(it, pid);
         }
-        catch (const std::exception& e)
+        catch (const exception& e)
         {
             Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
             cleanupClient((*it)->_client);
@@ -160,7 +160,7 @@ void RunServers::checkClientDisconnects()
             }
         }
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
         Logger::log(ERROR, "Server error", '-', "Exception in checkClientDisconnects: ", e.what());
     }

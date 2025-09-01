@@ -38,7 +38,6 @@ class Location : public Alocation
 	public:
         // Initialization
 		Location() = default;
-		Location(string &path);
 		Location(const Location &other);
 		Location &operator=(const Location &other);
 		~Location() = default;

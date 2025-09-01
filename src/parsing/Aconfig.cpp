@@ -250,7 +250,7 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
     size_t nameLen = line.find_first_of(INVALID_PATH_CHARS);
     if (nameLen == string::npos)
         nameLen = line.length();
-    else if (string(WHITESPACE_SEMICOLON).find(line[nameLen]) == std::string::npos)
+    else if (string(WHITESPACE_SEMICOLON).find(line[nameLen]) == string::npos)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: invalid character found after error_page");
 
     string error_page = line.substr(0, nameLen);

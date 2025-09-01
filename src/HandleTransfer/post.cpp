@@ -195,7 +195,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
     }
     if (_fileBuffer.size() > TERMINATOR_SIZE)
     {
-        std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
+        cout << "filebuffer is after: " << _fileBuffer << endl; //testcout
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     }
     return CONTINUE_READING;

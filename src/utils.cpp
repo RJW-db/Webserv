@@ -12,7 +12,7 @@ namespace
 
 void initRandomSeed()
 {
-    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
     if (seed <= 0)
         throw runtime_error(string("Server epoll_wait: ") + strerror(errno));
     srand(static_cast<unsigned int>(seed));
@@ -20,7 +20,7 @@ void initRandomSeed()
 
 bool directoryCheck(string &path)
 {
-    // std::cout << "\t" << path << std::endl;
+    // cout << "\t" << path << endl;
     DIR *d = opendir(path.c_str());	// path = rde-brui
     if (d == NULL)
     {

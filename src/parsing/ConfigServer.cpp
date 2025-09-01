@@ -40,7 +40,7 @@ bool ConfigServer::listenHostname(string &line)
     }
     else
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid character found after hostname - '", line, "'");
-    uint16_t port = static_cast<uint16_t>(std::stoul(line, &index));
+    uint16_t port = static_cast<uint16_t>(stoul(line, &index));
     if (port == 0)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid port entered for listen should be between 1 and 65535: ", +port);
     string strPort = line.substr(0, index);

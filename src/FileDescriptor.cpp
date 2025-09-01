@@ -18,7 +18,7 @@ void FileDescriptor::setFD(int fd)
     {
         _fds.push_back(fd);
     }
-    catch (const std::bad_alloc& e)
+    catch (const bad_alloc& e)
     {
         safeCloseFD(fd);
         Logger::logExit(ERROR, "setFD failed while adding FD:", fd, e.what());

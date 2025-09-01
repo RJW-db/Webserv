@@ -5,21 +5,21 @@
 using namespace std;
 // int main()
 // {
-// 	std::string str = "Hello, World!";
-// 	std::string_view view = str.substr(0, 5); // Extract "Hello"
-// 	std::cout << view << std::endl;
+// 	string str = "Hello, World!";
+// 	string_view view = str.substr(0, 5); // Extract "Hello"
+// 	cout << view << endl;
 // 	str.clear(); // Clear the original string
-// 	std::cout << view << std::endl; // Still valid, prints "Hello"
+// 	cout << view << endl; // Still valid, prints "Hello"
 // 	return 0;
 // }
 
 // int main()
 // {
-// 	std::string str = "Hello, World!";
-// 	std::string_view view(str.data(), 5);
-// 	std::cout << view << std::endl;
+// 	string str = "Hello, World!";
+// 	string_view view(str.data(), 5);
+// 	cout << view << endl;
 // 	str.clear(); // Clear the original string
-// 	std::cout << view << std::endl; // view is freed, reading from it is undefined behavior
+// 	cout << view << endl; // view is freed, reading from it is undefined behavior
 // 	return 0;
 // }
 
@@ -100,7 +100,7 @@ static inline void insertUuidSegment(int8_t amount, char *buffIndex)
 
 void initRandomSeed()
 {
-    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
     if (seed <= 0)
     srand(static_cast<unsigned int>(seed));
 }
@@ -126,6 +126,6 @@ int main(void)
     generateUuid(uuid);
     printf("%s\n", uuid);
 
-    std::cout << getExecutableDirectory() << std::endl; //testcout
+    cout << getExecutableDirectory() << endl; //testcout
     return 0;
 }

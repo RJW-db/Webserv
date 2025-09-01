@@ -34,12 +34,12 @@ void RunServers::acceptConnection(const int listener)
         if (addFdToEpoll(infd) == false)
             break;
 
-        _clients[infd] = std::make_unique<Client>(infd);
+        _clients[infd] = make_unique<Client>(infd);
         setClientServerAddress(*_clients[infd], infd);
 
         Logger::log(INFO, *_clients[infd], 
             "Connected on: " + NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)) + 
-            ":" + std::to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
+            ":" + to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
 
         _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }

@@ -27,7 +27,7 @@ namespace
     "</html>";
 }
 
-ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message)
+ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const string &message)
 : _client(client), _errorCode(static_cast<uint16_t>(errorCode)), _message(message)
 {
     _errorPages = client._location.getErrorCodesWithPage();
@@ -44,7 +44,7 @@ void ErrorCodeClientException::handleErrorClient() const
             RunServers::cleanupClient(_client);
             return;
         }
-        map<uint16_t, std::string>::const_iterator it = _errorPages.find(_errorCode);
+        map<uint16_t, string>::const_iterator it = _errorPages.find(_errorCode);
         if (it == _errorPages.end())
         {
             handleDefaultErrorPage();
@@ -59,7 +59,7 @@ void ErrorCodeClientException::handleErrorClient() const
         }
         handleCustomErrorPage(it, fd);
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
         RunServers::cleanupClient(_client);
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
@@ -85,10 +85,10 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     else
     {
         body = "<html>\n"
-            "  <head><title>" + std::to_string(_errorCode) + " Error</title></head>\n"
+            "  <head><title>" + to_string(_errorCode) + " Error</title></head>\n"
             "  <body>\n"
-            "    <h1>" + std::to_string(_errorCode) + " Error</h1>\n"
-            "    <p>An error occurred (" + std::to_string(_errorCode) + ").</p>\n"
+            "    <h1>" + to_string(_errorCode) + " Error</h1>\n"
+            "    <p>An error occurred (" + to_string(_errorCode) + ").</p>\n"
             "  </body>\n"
             "</html>";
         message = HttpRequest::HttpResponse(_client, _errorCode, ".html", body.size());
@@ -98,7 +98,7 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     RunServers::insertHandleTransfer(move(handleClient));
 }
 
-void ErrorCodeClientException::handleCustomErrorPage(map<uint16_t, std::string>::const_iterator it, int fd) const
+void ErrorCodeClientException::handleCustomErrorPage(map<uint16_t, string>::const_iterator it, int fd) const
 {
     FileDescriptor::setFD(fd);
     string errorPagePath = it->second;

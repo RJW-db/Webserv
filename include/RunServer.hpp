@@ -10,7 +10,7 @@
 #endif
 using namespace std;
 using ServerList = vector<unique_ptr<AconfigServ>>;
-using HandleTransferIter = std::vector<std::unique_ptr<HandleTransfer>>::iterator;
+using HandleTransferIter = vector<unique_ptr<HandleTransfer>>::iterator;
 extern volatile sig_atomic_t g_signal_status;
 class Client;
 
@@ -87,7 +87,7 @@ class RunServers
         class LengthRequiredException : public ClientException
         {
             public:
-                explicit LengthRequiredException(const std::string &message)
+                explicit LengthRequiredException(const string &message)
                     : ClientException(message) {}
         };
 

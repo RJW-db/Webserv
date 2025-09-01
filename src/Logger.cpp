@@ -17,10 +17,8 @@ void Logger::initialize(const string &logDir, const string &filename)
 
     _logFd = open(absoluteFilePath.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (_logFd == -1)
-    {
         Logger::logExit(ERROR, "Log file error", '-', strerror(errno), ' ', absoluteFilePath);
-    }
-    std::cout << "Log file descriptor: " << _logFd << std::endl; //testcout
+
     FileDescriptor::setFD(_logFd);
     log(INFO, "Log file initialized", _logFd, "logFD", absoluteFilePath);
 }
@@ -30,10 +28,10 @@ string Logger::initLogDirectory(const string &logDir)
     string absolutePath = RunServers::getServerRootDir() + '/' + logDir;
     try
     {
-        if (!std::filesystem::exists(absolutePath))
-            std::filesystem::create_directory(absolutePath);
+        if (!filesystem::exists(absolutePath))
+            filesystem::create_directory(absolutePath);
     }
-    catch (const std::filesystem::filesystem_error &e)
+    catch (const filesystem::filesystem_error &e)
     {
         Logger::logExit(ERROR, "Log dir error", '-', "Filesystem error", absolutePath, " Details: ", e.what());
     }
@@ -44,7 +42,7 @@ string Logger::getTimeStamp()
 {
     time_t now = time(0);
     if (now == -1)
-        throw runtime_error("std::time failed");
+        throw runtime_error("time failed");
 
     tm *ltm = localtime(&now);
     

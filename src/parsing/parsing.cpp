@@ -115,7 +115,7 @@ void Parsing::ServerCheck()
     {
         line.erase(0, 1);
         skipLine(line, false, curConf, false);
-        const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
+        const map<string, bool (ConfigServer::*)(string &)> cmds = {
             {"listen", &ConfigServer::listenHostname},
             {"root", &ConfigServer::root},
             {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
@@ -195,7 +195,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 template <typename T>
 void Parsing::LocationCheck(string &line, T &block)
 {
-    if constexpr (std::is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
+    if constexpr (is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
     {
         Location location;
         location.setLineNbr(_lines.begin()->first);
@@ -311,7 +311,7 @@ namespace {
      */
     void validateWhitespaceAfterCommand(const string &line, const char *whitespaceChars, int lineNumber)
     {
-        if (line.empty() || string(whitespaceChars).find(line[0]) == std::string::npos)
+        if (line.empty() || string(whitespaceChars).find(line[0]) == string::npos)
             Logger::logExit(ERROR, "Config error at line", lineNumber, "Missing whitespace after command - '", line, "'");
     }
 }

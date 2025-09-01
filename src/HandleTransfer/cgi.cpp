@@ -42,7 +42,7 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
-    std::vector<char> buff(1024 * 1024);
+    vector<char> buff(PIPE_BUFFER_SIZE);
     
     ssize_t bytesRead = read(_fd, buff.data(), buff.size());
     if (bytesRead == -1)

@@ -11,17 +11,13 @@ namespace
     void validateMultipartContentType(Client &client, const string &buff, const string &filename);
 }
 
-bool HttpRequest::processHttpBody(Client &client)
+void HttpRequest::POST(Client &client)
 {
     HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
-    if (handle->postTransfer(false) == true)
-    {
-        return false;
-    }
-    RunServers::insertHandleTransfer(move(handle));
-    return true;
+    if (handle->postTransfer(false) == false)
+        RunServers::insertHandleTransfer(move(handle));
 }
 
 void HttpRequest::getContentLength(Client &client)

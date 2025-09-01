@@ -40,8 +40,6 @@ void RunServers::runServers()
         int eventCount;
 
         disconnectChecks();
-        if (g_signal_status == 0)
-            break;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
 
         if (eventCount == -1)
@@ -108,14 +106,14 @@ bool RunServers::handleEpollStdinEvents()
 {
     char buffer[1024];
     ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
-    if (bytesRead > 0)
+    if (bytesRead == -1)
+        Logger::log(IWARN, "Reading from stdin failed: ", strerror(errno));
+    else if (bytesRead > 0)
     {
         buffer[bytesRead] = '\0';
-    }
-    int snooze = stoi(buffer, nullptr, 16); //TODO not protectect
-    if (snooze > 0 && snooze < 20)
-    {
-        this_thread::sleep_for(chrono::seconds(snooze));
+        int snooze = stoi(buffer, nullptr, 10);
+        if (snooze > 0 && snooze < 20)
+            this_thread::sleep_for(chrono::seconds(snooze));
     }
     return true;
 }

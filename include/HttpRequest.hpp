@@ -12,13 +12,12 @@ class HttpRequest
     public:
         // Parsing
         static bool parseHttpHeader(Client &client, const char *buff, size_t receivedBytes);
-        static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
-        static bool processHttpBody(Client &client);
         static inline bool appendToBody(Client &client, const char *buff, size_t receivedBytes)
         {
             client._body.append(buff, receivedBytes);
             return (true);
         }
+        static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static void validateHEAD(Client &client);
         static void	getBodyInfo(Client &client, const string buff);
         static void getContentLength(Client &client);
@@ -39,7 +38,7 @@ class HttpRequest
         
         // File Operations
         static void	GET(Client &client);
-        static void	POST(Client &client);
+        static void POST(Client &client);
         static void SendAutoIndex(Client &client);
         static void appendUuidToFilename(Client &client, string &filename);
 

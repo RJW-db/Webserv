@@ -48,7 +48,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     if (client._pid == -1)
     {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
-        std::exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     if (client._pid == CHILD)
@@ -119,7 +119,7 @@ namespace
         {
             Logger::log(ERROR, "CGI error", '-', "ErrorCodeClientException in parent process: ", e.what());
         }
-        catch (const std::exception& e)
+        catch (const exception& e)
         {
             Logger::log(ERROR, "CGI error", '-', "Exception in parent process: ", e.what());
         }
@@ -142,7 +142,7 @@ namespace
      */
     bool setPipeBufferSize(int pipeFd)
     {
-        const size_t pipeSize = 500 * 1024; // 500 KB
+        const size_t pipeSize = PIPE_BUFFER_SIZE; // 512 KB
 
         if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
         {
@@ -182,7 +182,7 @@ namespace
             execve(filePath, argv.data(), envp.data());
             Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
         }
-        catch (const std::exception &e)
+        catch (const exception &e)
         {
             Logger::log(ERROR, "CGI error", '-', "Exception in child process: ", e.what());
         }
@@ -192,7 +192,7 @@ namespace
         }
         FileDescriptor::safeCloseFD(STDIN_FILENO);
         FileDescriptor::safeCloseFD(STDOUT_FILENO);
-        std::exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     void setupChildPipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
@@ -200,13 +200,13 @@ namespace
         if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1)
         {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
-            std::exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
         if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1)
         {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
             close(STDIN_FILENO);
-            std::exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
     }
 

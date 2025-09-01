@@ -9,11 +9,10 @@ class ErrorCodeClientException
 {
     public:
         // Initialization
-        explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
+        explicit ErrorCodeClientException(Client &client, int errorCode, const string &message);
 
         //handle error page
         void handleErrorClient() const;
-
 
     private:
         //variables
@@ -24,7 +23,8 @@ class ErrorCodeClientException
 
         //helper functions
         void handleDefaultErrorPage() const;
-        void handleCustomErrorPage(map<uint16_t, std::string>::const_iterator it, int fd) const;
+        void handleCustomErrorPage(map<uint16_t, string>::const_iterator it, int fd) const;
+
     public:
         // utility function
         const char *what() const throw();
