@@ -1,20 +1,17 @@
+
+#include <unordered_map>
+#include <sys/wait.h>
+#include <filesystem> // filesystem::path
+#include <limits.h>   // PATH_MAX
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <sys/wait.h>
-#include <unordered_map>
-#include <limits.h> // PATH_MAX
-#include <filesystem> // std::filesystem::path
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <FileDescriptor.hpp>
-// #include <HttpRequest.hpp>
-// #include <iostream>
-// #include <FileDescriptor.hpp>
-// #include <HandleTransfer.hpp>
+#include "ErrorCodeClientException.hpp"
+#include "FileDescriptor.hpp"
+#include "ServerListenFD.hpp"
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
-#include <ConfigServer.hpp>
-#include <ServerListenFD.hpp>
 
 void RunServers::getExecutableDirectory()
 {
@@ -38,10 +35,7 @@ void RunServers::getExecutableDirectory()
 void RunServers::createServers(vector<ConfigServer> &configs)
 {
     for (ConfigServer &config : configs)
-    {
         _servers.push_back(make_unique<AconfigServ>(AconfigServ(config)));
-    }   
-    // AconfigServ::createListeners(_servers);
 }
 
 void RunServers::setupEpoll()
@@ -59,7 +53,7 @@ void RunServers::epollInit(ServerList &servers)
     FileDescriptor::setFD(_epfd);
     Logger::log(INFO, "Epoll fd created", _epfd, "epollFD");
 
-	map<pair<const string, string>, int> listenersMade;
+    map<pair<const string, string>, int> listenersMade;
     for (auto &server : servers)
     {
         for (pair<const string, string> &hostPort : server->getPortHost())
@@ -99,11 +93,13 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
     {
         if (_clients.count(fd) == 0 || !_clients[fd])
         {
-            Logger::log(ERROR, "Server Error", fd, "Invalid clientFD, setEpollEvents failed");
-            throw std::runtime_error("epoll_ctl failed: " + string(strerror(errno)));
+            Logger::log(ERROR, "Server Error", fd, "Invalid FD, setEpollEvents failed");
+            throw runtime_error("epoll_ctl failed: " + string(strerror(errno)));
         }
         throw ErrorCodeClientException(*_clients[fd], 0, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
     }
+    if (option == EPOLL_CTL_ADD)
+        _epollAddedFds.push_back(fd);
 }
 
 void RunServers::setServerFromListener(Client &client)
@@ -135,14 +131,13 @@ void RunServers::setServerFromListener(Client &client)
         throw ErrorCodeClientException(client, 0, "No matching server configuration found");
 }
 
-
 void    RunServers::setLocation(Client &client)
 {
-	for (pair<string, Location> &locationPair : client._usedServer->getLocations())
-	{
-		if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
+    for (pair<string, Location> &locationPair : client._usedServer->getLocations())
+    {
+        if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
-		{
+        {
             client._location = locationPair.second;
             return;
         }
@@ -152,16 +147,15 @@ void    RunServers::setLocation(Client &client)
 
 void RunServers::cleanupEpoll()
 {
-    for (auto it = _listenFDS.begin(); it != _listenFDS.end(); ++it)
+    for (auto it = _listenFDS.begin(); it != _listenFDS.end(); /* ++it */)
     {
-        FileDescriptor::cleanupFD(*it);
-        _listenFDS.erase(it);
+        FileDescriptor::cleanupEpollFd(*it);
+        it = _listenFDS.erase(it);
     }
-    for (auto it = _clients.begin(); it != _clients.end();)
+    while (_clients.size() > 0)
     {
-        unique_ptr<Client> &client = it->second;
-        cleanupClient(*client);
-        it = _clients.erase(it);
+        cleanupClient(*_clients.begin()->second);
     }
     FileDescriptor::closeFD(_epfd);
+    FileDescriptor::cleanupAllFD(); // left overs like fd for files
 }

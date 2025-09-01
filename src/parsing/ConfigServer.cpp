@@ -1,10 +1,9 @@
-#include <ConfigServer.hpp>
-#include <RunServer.hpp>
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
 #include "Logger.hpp"
 
 ConfigServer::ConfigServer()
 {
-    
 }
 
 ConfigServer::ConfigServer(const ConfigServer &other) : AconfigServ(other)
@@ -41,7 +40,7 @@ bool ConfigServer::listenHostname(string &line)
     }
     else
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid character found after hostname - '", line, "'");
-    uint16_t port = static_cast<uint16_t>(std::stoul(line, &index));
+    uint16_t port = static_cast<uint16_t>(stoul(line, &index));
     if (port == 0)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "listen: invalid port entered for listen should be between 1 and 65535: ", +port);
     string strPort = line.substr(0, index);
@@ -90,7 +89,6 @@ int ConfigServer::getLineNbr() const { return _lineNbr; }
 
 void ConfigServer::setDefaultConf()
 {
-    // what to do with no error pages? do we create our own or just have one
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
         _root = _root.substr(0, _root.size() - 1);
@@ -114,7 +112,6 @@ void ConfigServer::setDefaultConf()
         Location &location = val.second;
         location.SetDefaultLocation(*this);
     }
-    //check if / path exists in locations if not create it
     bool found = false;
     for (auto it = _locations.begin(); it != _locations.end(); ++it)
     {
@@ -132,8 +129,6 @@ void ConfigServer::setDefaultConf()
     }
     setDefaultErrorPages();
 }
-
-/* Aconfigserv class for helper funcs */
 
 AconfigServ::AconfigServ(const AconfigServ &other) : Aconfig(other) { *this = other; }
 

@@ -1,47 +1,46 @@
 #ifndef HANDLETRANSFER_HPP
 #define HANDLETRANSFER_HPP
-
-#include <Logger.hpp>
-#include <Client.hpp>
-#include <Constants.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <FileDescriptor.hpp>
 #include <stdexcept>
 #include <string>
-
+#include <cstdint>
+#include "FileDescriptor.hpp"
 using namespace std;
-
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
-
-enum HandleTransferType {
-    HANDLE_GET_TRANSFER = 1,
-    HANDLE_POST_TRANSFER = 2,
-    HANDLE_CHUNK_TRANSFER = 3,
-    HANDLE_WRITE_TO_CGI_TRANSFER = 4,
-    HANDLE_READ_FROM_CGI_TRANSFER = 5,
-    HANDLE_TO_CLIENT_TRANSFER = 6
-};
-
-enum ValidationResult {
-    CONTINUE_READING = 0,
-    FINISHED = 1,
-    RERUN_WITHOUT_READING = 2
-};
+class Client;
+// namespace //TODO look at this. It didn't compile on newer version of compiler ( error: ‘HandleTransfer’ has a field ‘{anonymous}::HandleTransferType HandleTransfer::_handleType’ whose type uses the anonymous namespace [-Werror=subobject-linkage] 32 | class HandleTransfer)
+// { 
+    enum HandleTransferType : uint8_t
+    {
+        HANDLE_GET_TRANSFER = 1,
+        HANDLE_POST_TRANSFER = 2,
+        HANDLE_CHUNK_TRANSFER = 3,
+        HANDLE_WRITE_TO_CGI_TRANSFER = 4,
+        HANDLE_READ_FROM_CGI_TRANSFER = 5,
+        HANDLE_TO_CLIENT_TRANSFER = 6
+    };
+    
+    enum ValidationResult : uint8_t
+    {
+        CONTINUE_READING = 0,
+        FINISHED = 1,
+        RERUN_WITHOUT_READING = 2
+    };
+// }
 
 class HandleTransfer
 {
-    public :
+    public:
         // Pure virtual functions for polymorphic behavior
-		virtual bool handleGetTransfer() { throw std::runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool postTransfer(bool readData) { (void)readData; throw std::runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool handleChunkTransfer() { throw std::runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
-		virtual bool getIsChunk() const { throw std::runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
-		virtual void appendToBody() { throw std::runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
-        virtual bool writeToCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
-        virtual bool readFromCgiTransfer() { throw std::runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
-        virtual bool sendToClientTransfer() { throw std::runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool handleGetTransfer() { throw runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool postTransfer(bool readData) { (void)readData; throw runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool handleChunkTransfer() { throw runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
+        virtual bool getIsChunk() const { throw runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
+        virtual void appendToBody() { throw runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
+        virtual bool writeToCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool readFromCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool sendToClientTransfer() { throw runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
         virtual ~HandleTransfer() = default;
 
         Client &_client;
@@ -50,13 +49,13 @@ class HandleTransfer
         size_t  _bytesReadTotal = 0;
         HandleTransferType _handleType;
 
-    protected :
+    protected:
         HandleTransfer(Client &client, int fd, HandleTransferType handleType) : _client(client), _fd(fd), _handleType(handleType) {};
 };
 
 class HandleGetTransfer : public HandleTransfer
 {
-    public :
+    public:
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
         ~HandleGetTransfer() { FileDescriptor::closeFD(_fd); };
 
@@ -80,7 +79,7 @@ class HandlePostTransfer : public HandleTransfer
         size_t _bytesWrittenTotal = 0;
         bool _foundBoundary = false;
         bool _searchContentDisposition = false;
-        vector<string> _fileNamePaths; // for post transfer - shared between HandlePostTransfer and HandleChunkTransfer
+        vector<string> _fileNamePaths; // For post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
     protected:
         // Protected constructor for derived classes
@@ -93,7 +92,7 @@ class HandlePostTransfer : public HandleTransfer
         // recv incoming
         void ReadIncomingData();
 
-        // process
+        // Process
         bool processMultipartData();
         size_t FindBoundaryAndWrite(size_t &bytesWritten);
         bool searchContentDisposition();
@@ -104,7 +103,7 @@ class HandlePostTransfer : public HandleTransfer
 
 class HandleChunkTransfer : public HandlePostTransfer
 {
-    public :
+    public:
         HandleChunkTransfer(Client &client);
 
         // Logic functions
@@ -125,7 +124,7 @@ class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
         HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
-        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool writeToCgiTransfer();
 
@@ -136,7 +135,7 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 {
     public:
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
-        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool readFromCgiTransfer();
 };
@@ -145,7 +144,7 @@ class HandleToClientTransfer : public HandleTransfer
 {
     public:
         HandleToClientTransfer(Client &client, string &response);
-        ~HandleToClientTransfer() { FileDescriptor::cleanupFD(_fd); };
+        ~HandleToClientTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
 
         bool sendToClientTransfer();
 };
@@ -160,5 +159,4 @@ class MultipartParser
     private:
         MultipartParser() = default; // Prevent instantiation since this is a utility class
 };
-
 #endif

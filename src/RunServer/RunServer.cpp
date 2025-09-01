@@ -1,30 +1,17 @@
-// #include <chrono>
-// #include <ctime>
-// #include <iostream>
-// #include <arpa/inet.h>
-// #include <cstring>
-// #include <errno.h>
-// #include <fcntl.h>
-// #include <netdb.h>
-// #include <netinet/in.h>
-// #include <stdio.h>
-// #include <sys/socket.h>
-// #include <sys/types.h>
-// #include <stdlib.h>	// callod
-// #include <filesystem> // canonical()
+#include <sys/wait.h>
+#include <algorithm>
+#include <signal.h>
 #include <thread>
+#include <array>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <signal.h>
-#include <sys/wait.h>
-#include <array>
-
-#include "RunServer.hpp"
 #include "ErrorCodeClientException.hpp"
-#include "HttpRequest.hpp"
 #include "FileDescriptor.hpp"
 #include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 
 // Static member variables
@@ -35,6 +22,7 @@ array<struct epoll_event, FD_LIMIT> RunServers::_events;
 // unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
+vector<int> RunServers::_epollAddedFds;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 vector<unique_ptr<HandleTransfer>> RunServers::_handleCgi;
 // vector<int> RunServers::_connectedClients;
@@ -43,6 +31,7 @@ int RunServers::_level = -1;
 
 uint64_t RunServers::_ramBufferLimit = 65536;
 bool RunServers::_fatalErrorOccurred = false;
+
 
 void RunServers::runServers()
 {
@@ -53,11 +42,13 @@ void RunServers::runServers()
         disconnectChecks();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
 
-        // only goes wrong with EINTR(signals)
         if (eventCount == -1)
         {
             if (errno == EINTR)
-                break ;
+            {
+                Logger::log(WARN, "epoll_wait interrupted by signal: ", g_signal_status);
+                continue;
+            }
             Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));
         }
         try
@@ -65,11 +56,11 @@ void RunServers::runServers()
             // cout << "event count "<<  eventCount << endl;
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch(Logger::ErrorLogExit&)
+        catch (Logger::ErrorLogExit&)
         {
             Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
         }
-        catch(const exception& e)
+        catch (const exception& e)
         {
             Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
         }
@@ -115,14 +106,14 @@ bool RunServers::handleEpollStdinEvents()
 {
     char buffer[1024];
     ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
-    if (bytesRead > 0)
+    if (bytesRead == -1)
+        Logger::log(IWARN, "Reading from stdin failed: ", strerror(errno));
+    else if (bytesRead > 0)
     {
         buffer[bytesRead] = '\0';
-    }
-    int snooze = stoi(buffer, nullptr, 16); //TODO not protectect
-    if (snooze > 0 && snooze < 20)
-    {
-        this_thread::sleep_for(chrono::seconds(snooze));
+        int snooze = stoi(buffer, nullptr, 10);
+        if (snooze > 0 && snooze < 20)
+            this_thread::sleep_for(chrono::seconds(snooze));
     }
     return true;
 }

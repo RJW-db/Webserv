@@ -1,11 +1,10 @@
-#include <Parsing.hpp>
-#include <ConfigServer.hpp>
+#include <map>
+#include "ConfigServer.hpp"
+#include "Parsing.hpp"
 #include "Logger.hpp"
-
 using namespace std;
-
-// Constants for better readability
-namespace {
+namespace
+{
     constexpr const char *WHITESPACE_CHARS = " \t\f\v\r";
     constexpr const char *WHITESPACE_WITH_NEWLINE = " \t\f\v\r\n";
     constexpr size_t SERVER_KEYWORD_LENGTH = 6;
@@ -75,31 +74,31 @@ void Parsing::readBlock(T &block,
     string line = _lines.begin()->second;
     do
     {
-		_validSyntax = false;
+        _validSyntax = false;
         trimLeadingWhitespace(line);
         for (const auto& cmd : cmds)
         {
             if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
-			{
-    			_validSyntax = true;
+            {
+                _validSyntax = true;
                 cmdCheck(line, block, cmd);
-			}
+            }
         }
-		if (_validSyntax == false)
-		{
-			for (const auto& whileCmd : whileCmds)
-			{
-				if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
-				{
-					whileCmdCheck(line, block, whileCmd);
-					_validSyntax = true;
-				}
-			}
-		}
+        if (_validSyntax == false)
+        {
+            for (const auto& whileCmd : whileCmds)
+            {
+                if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
+                {
+                    whileCmdCheck(line, block, whileCmd);
+                    _validSyntax = true;
+                }
+            }
+        }
         if (strncmp(line.c_str(), "location", LOCATION_KEYWORD_LENGTH) == 0 && _validSyntax == false)
             LocationCheck(line, block);
     }
-	while (checkParseSyntax() == true);
+    while (checkParseSyntax() == true);
 }
 
 /**
@@ -109,14 +108,14 @@ void Parsing::ServerCheck()
 {
     ConfigServer curConf;
     curConf.setLineNbr(_lines.begin()->first);
-	string line = _lines.begin()->second;
+    string line = _lines.begin()->second;
     line.erase(0, SERVER_KEYWORD_LENGTH);
     skipLine(line, false, curConf, true);
     if (line[0] == '{')
     {
         line.erase(0, 1);
         skipLine(line, false, curConf, false);
-        const std::map<string, bool (ConfigServer::*)(string &)> cmds = {
+        const map<string, bool (ConfigServer::*)(string &)> cmds = {
             {"listen", &ConfigServer::listenHostname},
             {"root", &ConfigServer::root},
             {"client_max_body_size", &ConfigServer::ClientMaxBodysize},
@@ -125,7 +124,7 @@ void Parsing::ServerCheck()
         const map<string, bool (ConfigServer::*)(string &)> whileCmds = {
             {"error_page", &ConfigServer::error_page},
             {"return", &ConfigServer::returnRedirect}};
-		_lines.begin()->second = line;
+        _lines.begin()->second = line;
         readBlock(curConf, cmds, whileCmds);
         curConf.setDefaultConf();
         _configs.push_back(curConf);
@@ -143,7 +142,7 @@ void Parsing::ServerCheck()
 template <typename T>
 void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
-	bool foundSemicolon;
+    bool foundSemicolon;
     line.erase(0, cmd.first.size());
     skipLine(line, false, block, false);
     validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
@@ -168,23 +167,23 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
 template <typename T>
 void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
-	bool foundSemicolon;
-	line.erase(0, cmd.first.size());
-	validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
+    bool foundSemicolon;
+    line.erase(0, cmd.first.size());
+    validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
 
-	size_t argumentCount = 0;
-	while (++argumentCount)
-	{
-		skipLine(line, false, block, true);
-		foundSemicolon = (block.*(cmd.second))(line);
-		skipLine(line, false, block, true);
-		if (foundSemicolon == true)
-		{
-			if (argumentCount == 1)
+    size_t argumentCount = 0;
+    while (++argumentCount)
+    {
+        skipLine(line, false, block, true);
+        foundSemicolon = (block.*(cmd.second))(line);
+        skipLine(line, false, block, true);
+        if (foundSemicolon == true)
+        {
+            if (argumentCount == 1)
                 Logger::logExit(ERROR, "Config error", '-', "No arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
-			break;
-		}
-	}
+            break;
+        }
+    }
 }
 
 /**
@@ -196,7 +195,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 template <typename T>
 void Parsing::LocationCheck(string &line, T &block)
 {
-    if constexpr (std::is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
+    if constexpr (is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
     {
         Location location;
         location.setLineNbr(_lines.begin()->first);
@@ -220,10 +219,10 @@ void Parsing::LocationCheck(string &line, T &block)
             {"limit_except", &Location::methods},
             {"return", &Location::returnRedirect},
             {"index", &Location::indexPage},
-			{"cgi_extension", &Location::cgiExtensions}};
-		_lines.begin()->second = line;
-		readBlock(location, cmds, whileCmds);
-		line = _lines.begin()->second;
+            {"cgi_extension", &Location::cgiExtensions}};
+        _lines.begin()->second = line;
+        readBlock(location, cmds, whileCmds);
+        line = _lines.begin()->second;
         block.addLocation(location, location.getPath());
         _validSyntax = true;
     }
@@ -238,8 +237,8 @@ void Parsing::LocationCheck(string &line, T &block)
 bool    Parsing::checkParseSyntax()
 {
     size_t  skipSpace;
-	if (_validSyntax == false)
-		Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
+    if (_validSyntax == false)
+        Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
 
     if (_lines.begin()->second[0] == '}')
     {
@@ -262,7 +261,7 @@ bool    Parsing::checkParseSyntax()
 template <typename T>
 void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkipSpace)
 {
-	size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
+    size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
     if (string::npos == skipSpace || forceSkip)
     {
         if (_lines.size() <= 1)
@@ -273,79 +272,6 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
     }
     if (shouldSkipSpace == true)
         trimLeadingWhitespace(line);
-}
-
-/**
- * prints all values stored in servers and locations
- */
-void Parsing::printAll() const
-{
-	for (ConfigServer config : _configs)
-	{
-		cout << "Server Name: " << config.getServerName() << endl;
-		cout << "Port and Host:" << endl;
-		for (const auto &portHost : config.getPortHost())
-		{
-			cout << "  Port: " << portHost.first << endl << ", Host: " << portHost.second << endl;
-		}
-			cout << "  Root: " << config.getRoot() << endl;
-			cout << "  Client Max Body Size: " << config.getClientMaxBodySize() << endl;
-			cout << "  Auto Index: " << (config.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-
-			// cout << "  Error Pages: ";
-			// for (const auto &errorPage : config.getErrorCodesWithPage())
-			// {
-			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
-			// }
-			// cout << endl;
-
-			cout << "  Return Redirect: " << config.getReturnRedirect().first << " -> " << config.getReturnRedirect().second << endl;
-			cout << "  Index Pages: ";
-			for (const string &index : config.getIndexPage())
-			{
-				cout << index << " ";
-			}
-			cout << endl;
-		for (auto pair : config.getLocations())
-		{
-			Alocation &location = pair.second;
-			cout << "location: " << "Path: " << pair.first << endl;
-			cout << "  Root: " << location.getRoot() << endl;
-			cout << "  Client Max Body Size: " << location.getClientMaxBodySize() << endl;
-			cout << "  Auto Index: " << (location.getAutoIndex() == autoIndexTrue ? "True" : "False") << endl;
-
-			// cout << "  Error Pages: ";
-			// for (const auto &errorPage : location.getErrorCodesWithPage())
-			// {
-			// 	cout << errorPage.first << " -> " << errorPage.second << ", ";
-			// }
-			// cout << endl;
-
-			cout << "  Return Redirect: " << location.getReturnRedirect().first << " -> " << location.getReturnRedirect().second << endl;
-			cout << "  Index Pages: ";
-			for (const string &index : location.getIndexPage())
-			{
-				cout << index << " ";
-			}
-			cout << endl;
-			cout << "  Methods: ";
-			if (location.getAllowedMethods() & 1)
-                cout << "HEAD ";
-            if (location.getAllowedMethods() & 2)
-                cout << "GET ";
-            if (location.getAllowedMethods() & 4)
-                cout << "POST ";
-            if (location.getAllowedMethods() & 8)
-                cout << "DELETE ";
-
-			cout << endl;
-			cout << "  Upload Store: " << location.getUploadStore() << endl;
-			std::cout << "cgi extensions: ";
-			for (string extension : location.getExtension())
-				std::cout << extension;
-			cout << endl << "  CGI Path: " << location.getCgiPath() << endl;
-		}
-	}
 }
 
 vector<ConfigServer> &Parsing::getConfigs() {return _configs;}
@@ -385,7 +311,7 @@ namespace {
      */
     void validateWhitespaceAfterCommand(const string &line, const char *whitespaceChars, int lineNumber)
     {
-        if (line.empty() || string(whitespaceChars).find(line[0]) == std::string::npos)
+        if (line.empty() || string(whitespaceChars).find(line[0]) == string::npos)
             Logger::logExit(ERROR, "Config error at line", lineNumber, "Missing whitespace after command - '", line, "'");
     }
 }

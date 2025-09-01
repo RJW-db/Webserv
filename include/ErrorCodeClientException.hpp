@@ -1,42 +1,38 @@
 #ifndef ERRORCODECLIENTEXCEPTION_HPP
-# define ERRORCODECLIENTEXCEPTION_HPP
-
-#include <Client.hpp>
-#include "Logger.hpp"
-
+#define ERRORCODECLIENTEXCEPTION_HPP
 #include <string>
 #include <map>
-#include <fcntl.h>
-#include <utils.hpp>
+#include <cstdint>
 using namespace std;
+class Client;
 
 class ErrorCodeClientException
 {
-public:
-    //initialization
-    explicit ErrorCodeClientException(Client &client, int errorCode, const std::string &message);
+    public:
+        // Initialization
+        explicit ErrorCodeClientException(Client &client, int errorCode, const string &message);
 
-    //handle error page
-    void handleErrorClient() const;
+        //handle error page
+        void handleErrorClient() const;
 
+    private:
+        //variables
+        Client &_client;
+        uint16_t _errorCode;
+        string _message;
+        map<uint16_t, string> _errorPages;
 
-private:
-    //variables
-    Client &_client;
-    uint16_t _errorCode;
-    string _message;
-    map<uint16_t, string> _errorPages;
+        //helper functions
+        void handleDefaultErrorPage() const;
+        void handleCustomErrorPage(const string &errorPagePath) const;
 
-    //helper functions
-    void handleDefaultErrorPage() const;
-    void handleCustomErrorPage(const string &errorPagePath) const;
-public:
-    // utility function
-    const char *what() const throw();
+    public:
+        // utility function
+        const char *what() const throw();
 
-    //getters
-    uint16_t getErrorCode() const;
-    string getMessage() const;
+        // Getters
+        uint16_t getErrorCode() const;
+        string getMessage() const;
 };
 
 #endif

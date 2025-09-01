@@ -1,43 +1,25 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
-
-#define RESERVED_FDS 5         // stdin, stdout, stderr, server, epoll
-#define INCOMING_FD_LIMIT 1024 // Makefile, shell(ulimit -n)
-// TODO if FD minimum = 5, immediate turning off webserv with error.
-// 4th is listener FD, 5th FD is client.
-#define FD_LIMIT 1024 - RESERVED_FDS
-
-#define PORT "8080"
-
-#define EPOLL_DEL_EVENTS 0
-# define _XOPEN_SOURCE 700  // VSC related, make signal and struct visisible
-
-#include <signal.h> // sig_atomic_t
-
-// #include <memory>
-// #include <vector>
-// #include <array>
-// #include <unordered_map>
-// #include <string_view>
-
-#include "ConfigServer.hpp"
+#include <signal.h>
+#include <memory>
 #include "HandleTransfer.hpp"
-#include "Client.hpp"
-
+#include "ConfigServer.hpp"
+#define _XOPEN_SOURCE 700  // VSC related, make signal and struct visible
+#ifndef FD_LIMIT
+# define FD_LIMIT 1024
+#endif
 using namespace std;
-
-extern volatile sig_atomic_t g_signal_status;
-// #include <FileDescriptor.hpp>
-class FileDescriptor;
-
 using ServerList = vector<unique_ptr<AconfigServ>>;
+using HandleTransferIter = vector<unique_ptr<HandleTransfer>>::iterator;
+extern volatile sig_atomic_t g_signal_status;
+class Client;
 
 class RunServers
 {
     public:
         // initialization
         static void   getExecutableDirectory();
-		static void   createServers(vector<ConfigServer> &configs);
+        static void   createServers(vector<ConfigServer> &configs);
         static void   setupEpoll();
         static void   epollInit(ServerList &servers);
         static void   addStdinToEpoll();
@@ -72,28 +54,45 @@ class RunServers
         static void   closeHandles(pid_t pid);
         static void   clientHttpCleanup(Client &client);
         static void   cleanupClient(Client &client);
-        static vector<std::unique_ptr<HandleTransfer>>::iterator   cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, int clientFD);
-        static vector<std::unique_ptr<HandleTransfer>>::iterator   killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid);
+        static HandleTransferIter cleanupHandleCgi(HandleTransferIter it, int clientFD);
+        static HandleTransferIter killCgiPipes(HandleTransferIter it, pid_t pid);
 
-        static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle)
-        {
+        static inline void insertHandleTransfer(unique_ptr<HandleTransfer> handle) {
             _handle.push_back(move(handle));
         }
-        static inline void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle)
-        {
+        static inline void insertHandleTransferCgi(unique_ptr<HandleTransfer> handle) {
             _handleCgi.push_back(move(handle));
         }
-        static inline string &getServerRootDir()
-        {
+        static inline string &getServerRootDir() {
             return _serverRootDir;
         }
-        static inline uint64_t getRamBufferLimit()
-        {
+        static inline uint64_t getRamBufferLimit() {
             return _ramBufferLimit;
         }
-        static inline int getEpollFD()
-        {
+        static inline int getEpollFD() {
             return _epfd;
+        }
+
+        class ClientException : public exception
+        {
+            private:
+                string _message;
+            public:
+                explicit ClientException(const string &message) : _message(message) {}
+                virtual const char* what() const throw() {
+                    return _message.c_str();
+                }
+        };
+
+        class LengthRequiredException : public ClientException
+        {
+            public:
+                explicit LengthRequiredException(const string &message)
+                    : ClientException(message) {}
+        };
+
+        static vector<int> &getEpollAddedFds() {
+            return _epollAddedFds;
         }
 
     private:
@@ -101,6 +100,7 @@ class RunServers
         static string _serverRootDir;
         static ServerList _servers;
         static vector<int> _listenFDS;
+        static vector<int> _epollAddedFds;
 
         // --- Epoll and event management ---
         static int _epfd;

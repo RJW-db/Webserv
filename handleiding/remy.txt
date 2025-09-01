@@ -53,44 +53,14 @@ cat test.txt | nc localhost 8080
 check characters in a file
 od -tx1 -c filename
 
-problem with overwriting the file, if 2 or 3 people trying to create the same file
 
 
 
-
-kill() send TERM signal
-in child we need to setup to catch the signal and handle it, cleaning up propperly off open fd (pipes)
-
-problematic
-cgi_extension .py .php .pl;  # Multiple extensions
-cgi_path python3;            # But only ONE interpreter path
+RunServers::ClientException >> ErrorCodeClientException
 
 
-CGI
-the problem now is we are in a handlePOSTtransfer and when handleCgiTransfer made a transfer (move),
-the (it) in runserver for POST should remove this handle. and cgi handle should get triggered
-
-
-Logger
-create fd for log file, both parent and child can write there error messages for debugging.
+ulimit -n 14  gives problems and the log file could be fd:0 for some reason.
 
 
 
-        send(_client._fd, headers.data(), headers.size(), 0); // TODO: check if send is successful and if needs its own handle???
-
-
-segmentation because of 983938893
-make && valgrind ./Webserv config/default.conf 983938893
-
-
-
-
-writetocgitransfer kan altijd sluiten, kan vastlopen als cgi nooit eindigt.
-als de write naar de pipe -1 gooit,
-
-readFromCgiTransfer moet de pid checken voor discconnect tijd, als over de tijd dan kill child,
- als fout in write of exit code alle vectors doorkijken voor clients met matchend pid end daarna pid -1 zetten
-
-
-
- RunServers::ClientException >> ErrorCodeClientException
+we hebben _epollAddedFds toegevoegd, maar doen der niks mee.

@@ -1,18 +1,15 @@
-#include <HandleTransfer.hpp>
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <HttpRequest.hpp>
 #include <sys/epoll.h>
+#include <fcntl.h>
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
-
-#ifndef SIEGE_TEST
-# define SIEGE_TEST false
-#endif
-
 namespace
 {
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
-    constexpr size_t TERMINATOR_SIZE = 4;    // for --\r\n
+    constexpr size_t TERMINATOR_SIZE = 4;   // for --\r\n
     constexpr int FILE_PERMISSIONS = 0700;
     constexpr uint16_t HTTP_CREATED = 201;
 }
@@ -48,7 +45,7 @@ bool HandlePostTransfer::postTransfer(bool readData)
             return handlePostCgi();
         return processMultipartData();        
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
@@ -96,7 +93,7 @@ bool HandlePostTransfer::processMultipartData()
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);
         if (boundaryPos != string::npos)
         {
-            _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryPos - bytesWritten);
+            _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
             RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
             _foundBoundary = true;
         }
@@ -104,8 +101,6 @@ bool HandlePostTransfer::processMultipartData()
             return false;
     }
 }
-
-
 
 /**
  * Finds boundary markers in the buffer and writes content to file
@@ -115,9 +110,9 @@ bool HandlePostTransfer::processMultipartData()
  */
 size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
 {
-    size_t boundaryBufferSize = _client._bodyBoundary.size() + BOUNDARY_PADDING; 
+    size_t boundaryBufferSize = _client._boundary.size() + BOUNDARY_PADDING; 
     size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
-    size_t boundaryPos = _fileBuffer.find(_client._bodyBoundary);
+    size_t boundaryPos = _fileBuffer.find(_client._boundary);
     if (boundaryPos != string::npos)
     {
         if (boundaryPos >= BOUNDARY_PADDING && strncmp(_fileBuffer.data() + boundaryPos - BOUNDARY_PADDING, "\r\n--", BOUNDARY_PADDING) == 0)
@@ -187,10 +182,9 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         _foundBoundary = false;
         return RERUN_WITHOUT_READING;
     }
-    if ((foundReturn == BOUNDARY_PREFIX_LEN &&
+    if (foundReturn == BOUNDARY_PREFIX_LEN &&
         strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 &&
-        _fileBuffer.size() <= BOUNDARY_PADDING) ||
-        SIEGE_TEST)
+        _fileBuffer.size() <= BOUNDARY_PADDING)
     {
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);
@@ -199,7 +193,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
     }
     if (_fileBuffer.size() > TERMINATOR_SIZE)
     {
-        std::cout << "filebuffer is after: " << _fileBuffer << std::endl; //testcout
+        cout << "filebuffer is after: " << _fileBuffer << endl; //testcout
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     }
     return CONTINUE_READING;
@@ -214,7 +208,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
  */
 bool HandlePostTransfer::handlePostCgi()
 {
-    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
+    if (_fileBuffer.find(string(_client._boundary) + "--" + CRLF) == string::npos)
         return false;
 
     if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
@@ -236,9 +230,8 @@ bool HandlePostTransfer::handlePostCgi()
 void HandlePostTransfer::sendSuccessResponse()
 {
     size_t absolutePathSize = RunServers::getServerRootDir().size();
-    // string_view test(_client._filenamePath.data() + absolutePathSize);
-    // string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
-    string relativePath = "." + _client._filenamePath.substr(absolutePathSize) + '\n';
+    string_view relativeView(_client._filenamePath.data() + absolutePathSize, _client._filenamePath.size() - absolutePathSize);
+    string relativePath = "." + string(relativeView) + '\n';
     string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
     
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, headers);
@@ -266,10 +259,6 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
 }
-
-
-
-
 
 /**
  * Validates the syntax of multipart POST data for CGI processing
@@ -301,15 +290,14 @@ bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
             needsContentDisposition = false;
             continue;
         }
-        size_t boundaryPos = buffer.find(client._bodyBoundary);
+        size_t boundaryPos = buffer.find(client._boundary);
         if (boundaryPos == string_view::npos)
             throw ErrorCodeClientException(client, 400, "Expected boundary not found in multipart data");
-        buffer.remove_prefix(boundaryPos + client._bodyBoundary.size());
+        buffer.remove_prefix(boundaryPos + client._boundary.size());
         foundBoundary = true;
     }
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
 }
-
 
 /**
  * Parses Content-Disposition header from multipart data
@@ -354,5 +342,3 @@ bool MultipartParser::validateBoundaryTerminator(Client &client, string_view &bu
         return true;
     throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
 }
-
-

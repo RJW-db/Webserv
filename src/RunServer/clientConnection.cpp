@@ -1,13 +1,13 @@
+#include <netinet/in.h>   // sockaddr_in, ntohl, ntohs
+#include <sys/socket.h>   // socket functions, accept
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <netinet/in.h>   // sockaddr_in, ntohl, ntohs
-#include <sys/socket.h>   // socket functions, accept
-#include "RunServer.hpp"
-#include "HttpRequest.hpp"
-#include "Logger.hpp"
 #include "ErrorCodeClientException.hpp"
-
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "Logger.hpp"
 #ifndef CLIENT_BUFFER_SIZE
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
@@ -34,12 +34,12 @@ void RunServers::acceptConnection(const int listener)
         if (addFdToEpoll(infd) == false)
             break;
 
-        _clients[infd] = std::make_unique<Client>(infd);
+        _clients[infd] = make_unique<Client>(infd);
         setClientServerAddress(*_clients[infd], infd);
 
         Logger::log(INFO, *_clients[infd], 
             "Connected on: " + NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)) + 
-            ":" + std::to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
+            ":" + to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
 
         _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
@@ -88,7 +88,7 @@ void RunServers::processClientRequest(Client &client)
         // client._finishedProcessClientRequest = true;
         HttpRequest::processRequest(client);
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }
@@ -125,9 +125,8 @@ namespace
         bytes[3] = static_cast<unsigned char>(addr & 0xFF);
     
         return to_string(bytes[0]) + "." +
-               to_string(bytes[1]) + "." +
-               to_string(bytes[2]) + "." +
-               to_string(bytes[3]);
+            to_string(bytes[1]) + "." +
+            to_string(bytes[2]) + "." +
+            to_string(bytes[3]);
     }
 }
-

@@ -1,4 +1,9 @@
+#include <fcntl.h>
+#include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "Logger.hpp"
 
 void HttpRequest::processRequest(Client &client)
 {
@@ -77,8 +82,6 @@ void HttpRequest::processGet(Client &client)
 
 void HttpRequest::GET(Client &client)
 {
-    // Logger::log(DEBUG, client._rootPath); //testlog
-    // Logger::log(DEBUG, client._filenamePath); //testlog
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1)
     {
@@ -131,7 +134,7 @@ void HttpRequest::processPost(Client &client)
     switch (client._headerParseState)
     {
         case REQUEST_READY:
-            processHttpBody(client);
+            POST(client);
             break;
         case BODY_CHUNKED:
         {
@@ -182,4 +185,3 @@ void HttpRequest::processDelete(Client &client)
         throw ErrorCodeClientException(client, code, string("Remove failed: ") + strerror(errno));
     }
 }
-

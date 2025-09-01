@@ -1,9 +1,9 @@
-#include <HttpRequest.hpp>
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <HandleTransfer.hpp>
-#include <utils.hpp>
-
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "utils.hpp"
 namespace
 {
     string extractContentDispositionLine(Client &client, const string &buff);
@@ -11,17 +11,13 @@ namespace
     void validateMultipartContentType(Client &client, const string &buff, const string &filename);
 }
 
-bool HttpRequest::processHttpBody(Client &client)
+void HttpRequest::POST(Client &client)
 {
     HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
-    if (handle->postTransfer(false) == true)
-    {
-        return false;
-    }
-    RunServers::insertHandleTransfer(move(handle));
-    return true;
+    if (handle->postTransfer(false) == false)
+        RunServers::insertHandleTransfer(move(handle));
 }
 
 void HttpRequest::getContentLength(Client &client)
@@ -29,14 +25,20 @@ void HttpRequest::getContentLength(Client &client)
     auto contentLength = client._headerFields.find("Content-Length");
     if (contentLength == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Length header not found");
+    try
+    {
+        uint64_t value = stoullSafe(contentLength->second);
+        if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
+            throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
+        if (value == 0)
+            throw ErrorCodeClientException(client, 400, "Content-Length cannot be zero.");
 
-    const string_view content = contentLength->second;
-    uint64_t value = stoullSafe(content);
-    if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
-        throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
-    if (value == 0)
-        throw ErrorCodeClientException(client, 400, "Content-Length cannot be zero.");
-    client._contentLength = static_cast<size_t>(value);
+        client._contentLength = static_cast<size_t>(value);
+    }
+    catch (const runtime_error &e)
+    {
+        throw ErrorCodeClientException(client, 400, "Content-Length header is invalid: " + string(e.what()));
+    }
 }
 
 void HttpRequest::getContentType(Client &client)
@@ -44,7 +46,7 @@ void HttpRequest::getContentType(Client &client)
     auto it = client._headerFields.find("Content-Type");
     if (it == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
-    const string_view ct = it->second;
+    const string_view ct(it->second);
     if (ct.find("multipart/form-data") == 0)
     {
         size_t semi = ct.find(';');
@@ -53,7 +55,7 @@ void HttpRequest::getContentType(Client &client)
             client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
             if (boundaryPos != string_view::npos)
-                client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
+                client._boundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
                 throw ErrorCodeClientException(client, 400, "Boundary not found in Content-Type header");
         }

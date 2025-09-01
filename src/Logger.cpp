@@ -1,10 +1,10 @@
-#include <RunServer.hpp> // escape_special_char   should be utils.hpp
-#include "Logger.hpp"
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
+#include <iostream>
 #include <fcntl.h>
-// Static member definitions
+#include "RunServer.hpp"
+#include "Logger.hpp"
+
 int Logger::_logFd = -1;
 
 void Logger::initialize(const string &logDir, const string &filename)
@@ -17,9 +17,7 @@ void Logger::initialize(const string &logDir, const string &filename)
 
     _logFd = open(absoluteFilePath.data(), O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (_logFd == -1)
-    {
         Logger::logExit(ERROR, "Log file error", '-', strerror(errno), ' ', absoluteFilePath);
-    }
 
     FileDescriptor::setFD(_logFd);
     log(INFO, "Log file initialized", _logFd, "logFD", absoluteFilePath);
@@ -30,10 +28,10 @@ string Logger::initLogDirectory(const string &logDir)
     string absolutePath = RunServers::getServerRootDir() + '/' + logDir;
     try
     {
-        if (!std::filesystem::exists(absolutePath))
-            std::filesystem::create_directory(absolutePath);
+        if (!filesystem::exists(absolutePath))
+            filesystem::create_directory(absolutePath);
     }
-    catch (const std::filesystem::filesystem_error &e)
+    catch (const filesystem::filesystem_error &e)
     {
         Logger::logExit(ERROR, "Log dir error", '-', "Filesystem error", absolutePath, " Details: ", e.what());
     }
@@ -44,7 +42,7 @@ string Logger::getTimeStamp()
 {
     time_t now = time(0);
     if (now == -1)
-        throw runtime_error("std::time failed");
+        throw runtime_error("time failed");
 
     tm *ltm = localtime(&now);
     
@@ -57,15 +55,15 @@ string Logger::getTimeStamp()
     if (currentDay != lastDay)
     {
         timeStamp << "\n--- " << ltm->tm_year + 1900 << '-'
-                  << setw(2) << setfill('0') << 1 + ltm->tm_mon << '-'
-                  << setw(2) << setfill('0') << ltm->tm_mday << " ---\n";
+                << setw(2) << setfill('0') << 1 + ltm->tm_mon << '-'
+                << setw(2) << setfill('0') << ltm->tm_mday << " ---\n";
         lastDay = currentDay;
     }
     
     // Just time for each log entry
     timeStamp << '[' << setw(2) << setfill('0') << ltm->tm_hour << ':'
-              << setw(2) << setfill('0') << ltm->tm_min << ':'
-              << setw(2) << setfill('0') << ltm->tm_sec << "] ";
+            << setw(2) << setfill('0') << ltm->tm_min << ':'
+            << setw(2) << setfill('0') << ltm->tm_sec << "] ";
     
     return timeStamp.str();
 }

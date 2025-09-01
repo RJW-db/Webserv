@@ -9,20 +9,21 @@ PRINT_NO_DIR	:=	--no-print-directory
 #		CCPFLAGS for testing
 COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
-# CCPFLAGS		+=	-Wall -Wextra
-# CCPFLAGS		+=	-Werror
-# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+CCPFLAGS		+=	-Wall -Wextra
+CCPFLAGS		+=	-Werror
+CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
+# CCPFLAGS		+=	-g
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+#		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
+# CCPFLAGS		+=	-g -fsanitize=address
+
+# ulimit -n, view the limit of fds. use ulimit -n <max_value> to set a new limit.
+FD_LIMIT		:=	$(shell n=$$(ulimit -n); echo $$((n>1024?1024:n)))
+CCPFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
 ifdef BUFFER
 CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
 endif
-ifdef SIEGE_TEST
-CCPFLAGS += -D SIEGE_TEST=true
-endif
-CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
-#		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS		+=	-g -fsanitize=address
 
 #		Directories
 BUILD_DIR		:=	.build/
@@ -32,20 +33,18 @@ DOCKER_DIR		:=	testing/docker
 #		SOURCE FILES
 SRC_DIR			:=	src/
 
-MAIN			:=	main.cpp \
-					parsing/parsing.cpp		parsing/Aconfig.cpp			parsing/ConfigServer.cpp		parsing/Location.cpp						\
-					RunServer/RunServer.cpp	RunServer/serverUtils.cpp	RunServer/clientConnection.cpp	RunServer/cleanup.cpp						\
-					request/parsingReq.cpp	request/processReq.cpp		request/response.cpp			request/validation.cpp	request/Post.cpp	\
-					utils.cpp		HandleCgiTransfer.cpp  HandleTransferChunks.cpp handleGetTransfer.cpp handlePostTransfer.cpp handleCgi.cpp handleToClientTransfer.cpp\
-					FileDescriptor.cpp	  Client.cpp			\
-					serverListenFD.cpp		\
-						loggingErrors.cpp								\
-					ErrorCodeClientException.cpp  Logger.cpp
-# PARSE			:=	parse/parsing.cpp				parse/parse_utils.cpp
+MAIN			:=	main.cpp
+PARSE			:=	parsing.cpp		Aconfig.cpp			ConfigServer.cpp		Location.cpp
+RUNSERVER		:=	RunServer.cpp	serverUtils.cpp		serverListenFD.cpp		cleanup.cpp   	clientConnection.cpp
+REQUEST			:=	parsingReq.cpp	processReq.cpp		validation.cpp			Post.cpp		response.cpp			handleCgi.cpp
+TRANSFER		:=	get.cpp 		post.cpp			toClient.cpp			cgi.cpp			chunk.cpp
+MISC			:=	utils.cpp		Client.cpp			FileDescriptor.cpp		Logger.cpp		ErrorCodeClientException.cpp
+
+SRC_ALL			:=	$(MAIN) $(addprefix parsing/, $(PARSE))		$(addprefix RunServer/, $(RUNSERVER))	$(addprefix request/, $(REQUEST))	\
+					$(addprefix HandleTransfer/, $(TRANSFER))	$(MISC)
 
 #		Find all .c files in the specified directories
-SRCP			:=	$(addprefix $(SRC_DIR), $(MAIN))
-# $(addprefix $(SRC_DIR)parsing/, $(PARSE))
+SRCP			:=	$(addprefix $(SRC_DIR), $(SRC_ALL))
 
 #		Generate object file names
 OBJS 			:=	$(SRCP:%.cpp=$(BUILD_DIR)%.o)
@@ -58,8 +57,8 @@ INCLUDE			:=	-I $(INCD)
 BUILD			:=	$(COMPILER) $(INCLUDE) $(CCPFLAGS)
 
 #		Remove these created files
-DELETE			:=	*.out			**/*.out			.DS_Store												\
-					**/.DS_Store	.dSYM/				**/.dSYM/
+DELETE			:=	*.out			**/*.out		.DS_Store	\
+					**/.DS_Store	.dSYM/			**/.dSYM/
 
 #		RECIPES
 all:	$(NAME)
@@ -89,9 +88,6 @@ test: all
 
 valgrind: all
 	valgrind -s --track-fds=yes ./$(NAME)
-
-siege:
-	$(MAKE) SIEGE_TEST=true
 
 build:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')

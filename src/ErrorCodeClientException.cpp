@@ -1,27 +1,33 @@
-#include <ErrorCodeClientException.hpp>
-#include <HandleTransfer.hpp>
-#include <HttpRequest.hpp>
-#include <FileDescriptor.hpp>
-#include <RunServer.hpp>
 #include <sys/epoll.h>
-#define ERR400 \
-"<html>\n\
-  <head><title>400 Bad Request</title></head>\n\
-  <body>\n\
-    <h1>400 Bad Request</h1>\n\
-    <p>Your browser sent a request that this server could not understand.</p>\n\
-  </body>\n\
-</html>"
-#define ERR500 \
-"<html>\n\
-  <head><title>500 Internal Server Error</title></head>\n\
-  <body>\n\
-    <h1>500 Internal Server Error</h1>\n\
-    <p>The server encountered an internal error and was unable to complete your request.</p>\n\
-  </body>\n\
-</html>"
+#include <fcntl.h>
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "FileDescriptor.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Logger.hpp"
+namespace
+{
+    constexpr const char ERR400[] =
+    "<html>\n"
+    "<head><title>400 Bad Request</title></head>\n"
+    "<body>\n"
+    "    <h1>400 Bad Request</h1>\n"
+    "    <p>Your browser sent a request that this server could not understand.</p>\n"
+    "</body>\n"
+    "</html>";
 
-ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const std::string &message)
+    constexpr const char ERR500[] =
+    "<html>\n"
+    "<head><title>500 Internal Server Error</title></head>\n"
+    "<body>\n"
+    "    <h1>500 Internal Server Error</h1>\n"
+    "    <p>The server encountered an internal error and was unable to complete your request.</p>\n"
+    "</body>\n"
+    "</html>";
+}
+
+ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const string &message)
 : _client(client), _errorCode(static_cast<uint16_t>(errorCode)), _message(message)
 {
     _errorPages = client._location.getErrorCodesWithPage();
@@ -46,7 +52,7 @@ void ErrorCodeClientException::handleErrorClient() const
         }
         handleCustomErrorPage(errorPageIt->second);
     }
-    catch(const std::exception& e)
+    catch (const exception& e)
     {
         RunServers::cleanupClient(_client);
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
@@ -66,10 +72,10 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     else
     {
         body = "<html>\n"
-            "  <head><title>" + std::to_string(_errorCode) + " Error</title></head>\n"
+            "  <head><title>" + to_string(_errorCode) + " Error</title></head>\n"
             "  <body>\n"
-            "    <h1>" + std::to_string(_errorCode) + " Error</h1>\n"
-            "    <p>An error occurred (" + std::to_string(_errorCode) + ").</p>\n"
+            "    <h1>" + to_string(_errorCode) + " Error</h1>\n"
+            "    <p>An error occurred (" + to_string(_errorCode) + ").</p>\n"
             "  </body>\n"
             "</html>";
     }

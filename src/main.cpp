@@ -1,16 +1,16 @@
 #include <sys/stat.h>
-#include <RunServer.hpp>
-#include <Parsing.hpp>
-#include <FileDescriptor.hpp>
-#include <Logger.hpp>
-
-constexpr char LOG_DIR[] = "log";
-constexpr char LOG[] = "webserv.log";
-constexpr char DEFAULT_CONFIG[] = "config/default.conf";
+#include <unistd.h>
+#include "FileDescriptor.hpp"
+#include "RunServer.hpp"
+#include "Parsing.hpp"
+#include "Logger.hpp"
 volatile sig_atomic_t g_signal_status = 0;
+namespace
+{
+    constexpr char LOG_DIR[] = "log";
+    constexpr char LOG[] = "webserv.log";
+    constexpr char DEFAULT_CONFIG[] = "config/default.conf";
 
-
-namespace {
     int  runWebServer(int argc, char *argv[]);
     void setupEnvironment();
     void setupSignalHandlers();
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     {
         Logger::log(ERROR, "An error occurred: ", e.what());
     }
-    catch(...)
+    catch (...)
     {
         Logger::log(ERROR, "An error occurred");
     }
@@ -56,6 +56,9 @@ namespace
         initRandomSeed();
         RunServers::getExecutableDirectory();
         Logger::initialize(LOG_DIR, LOG);
+        if (FD_LIMIT <= 5 || FD_LIMIT > 65536)
+            Logger::logExit(ERROR, "FD_LIMIT is set to an invalid value: ", FD_LIMIT,
+                        "It must be between 6 and 65536. Please recompile with a valid FD_LIMIT.");
         atexit(FileDescriptor::cleanupAllFD);
         atexit(RunServers::cleanupEpoll);
     }
@@ -75,17 +78,6 @@ namespace
     void configureServer(int argc, char *argv[])
     {
         const char *confFile = (argc >= 2) ? argv[1] : DEFAULT_CONFIG;
-        // if (argc == 3)
-        // {
-        //     try
-        //     {
-        //         RunServers::setClientBufferSize(stoullSafe(argv[2]));
-        //     }
-        //     catch(const std::exception& e)
-        //     {
-        //         Logger::logExit(ERROR, "Config error", '-', "Client buffer size failed", e.what());
-        //     }
-        // }
         Parsing configFile(confFile);
         RunServers::createServers(configFile.getConfigs());
     }

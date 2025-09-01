@@ -1,9 +1,8 @@
-#include <RunServer.hpp>
-#include <ConfigServer.hpp>
 #include <cstring>
-
-// Constants for better readability
-namespace {
+#include "ConfigServer.hpp"
+#include "RunServer.hpp"
+namespace
+{
     const char *WHITESPACE_SEMICOLON = " \t\f\v\r;";
     const char* WHITESPACE_OPEN_BRACKET = " \t\f\v\r{";
 
@@ -14,8 +13,6 @@ namespace {
     const uint8_t DELETE_METHOD_BIT = 8;
     const uint8_t ALL_METHODS = HEAD_METHOD_BIT | GET_METHOD_BIT | POST_METHOD_BIT | DELETE_METHOD_BIT;
 }
-
-// Location class functions (in header order)
 
 Location::Location(const Location &other) : Alocation(other)
 {
@@ -42,7 +39,7 @@ void Location::getLocationPath(string &line)
     // Location paths must start with '/'
     if (_locationPath[0] != '/')
         throw runtime_error(to_string(_lineNbr) + ": location path: invalid location path '" +
-                           _locationPath + "' - must start with '/'");
+                        _locationPath + "' - must start with '/'");
 }
 
 bool Location::checkMethodEnd(bool &findColon, string &line)
@@ -69,7 +66,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
     }
     else if (expectedTokenIndex != 0)
         throw runtime_error(to_string(_lineNbr) + ": limit_except: expected '" +
-                           expectedTokens[expectedTokenIndex] + "' after limit_except directive");
+                        expectedTokens[expectedTokenIndex] + "' after limit_except directive");
     return false;
 }
 
@@ -237,7 +234,7 @@ Alocation &Alocation::operator=(const Alocation &other)
 bool Alocation::isCgiFile(string_view &filename) const
 {
     size_t extensionPos = filename.find_last_of('.');
-    string_view fileExtension = filename.data() + extensionPos;
+    string_view fileExtension(filename.data() + extensionPos);
     for(const string &cgiExtension : _cgiExtension)
     {
         if (filename == cgiExtension || fileExtension == cgiExtension)

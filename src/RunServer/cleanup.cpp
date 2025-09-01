@@ -1,14 +1,11 @@
+#include <sys/wait.h>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
-#include <sys/wait.h>
-#include <RunServer.hpp>
-#include <HttpRequest.hpp>
-#include <ErrorCodeClientException.hpp>
-// #include <HttpRequest.hpp>
-// #include <iostream>
-// #include <FileDescriptor.hpp>
-// #include <HandleTransfer.hpp>
+#include "ErrorCodeClientException.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 
 void RunServers::disconnectChecks()
@@ -22,19 +19,19 @@ void RunServers::disconnectChecks()
     {
         e.handleErrorClient();  //TODO anything throwing in here stops the server?
     }
-    catch(Logger::ErrorLogExit&)
+    catch (Logger::ErrorLogExit&)
     {
         Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         Logger::log(ERROR, "Server error", '-', "Exception in disconnectChecks: ", e.what());
     }
 }
 
-vector<unique_ptr<HandleTransfer>>::iterator RunServers::cleanupHandleCgi(vector<unique_ptr<HandleTransfer>>::iterator it, int clientfd)
+HandleTransferIter RunServers::cleanupHandleCgi(HandleTransferIter it, int clientfd)
 {
-    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    HandleTransferIter lastAfter = it;
     if (it != _handleCgi.begin())
         --it;
     while (it != _handleCgi.end())
@@ -66,7 +63,7 @@ void RunServers::checkCgiDisconnect()
         //     // it = _handleCgi.erase(it);
         //     continue ;
         // }
-        // std::cout << "_handleType " << +((*it)->_handleType) << std::endl; //testcout
+        // cout << "_handleType " << +((*it)->_handleType) << endl; //testcout
         pid_t result = waitpid(client._pid, &exit_code, WNOHANG);
 
         if (result == 0)
@@ -90,6 +87,7 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
+                Logger::log(DEBUG, "Child process for client ", client._fd, " exited with status ", WEXITSTATUS(exit_code));
                 it = killCgiPipes(_handleCgi.begin(), client._pid);
             }
 
@@ -97,9 +95,9 @@ void RunServers::checkCgiDisconnect()
     }
 }
 
-vector<unique_ptr<HandleTransfer>>::iterator RunServers::killCgiPipes(vector<unique_ptr<HandleTransfer>>::iterator it, pid_t pid)
+HandleTransferIter RunServers::killCgiPipes(HandleTransferIter it, pid_t pid)
 {
-    vector<unique_ptr<HandleTransfer>>::iterator lastAfter = it;
+    HandleTransferIter lastAfter = it;
     while (it != _handleCgi.end())
     {
         try
@@ -124,12 +122,12 @@ vector<unique_ptr<HandleTransfer>>::iterator RunServers::killCgiPipes(vector<uni
             }
             ++it;
         }
-        catch(ErrorCodeClientException& e)
+        catch (ErrorCodeClientException& e)
         {
             e.handleErrorClient();
             return cleanupHandleCgi(it, pid);
         }
-        catch(const std::exception& e)
+        catch (const exception& e)
         {
             Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
             cleanupClient((*it)->_client);
@@ -162,7 +160,7 @@ void RunServers::checkClientDisconnects()
             }
         }
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
         Logger::log(ERROR, "Server error", '-', "Exception in checkClientDisconnects: ", e.what());
     }
@@ -176,7 +174,7 @@ void RunServers::removeHandlesWithFD(int fd)
         {
             if ((*it)->_handleType == HANDLE_READ_FROM_CGI_TRANSFER)
             {
-                FileDescriptor::cleanupFD((*it)->_fd);
+                FileDescriptor::cleanupEpollFd((*it)->_fd);
             }
             else
             {
@@ -193,7 +191,7 @@ void RunServers::closeHandles(pid_t pid)
     {
         if ((*it)->_client._pid == pid)
         {
-            FileDescriptor::cleanupFD((*it)->_fd);
+            FileDescriptor::cleanupEpollFd((*it)->_fd);
             it =_handleCgi.erase(it);
             continue ;
         }
@@ -213,7 +211,7 @@ void RunServers::clientHttpCleanup(Client &client)
     client._contentLength = 0;
     client._headerFields.clear();
     client._rootPath.clear();
-	client._filenamePath.clear();
+    client._filenamePath.clear();
     client._name.clear();
     client._version.clear();
     client._bodyEnd = 0;
@@ -237,5 +235,5 @@ void RunServers::cleanupClient(Client &client)
     }
     cleanupHandleCgi(_handleCgi.begin(), clientFD);
     _clients.erase(clientFD);
-    FileDescriptor::cleanupFD(clientFD);
+    FileDescriptor::cleanupEpollFd(clientFD);
 }

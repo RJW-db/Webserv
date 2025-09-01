@@ -1,4 +1,4 @@
-#include <Client.hpp>
+#include "Client.hpp"
 
 Client::Client(int fd)
 : _fd(fd), _headerParseState(HEADER_AWAITING), _contentLength(0), _keepAlive(true)
@@ -16,7 +16,7 @@ void Client::resetRequestState()
     _version.clear();
     _contentLength = 0;
     _contentType = string_view();
-    _bodyBoundary = string_view();
+    _boundary = string_view();
     _filename.clear();
     _filenamePath.clear();
     _fileContent = string_view();

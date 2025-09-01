@@ -1,8 +1,11 @@
-#include <HandleTransfer.hpp>
-#include <RunServer.hpp>
-#include <ErrorCodeClientException.hpp>
-#include <HttpRequest.hpp>
-#include <Client.hpp>
+#include <algorithm>
+#include "ErrorCodeClientException.hpp"
+#include "HandleTransfer.hpp"
+#include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "Client.hpp"
+#include "Logger.hpp"
 
 HandleChunkTransfer::HandleChunkTransfer(Client &client)
 : HandlePostTransfer(client, -1)
@@ -27,7 +30,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
         if (decodeChunk(targetSize) == false)
             return false;
     }
-    catch(const exception& e)
+    catch (const exception& e)
     {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));

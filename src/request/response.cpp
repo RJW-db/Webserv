@@ -1,4 +1,8 @@
+#include "ErrorCodeClientException.hpp"
 #include "HttpRequest.hpp"
+#include "RunServer.hpp"
+#include "Constants.hpp"
+#include "Logger.hpp"
 
 string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
 {
@@ -112,7 +116,7 @@ void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, stri
 }
 
 string HttpRequest::buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
-                                   const string &input, size_t headerSize, bool hasBody)
+                                const string &input, size_t headerSize, bool hasBody)
 {
     ostringstream response;
     response << "HTTP/1.1 " << headerFields.at("Status") << CRLF;

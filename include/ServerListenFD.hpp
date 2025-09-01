@@ -1,7 +1,5 @@
 #ifndef SERVERLISTENFD_HPP
 #define SERVERLISTENFD_HPP
-#include <FileDescriptor.hpp>
-
 
 class ServerListenFD
 {
@@ -11,14 +9,13 @@ class ServerListenFD
 
         int	getFD() const;
 
-
         void createListenerSocket();
         struct addrinfo *getServerAddrinfo(void);
         void bindToSocket(struct addrinfo *server);
+
     private:
         int         _listener;
         const char *_port;
         const char *_hostName;
 };
-
 #endif
