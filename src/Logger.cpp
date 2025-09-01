@@ -20,7 +20,7 @@ void Logger::initialize(const string &logDir, const string &filename)
     {
         Logger::logExit(ERROR, "Log file error", '-', strerror(errno), ' ', absoluteFilePath);
     }
-
+    std::cout << "Log file descriptor: " << _logFd << std::endl; //testcout
     FileDescriptor::setFD(_logFd);
     log(INFO, "Log file initialized", _logFd, "logFD", absoluteFilePath);
 }

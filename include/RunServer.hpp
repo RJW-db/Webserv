@@ -5,8 +5,9 @@
 #include "HandleTransfer.hpp"
 #include "ConfigServer.hpp"
 #define _XOPEN_SOURCE 700  // VSC related, make signal and struct visible
-#define FD_LIMIT 1024
-#define EPOLL_DEL_EVENTS 0
+#ifndef FD_LIMIT
+# define FD_LIMIT 1024
+#endif
 using namespace std;
 using ServerList = vector<unique_ptr<AconfigServ>>;
 using HandleTransferIter = std::vector<std::unique_ptr<HandleTransfer>>::iterator;

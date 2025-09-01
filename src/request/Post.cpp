@@ -60,7 +60,7 @@ void HttpRequest::getContentType(Client &client)
             client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
             if (boundaryPos != string_view::npos)
-                client._bodyBoundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
+                client._boundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
             else
                 throw RunServers::ClientException("Malformed multipart Content-Type: boundary not found");
         }

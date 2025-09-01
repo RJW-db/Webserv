@@ -93,7 +93,7 @@ bool HandlePostTransfer::processMultipartData()
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);
         if (boundaryPos != string::npos)
         {
-            _fileBuffer = _fileBuffer.erase(0, _client._bodyBoundary.size() + boundaryPos - bytesWritten);
+            _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
             RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
             _foundBoundary = true;
         }
@@ -110,9 +110,9 @@ bool HandlePostTransfer::processMultipartData()
  */
 size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
 {
-    size_t boundaryBufferSize = _client._bodyBoundary.size() + BOUNDARY_PADDING; 
+    size_t boundaryBufferSize = _client._boundary.size() + BOUNDARY_PADDING; 
     size_t writeSize = (boundaryBufferSize >= _fileBuffer.size()) ? 0 : _fileBuffer.size() - boundaryBufferSize;
-    size_t boundaryPos = _fileBuffer.find(_client._bodyBoundary);
+    size_t boundaryPos = _fileBuffer.find(_client._boundary);
     if (boundaryPos != string::npos)
     {
         if (boundaryPos >= BOUNDARY_PADDING && strncmp(_fileBuffer.data() + boundaryPos - BOUNDARY_PADDING, "\r\n--", BOUNDARY_PADDING) == 0)
@@ -210,7 +210,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
  */
 bool HandlePostTransfer::handlePostCgi()
 {
-    if (_fileBuffer.find(string(_client._bodyBoundary) + "--" + CRLF) == string::npos)
+    if (_fileBuffer.find(string(_client._boundary) + "--" + CRLF) == string::npos)
         return false;
 
     if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
@@ -295,10 +295,10 @@ bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
             needsContentDisposition = false;
             continue;
         }
-        size_t boundaryPos = buffer.find(client._bodyBoundary);
+        size_t boundaryPos = buffer.find(client._boundary);
         if (boundaryPos == string_view::npos)
             throw ErrorCodeClientException(client, 400, "Expected boundary not found in multipart data");
-        buffer.remove_prefix(boundaryPos + client._bodyBoundary.size());
+        buffer.remove_prefix(boundaryPos + client._boundary.size());
         foundBoundary = true;
     }
     throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");

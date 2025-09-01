@@ -6,82 +6,28 @@
 #include "FileDescriptor.hpp"
 #include "RunServer.hpp"
 #include "Logger.hpp"
-
 vector<int> FileDescriptor::_fds = {};
-
-void FileDescriptor::cleanupEpollFd(int &fd)
+namespace
 {
-    if (fd > 0)
-    {
-        vector<int> &fds = RunServers::getEpollAddedFds();
-        auto it = find(fds.begin(), fds.end(), fd);
-        if (it != fds.end())
-        {
-            RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
-            fds.erase(it);
-        }
-        FileDescriptor::closeFD(fd);
-    }
+    constexpr uint32_t EPOLL_DEL_EVENTS = 0;
 }
 
-void FileDescriptor::cleanupAllFD()
+void FileDescriptor::setFD(int fd)
 {
-    while (!_fds.empty())
+    try
     {
-        int fd = _fds.back();
-        closeFD(fd);
+        _fds.push_back(fd);
     }
-}
-
-void FileDescriptor::printAllFDs()
-{
-    Logger::log(DEBUG, "Current tracked FDs (", _fds.size(), " total):");
-    for (size_t i = 0; i < _fds.size(); i++) {
-        Logger::log(DEBUG, "  [", i, "] FD: ", _fds[i]);
-    }
-    if (_fds.empty()) {
-        Logger::log(DEBUG, "  No FDs currently tracked");
-    }
-}
-
-bool	FileDescriptor::closeFD(int &fd)
-{
-    if (fd == -1)
-        return true;
-    vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
-    if (it != _fds.end())
+    catch (const std::bad_alloc& e)
     {
-        // std::cerr << "closing fd " << fd << std::endl; //testcout
-        if (safeCloseFD(fd) == false) // TODO EIO, how to resove for parent and child
-            return false;
-        _fds.erase(it);
-        Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
-        fd = -1;
+        safeCloseFD(fd);
+        Logger::logExit(ERROR, "setFD failed while adding FD:", fd, e.what());
     }
-    else
+    catch (...)
     {
-        if (fd != -1)
-            Logger::log(WARN, "FileDescriptor error", fd, "Not in vector", "closeFD attempted");
+        safeCloseFD(fd);
+        Logger::logExit(ERROR, "setFD failed on unknown exception while adding FD:", fd);
     }
-    return true;
-}
-
-// bool only used for child with return false
-bool    FileDescriptor::safeCloseFD(int fd)
-{
-    int ret;
-    do
-    {
-        ret = close(fd);
-    } while (ret == -1 && errno == EINTR);
-
-    if (ret == -1 && errno == EIO)
-    {
-        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
-        RunServers::fatalErrorShutdown();
-        return false;
-    }
-    return true;
 }
 
 bool FileDescriptor::setNonBlocking(int sfd)
@@ -101,4 +47,76 @@ bool FileDescriptor::setNonBlocking(int sfd)
         return false;
     }
     return true;
+}
+
+bool    FileDescriptor::safeCloseFD(int fd)
+{
+    int ret;
+    do
+    {
+        ret = close(fd);
+    } while (ret == -1 && errno == EINTR);
+
+    if (ret == -1 && errno == EIO)
+    {
+        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        RunServers::fatalErrorShutdown();
+        return false;
+    }
+    return true;
+}
+
+bool	FileDescriptor::closeFD(int &fd)
+{
+    if (fd == -1)
+        return true;
+    vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
+    if (it != _fds.end())
+    {
+        if (safeCloseFD(fd) == false)
+            return false;
+        _fds.erase(it);
+        Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
+        fd = -1;
+    }
+    else
+    {
+        if (fd != -1)
+            Logger::log(WARN, "FileDescriptor error", fd, "Not in vector", "closeFD attempted");
+    }
+    return true;
+}
+
+void FileDescriptor::cleanupAllFD()
+{
+    while (!_fds.empty())
+    {
+        int fd = _fds.back();
+        closeFD(fd);
+    }
+}
+
+void FileDescriptor::cleanupEpollFd(int &fd)
+{
+    if (fd > 0)
+    {
+        vector<int> &fds = RunServers::getEpollAddedFds();
+        auto it = find(fds.begin(), fds.end(), fd);
+        if (it != fds.end())
+        {
+            RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+            fds.erase(it);
+        }
+        FileDescriptor::closeFD(fd);
+    }
+}
+
+void FileDescriptor::printAllFDs()
+{
+    for (size_t i = 0; i < _fds.size(); i++) {
+        Logger::log(DEBUG, "[", i, "] FD: ", _fds[i]);
+    }
+    if (_fds.empty()) {
+        Logger::log(DEBUG, "No FDs currently tracked");
+    }
 }

@@ -13,13 +13,17 @@ CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
 CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
-ifdef BUFFER
-CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
-endif
 CCPFLAGS		+=	-g
 CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
+
+# ulimit -n, view the limit of fds. use ulimit -n <max_value> to set a new limit.
+FD_LIMIT		:=	$(shell n=$$(ulimit -n); echo $$((n>1024?1024:n)))
+CCPFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
+ifdef BUFFER
+CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
+endif
 
 #		Directories
 BUILD_DIR		:=	.build/

@@ -40,6 +40,8 @@ void RunServers::runServers()
         int eventCount;
 
         disconnectChecks();
+        if (g_signal_status == 0)
+            break;
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
 
         if (eventCount == -1)

@@ -1,6 +1,5 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
-#include <cstddef>
 
 constexpr size_t DISCONNECT_DELAY_SECONDS = 40;
 constexpr char CRLF[] = "\r\n";

@@ -57,13 +57,13 @@ class Client
         uint8_t _useMethod;
         string _requestPath;
         string _queryString;
-        string _rootPath; // root + requestpath
-        string _filenamePath; // rootpath + filename
+        string _rootPath;      // root + requestpath
+        string _filenamePath;  // rootpath + filename
         string _version;
         size_t _contentLength;
         size_t _bodyEnd;
         string_view _contentType;
-        string_view _bodyBoundary;  // shorten to just _boundary
+        string_view _boundary;
 
         pid_t _pid = -1;
         string _filename;
