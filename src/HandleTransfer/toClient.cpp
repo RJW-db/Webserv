@@ -11,7 +11,7 @@ HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
 {
     _fileBuffer = response;
     _bytesReadTotal = 0;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
+    RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
 bool HandleToClientTransfer::sendToClientTransfer()
@@ -22,7 +22,7 @@ bool HandleToClientTransfer::sendToClientTransfer()
         _bytesReadTotal += static_cast<size_t>(sent);
         if (_fileBuffer.size() == _bytesReadTotal || sent == 0)
         {
-            RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+            RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
             return true;
         }
     }

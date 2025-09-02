@@ -249,7 +249,7 @@ namespace
                 return;
             }
         }
-
+        
         if (client._location.getAutoIndex() == true)
             client._isAutoIndex = true;
         else

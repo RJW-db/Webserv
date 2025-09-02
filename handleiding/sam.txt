@@ -1,57 +1,10 @@
 
-dingen die nog moeten worden geimplementeerd: upload_store, autoindex, return (redirect)
+dingen die nog moeten worden geimplementeerd: upload_store
 zorgen dat voor chunked max_body_size wordt gechecked
 
-tests te maken
+erase calls bekijken of ze in destructor of anders kunnen throwen
 
-get
-missing HOST
-not in limit except
-wrong path not starting with /
-different http version
-Accept not text/html
-incorrect Connection type
-request with incorrect characters that turn into %
-request with body in GET request
-request with duplicate headers
+cgi error codes aanpassen
 
-
-post
-
-too big
-no filename
-incorrect content Type
-missing boundary start
-missing boundary end
-missing content length
-wrong Connection header
-missing content-disposition
-wrong content-disposition line
-missing content Type
-unsupported content type
-not in limit except
-empty body
-body with only boundary, no data
-content-length smaller than actual body
-content-length larger than actual body
-
-
-make sure no characters in buff after last \r\n ~
-
-check for just \r\n before boundary and add -- check ~
-
-compare bodysize to contentLength ~
-
-meer boundary kunnen hanteren 
-
-ook hanteren als er geen file is maar gewoon form
-
-
-
-
-for cgi
-
-when receiving multipart data without filename we should convert to url encoded before sending to stdin cgi
-
-query string(? in requestpath) only for cgi and otherwise ignored
+verder testen falen setepollevents voor pipes en clients
 

@@ -12,7 +12,7 @@ HandleChunkTransfer::HandleChunkTransfer(Client &client)
 {
     _bytesReadTotal = 0;
     _handleType = HANDLE_CHUNK_TRANSFER;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+    RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
 void HandleChunkTransfer::appendToBody()

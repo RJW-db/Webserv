@@ -101,8 +101,8 @@ namespace
 
         try
         {
-            RunServers::setEpollEvents(fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
-            RunServers::setEpollEvents(fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
+            RunServers::setEpollEventsClient(client, fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
+            RunServers::setEpollEventsClient(client, fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
                     
             if (client._useMethod & METHOD_POST)
             {
@@ -262,7 +262,7 @@ namespace
 
         envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
         envpString.push_back("SERVER_NAME=" + client._usedServer->getServerName());
-        // envpString.push_back("SERVER_PORT=" + client._usedServer->getPortHost());
+        envpString.push_back("SERVER_PORT=" + client._ipPort.second);
 
         envpString.push_back("DOCUMENT_ROOT=" + client._location.getRoot());
         return envpString;

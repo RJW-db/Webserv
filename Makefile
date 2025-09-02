@@ -13,8 +13,8 @@ CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
 CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
-# CCPFLAGS		+=	-g
-# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+CCPFLAGS		+=	-g
+CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 
@@ -87,7 +87,7 @@ test: all
 	./$(NAME)
 
 valgrind: all
-	valgrind -s --track-fds=yes ./$(NAME)
+	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
 
 build:
 	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')

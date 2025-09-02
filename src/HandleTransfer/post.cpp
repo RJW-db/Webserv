@@ -26,7 +26,7 @@ HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string 
 {
     _bytesReadTotal = bytesRead;
     _fileBuffer = buffer;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+    RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
 /**
@@ -94,7 +94,7 @@ bool HandlePostTransfer::processMultipartData()
         if (boundaryPos != string::npos)
         {
             _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
-            RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+            RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
             _foundBoundary = true;
         }
         else

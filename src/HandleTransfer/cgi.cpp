@@ -10,7 +10,6 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body,
 {
     _fileBuffer = body;
     _handleType = HANDLE_WRITE_TO_CGI_TRANSFER;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()

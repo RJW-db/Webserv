@@ -12,6 +12,14 @@
 #include "ConfigServer.hpp"
 #include "RunServer.hpp"
 #include "Logger.hpp"
+namespace
+{
+    constexpr const char   *EPOLL_OPTIONS[3] = {
+        "EPOLL_CTL_ADD: ",
+        "EPOLL_CTL_DEL: ",
+        "EPOLL_CTL_MOD: "
+    };
+}
 
 void RunServers::getExecutableDirectory()
 {
@@ -69,19 +77,19 @@ void RunServers::epollInit(ServerList &servers)
     }
 }
 
-// void RunServers::addStdinToEpoll()
-// {
-//     int stdin_fd = 0;
+void RunServers::addStdinToEpoll()
+{
+    int stdin_fd = 0;
 
-//     if (FileDescriptor::setNonBlocking(stdin_fd) == false)
-//         Logger::logExit(ERROR, "Server error" , '-', "Failed to set stdin to non-blocking mode");
+    if (FileDescriptor::setNonBlocking(stdin_fd) == false)
+        Logger::logExit(ERROR, "Server error" , '-', "Failed to set stdin to non-blocking mode");
 
-//     struct epoll_event current_event;
-//     current_event.data.fd = stdin_fd;
-//     current_event.events = EPOLLIN;
-//     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
-//         Logger::logExit(ERROR, "Server error" , '-', "epoll_ctl (stdin): ", strerror(errno));
-// }
+    struct epoll_event current_event;
+    current_event.data.fd = stdin_fd;
+    current_event.events = EPOLLIN;
+    if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
+        Logger::logExit(ERROR, "Server error" , '-', "epoll_ctl (stdin): ", strerror(errno));
+}
 
 // setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 void RunServers::setEpollEvents(int fd, int option, uint32_t events)
@@ -90,13 +98,36 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
     ev.data.fd = fd;
     ev.events = events;
     if (epoll_ctl(_epfd, option, fd, &ev) == -1)
+        Logger::logExit(ERROR, "Server Error", fd, "Invalid FD, setEpollEvents failed");
+    if (option == EPOLL_CTL_ADD)
+        _epollAddedFds.push_back(fd);
+}
+
+// setEpollEventsClient(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
+void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32_t events)
+{
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    ev.events = events;
+    // throwTesting();
+    static int testCount = 0;
+    if (testCount++ == 0 || epoll_ctl(_epfd, option, fd, &ev) == -1)
     {
-        if (_clients.count(fd) == 0 || !_clients[fd])
+        if (_clients.count(fd) == 0) // pipes
         {
-            Logger::log(ERROR, "Server Error", fd, "Invalid FD, setEpollEvents failed");
-            throw runtime_error("epoll_ctl failed: " + string(strerror(errno)));
+            if (option == EPOLL_CTL_DEL)
+                Logger::logExit(ERROR, "Server Error", fd, "Invalid FD, epoll_ctl failed on: ", EPOLL_OPTIONS[option - 1], strerror(errno));
+            throw ErrorCodeClientException(client, 502, "Server Error: epoll_ctl failed on: " + string(EPOLL_OPTIONS[option - 1]) + strerror(errno) + " for fd: " + to_string(fd));
         }
-        throw ErrorCodeClientException(*_clients[fd], 0, "epoll_ctl failed: " + string(strerror(errno)) + " for fd: " + to_string(fd));
+        else // client
+        {
+            if (option == EPOLL_CTL_DEL)
+                Logger::logExit(ERROR, "epoll_ctl error", fd, "SetEpollEvents failed on: ", EPOLL_OPTIONS[option - 1], strerror(errno));
+            if (events & EPOLLOUT || option == EPOLL_CTL_ADD)
+                throw ErrorCodeClientException(*_clients[fd], 0, "Server Error: epoll_ctl failed on: " + string(EPOLL_OPTIONS[option - 1]) + strerror(errno) + " for fd: " + to_string(fd));
+            if (events & EPOLLIN)
+                throw ErrorCodeClientException(*_clients[fd], 500, "Server Error: epoll_ctl failed on: " + string(EPOLL_OPTIONS[option - 1]) + strerror(errno) + " for fd: " + to_string(fd));
+        }
     }
     if (option == EPOLL_CTL_ADD)
         _epollAddedFds.push_back(fd);

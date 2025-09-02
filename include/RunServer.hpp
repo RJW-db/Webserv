@@ -27,6 +27,7 @@ class RunServers
         
         // utils
         static void   setEpollEvents(int fd, int option, uint32_t events);
+        static void   setEpollEventsClient(Client &client, int fd, int option, uint32_t events);
         static void   setServerFromListener(Client &client);
         static void   setLocation(Client &state);
         static inline void   fatalErrorShutdown() {

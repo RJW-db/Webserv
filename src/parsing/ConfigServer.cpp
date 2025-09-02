@@ -125,7 +125,7 @@ void ConfigServer::setDefaultConf()
     {
         Location location;
         location.SetDefaultLocation(*this);
-        _locations.insert(_locations.begin(), {"/", location});
+        _locations.insert(_locations.end(), {"/", location});
     }
     setDefaultErrorPages();
 }

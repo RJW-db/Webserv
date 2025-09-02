@@ -38,7 +38,6 @@ void ServerListenFD::createListenerSocket()
 {
 	struct addrinfo *serverInfo = getServerAddrinfo();
 	bindToSocket(serverInfo);
-	freeaddrinfo(serverInfo);
 	if (FileDescriptor::setNonBlocking(_listener) == false)
 		Logger::logExit(ERROR, "Server error", '-', "Non-blocking fail", _listener, ": ", strerror(errno));
 
@@ -66,26 +65,36 @@ struct addrinfo* ServerListenFD::getServerAddrinfo(void)
 void ServerListenFD::bindToSocket(struct addrinfo *server)
 {
 	struct addrinfo *p;
-	for (p = server; p != NULL; p = p->ai_next)
+	try
 	{
-		_listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-
-		if (_listener < 0)
-			continue;
-
-		int reUse = 1;
-		setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &reUse, sizeof(int));
-		if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1)
+		for (p = server; p != NULL; p = p->ai_next)
 		{
-			if (FileDescriptor::safeCloseFD(_listener) == false)
-				Logger::logExit(FATAL, "Server error", _listener, "Attempted to close a file descriptor that is not in the vector");
-			continue;
+			
+			_listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+	
+			if (_listener < 0)
+				continue;
+	
+			int reUse = 1;
+			setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &reUse, sizeof(int));
+			if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1)
+			{
+				if (FileDescriptor::safeCloseFD(_listener) == false)
+					Logger::logExit(FATAL, "Server error", _listener, "Attempted to close a file descriptor that is not in the vector");
+				continue;
+			}
+			FileDescriptor::setFD(_listener);
+			Logger::log(INFO, "Server created", _listener, "listenFD",  "Successfuly bound to ", _hostName, ':', _port);
+			
+			RunServers::setEpollEvents(_listener, EPOLL_CTL_ADD, EPOLLIN);
+			freeaddrinfo(server);
+			return;
 		}
-		FileDescriptor::setFD(_listener);
-		Logger::log(INFO, "Server created", _listener, "listenFD",  "Successfuly bound to ", _hostName, ':', _port);
-
-		RunServers::setEpollEvents(_listener, EPOLL_CTL_ADD, EPOLLIN);
-		return;
+	}
+	catch(...)
+	{
+		freeaddrinfo(server);
+		throw;
 	}
 	freeaddrinfo(server);
 	Logger::logExit(ERROR, "Server error", '-', "Server bindToSocket: ", strerror(errno));

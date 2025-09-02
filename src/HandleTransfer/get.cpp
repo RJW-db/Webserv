@@ -11,7 +11,7 @@ HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHea
 {
     _bytesReadTotal = 0;
     _fileBuffer = responseHeader;
-    RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLOUT);
+    RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
 
 bool HandleGetTransfer::handleGetTransfer()
@@ -25,7 +25,7 @@ bool HandleGetTransfer::handleGetTransfer()
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     if (_bytesReadTotal >= _fileSize)
     {
-        RunServers::setEpollEvents(_client._fd, EPOLL_CTL_MOD, EPOLLIN);
+        RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
         Logger::log(INFO, _client, "GET    ", _client._filenamePath);
         return true;
     }

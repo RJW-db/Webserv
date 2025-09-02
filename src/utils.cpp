@@ -106,9 +106,9 @@ void throwTesting()
     static uint8_t count = 1;
 
     // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
-    if (count++ < 2)
+    if (count++ == 1)
     {
-        throw bad_alloc();
+        Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
         // throw runtime_error("Throw test");
     }
 }

@@ -103,7 +103,13 @@ void FileDescriptor::cleanupEpollFd(int &fd)
         auto it = find(fds.begin(), fds.end(), fd);
         if (it != fds.end())
         {
-            RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+            try
+            {
+                RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
+            }
+            catch(...)
+            {
+            }
             fds.erase(it);
         }
         FileDescriptor::closeFD(fd);

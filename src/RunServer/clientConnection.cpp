@@ -31,11 +31,13 @@ void RunServers::acceptConnection(const int listener)
             break;
         }
 
-        if (addFdToEpoll(infd) == false)
-            break;
-
+        // if (addFdToEpoll(infd) == false)
+        //     break;
+        FileDescriptor::setFD(infd);
         _clients[infd] = make_unique<Client>(infd);
         setClientServerAddress(*_clients[infd], infd);
+
+        setEpollEventsClient(*_clients[infd], infd, EPOLL_CTL_ADD, EPOLLIN);
 
         Logger::log(INFO, *_clients[infd], 
             "Connected on: " + NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)) + 
@@ -87,6 +89,10 @@ void RunServers::processClientRequest(Client &client)
             return ;
         // client._finishedProcessClientRequest = true;
         HttpRequest::processRequest(client);
+    }
+    catch (const Logger::ErrorLogExit&)
+    {
+        throw;
     }
     catch (const exception& e)
     {
