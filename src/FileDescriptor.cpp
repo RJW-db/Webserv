@@ -21,12 +21,12 @@ void FileDescriptor::setFD(int fd)
     catch (const bad_alloc& e)
     {
         safeCloseFD(fd);
-        Logger::logExit(ERROR, "setFD failed while adding FD:", fd, e.what());
+        throw;
     }
     catch (...)
     {
         safeCloseFD(fd);
-        Logger::logExit(ERROR, "setFD failed on unknown exception while adding FD:", fd);
+        throw;
     }
 }
 
@@ -73,10 +73,12 @@ bool	FileDescriptor::closeFD(int &fd)
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
     if (it != _fds.end())
     {
-        if (safeCloseFD(fd) == false)
-            return false;
+        if (fd == Logger::getLogfd())
+            Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
+        safeCloseFD(fd);
         _fds.erase(it);
-        Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
+        if (fd != Logger::getLogfd())
+            Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
         fd = -1;
     }
     else
@@ -90,10 +92,7 @@ bool	FileDescriptor::closeFD(int &fd)
 void FileDescriptor::cleanupAllFD()
 {
     while (!_fds.empty())
-    {
-        int fd = _fds.back();
-        closeFD(fd);
-    }
+        closeFD(_fds.back());
 }
 
 void FileDescriptor::cleanupEpollFd(int &fd)

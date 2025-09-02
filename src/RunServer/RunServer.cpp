@@ -46,7 +46,8 @@ void RunServers::runServers()
         {
             if (errno == EINTR)
             {
-                Logger::log(WARN, "epoll_wait interrupted by signal: ", g_signal_status);
+                if (g_signal_status != SIGINT)
+                    Logger::log(WARN, "epoll_wait interrupted by signal: ", g_signal_status);
                 continue;
             }
             Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));
@@ -77,9 +78,9 @@ void RunServers::handleEvents(size_t eventCount)
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
 
-            if (eventFD == 0 && (currentEvent.events & EPOLLIN) &&
-                handleEpollStdinEvents())
-                continue;
+            // if (eventFD == 0 && (currentEvent.events & EPOLLIN) &&
+            //     handleEpollStdinEvents())
+            //     continue;
 
             if (handleEpollErrorEvents(currentEvent, eventFD))
                 continue;

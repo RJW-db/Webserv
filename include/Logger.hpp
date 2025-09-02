@@ -46,6 +46,8 @@ class Logger
         template<typename... Args>
         static string makeRawMessage(uint8_t level, Args&&... args);
 
+        static inline int getLogfd() { return _logFd; }
+
         class ErrorLogExit : public exception
         {
         public:
@@ -95,8 +97,7 @@ void Logger::log(uint8_t level, Args&&... args)
 
         if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
         {
-            if (_logFd != 3)
-                cerr << getTimeStamp() << logLevelToString(ERROR, TERMINAL) << "Writing to log file failed: " << strerror(errno) << endl;
+            cerr << getTimeStamp() << logLevelToString(ERROR, TERMINAL) << "Writing to log file failed: " << strerror(errno) << endl;
             _logFd = -1;
         }
 

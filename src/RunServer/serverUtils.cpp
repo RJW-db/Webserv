@@ -69,19 +69,19 @@ void RunServers::epollInit(ServerList &servers)
     }
 }
 
-void RunServers::addStdinToEpoll()
-{
-    int stdin_fd = 0;
+// void RunServers::addStdinToEpoll()
+// {
+//     int stdin_fd = 0;
 
-    if (FileDescriptor::setNonBlocking(stdin_fd) == false)
-        Logger::logExit(ERROR, "Server error" , '-', "Failed to set stdin to non-blocking mode");
+//     if (FileDescriptor::setNonBlocking(stdin_fd) == false)
+//         Logger::logExit(ERROR, "Server error" , '-', "Failed to set stdin to non-blocking mode");
 
-    struct epoll_event current_event;
-    current_event.data.fd = stdin_fd;
-    current_event.events = EPOLLIN;
-    if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
-        Logger::logExit(ERROR, "Server error" , '-', "epoll_ctl (stdin): ", strerror(errno));
-}
+//     struct epoll_event current_event;
+//     current_event.data.fd = stdin_fd;
+//     current_event.events = EPOLLIN;
+//     if (epoll_ctl(_epfd, EPOLL_CTL_ADD, stdin_fd, &current_event) == -1)
+//         Logger::logExit(ERROR, "Server error" , '-', "epoll_ctl (stdin): ", strerror(errno));
+// }
 
 // setEpollEvents(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
 void RunServers::setEpollEvents(int fd, int option, uint32_t events)
@@ -147,7 +147,7 @@ void    RunServers::setLocation(Client &client)
 
 void RunServers::cleanupEpoll()
 {
-    for (auto it = _listenFDS.begin(); it != _listenFDS.end(); /* ++it */)
+    for (auto it = _listenFDS.begin(); it != _listenFDS.end();)
     {
         FileDescriptor::cleanupEpollFd(*it);
         it = _listenFDS.erase(it);

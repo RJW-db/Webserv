@@ -56,7 +56,7 @@ namespace
         initRandomSeed();
         RunServers::getExecutableDirectory();
         Logger::initialize(LOG_DIR, LOG);
-        if (FD_LIMIT <= 5 || FD_LIMIT > 65536)
+        if (FD_LIMIT <= 5)
             Logger::logExit(ERROR, "FD_LIMIT is set to an invalid value: ", FD_LIMIT,
                         "It must be between 6 and 65536. Please recompile with a valid FD_LIMIT.");
         atexit(FileDescriptor::cleanupAllFD);

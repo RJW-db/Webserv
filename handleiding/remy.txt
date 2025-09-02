@@ -53,14 +53,3 @@ cat test.txt | nc localhost 8080
 check characters in a file
 od -tx1 -c filename
 
-
-
-
-RunServers::ClientException >> ErrorCodeClientException
-
-
-ulimit -n 14  gives problems and the log file could be fd:0 for some reason.
-
-
-
-we hebben _epollAddedFds toegevoegd, maar doen der niks mee.
