@@ -70,7 +70,9 @@ string Logger::getTimeStamp()
 
 string Logger::logLevelToString(uint8_t level, bool useColors)
 {
-    switch ((level == CHILD_INFO || level == IWARN) ? level + 1 : level)
+    switch ((level == CHILD_INFO ||
+             level == IWARN ||
+             level == IERROR) ? level + 1 : level)
     {
         case DEBUG: return useColors ? "\033[36mDEBUG\033[0m " : "DEBUG ";
         case INFO:  return useColors ? "\033[32mINFO \033[0m " : "INFO  ";

@@ -22,9 +22,10 @@ namespace
         INFO       = 1, // cout
         IWARN      = 2, // cerr
         WARN       = 3, // cerr
-        ERROR      = 4, // cerr
-        FATAL      = 5, // cerr
-        DEBUG      = 6  // cerr
+        IERROR     = 4, // cerr
+        ERROR      = 5, // cerr
+        FATAL      = 6, // cerr
+        DEBUG      = 7  // cerr
     };
 }
 
@@ -155,6 +156,7 @@ string Logger::makeRawMessage(uint8_t level, Args&&... args)
         case CHILD_INFO:
         case INFO:
         case IWARN:
+        case IERROR:
         {
             auto tup = forward_as_tuple(forward<Args>(args)...);
             return processArgsToString(tup, index_sequence_for<Args...>{});
@@ -206,7 +208,7 @@ string Logger::processErrorArgsToString(const Tuple& tup, index_sequence<Is...>)
     ((out += (
         Is == 0 ? Logger::padRight(Logger::argToString(get<Is>(tup)), 24) : // message
         Is == 1 ? Logger::padLeft(Logger::argToString(get<Is>(tup)), 6) :   // number (right-aligned)
-        Is == 2 ? string(14, ' ') + Logger::argToString(get<Is>(tup)) :     // always 6 spaces before reason
+        Is == 2 ? string(15, ' ') + Logger::argToString(get<Is>(tup)) :     // always 15 spaces before reason
         Logger::argToString(get<Is>(tup))                                   // rest (no padding)
     )), ...);
     return out;
