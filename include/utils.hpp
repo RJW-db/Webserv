@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdlib>
 using namespace std;
+class Cleint;
 namespace
 {
     static constexpr bool   TERMINAL = true;
@@ -11,7 +12,7 @@ namespace
 }
 
 void	 initRandomSeed();
-bool	 directoryCheck(string &path);
+vector<string> listFilesInDirectory(Client &client, const string &path);
 size_t	 getFileLength(Client &client, const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
