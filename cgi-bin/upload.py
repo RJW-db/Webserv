@@ -84,11 +84,21 @@ def main():
             print("Content-Type: text/plain\r\n\r")
             print("Upload failed:", str(e))
     elif os.environ.get('REQUEST_METHOD', '') == 'GET':
-        print("Status: 405 Method Not Allowed\r")
-        print("Content-Type: text/plain\r\n\r")
-        print("GET method is not allowed for this endpoint.")
+        query_string = os.environ.get('QUERY_STRING', '')
+        username = query_string[len('username='):]
+        print("Status: 200 OK\r")
+        print("Content-Type: text/html\r\n\r")
+        print(f"""
+        <html>
+        <head><title>Welcome</title></head>
+        <body>
+            <h1>Welcome {username}!</h1>
+            <a href="/index.html">Return to previous page</a>
+        </body>
+        </html>
+        """)
     elif os.environ.get('REQUEST_METHOD', '') == 'DELETE':
-        print(f"DEBUG: this works", file=sys.stderr)
+        # print(f"DEBUG: this works", file=sys.stderr)
         
         filename = os.environ.get('QUERY_STRING', '').replace('filename=', '')
         upload_dir = os.environ.get('UPLOAD_STORE', './upload')
@@ -113,7 +123,7 @@ def main():
             print("Status: 404 Not Found\r")
             print("Content-Type: text/plain\r\n\r")
             print("File not found.")
-        print(f"DEBUG: end of python", file=sys.stderr)
+        # print(f"DEBUG: end of python", file=sys.stderr)
     else:
         print("Status: 501 Not Implemented\r")
         print("Content-Type: text/plain\r\n\r")

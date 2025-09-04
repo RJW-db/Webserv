@@ -8,3 +8,5 @@ cgi error codes aanpassen
 
 verder testen falen setepollevents voor pipes en clients
 
+get request bytesSentTotal gebruiken
+

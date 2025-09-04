@@ -94,7 +94,6 @@ bool HandlePostTransfer::processMultipartData()
         if (boundaryPos != string::npos)
         {
             _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
-            RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
             _foundBoundary = true;
         }
         else
@@ -256,6 +255,15 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
     {
         if (remove(filePath.data()) != 0)
             Logger::log(WARN, "remove failed on file: ", filePath, " because: ", strerror(errno));
+    }
+    auto it = RunServers::getHandleTransfers().begin();
+    for (; it != RunServers::getHandleTransfers().end(); ++it)
+    {
+        if ((*it)->_fd == _fd)
+        {
+            RunServers::getHandleTransfers().erase(it);
+            break;
+        }
     }
     throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
 }

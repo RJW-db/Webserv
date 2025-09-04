@@ -73,8 +73,11 @@ class RunServers
         static inline int getEpollFD() {
             return _epfd;
         }
-        static vector<int> &getEpollAddedFds() {
+        static inline vector<int> &getEpollAddedFds() {
             return _epollAddedFds;
+        }
+        static inline vector<unique_ptr<HandleTransfer>> &getHandleTransfers() {
+            return _handle;
         }
 
     private:

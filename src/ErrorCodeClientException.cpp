@@ -27,8 +27,8 @@ namespace
     "</html>";
 }
 
-ErrorCodeClientException::ErrorCodeClientException(Client &client, int errorCode, const string &message)
-: _client(client), _errorCode(static_cast<uint16_t>(errorCode)), _message(message)
+ErrorCodeClientException::ErrorCodeClientException(Client &client, uint16_t errorCode, const string &message)
+: _client(client), _errorCode(errorCode), _message(message)
 {
     _errorPages = client._location.getErrorCodesWithPage();
 }
@@ -51,13 +51,21 @@ void ErrorCodeClientException::handleErrorClient() const
             return;
         }
         handleCustomErrorPage(errorPageIt->second);
+        return;
     }
     catch (const exception& e)
     {
-        RunServers::cleanupClient(_client);
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
-        
     }
+    catch (const ErrorCodeClientException &e)
+    {
+        Logger::log(ERROR, "Server error", '-', "Nested ErrorCodeClientException in handleErrorClient: ", e.what());
+    }
+    catch (...)
+    {
+        Logger::log(ERROR, "Server error", '-', "Unknown exception in handleErrorClient");
+    }
+    RunServers::cleanupClient(_client);
 }
 
 void ErrorCodeClientException::handleDefaultErrorPage() const

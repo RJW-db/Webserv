@@ -40,7 +40,7 @@ class HandleTransfer
         virtual void appendToBody() { throw runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
         virtual bool writeToCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
         virtual bool readFromCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
-        virtual bool sendToClientTransfer() { throw runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType)); }
+        virtual bool sendToClientTransfer() { throw runtime_error("sendToClientTransfer not supported for handle: " + to_string(_handleType) + " with fd: " + to_string(_fd)); }
         virtual ~HandleTransfer() = default;
 
         Client &_client;

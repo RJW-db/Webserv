@@ -87,7 +87,7 @@ void RunServers::checkCgiDisconnect()
         {
             if (WIFEXITED(exit_code))
             {
-                Logger::log(DEBUG, "Child process for client ", client._fd, " exited with status ", WEXITSTATUS(exit_code));
+                Logger::log(INFO, "Child process exited ", client._fd, "Child", "exit code: ", WEXITSTATUS(exit_code));
                 it = killCgiPipes(_handleCgi.begin(), client._pid);
             }
 
@@ -170,6 +170,7 @@ void RunServers::removeHandlesWithFD(int fd)
 {
     for(auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
     {
+        Logger::log(DEBUG, "Checking handle with fd: ", (*it)->_fd); //testlog
         if ((*it)->_fd == fd)
         {
             if ((*it)->_handleType == HANDLE_READ_FROM_CGI_TRANSFER)
@@ -183,6 +184,7 @@ void RunServers::removeHandlesWithFD(int fd)
             return;
         }
     }
+    FileDescriptor::cleanupEpollFd(fd);
 }
 
 void RunServers::closeHandles(pid_t pid)

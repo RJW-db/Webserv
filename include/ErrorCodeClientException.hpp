@@ -10,7 +10,7 @@ class ErrorCodeClientException
 {
     public:
         // Initialization
-        explicit ErrorCodeClientException(Client &client, int errorCode, const string &message);
+        explicit ErrorCodeClientException(Client &client, uint16_t errorCode, const string &message);
 
         //handle error page
         void handleErrorClient() const;

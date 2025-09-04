@@ -98,17 +98,19 @@ namespace
 
         unique_ptr<HandleTransfer> handleWrite = nullptr;
         unique_ptr<HandleTransfer> handleRead = nullptr;
-
+        uint16_t errorCode = 500; 
         try
         {
-            RunServers::setEpollEventsClient(client, fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
             RunServers::setEpollEventsClient(client, fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
                     
             if (client._useMethod & METHOD_POST)
             {
+                RunServers::setEpollEventsClient(client, fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
                 handleWrite = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
                 RunServers::insertHandleTransferCgi(move(handleWrite));
             }
+            else
+                FileDescriptor::closeFD(fdWriteToCgi[1]);
             handleRead = make_unique<HandleReadFromCgiTransfer>(client, fdReadfromCgi[0]);
             RunServers::insertHandleTransferCgi(move(handleRead));
 
@@ -118,6 +120,7 @@ namespace
         catch (const ErrorCodeClientException &e)
         {
             Logger::log(ERROR, "CGI error", '-', "ErrorCodeClientException in parent process: ", e.what());
+            errorCode = e.getErrorCode();
         }
         catch (const exception& e)
         {
@@ -134,7 +137,7 @@ namespace
             handleWrite->_fd = -1;
         if (handleRead)
             handleRead->_fd = -1;
-        throw ErrorCodeClientException(client, 500, "CGI setup failed");
+        throw ErrorCodeClientException(client, errorCode, "CGI setup failed");
     }
     /**
      * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.

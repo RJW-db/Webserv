@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <sys/wait.h>
 #include <filesystem> // filesystem::path
+#include <algorithm>  // find iterator
 #include <limits.h>   // PATH_MAX
 #ifdef __linux__
 # include <sys/epoll.h>
@@ -101,6 +102,12 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
         Logger::logExit(FATAL, "Server Error", fd, "Invalid FD, setEpollEvents failed");
     if (option == EPOLL_CTL_ADD)
         _epollAddedFds.push_back(fd);
+    if (option == EPOLL_CTL_DEL)
+    {
+        vector<int>::iterator it = find(_epollAddedFds.begin(), _epollAddedFds.end(), fd);
+        if (it != _epollAddedFds.end())
+            _epollAddedFds.erase(it);
+    }
 }
 
 // setEpollEventsClient(clientFD, EPOLL_CTL_MOD, EPOLLIN | EPOLLOUT);
@@ -109,24 +116,20 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
-    // throwTesting();
-    // static int testCount = 0;
-    if (option == EPOLL_CTL_DEL || epoll_ctl(_epfd, option, fd, &ev) == -1)
+    if (epoll_ctl(_epfd, option, fd, &ev) == -1)
     {
+        string Event = (events & EPOLLIN ? "EPOLLIN " : "EPOLLOUT ");
         if (_clients.count(fd) == 0) // pipes
         {
             if (option == EPOLL_CTL_DEL)
-                Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], strerror(errno));
+                Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
             throw ErrorCodeClientException(client, 502, "Server Error Pipes: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
         }
         else // client
         {
             if (option == EPOLL_CTL_DEL)
-                Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], strerror(errno));
-            if (events & EPOLLOUT || option == EPOLL_CTL_ADD)
-                throw ErrorCodeClientException(client, 0, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
-            if (events & EPOLLIN)
-                throw ErrorCodeClientException(client, 500, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
+                Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
+            throw ErrorCodeClientException(client, 0, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + Event + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
         }
     }
     if (option == EPOLL_CTL_ADD)
