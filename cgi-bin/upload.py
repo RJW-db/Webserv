@@ -85,18 +85,27 @@ def main():
             print("Upload failed:", str(e))
     elif os.environ.get('REQUEST_METHOD', '') == 'GET':
         query_string = os.environ.get('QUERY_STRING', '')
-        username = query_string[len('username='):]
-        print("Status: 200 OK\r")
-        print("Content-Type: text/html\r\n\r")
-        print(f"""
-        <html>
-        <head><title>Welcome</title></head>
-        <body>
-            <h1>Welcome {username}!</h1>
-            <a href="/index.html">Return to previous page</a>
-        </body>
-        </html>
-        """)
+        if query_string.startswith('username=') and len(query_string) > len('username='):
+            username = query_string[len('username='):]
+            print("Status: 200 OK\r")
+            print("Content-Type: text/html\r\n\r")
+            print(f"""
+            <html>
+            <head><title>Welcome</title></head>
+            <body>
+                <h1>Welcome {username}!</h1>
+                <a href="/index.html">Return to previous page</a>
+            </body>
+            </html>
+            """)
+        elif query_string == '' or query_string.startswith('username='):
+            print("Status: 400 Bad Request\r")
+            print("Content-Type: text/plain\r\n\r")
+            print("Missing 'username' parameter in query string.")
+        else:
+            print("Status: 403 Forbidden\r")
+            print("Content-Type: text/plain\r\n\r")
+            print("Changing the query parameter/key is not allowed.")
     elif os.environ.get('REQUEST_METHOD', '') == 'DELETE':
         # print(f"DEBUG: this works", file=sys.stderr)
         
