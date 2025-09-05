@@ -76,6 +76,7 @@
     <ul>
       <li><a href="tenacity/tenacity.html" data-game="tenacity/tenacity.html">Tenacity</a></li>
       <li><a href="Edge_Not_Found/index.html" data-game="Edge_Not_Found/index.html">Edge Not Found</a></li>
+      <li><a href="Pacman/Pacman.html" data-game="Pacman/Pacman.html">Pacman</a></li>
       <li><a href="snake.html" data-game="snake.html">Snake</a></li>
       <li><a href="tetris.html" data-game="tetris.html">Tetris</a></li>
       <li><a href="breakout.html" data-game="breakout.html">Breakout</a></li>
@@ -115,7 +116,8 @@
         const game = this.getAttribute('data-game');
         if (
           game === "tenacity/tenacity.html" ||
-          game === "Edge_Not_Found/index.html"
+          game === "Edge_Not_Found/index.html" /*||
+          game === "Pacman/Pacman.html"*/
         ) {
           bgMusic.pause();
         } else {
