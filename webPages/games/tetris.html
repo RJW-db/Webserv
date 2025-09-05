@@ -7,13 +7,14 @@
     <style>
       body {
         text-align: center;
-        background: #fff;
       }
 
       #my-canvas {
-        background: #fff;
+        background: rgba(0,0,0,0.7);
         margin-left: 10px;
         margin-top: 10px;
+        border-radius: 8px;
+        box-shadow: 0 0 20px #000a;
       }
     </style>
   </head>
@@ -92,7 +93,7 @@
       ];
 
       const tetrominoColors = [
-        "white",
+        "rgba(0,0,0,0.7)",
         "purple",
         "cyan",
         "blue",
@@ -145,8 +146,8 @@
       const storage = new LocalStorageManager();
 
       const renderWell = () => {
-        //     ctx.clearRect(9, 9, 278, 460)
-        ctx.fillStyle = "black";
+        ctx.clearRect(9, 9, 278, 460)
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillRect(8, 8, 280, 462);
         well.forEach((row, y) =>
           row.forEach((tile, x) => drawTile(x, y, tetrominoColors[tile]))
@@ -156,16 +157,16 @@
       function setupCanvas() {
         ctx.scale(2, 2);
 
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = "rgba(255,255,255,0.7)";
         ctx.strokeRect(8, 8, 280, 462);
 
         // Next Tetromino //
         ctx.strokeRect(300, 8, 161, 70);
 
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.font = "21px Arial";
 
         ctx.fillText("Level", 300, 100);
@@ -199,21 +200,21 @@
 
       function updateScore() {
         ctx.font = "21px Arial";
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(301, 166, 159, 22);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillText(state.score, 310, 185);
 
         storage.setScore(state.score);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(301, 226, 159, 22);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillText(storage.getBestScore(), 310, 245);
 
         state.level = ~~(state.score / 100) + 1;
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(301, 108, 159, 22);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillText(state.level, 310, 127);
       }
 
@@ -226,11 +227,11 @@
 
       function deleteTetromino() {
         const coords = setCoords(curTetromino, state.pos);
-        coords.forEach(({ x, y, z }) => z && drawTile(x, y, "white"));
+        coords.forEach(({ x, y, z }) => z && drawTile(x, y, "rgba(0,0,0,0.7)"));
       }
 
       function drawNextTetromino() {
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(301, 9, 158, 68);
 
         const coords = setCoords(nextTetromino, { x: 14.5, y: 0.5 });
@@ -390,9 +391,9 @@
       const gameOver = () => {
         state.winOrLose = "Game Over";
         state.over = true;
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(310, 283, 140, 40);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillText(state.winOrLose, 310, 311);
       };
 

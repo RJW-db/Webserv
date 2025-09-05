@@ -11,10 +11,10 @@ COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
-# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
-CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+# CCPFLAGS		+=	-g
+# CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CCPFLAGS		+=	-g -fsanitize=address
 

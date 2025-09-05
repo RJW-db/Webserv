@@ -15,7 +15,7 @@ go to project and run:
 
 
 cpp Check
-https://github.com/danmar/cppcheck
+https://github.com/danmar/cppcheckwh
 in zip
 mkdir build
 cd build

@@ -4687,3 +4687,37 @@ input, select, textarea {
 		}
 
 	}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2em 0;
+}
+
+.logo-container img {
+  max-width: 360px;
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+.image.fit {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  max-width: 700px; /* or whatever max width you want */
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image.fit img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
