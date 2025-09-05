@@ -57,7 +57,6 @@ bool HttpRequest::checkAndRunCgi(Client &client)
     if (client._isCgi && client._useMethod != METHOD_POST)
     {
         handleCgi(client, client._body);
-        RunServers::clientHttpCleanup(client);
         return true;
     }
     return false;

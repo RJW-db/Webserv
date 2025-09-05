@@ -72,7 +72,10 @@ void RunServers::checkCgiDisconnect()
             {
                 client._cgiClosing = true;
                 it = cleanupHandleCgi(it, client._fd);
-                kill(client._pid, SIGTERM);
+                if (client._pid > 0)
+                    kill(client._pid, SIGTERM);
+                else
+                    Logger::log(IERROR, "No valid PID to kill", client._fd, "clientFD", "Trying to kill pid ", client._pid); //testlog
                 throw ErrorCodeClientException(client, 500, "Reading from CGI failed because it took too long");
                 // continue;
             }
