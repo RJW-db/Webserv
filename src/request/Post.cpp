@@ -11,6 +11,8 @@ namespace
     void validateMultipartContentType(Client &client, const string &buff, const string &filename);
 }
 
+#include "Logger.hpp"
+
 void HttpRequest::POST(Client &client)
 {
     HttpRequest::getContentLength(client);

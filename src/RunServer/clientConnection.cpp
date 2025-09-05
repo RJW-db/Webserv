@@ -34,7 +34,20 @@ void RunServers::acceptConnection(const int listener)
         // if (addFdToEpoll(infd) == false)
         //     break;
         FileDescriptor::setFD(infd);
-        _clients[infd] = make_unique<Client>(infd);
+        // throw bad_alloc();
+        try
+        {
+            _clients[infd] = make_unique<Client>(infd); 
+            /* code */
+        }
+        catch(const std::exception& e) //TODO is this correct solution for protection of fd leak?
+        {
+            FileDescriptor::closeFD(infd);
+            Logger::log(ERROR, "Server error", listener, "Client creation failed", strerror(errno));
+            throw;
+        }
+        
+        
         setClientServerAddress(*_clients[infd], infd);
 
         setEpollEventsClient(*_clients[infd], infd, EPOLL_CTL_ADD, EPOLLIN);
@@ -71,6 +84,7 @@ void RunServers::setClientServerAddress(Client &client, int infd)
         throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info");
     client._ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     client._ipPort.second = to_string(ntohs(serverAddr.sin_port));
+
 }
 
 void RunServers::processClientRequest(Client &client)
@@ -106,12 +120,11 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    // Logger::log(DEBUG, "received: " + escapeSpecialChars(string(buff, bytesReceived), TERMINAL)); // testlog
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
     {
-        throw ErrorCodeClientException(client, 0, "Recv failed from client with error: " + string(strerror(errno)));
+        throw ErrorCodeClientException(client, 500, "Recv failed from client with error: " + string(strerror(errno)));
     }
     if (bytesReceived == 0)
     {

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <poll.h>
+// #include <poll.h>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif
@@ -94,6 +94,7 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 	catch(...)
 	{
 		freeaddrinfo(server);
+		FileDescriptor::closeFD(_listener); //TODO check if correct solution for protection of fd leak
 		throw;
 	}
 	freeaddrinfo(server);

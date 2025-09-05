@@ -15,7 +15,7 @@ void RunServers::disconnectChecks()
         checkCgiDisconnect();
         checkClientDisconnects();
     }
-    catch (const ErrorCodeClientException &e)
+    catch (ErrorCodeClientException &e)
     {
         e.handleErrorClient();  //TODO anything throwing in here stops the server?
     }

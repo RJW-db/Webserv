@@ -10,3 +10,6 @@ verder testen falen setepollevents voor pipes en clients
 
 get request bytesSentTotal gebruiken
 
+maybe also for cgi pipes handle if it fails remove it
+
+check if add addFdToEpoll still needed

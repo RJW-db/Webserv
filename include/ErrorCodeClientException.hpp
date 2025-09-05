@@ -20,6 +20,7 @@ class ErrorCodeClientException
         Client &_client;
         uint16_t _errorCode;
         string _message;
+        int _fileFD = -1;
         map<uint16_t, string> _errorPages;
 
         //helper functions

@@ -65,6 +65,8 @@ void ErrorCodeClientException::handleErrorClient() const
     {
         Logger::log(ERROR, "Server error", '-', "Unknown exception in handleErrorClient");
     }
+    int closeFd = _fileFD;
+    FileDescriptor::closeFD(closeFd);
     RunServers::cleanupClient(_client);
 }
 
@@ -95,18 +97,18 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
 
 void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath) const
 {
-    int fd = open(errorPagePath.c_str(), O_RDONLY);
-    if (fd == -1)
+    int _fileFD = open(errorPagePath.c_str(), O_RDONLY);
+    if (_fileFD == -1)
     {
         Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", errorPagePath);
         handleDefaultErrorPage();
         return;
     }
-    FileDescriptor::setFD(fd);
+    FileDescriptor::setFD(_fileFD);
     size_t fileSize = getFileLength(_client, errorPagePath.c_str());
     _client._filenamePath = errorPagePath;
     string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);
-    auto transfer = make_unique<HandleGetTransfer>(_client, fd, response, fileSize);
+    auto transfer = make_unique<HandleGetTransfer>(_client, _fileFD, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
 }
 
