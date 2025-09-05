@@ -25,7 +25,7 @@ HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string 
 : HandleTransfer(client, -1, HANDLE_POST_TRANSFER), _foundBoundary(false), _searchContentDisposition(false)
 {
     _bytesReadTotal = bytesRead;
-    _fileBuffer = buffer;
+    _fileBuffer = move(buffer);
     RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
 
@@ -50,7 +50,7 @@ bool HandlePostTransfer::postTransfer(bool readData)
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
     }
-    catch (const ErrorCodeClientException &e)
+    catch (ErrorCodeClientException &e)
     {
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
@@ -129,7 +129,7 @@ size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
     {
         ssize_t written = write(_fd, _fileBuffer.data(), writeSize);
         if (written == -1)
-            ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
         bytesWritten = static_cast<size_t>(written);
         _fileBuffer = _fileBuffer.erase(0, bytesWritten);
     }
@@ -210,14 +210,9 @@ bool HandlePostTransfer::handlePostCgi()
     if (_fileBuffer.find(string(_client._boundary) + "--" + CRLF) == string::npos)
         return false;
 
-    if (MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer) == true)
-    {
-        HttpRequest::handleCgi(_client, _fileBuffer);
-        return true;
-    }
-    else
-        throw ErrorCodeClientException(_client, 400, "Malformed POST request syntax for CGI");
-    return false;
+    MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer);
+    HttpRequest::handleCgi(_client, _fileBuffer);
+    return true;
 }
 
 /* helper functions */
@@ -246,7 +241,7 @@ void HandlePostTransfer::sendSuccessResponse()
  * @param errorCode HTTP error code to return
  * @param errMsg Error message describing the issue
  */
-void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, string errMsg)
+void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, const string &errMsg)
 {
     if (_fd != -1)
         FileDescriptor::closeFD(_fd);
@@ -273,9 +268,8 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, s
  * Parses boundaries, headers, and ensures proper multipart format compliance
  * @param client Reference to the client connection
  * @param input String containing the complete multipart data to validate
- * @return true if syntax is valid, throws exception if invalid
  */
-bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
+void MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
         throw ErrorCodeClientException(client, 400, "Content-Length does not match body size, " + string("content_length: ") + to_string(client._contentLength) + ", input size: " + to_string(input.size()));
@@ -288,7 +282,7 @@ bool MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
         if (foundBoundary)
         {
             if (validateBoundaryTerminator(client, buffer, needsContentDisposition))
-                return true; // Found end of multipart data
+                return; // Found end of multipart data
             foundBoundary = false;
             continue;
         }

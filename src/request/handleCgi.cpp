@@ -117,7 +117,7 @@ namespace
             client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
             return;
         }
-        catch (const ErrorCodeClientException &e)
+        catch (ErrorCodeClientException &e)
         {
             Logger::log(ERROR, "CGI error", '-', "ErrorCodeClientException in parent process: ", e.what());
             errorCode = e.getErrorCode();

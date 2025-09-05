@@ -9,7 +9,7 @@ class Parsing
 {
     public:
         // Initialization
-        Parsing(const char *input);
+        explicit Parsing(const char *input);
         ~Parsing() = default;
 
         // Getters

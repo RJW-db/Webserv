@@ -37,10 +37,9 @@ class RunServers
         // main loop
         static void   runServers();
         static void   handleEvents(size_t eventCount);
-        static bool   handleEpollStdinEvents();
+        static void   handleEpollStdinEvents();
         static bool   handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD);
         static void   acceptConnection(const int listener);
-        static bool   addFdToEpoll(int infd);
         static void   setClientServerAddress(Client &client, int infd);
         static bool   runHandleTransfer(struct epoll_event &currentEvent);
         static bool   runCgiHandleTransfer(struct epoll_event &currentEvent);
@@ -52,8 +51,6 @@ class RunServers
         static void   checkCgiDisconnect();
         static void   checkClientDisconnects();
         static void   removeHandlesWithFD(int fd);
-        static void   closeHandles(pid_t pid);
-        static void   clientHttpCleanup(Client &client);
         static void   cleanupClient(Client &client);
         static HandleTransferIter cleanupHandleCgi(HandleTransferIter it, int clientFD);
         static HandleTransferIter killCgiPipes(HandleTransferIter it, pid_t pid);
@@ -69,9 +66,6 @@ class RunServers
         }
         static inline uint64_t getRamBufferLimit() {
             return _ramBufferLimit;
-        }
-        static inline int getEpollFD() {
-            return _epfd;
         }
         static inline vector<int> &getEpollAddedFds() {
             return _epollAddedFds;

@@ -28,12 +28,12 @@ namespace
 }
 
 ErrorCodeClientException::ErrorCodeClientException(Client &client, uint16_t errorCode, const string &message)
-: _client(client), _errorCode(errorCode), _message(message)
+: _client(client), _errorCode(errorCode), _message(message), _errorPages(client._location.getErrorCodesWithPage())
 {
-    _errorPages = client._location.getErrorCodesWithPage();
+    // _errorPages = client._location.getErrorCodesWithPage();
 }
 
-void ErrorCodeClientException::handleErrorClient() const
+void ErrorCodeClientException::handleErrorClient()
 {
     try
     {
@@ -57,7 +57,7 @@ void ErrorCodeClientException::handleErrorClient() const
     {
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
     }
-    catch (const ErrorCodeClientException &e)
+    catch (ErrorCodeClientException &e)
     {
         Logger::log(ERROR, "Server error", '-', "Nested ErrorCodeClientException in handleErrorClient: ", e.what());
     }
@@ -95,9 +95,9 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     RunServers::insertHandleTransfer(move(handleClient));
 }
 
-void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath) const
+void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath)
 {
-    int _fileFD = open(errorPagePath.c_str(), O_RDONLY);
+    _fileFD = open(errorPagePath.c_str(), O_RDONLY);
     if (_fileFD == -1)
     {
         Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", errorPagePath);
@@ -105,7 +105,7 @@ void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath
         return;
     }
     FileDescriptor::setFD(_fileFD);
-    size_t fileSize = getFileLength(_client, errorPagePath.c_str());
+    size_t fileSize = getFileLength(_client, string_view(errorPagePath));
     _client._filenamePath = errorPagePath;
     string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);
     auto transfer = make_unique<HandleGetTransfer>(_client, _fileFD, response, fileSize);
@@ -118,4 +118,4 @@ const char *ErrorCodeClientException::what() const throw()
 }
 
 uint16_t ErrorCodeClientException::getErrorCode() const { return _errorCode; }
-string ErrorCodeClientException::getMessage() const { return _message; }
+const string &ErrorCodeClientException::getMessage() const { return _message; }

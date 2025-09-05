@@ -16,7 +16,7 @@ vector<string> listFilesInDirectory(Client &client, const string &path);
 size_t	 getFileLength(Client &client, const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
-void     throwTesting();
+// void     throwTesting();
 /**
  * Universally Unique Identifier
  * 3fb17ebc-bc38-4939-bc8b-74f2443281d4

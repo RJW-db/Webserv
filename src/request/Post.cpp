@@ -1,3 +1,5 @@
+#include <cassert>
+#include <string_view>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "HttpRequest.hpp"
@@ -74,7 +76,7 @@ void HttpRequest::getContentType(Client &client)
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
 }
 
-void HttpRequest::getBodyInfo(Client &client, const string buff)
+void HttpRequest::getBodyInfo(Client &client, const string &buff)
 {
     string cdLine = extractContentDispositionLine(client, buff);
     client._filename = extractFilenameFromContentDisposition(client, cdLine);
@@ -94,7 +96,7 @@ void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
     {
         size_t leftOvers = totalLength - NAME_MAX;
         if (filename.size() > leftOvers)
-            filename = filename.substr(0, filename.size() - leftOvers);
+            filename.erase(filename.size() - leftOvers);
         else
             throw ErrorCodeClientException(client, 413, "Filename too long to accommodate unique identifier");
     }

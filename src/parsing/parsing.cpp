@@ -10,7 +10,7 @@ namespace
     constexpr size_t SERVER_KEYWORD_LENGTH = 6;
     constexpr size_t LOCATION_KEYWORD_LENGTH = 8;
 
-    bool isEmptyOrCommentLine(string &line, size_t &skipSpace);
+    bool isEmptyOrCommentLine(const string &line, size_t &skipSpace);
     void trimLeadingWhitespace(string &line);
     void validateWhitespaceAfterCommand(const string &line, const char *validChars, int lineNbr);
 }
@@ -123,8 +123,9 @@ void Parsing::ServerCheck()
             {"autoindex", &Location::autoIndex}};
         const map<string, bool (ConfigServer::*)(string &)> whileCmds = {
             {"error_page", &ConfigServer::error_page},
+            {"index", &ConfigServer::indexPage},
             {"return", &ConfigServer::returnRedirect}};
-        _lines.begin()->second = line;
+        _lines.begin()->second = move(line);
         readBlock(curConf, cmds, whileCmds);
         curConf.setDefaultConf();
         _configs.push_back(curConf);
@@ -167,22 +168,19 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
 template <typename T>
 void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, bool (T::*)(string &)> &cmd)
 {
-    bool foundSemicolon;
     line.erase(0, cmd.first.size());
     validateWhitespaceAfterCommand(line, WHITESPACE_WITH_NEWLINE, _lines.begin()->first);
 
     size_t argumentCount = 0;
-    while (++argumentCount)
+    bool foundSemicolon = false;
+    while (!foundSemicolon)
     {
+        ++argumentCount;
         skipLine(line, false, block, true);
         foundSemicolon = (block.*(cmd.second))(line);
         skipLine(line, false, block, true);
-        if (foundSemicolon == true)
-        {
-            if (argumentCount == 1)
-                Logger::logExit(ERROR, "Config error", '-', "No arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
-            break;
-        }
+        if (foundSemicolon == true && argumentCount == 1)
+            Logger::logExit(ERROR, "Config error", '-', "No arguments provided for command '", cmd.first, "' at line ", _lines.begin()->first);
     }
 }
 
@@ -236,12 +234,12 @@ void Parsing::LocationCheck(string &line, T &block)
  */
 bool    Parsing::checkParseSyntax()
 {
-    size_t  skipSpace;
     if (_validSyntax == false)
         Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
 
     if (_lines.begin()->second[0] == '}')
     {
+        size_t skipSpace;
         _lines.begin()->second.erase(0, 1);
         if (isEmptyOrCommentLine(_lines.begin()->second, skipSpace) == true)
             _lines.erase(_lines.begin());
@@ -283,7 +281,7 @@ namespace {
      * @param skipSpace Output parameter for the position of first non-whitespace character
      * @return true if line is empty or comment-only, false otherwise
      */
-    bool isEmptyOrCommentLine(string &line, size_t &skipSpace)
+    bool isEmptyOrCommentLine(const string &line, size_t &skipSpace)
     {
         skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
         if (string::npos == skipSpace || line[skipSpace] == '#')

@@ -71,7 +71,7 @@ void RunServers::checkCgiDisconnect()
             if (client._disconnectTimeCgi <= chrono::steady_clock::now())
             {
                 client._cgiClosing = true;
-                it = cleanupHandleCgi(it, client._fd);
+                cleanupHandleCgi(it, client._fd);
                 if (client._pid > 0)
                     kill(client._pid, SIGTERM);
                 else
@@ -188,43 +188,6 @@ void RunServers::removeHandlesWithFD(int fd)
         }
     }
     FileDescriptor::cleanupEpollFd(fd);
-}
-
-void RunServers::closeHandles(pid_t pid)
-{
-    for (auto it = _handleCgi.begin(); it != _handleCgi.end();)
-    {
-        if ((*it)->_client._pid == pid)
-        {
-            FileDescriptor::cleanupEpollFd((*it)->_fd);
-            it =_handleCgi.erase(it);
-            continue ;
-        }
-        ++it;
-    }
-}
-
-void RunServers::clientHttpCleanup(Client &client)
-{
-    client._headerParseState = HEADER_AWAITING;
-    client._header.clear();
-    client._body.clear();
-    client._requestPath.clear();
-    client._queryString.clear();
-    client._method.clear();
-    client._useMethod = 0;
-    client._contentLength = 0;
-    client._headerFields.clear();
-    client._rootPath.clear();
-    client._filenamePath.clear();
-    client._name.clear();
-    client._version.clear();
-    client._bodyEnd = 0;
-    client._filename.clear();
-    client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-    client._isAutoIndex = false;
-    client._isCgi = false;
-    client._pid = -1;
 }
 
 void RunServers::cleanupClient(Client &client)

@@ -116,12 +116,12 @@ void FileDescriptor::cleanupEpollFd(int &fd)
     }
 }
 
-void FileDescriptor::printAllFDs()
-{
-    for (size_t i = 0; i < _fds.size(); i++) {
-        Logger::log(DEBUG, "[", i, "] FD: ", _fds[i]);
-    }
-    if (_fds.empty()) {
-        Logger::log(DEBUG, "No FDs currently tracked");
-    }
-}
+// void FileDescriptor::printAllFDs()
+// {
+//     for (size_t i = 0; i < _fds.size(); i++) {
+//         Logger::log(DEBUG, "[", i, "] FD: ", _fds[i]);
+//     }
+//     if (_fds.empty()) {
+//         Logger::log(DEBUG, "No FDs currently tracked");
+//     }
+// }

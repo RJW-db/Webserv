@@ -31,13 +31,12 @@ class ConfigServer : public AconfigServ
         // Initialization
         ConfigServer();
         ConfigServer(const ConfigServer &other);
-        virtual ~ConfigServer();
         ConfigServer &operator=(const ConfigServer &other);
+        // virtual ~ConfigServer() = default;
 
         // Parsing logic
         bool listenHostname(string &line);
         bool serverName(string &line);
-        string &getServerName(void);
 
         // Utils
         void addLocation(const Location &location, string path);

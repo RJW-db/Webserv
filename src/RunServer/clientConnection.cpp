@@ -31,14 +31,10 @@ void RunServers::acceptConnection(const int listener)
             break;
         }
 
-        // if (addFdToEpoll(infd) == false)
-        //     break;
         FileDescriptor::setFD(infd);
-        // throw bad_alloc();
         try
         {
             _clients[infd] = make_unique<Client>(infd); 
-            /* code */
         }
         catch(const std::exception& e) //TODO is this correct solution for protection of fd leak?
         {
@@ -53,34 +49,18 @@ void RunServers::acceptConnection(const int listener)
         setEpollEventsClient(*_clients[infd], infd, EPOLL_CTL_ADD, EPOLLIN);
 
         Logger::log(INFO, *_clients[infd], 
-            "Connected on: " + NumIpToString(ntohl(((sockaddr_in *)&in_addr)->sin_addr.s_addr)) + 
-            ":" + to_string(ntohs(((sockaddr_in *)&in_addr)->sin_port)));
+            "Connected on: " + NumIpToString(ntohl((reinterpret_cast<sockaddr_in *>(&in_addr))->sin_addr.s_addr)) + 
+            ":" + to_string(ntohs((reinterpret_cast<sockaddr_in *>(&in_addr))->sin_port)));
 
         _clients[infd]->setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     }
-}
-
-bool RunServers::addFdToEpoll(int infd)
-{
-    struct epoll_event  current_event;
-    current_event.data.fd = infd;
-    current_event.events = EPOLLIN;
-    if (epoll_ctl(_epfd, EPOLL_CTL_ADD, infd, &current_event) == -1)
-    {
-        Logger::log(ERROR, "Server error", infd, "epoll_ctl failed: ", strerror(errno));
-        if (FileDescriptor::safeCloseFD(infd) == false)
-            Logger::logExit(FATAL, "FileDescriptor error", infd, "safeCloseFD failed, FD not in vector");
-        return false;
-    }
-    FileDescriptor::setFD(infd);
-    return true;
 }
 
 void RunServers::setClientServerAddress(Client &client, int infd)
 {
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr); 
-    if (getsockname(infd, (struct sockaddr*)&serverAddr, &addrLen) != 0)
+    if (getsockname(infd, reinterpret_cast<sockaddr*>(&serverAddr), &addrLen) != 0)
         throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info");
     client._ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     client._ipPort.second = to_string(ntohs(serverAddr.sin_port));
@@ -123,14 +103,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
-    {
         throw ErrorCodeClientException(client, 500, "Recv failed from client with error: " + string(strerror(errno)));
-    }
-    if (bytesReceived == 0)
-    {
-        throw ErrorCodeClientException(client, 0, "kicking out client after read of 0");
-    }
-    return (0); // You never get here
+    throw ErrorCodeClientException(client, 0, "kicking out client after read of 0");
 }
 
 namespace

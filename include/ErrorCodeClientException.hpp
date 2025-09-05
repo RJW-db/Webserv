@@ -13,7 +13,7 @@ class ErrorCodeClientException
         explicit ErrorCodeClientException(Client &client, uint16_t errorCode, const string &message);
 
         //handle error page
-        void handleErrorClient() const;
+        void handleErrorClient();
 
     private:
         //variables
@@ -25,7 +25,7 @@ class ErrorCodeClientException
 
         //helper functions
         void handleDefaultErrorPage() const;
-        void handleCustomErrorPage(const string &errorPagePath) const;
+        void handleCustomErrorPage(const string &errorPagePath);
 
     public:
         // utility function
@@ -33,7 +33,7 @@ class ErrorCodeClientException
 
         // Getters
         uint16_t getErrorCode() const;
-        string getMessage() const;
+        const string &getMessage() const;
 };
 
 #endif

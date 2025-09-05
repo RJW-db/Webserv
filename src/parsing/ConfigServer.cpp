@@ -11,7 +11,6 @@ ConfigServer::ConfigServer(const ConfigServer &other) : AconfigServ(other)
     *this = other;
 }
 
-ConfigServer::~ConfigServer(){ }
 
 ConfigServer &ConfigServer::operator=(const ConfigServer &other)
 {
@@ -67,8 +66,6 @@ bool ConfigServer::serverName(string &line)
     return (handleNearEndOfLine(line, len, "server_name"));
 }
 
-string &ConfigServer::getServerName() { return _serverName; }
-
 void ConfigServer::addLocation(const Location &location, string path)
 {
     for (auto it = _locations.begin(); it != _locations.end(); ++it)
@@ -91,7 +88,7 @@ void ConfigServer::setDefaultConf()
 {
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
-        _root = _root.substr(0, _root.size() - 1);
+        _root.erase(_root.size() - 1);
     
     if (_clientMaxBodySize == 0)
         _clientMaxBodySize = 1024 * 1024;

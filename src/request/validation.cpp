@@ -8,7 +8,7 @@
 #include "Logger.hpp"
 namespace
 {
-    uint8_t              checkAllowedMethod(string &method, uint8_t allowedMethods);
+    uint8_t              checkAllowedMethod(const string &method, uint8_t allowedMethods);
     void                 parseRequestPath(Client &client);
     string               percentDecode(const string& input);
     bool                 isValidAndNormalizeRequestPath(Client &client);
@@ -54,7 +54,7 @@ void    HttpRequest::validateHEAD(Client &client)
 
 namespace
 {
-    uint8_t checkAllowedMethod(string &method, uint8_t allowedMethods)
+    uint8_t checkAllowedMethod(const string &method, uint8_t allowedMethods)
     {
         if (method == "HEAD" && allowedMethods & METHOD_HEAD)
             return METHOD_HEAD;
@@ -239,7 +239,7 @@ namespace
 
     void findIndexFile(Client &client, struct stat &status)
     {
-        for (string &indexPage : client._location.getIndexPage())
+        for (const string &indexPage : client._location.getIndexPage())
         {
             if (stat(indexPage.data(), &status) == 0)
             {

@@ -44,14 +44,14 @@ void RunServers::getExecutableDirectory()
 void RunServers::createServers(vector<ConfigServer> &configs)
 {
     for (ConfigServer &config : configs)
-        _servers.push_back(make_unique<AconfigServ>(AconfigServ(config)));
+        _servers.push_back(make_unique<AconfigServ>(move(config)));
 }
 
 void RunServers::setupEpoll()
 {
     epollInit(_servers);
-    // if (TERMINAL_DEBUG)
-    //     addStdinToEpoll();
+    if (TERMINAL_DEBUG)
+        addStdinToEpoll();
 }
 
 void RunServers::epollInit(ServerList &servers)
@@ -145,7 +145,7 @@ void RunServers::setServerFromListener(Client &client)
     AconfigServ *tmpServer = nullptr;
     // Find the matching server
     for (unique_ptr<AconfigServ> &server : _servers) {
-        for (pair<const string, string> &porthost : server->getPortHost()) {
+        for (const pair<const string, string> &porthost : server->getPortHost()) {
             if (porthost.first == client._ipPort.second && 
                 (porthost.second == client._ipPort.first || porthost.second == "0.0.0.0"))
             {

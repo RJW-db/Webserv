@@ -5,7 +5,7 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 
-HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, string &body, int fdWriteToCgi)
+HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, const string &body, int fdWriteToCgi)
 : HandleTransfer(client, fdWriteToCgi, HANDLE_WRITE_TO_CGI_TRANSFER), _bytesWrittenTotal(0)
 {
     _fileBuffer = body;
@@ -51,7 +51,7 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     }
     size_t rd = static_cast<size_t>(bytesRead);
     _fileBuffer.append(buff.data(), rd);
-    if (rd == 0 || (rd > 0 && buff[rd] == '\0'))
+    if (rd == 0 || buff[rd] == '\0')
     {
         FileDescriptor::cleanupEpollFd(_fd);
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);

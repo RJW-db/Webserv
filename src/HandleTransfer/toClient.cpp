@@ -6,7 +6,7 @@
 #include "RunServer.hpp"
 #include "Client.hpp"
 
-HandleToClientTransfer::HandleToClientTransfer(Client &client, string &response)
+HandleToClientTransfer::HandleToClientTransfer(Client &client, const string &response)
 : HandleTransfer(client, -1, HANDLE_TO_CLIENT_TRANSFER)
 {
     _fileBuffer = response;

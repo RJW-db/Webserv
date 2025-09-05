@@ -22,12 +22,13 @@ Aconfig &Aconfig::operator=(const Aconfig &other)
 {
     if (this != &other)
     {
-        ErrorCodesWithPage = other.ErrorCodesWithPage;
+        _ErrorCodesWithPage = other._ErrorCodesWithPage;
         _clientMaxBodySize = other._clientMaxBodySize;
         _autoIndex = other._autoIndex;
         _root = other._root;
         _returnRedirect = other._returnRedirect;
         _indexPage = other._indexPage;
+        _lineNbr = other._lineNbr;
     }
     return (*this);
 }
@@ -78,8 +79,8 @@ bool Aconfig::error_page(string &line)
     // Validate input - shouldn't end without a page
     if (line[0] == ';')
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: no error page given for error codes");
-    if (foundPage == true)
-        Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: invalid input after error page");
+    // if (foundPage == true)
+    //     Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: invalid input after error page");
     
     // Parse error code
     size_t pos;
@@ -88,7 +89,7 @@ bool Aconfig::error_page(string &line)
         Logger::logExit(ERROR, "Config error at line", _lineNbr,
             "error_page: error code invalid must be between ", MIN_ERROR_CODE, " and ", MAX_ERROR_CODE);
 
-    ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
+    _ErrorCodesWithoutPage.push_back(static_cast<uint16_t>(error_num));
     line.erase(0, pos + 1);
     return false;
 }
@@ -153,7 +154,7 @@ bool Aconfig::indexPage(string &line)
     
     string indexPage = line.substr(0, len);
     _indexPage.push_back(indexPage);
-    line.erase(0, len + 1);
+    line.erase(0, len);
     return false;
 }
 
@@ -243,7 +244,7 @@ void Aconfig::setLineNbr(int num)
 bool Aconfig::setErrorPage(string &line, bool &foundPage)
 {
     // Ensure we have error codes waiting for a page assignment
-    if (ErrorCodesWithoutPage.size() == 0)
+    if (_ErrorCodesWithoutPage.size() == 0)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: no error codes in config for error_page");
     
     // Find the end of the error page path
@@ -253,18 +254,18 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
     else if (string(WHITESPACE_SEMICOLON).find(line[nameLen]) == string::npos)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: invalid character found after error_page");
 
-    string error_page = line.substr(0, nameLen);
+    string errPage = line.substr(0, nameLen);
     
     // Assign the error page to all pending error codes
-    for (uint16_t error_code : ErrorCodesWithoutPage)
+    for (uint16_t error_code : _ErrorCodesWithoutPage)
     {
-        if (ErrorCodesWithPage.find(error_code) != ErrorCodesWithPage.end())
-            ErrorCodesWithPage.at(error_code) = error_page;
+        if (_ErrorCodesWithPage.find(error_code) != _ErrorCodesWithPage.end())
+            _ErrorCodesWithPage.at(error_code) = errPage;
         else
-            ErrorCodesWithPage.insert({error_code, error_page});
+            _ErrorCodesWithPage.insert({error_code, errPage});
     }
     
-    ErrorCodesWithoutPage.clear();
+    _ErrorCodesWithoutPage.clear();
     foundPage = true;
     line.erase(0, nameLen);
     return false;
@@ -298,30 +299,30 @@ void Aconfig::setDefaultErrorPages()
     {
         uint16_t errorCode = errorCodes[i];
         
-        if (ErrorCodesWithPage.find(errorCode) == ErrorCodesWithPage.end())
+        if (_ErrorCodesWithPage.find(errorCode) == _ErrorCodesWithPage.end())
         {
             // Use default error page
             string fileName = "./webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
-            ErrorCodesWithPage.insert({errorCode, fileName});
+            _ErrorCodesWithPage.insert({errorCode, fileName});
         }
         else
         {
             // Prepend root to custom error page path
-            ErrorCodesWithPage.at(errorCode).insert(0, _root);
-            ErrorCodesWithPage.at(errorCode).erase(0, 1);
-            if (ErrorCodesWithPage.at(errorCode)[0] == '/')
-                ErrorCodesWithPage.at(errorCode).erase(0, 1);
+            _ErrorCodesWithPage.at(errorCode).insert(0, _root);
+            _ErrorCodesWithPage.at(errorCode).erase(0, 1);
+            if (_ErrorCodesWithPage.at(errorCode)[0] == '/')
+                _ErrorCodesWithPage.at(errorCode).erase(0, 1);
         }
         
         // Verify the error page file is accessible
-        if (access(ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "couldn't open error page: ", ErrorCodesWithPage.at(errorCode));
+        if (access(_ErrorCodesWithPage.at(errorCode).c_str(), R_OK) != 0)
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "couldn't open error page: ", _ErrorCodesWithPage.at(errorCode));
     }
 }
 
 size_t Aconfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
-string Aconfig::getRoot() const { return _root; }
+const string &Aconfig::getRoot() const { return _root; }
 int8_t Aconfig::getAutoIndex() const { return _autoIndex; }
 pair<uint16_t, string> Aconfig::getReturnRedirect() const { return _returnRedirect; }
-map<uint16_t, string> Aconfig::getErrorCodesWithPage() const { return ErrorCodesWithPage; }
-vector<string> Aconfig::getIndexPage() const { return _indexPage; }
+const map<uint16_t, string> &Aconfig::getErrorCodesWithPage() const { return _ErrorCodesWithPage; }
+const vector<string> &Aconfig::getIndexPage() const { return _indexPage; }

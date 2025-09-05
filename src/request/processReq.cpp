@@ -35,7 +35,7 @@ bool HttpRequest::checkAndRedirect(Client &client)
     if (client._location.getReturnRedirect().first > 0)
     {
         redirectRequest(client);
-        RunServers::clientHttpCleanup(client);
+        client.httpCleanup();
         return true;
     }
     return false;
@@ -95,7 +95,7 @@ void HttpRequest::processGet(Client &client)
     else
     {
         SendAutoIndex(client);
-        RunServers::clientHttpCleanup(client);
+        client.httpCleanup();
     }
 }
 
@@ -120,11 +120,11 @@ void HttpRequest::GET(Client &client)
 
 void HttpRequest::SendAutoIndex(Client &client)
 {
-    struct dirent *en;
     DIR *dr = opendir(client._rootPath.data());
     string filenames;
     if (dr)
     {
+        const struct dirent *en;
         while ((en = readdir(dr)) != NULL) // TODO not protected
         {
             filenames += "<a href=\"";
@@ -180,7 +180,6 @@ void HttpRequest::processDelete(Client &client)
         unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
         RunServers::insertHandleTransfer(move(handleClient));
         Logger::log(INFO, client, "DELETE ", client._rootPath);
-        // RunServers::clientHttpCleanup(client);
     }
     else
     {

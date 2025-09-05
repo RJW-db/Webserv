@@ -4,7 +4,7 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 
-string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, size_t fileSize)
+string HttpRequest::HttpResponse(const Client &client, uint16_t code, const string &path, size_t fileSize)
 {
     static const map<uint16_t, string> responseCodes = {
         {200, "OK"},
@@ -42,7 +42,7 @@ string HttpRequest::HttpResponse(Client &client, uint16_t code, string path, siz
     return response.str();
 }
 
-string HttpRequest::getMimeType(string &path)
+string HttpRequest::getMimeType(const string &path)
 {
     static const map<string, string> mimeTypes = {
         {"html", "text/html"},
@@ -73,7 +73,7 @@ string HttpRequest::getMimeType(string &path)
     return "application/octet-stream";
 }
 
-string HttpRequest::createResponseCgi(Client &client, string &input)
+string HttpRequest::createResponseCgi(Client &client, const string &input)
 {
     size_t headerSize = input.find(CRLF2);
     bool hasBody = (input.size() > headerSize + CRLF2_LEN);
@@ -91,7 +91,7 @@ map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, 
         size_t end = input.find(CRLF, pos);
         if (end == string::npos) 
             break;
-        string_view line(input.data() + pos, end - pos);
+        string_view line(&input[pos], end - pos);
         size_t colon = line.find(':');
         if (colon != string_view::npos) {
             string_view key = line.substr(0, colon);
@@ -115,7 +115,7 @@ void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, stri
         throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
 }
 
-string HttpRequest::buildCgiResponse(Client &client, const map<string_view, string_view> &headerFields, 
+string HttpRequest::buildCgiResponse(const Client &client, const map<string_view, string_view> &headerFields, 
                                 const string &input, size_t headerSize, bool hasBody)
 {
     ostringstream response;

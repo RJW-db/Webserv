@@ -78,9 +78,11 @@ void RunServers::handleEvents(size_t eventCount)
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
 
-            // if (eventFD == 0 && (currentEvent.events & EPOLLIN) &&
-            //     handleEpollStdinEvents())
-            //     continue;
+            if (eventFD == 0 && (currentEvent.events & EPOLLIN))
+            {
+                handleEpollStdinEvents();
+                continue;
+            }
 
             if (handleEpollErrorEvents(currentEvent, eventFD))
                 continue;
@@ -96,14 +98,14 @@ void RunServers::handleEvents(size_t eventCount)
                 (currentEvent.events == EPOLLIN))
                 processClientRequest(*_clients[eventFD].get());
         }
-        catch (const ErrorCodeClientException &e)
+        catch (ErrorCodeClientException &e)
         {
             e.handleErrorClient();
         }
     }
 }
 
-bool RunServers::handleEpollStdinEvents()
+void RunServers::handleEpollStdinEvents()
 {
     char buffer[1024];
     ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
@@ -116,7 +118,6 @@ bool RunServers::handleEpollStdinEvents()
         if (snooze > 0 && snooze < 20)
             this_thread::sleep_for(chrono::seconds(snooze));
     }
-    return true;
 }
 
 bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD)
@@ -182,7 +183,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                         return true;
                     }
                     else
-                        clientHttpCleanup(client);
+                        client.httpCleanup();
                 }
                 _handle.erase(_handle.begin() + static_cast<long>(idx));
             }

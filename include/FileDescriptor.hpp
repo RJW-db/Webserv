@@ -12,7 +12,7 @@ class FileDescriptor
 		static bool setNonBlocking(int sfd);
 		static void cleanupAllFD();
 		static void cleanupEpollFd(int &fd);
-		static void printAllFDs();
+		// static void printAllFDs();
 
 	private:
 		static vector<int> _fds;

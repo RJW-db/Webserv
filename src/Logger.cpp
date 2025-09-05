@@ -44,7 +44,7 @@ string Logger::getTimeStamp()
     if (now == -1)
         throw runtime_error("time failed");
 
-    tm *ltm = localtime(&now);
+    const tm *ltm = localtime(&now);
     
     static int lastDay = -1;
     int currentDay = ltm->tm_mday;

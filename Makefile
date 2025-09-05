@@ -10,7 +10,7 @@ PRINT_NO_DIR	:=	--no-print-directory
 COMPILER		:=	c++
 CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
-# CCPFLAGS		+=	-Werror
+CCPFLAGS		+=	-Werror
 # CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CCPFLAGS		+=	-MMD -MP
 CCPFLAGS		+=	-g

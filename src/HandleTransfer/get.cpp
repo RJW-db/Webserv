@@ -49,7 +49,7 @@ void HandleGetTransfer::fileReadToBuff()
         _bytesReadTotal += rd;
         if (rd > 0)
             _fileBuffer.append(buff, rd);
-        else if (rd == 0 || _bytesReadTotal >= _fileSize)
+        else if (_bytesReadTotal >= _fileSize)
             FileDescriptor::closeFD(_fd);
     }
 }

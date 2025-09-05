@@ -32,12 +32,12 @@ class Aconfig
 
         // Getters
         size_t getClientMaxBodySize() const;
-        string getRoot() const;
+        const string &getRoot() const;
         int8_t getAutoIndex() const;
         pair<uint16_t, string> getReturnRedirect() const;
-        map<uint16_t, string> getErrorCodesWithPage() const;
-        vector<string> getIndexPage() const;
-        
+        const map<uint16_t, string> &getErrorCodesWithPage() const;
+        const vector<string> &getIndexPage() const;
+
         // Set default
         void setDefaultErrorPages();
 
@@ -53,13 +53,13 @@ class Aconfig
         bool setErrorPage(string &line, bool &foundPage);
         bool handleNearEndOfLine(string &line, size_t pos, string err);
 
-        int8_t _autoIndex;
-        size_t _clientMaxBodySize;
+        int8_t _autoIndex = 0;
+        size_t _clientMaxBodySize = 0;
         string _root;
         pair<uint16_t, string> _returnRedirect;
-        map<uint16_t, string> ErrorCodesWithPage;
+        map<uint16_t, string> _ErrorCodesWithPage;
         vector<string> _indexPage;
-        vector<uint16_t> ErrorCodesWithoutPage;
-        int _lineNbr;
+        vector<uint16_t> _ErrorCodesWithoutPage;
+        int _lineNbr = 0;
 };
 #endif

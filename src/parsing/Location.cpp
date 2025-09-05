@@ -76,10 +76,7 @@ bool Location::methods(string &line)
     if (checkMethodEnd(findColon, line) == true)
     {
         if (findColon == true)
-        {
-            findColon = false;
             return true;
-        }
         return false;
     }
     size_t len = line.find_first_of(WHITESPACE_OPEN_BRACKET);
@@ -100,24 +97,6 @@ bool Location::methods(string &line)
     if (_allowedMethods & method_bit)
         throw runtime_error(to_string(_lineNbr) + ": limit_except: Method '" + method + "' already specified");
     _allowedMethods |= method_bit;
-    line.erase(0, len);
-    return false;
-}
-
-bool Location::indexPage(string &line)
-{
-    if (line[0] == ';')
-    {
-        line.erase(0, 1);
-        return true;
-    }
-    size_t len = line.find_first_of(" \t\f\v\r;*?|><:\\");
-    if (len == string::npos)
-        len = line.length();
-    if (string("*?|><:\\").find(line[len]) != string::npos)
-        throw runtime_error("invalid character found in filename");
-    string indexPage = line.substr(0, len);
-    _indexPage.push_back(indexPage);
     line.erase(0, len);
     return false;
 }
@@ -166,15 +145,15 @@ bool Location::cgiPath(string &line)
     return (handleNearEndOfLine(line, len, "cgi_path"));
 }
 
-void Location::SetDefaultLocation(Aconfig &curConf)
+void Location::SetDefaultLocation(const Aconfig &curConf)
 {
     if (_autoIndex == autoIndexNotFound)
         _autoIndex = curConf.getAutoIndex();
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
-        _root = _root.substr(0, _root.size() - 1);
+        _root.erase(_root.size() - 1);
     if (_locationPath[_locationPath.size() - 1] == '/' && _locationPath.size() > 1)
-        _locationPath = _locationPath.substr(0, _locationPath.size() - 1);
+        _locationPath.erase(_locationPath.size() - 1);
     if (_root.size() > 2)
         _locationPath = _root + _locationPath;
     else
@@ -184,10 +163,10 @@ void Location::SetDefaultLocation(Aconfig &curConf)
     if (_returnRedirect.first == 0)
         _returnRedirect = curConf.getReturnRedirect();
     for (pair<uint16_t, string> errorCodePages : curConf.getErrorCodesWithPage())
-        ErrorCodesWithPage.insert(errorCodePages);
+        _ErrorCodesWithPage.insert(errorCodePages);
     if (_indexPage.empty())
     {
-        for (string indexPage : curConf.getIndexPage())
+        for (const string &indexPage : curConf.getIndexPage())
             _indexPage.push_back(indexPage);
     }
     if (_allowedMethods == 0)
@@ -243,8 +222,8 @@ bool Alocation::isCgiFile(string_view &filename) const
     return false;
 }
 
-string Alocation::getUploadStore() const { return _upload_store; }
-vector<string> Alocation::getExtension() const { return _cgiExtension; }
-string Alocation::getCgiPath() const { return _cgiPath; }
-string Alocation::getPath() const { return _locationPath; }
+const string &Alocation::getUploadStore() const { return _upload_store; }
+const vector<string> &Alocation::getExtension() const { return _cgiExtension; }
+const string &Alocation::getCgiPath() const { return _cgiPath; }
+const string &Alocation::getPath() const { return _locationPath; }
 uint8_t Alocation::getAllowedMethods() const { return _allowedMethods; }

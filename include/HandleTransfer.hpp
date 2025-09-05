@@ -32,11 +32,9 @@ class Client;
 class HandleTransfer
 {
     public:
-        // Pure virtual functions for polymorphic behavior
         virtual bool handleGetTransfer() { throw runtime_error("handleGetTransfer not implemented for handle: " + to_string(_handleType)); }
         virtual bool postTransfer(bool readData) { (void)readData; throw runtime_error("handlePostTransfer not implemented for handle: " + to_string(_handleType)); }
         virtual bool handleChunkTransfer() { throw runtime_error("handleChunkTransfer not implemented for handle: " + to_string(_handleType)); }
-        virtual bool getIsChunk() const { throw runtime_error("getIsChunk not implemented for handle: " + to_string(_handleType)); }
         virtual void appendToBody() { throw runtime_error("appendToBody not implemented for handle: " + to_string(_handleType)); }
         virtual bool writeToCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
         virtual bool readFromCgiTransfer() { throw runtime_error("HandleCgitransfer not supported for handle: " + to_string(_handleType)); }
@@ -57,10 +55,10 @@ class HandleGetTransfer : public HandleTransfer
 {
     public:
         HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
-        ~HandleGetTransfer() { FileDescriptor::closeFD(_fd); };
+        ~HandleGetTransfer() override { FileDescriptor::closeFD(_fd); };
 
         // Main logic
-        bool handleGetTransfer();
+        bool handleGetTransfer() override;
         void fileReadToBuff();
 
         size_t  _fileSize;
@@ -74,7 +72,7 @@ class HandlePostTransfer : public HandleTransfer
         HandlePostTransfer(Client &client, size_t bytesRead, string buffer); // POST
 
         // Main logic
-        virtual bool postTransfer(bool readData);
+        virtual bool postTransfer(bool readData) override;
 
         size_t _bytesWrittenTotal = 0;
         bool _foundBoundary = false;
@@ -86,7 +84,7 @@ class HandlePostTransfer : public HandleTransfer
         HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
 
         // Utility
-        void errorPostTransfer(Client &client, uint16_t errorCode, string errMsg);
+        void errorPostTransfer(Client &client, uint16_t errorCode, const string &errMsg);
 
     private:
         // recv incoming
@@ -104,12 +102,12 @@ class HandlePostTransfer : public HandleTransfer
 class HandleChunkTransfer : public HandlePostTransfer
 {
     public:
-        HandleChunkTransfer(Client &client);
+        explicit HandleChunkTransfer(Client &client);
 
         // Logic functions
-        virtual void appendToBody();
-        virtual bool handleChunkTransfer();
-        bool decodeChunk(size_t &chunkTargetSize);
+        virtual void appendToBody() override;
+        virtual bool handleChunkTransfer() override;
+        bool decodeChunk();
 
         // Chunk parsing helpers
         bool extractChunkSize(size_t &chunkTargetSize, size_t &chunkDataStart);
@@ -123,10 +121,10 @@ class HandleChunkTransfer : public HandlePostTransfer
 class HandleWriteToCgiTransfer : public HandleTransfer
 {
     public:
-        HandleWriteToCgiTransfer(Client &client, string &fileBuffer, int fdWriteToCgi);
-        ~HandleWriteToCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
+        HandleWriteToCgiTransfer(Client &client, const string &fileBuffer, int fdWriteToCgi);
+        ~HandleWriteToCgiTransfer() override { FileDescriptor::cleanupEpollFd(_fd); };
 
-        bool writeToCgiTransfer();
+        bool writeToCgiTransfer() override;
 
         size_t _bytesWrittenTotal = 0;
 };
@@ -135,24 +133,24 @@ class HandleReadFromCgiTransfer : public HandleTransfer
 {
     public:
         HandleReadFromCgiTransfer(Client &client, int fdReadfromCgi);
-        ~HandleReadFromCgiTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
+        ~HandleReadFromCgiTransfer() override { FileDescriptor::cleanupEpollFd(_fd); };
 
-        bool readFromCgiTransfer();
+        bool readFromCgiTransfer() override;
 };
 
 class HandleToClientTransfer : public HandleTransfer
 {
     public:
-        HandleToClientTransfer(Client &client, string &response);
-        ~HandleToClientTransfer() { FileDescriptor::cleanupEpollFd(_fd); };
+        HandleToClientTransfer(Client &client, const string &response);
+        ~HandleToClientTransfer() override { FileDescriptor::cleanupEpollFd(_fd); };
 
-        bool sendToClientTransfer();
+        bool sendToClientTransfer() override;
 };
 
 class MultipartParser
 {
     public:
-        static bool validateMultipartPostSyntax(Client &client, string &input);
+        static void validateMultipartPostSyntax(Client &client, string &input);
         static bool validateBoundaryTerminator(Client &client, string_view &buffer, bool &needsContentDisposition);
         static void parseContentDisposition(Client &client, string_view &buffer);
 

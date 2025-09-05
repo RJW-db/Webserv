@@ -24,10 +24,9 @@ void HandleChunkTransfer::appendToBody()
 
 bool HandleChunkTransfer::handleChunkTransfer()
 {
-    size_t targetSize = 0;
     try
     {
-        if (decodeChunk(targetSize) == false)
+        if (decodeChunk() == false)
             return false;
     }
     catch (const exception& e)
@@ -35,7 +34,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
     }
-    catch (const ErrorCodeClientException &e)
+    catch (ErrorCodeClientException &e)
     {
         _client._keepAlive = false;
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
@@ -55,16 +54,16 @@ bool HandleChunkTransfer::handleChunkTransfer()
     return false;
 }
 
-bool    HandleChunkTransfer::decodeChunk(size_t &targetSize)
+bool    HandleChunkTransfer::decodeChunk()
 {
+    size_t targetSize = 0;
     while (true)
     {
         size_t dataStart;
-
         if (extractChunkSize(targetSize, dataStart) == false)
             return false;
 
-        string &body = _client._body;
+        const string &body = _client._body;
         size_t dataEnd = dataStart + targetSize;
         
         if (body.size() >= dataEnd + CRLF_LEN)

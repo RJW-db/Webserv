@@ -30,9 +30,9 @@ namespace
 class Client
 {
     public:
-        Client(int fd);
+        explicit Client(int fd);
 
-        void resetRequestState();
+        void httpCleanup();
 
         void setDisconnectTime(uint16_t disconectTimeSeconds)
         {
@@ -54,22 +54,21 @@ class Client
         string _header;
         string _body;
         string _method;
-        uint8_t _useMethod;
+        uint8_t _useMethod = 0;
         string _requestPath;
         bool _requestUpload = false;
         string _queryString;
         string _rootPath;      // root + requestpath
         string _filenamePath;  // rootpath + filename
         string _version;
-        size_t _contentLength;
-        size_t _bodyEnd;
+        size_t _contentLength = 0;
+        size_t _bodyEnd = 0;
         string_view _contentType;
         string_view _boundary;
 
         pid_t _pid = -1;
         string _filename;
         string _name;
-        string_view _fileContent;
 
         bool    _cgiClosing = false;
         chrono::steady_clock::time_point _disconnectTimeCgi;
@@ -77,7 +76,7 @@ class Client
         bool _isAutoIndex = false;
 
         chrono::steady_clock::time_point _disconnectTime;
-        bool _keepAlive;
+        bool _keepAlive = true;
         unordered_map<string, string_view> _headerFields;
 };
 #endif

@@ -1,27 +1,32 @@
 #include "Client.hpp"
+#include "Constants.hpp"
 
 Client::Client(int fd)
 : _fd(fd), _headerParseState(HEADER_AWAITING), _contentLength(0), _keepAlive(true)
 {}
 
-void Client::resetRequestState()
+void Client::httpCleanup()
 {
+    // Do NOT reset: _fd, _usedServer, _location, _uploadPath, _disconnectTime, _keepAlive
     _headerParseState = HEADER_AWAITING;
     _header.clear();
     _body.clear();
-    _method.clear();
+    _boundary = string_view();
     _requestPath.clear();
     _queryString.clear();
-    _rootPath.clear();
-    _version.clear();
+    _method.clear();
+    _useMethod = 0;
     _contentLength = 0;
-    _contentType = string_view();
-    _boundary = string_view();
-    _filename.clear();
-    _filenamePath.clear();
-    _fileContent = string_view();
     _headerFields.clear();
+    _rootPath.clear();
+    _filenamePath.clear();
+    _contentType = string_view();
+    _name.clear();
+    _version.clear();
+    _bodyEnd = 0;
+    _filename.clear();
+    setDisconnectTime(DISCONNECT_DELAY_SECONDS);
+    _isAutoIndex = false;
     _isCgi = false;
     _pid = -1;
-    // Do NOT reset: _fd, _usedServer, _location, _uploadPath, _disconnectTime, _keepAlive
 }

@@ -12,10 +12,10 @@ class Alocation : public Aconfig
 
         // Getters
         uint8_t getAllowedMethods() const;
-		string getUploadStore() const;
-		vector<string> getExtension() const;
-		string getCgiPath() const;
-		string getPath() const;
+		const string &getUploadStore() const;
+		const vector<string> &getExtension() const;
+		const string &getCgiPath() const;
+		const string &getPath() const;
 
         // Helper function
         bool isCgiFile(string_view &filename) const;
@@ -40,20 +40,19 @@ class Location : public Alocation
 		Location() = default;
 		Location(const Location &other);
 		Location &operator=(const Location &other);
-		~Location() = default;
+		// ~Location() = default;
 
         // Getters
 		void getLocationPath(string &line);
 
         // Parsing logic
 		bool methods(string &line);
-		bool indexPage(string &line);
 		bool uploadStore(string &line);
 		bool cgiExtensions(string &line);
 		bool cgiPath(string &line);
 
         // Default setting
-		void SetDefaultLocation(Aconfig &curConf);
+		void SetDefaultLocation(const Aconfig &curConf);
 
 
 	private:

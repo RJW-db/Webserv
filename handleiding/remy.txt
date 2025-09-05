@@ -10,7 +10,7 @@ unzip, find infer location as below,
 /home/rde-brui/Downloads/infer-linux-x86_64-v1.2.0/bin/infer
 
 go to project and run:
-/home/rde-brui/Downloads/infer-linux-x86_64-v1.2.0/bin/infer run -- make
+/home/rde-brui/sgoinfre/infer-linux-x86_64-v1.2.0/bin/infer run -- make
 
 
 
@@ -28,6 +28,7 @@ pwd
 inside the project
 /home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --check-level=exhaustive --enable=all src -I include
 /home/rde-brui/sgoinfre/cppcheck-main/build/bin/cppcheck --suppress=missingIncludeSystem --check-level=exhaustive --enable=all src -I include > /dev/null
+
 
 
 echo -e "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n" > test.txt
