@@ -72,7 +72,27 @@ void HttpRequest::processHead(Client &client)
 void HttpRequest::processGet(Client &client)
 {
     if (!client._isAutoIndex)
-        GET(client);
+    {
+        if (client._requestUpload == false)
+            GET(client);
+        else
+        {
+            vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
+            string body;
+            for (const string& f : files)
+                body += f + "\n";
+            string responseStr = "HTTP/1.1 200 OK\r\n";
+            responseStr += "Content-Type: text/plain\r\n";
+            responseStr += "Content-Length: " + to_string(body.size()) + "\r\n";
+            responseStr += "Connection: keep-alive\r\n\r\n";
+            responseStr += body;
+
+            // Use HandleToClientTransfer to send the response
+            auto handle = make_unique<HandleToClientTransfer>(client, responseStr);
+            RunServers::insertHandleTransfer(move(handle));
+            client._requestUpload = false;
+        }
+    }
     else
     {
         SendAutoIndex(client);

@@ -19,29 +19,24 @@ void initRandomSeed()
     srand(static_cast<unsigned int>(seed));
 }
 
-bool directoryCheck(string &path)
+vector<string> listFilesInDirectory(Client &client, const string &path)
 {
-    // cout << "\t" << path << endl;
-    DIR *d = opendir(path.c_str());	// path = rde-brui
+    DIR *d = opendir(path.c_str());
     if (d == NULL)
     {
         perror("opendir");
-        return false;
+        throw ErrorCodeClientException(client, 500, "Couldn't open directory: " + path + " because: " + strerror(errno));
     }
 
-    // struct dirent *directoryEntry;
-    // while ((directoryEntry = readdir(d)) != NULL) {
-    //     printf("%s\n", directoryEntry->d_name);
-    //     if (string(directoryEntry->d_name) == path)
-    //     {
-    //         closedir(d);
-    //         return (true);
-    //     }
-    // }
-    
+    vector<string> files = {};
+    struct dirent *directoryEntry;
+    while ((directoryEntry = readdir(d)) != NULL) {
+        char *file = directoryEntry->d_name;
+        if (!(file[0] == '.' && (file[1] == '\0' || (file[1] == '.' && file[2] == '\0'))))
+            files.push_back(file);
+    }
     closedir(d);
-    return (true);
-    // return (false);
+    return files;
 }
 
 size_t getFileLength(Client &client, const string_view filename)

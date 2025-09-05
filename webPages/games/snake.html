@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Snake</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <div id="gameArea"></div>
+  </body>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: darkblue;
+      color: white;
+    }
+    #gameArea {
+      width: 600px;
+      height: 600px;
+      border: 10px solid #333;
+      position: relative;
+      background-color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .snake {
+      width: 30px;
+      height: 30px;
+      background-color: limegreen;
+      position: absolute;
+      border-radius: 5px;
+    }
+
+    .food {
+      width: 30px;
+      height: 30px;
+      background: radial-gradient(circle, tomato, red, darkred);
+      position: absolute;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    }
+  </style>
+
+  <script>
+    const gameArea = document.getElementById("gameArea");
+    const gameSize = { width: 600, height: 600 };
+    const snakeSize = 30;
+    let snake = [{ x: 150, y: 150 }];
+    let food = { x: 60, y: 60 };
+    let direction = { x: 0, y: 0 };
+
+    function createDiv(type) {
+      let div = document.createElement("div");
+      div.className = type;
+      gameArea.appendChild(div);
+      return div;
+    }
+
+    function drawSnake() {
+      gameArea.innerHTML = "";
+      snake.forEach((segment) => {
+        let snakePart = createDiv("snake");
+        snakePart.style.left = `${segment.x}px`;
+        snakePart.style.top = `${segment.y}px`;
+      });
+      let foodDiv = createDiv("food");
+      foodDiv.style.left = `${food.x}px`;
+      foodDiv.style.top = `${food.y}px`;
+    }
+
+    function moveSnake() {
+      const head = {
+        x: snake[0].x + direction.x * snakeSize,
+        y: snake[0].y + direction.y * snakeSize,
+      };
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      if (
+        head.x < 0 ||
+        head.x >= gameSize.width ||
+        head.y < 0 ||
+        head.y >= gameSize.height ||
+        snake.some(
+          (segment, index) =>
+            index !== 0 && segment.x === head.x && segment.y === head.y
+        )
+      ) {
+        // Game over
+        snake = [{ x: 150, y: 150 }];
+        direction = { x: 0, y: 0 };
+        alert("Game over");
+      }
+    }
+
+    function placeFood() {
+      food = {
+        x: Math.floor(Math.random() * (gameSize.width / snakeSize)) * snakeSize,
+        y:
+          Math.floor(Math.random() * (gameSize.height / snakeSize)) * snakeSize,
+      };
+    }
+
+    document.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowDown":
+          if (direction.y === 0) direction = { x: 0, y: 1 };
+          break;
+        case "ArrowUp":
+          if (direction.y === 0) direction = { x: 0, y: -1 };
+          break;
+        case "ArrowRight":
+          if (direction.x === 0) direction = { x: 1, y: 0 };
+          break;
+        case "ArrowLeft":
+          if (direction.x === 0) direction = { x: -1, y: 0 };
+          break;
+      }
+    });
+
+    setInterval(() => {
+      moveSnake();
+      drawSnake();
+    }, 200);
+
+    placeFood();
+    drawSnake();
+  </script>
+</html>

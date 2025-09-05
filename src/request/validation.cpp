@@ -1,3 +1,4 @@
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <iostream>
 #include "ErrorCodeClientException.hpp"
@@ -43,6 +44,11 @@ void    HttpRequest::validateHEAD(Client &client)
     
     client._rootPath = client._location.getRoot() + string(client._requestPath);
     decodeSafeFilenameChars(client);
+    if (client._requestPath == "/upload/list") {
+        client._requestUpload = true;
+        client._requestPath = "/upload";
+        // client._requestPath = should be upload_store
+    }
     validateResourceAccess(client);
 }
 
@@ -216,7 +222,7 @@ namespace
             if (access(reqPath.data(), R_OK | X_OK) != 0)
                 throw ErrorCodeClientException(client, 403, "Forbidden: No permission to access directory");
             
-            if (client._useMethod & (METHOD_HEAD | METHOD_GET))
+            if (client._requestUpload == false && client._useMethod & (METHOD_HEAD | METHOD_GET))
                 findIndexFile(client, status);
         }
         else if (S_ISREG(status.st_mode) == true)

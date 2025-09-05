@@ -56,6 +56,7 @@ class Client
         string _method;
         uint8_t _useMethod;
         string _requestPath;
+        bool _requestUpload = false;
         string _queryString;
         string _rootPath;      // root + requestpath
         string _filenamePath;  // rootpath + filename

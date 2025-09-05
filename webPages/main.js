@@ -1,4 +1,63 @@
 window.addEventListener('DOMContentLoaded', function() {
+  // Display existing images in the gallery on page load
+  fetch('/upload/list')
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to fetch file list');
+      return res.text();
+    })
+    .then(text => {
+      const gallery = document.getElementById('gallery');
+      const files = text.trim().split('\n');
+      files.forEach(filename => {
+        if (filename) {
+          const wrapper = document.createElement('div');
+          wrapper.style.position = 'relative';
+          wrapper.style.display = 'inline-block';
+          wrapper.style.margin = '10px';
+
+          const label = document.createElement('div');
+          label.textContent = filename;
+          label.style.textAlign = 'center';
+          label.style.marginBottom = '5px';
+          label.style.fontSize = '16px';
+
+          const img = document.createElement('img');
+          img.src = `/upload/${encodeURIComponent(filename)}`;
+          img.alt = filename;
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.style.position = 'absolute';
+          delBtn.style.top = '10px';
+          delBtn.style.right = '10px';
+          delBtn.onclick = function() {
+            fetch('/upload/' + encodeURIComponent(filename), {
+              method: 'DELETE'
+            })
+            .then(res => {
+              if (res.ok) {
+                wrapper.remove();
+              } else {
+                alert('Failed to delete image.');
+              }
+            })
+            .catch (() => alert('Error deleting image.'));
+          };
+
+          // Append children to wrapper
+          wrapper.appendChild(label);
+          wrapper.appendChild(img);
+          wrapper.appendChild(delBtn);
+
+          // Append wrapper to gallery
+          gallery.appendChild(wrapper);
+        }
+      });
+    })
+    .catch(err => {
+      console.error('Error loading file list:', err);
+    });
+
   // Handle file upload
   document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Games Hub</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      background: url('game_room.gif') center center no-repeat #222;
+      background-size: cover;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    #sidebar {
+      width: 200px;
+      background: #181818cc;
+      padding: 30px 10px 10px 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+      font-size: 1.3em;
+      text-align: center;
+    }
+    #sidebar ul {
+      list-style: none;
+      padding: 0;
+      width: 100%;
+    }
+    #sidebar li {
+      margin: 15px 0;
+      text-align: center;
+    }
+    #sidebar a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      padding: 8px 0;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+    #sidebar a:hover, #sidebar a.active {
+      background: #444;
+      color: #ff0;
+    }
+    #main {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      height: 100vh;
+    }
+    #gameFrame {
+      width: 100%;
+      height: 100vh;
+      min-width: 320px;
+      min-height: 320px;
+      border: none;
+      background: transparent;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      display: none; /* Hide by default */
+    }
+  </style>
+</head>
+<body>
+  <audio id="bgMusic" src="Guile's Theme.mp3" loop autoplay></audio>
+  <div id="sidebar">
+    <h2>Games</h2>
+    <ul>
+      <li><a href="tenacity/tenacity.html" data-game="tenacity/tenacity.html">Tenacity</a></li>
+      <li><a href="Edge_Not_Found/index.html" data-game="Edge_Not_Found/index.html">Edge Not Found</a></li>
+      <li><a href="snake.html" data-game="snake.html">Snake</a></li>
+      <li><a href="tetris.html" data-game="tetris.html">Tetris</a></li>
+      <li><a href="breakout.html" data-game="breakout.html">Breakout</a></li>
+      <li><a href="Bust-a-Move.html" data-game="Bust-a-Move.html">Bust-a-Move</a></li>
+      <li><a href="maze_generator.html" data-game="maze_generator.html">Maze Generator</a></li>
+    </ul>
+  </div>
+  <div id="main">
+    <iframe id="gameFrame"></iframe>
+  </div>
+  <script>
+    const links = document.querySelectorAll('#sidebar a');
+    const gameFrame = document.getElementById('gameFrame');
+    const bgMusic = document.getElementById('bgMusic');
+
+    // Try to play music immediately on load
+    window.onload = () => {
+      bgMusic.play().catch(() => {
+        // Some browsers require user interaction
+      });
+    };
+
+    // Fallback: play music on first user interaction if blocked
+    document.body.addEventListener('click', () => {
+      if (bgMusic.paused) bgMusic.play();
+    }, { once: true });
+
+    links.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        links.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        gameFrame.style.display = "block";
+        gameFrame.src = this.getAttribute('data-game');
+
+        // Pause bg music for Tenacity and Edge Not Found, play otherwise
+        const game = this.getAttribute('data-game');
+        if (
+          game === "tenacity/tenacity.html" ||
+          game === "Edge_Not_Found/index.html"
+        ) {
+          bgMusic.pause();
+        } else {
+          bgMusic.play();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
