@@ -11,8 +11,7 @@ void HttpRequest::processRequest(Client &client)
         checkAndRunCgi(client))
         return;
 
-    switch (client._useMethod)
-    {
+    switch (client._useMethod) {
         case METHOD_HEAD:
             processHead(client);
             break;
@@ -32,8 +31,7 @@ void HttpRequest::processRequest(Client &client)
 
 bool HttpRequest::checkAndRedirect(Client &client)
 {
-    if (client._location.getReturnRedirect().first > 0)
-    {
+    if (client._location.getReturnRedirect().first > 0) {
         redirectRequest(client);
         client.httpCleanup();
         return true;
@@ -54,8 +52,7 @@ void HttpRequest::redirectRequest(Client &client)
 
 bool HttpRequest::checkAndRunCgi(Client &client)
 {
-    if (client._isCgi && client._useMethod != METHOD_POST)
-    {
+    if (client._isCgi && client._useMethod != METHOD_POST) {
         handleCgi(client, client._body);
         return true;
     }
@@ -70,12 +67,10 @@ void HttpRequest::processHead(Client &client)
 
 void HttpRequest::processGet(Client &client)
 {
-    if (!client._isAutoIndex)
-    {
+    if (!client._isAutoIndex) {
         if (client._requestUpload == false)
             GET(client);
-        else
-        {
+        else {
             vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
             string body;
             for (const string& f : files)
@@ -92,8 +87,7 @@ void HttpRequest::processGet(Client &client)
             client._requestUpload = false;
         }
     }
-    else
-    {
+    else {
         SendAutoIndex(client);
         client.httpCleanup();
     }
@@ -102,8 +96,7 @@ void HttpRequest::processGet(Client &client)
 void HttpRequest::GET(Client &client)
 {
     int fd = open(client._filenamePath.data(), R_OK);
-    if (fd == -1)
-    {
+    if (fd == -1) {
         if (errno == EACCES)
             throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
         else if (errno == ENOENT)
@@ -120,29 +113,23 @@ void HttpRequest::GET(Client &client)
 
 void HttpRequest::SendAutoIndex(Client &client)
 {
-    DIR *dr = opendir(client._rootPath.data());
+    vector<string> files = listFilesInDirectory(client, client._rootPath);
     string filenames;
-    if (dr)
-    {
-        const struct dirent *en;
-        while ((en = readdir(dr)) != NULL) // TODO not protected
-        {
+    if (!files.empty()) {
+        for (const string &file : files) {
             filenames += "<a href=\"";
             filenames += client._requestPath;
             if (!client._requestPath.empty() && client._requestPath.back() != '/')
                 filenames += "/";
-            filenames += en->d_name;
-            filenames += "\">";
-            filenames += en->d_name;
-            filenames += "</a><br>";
+            filenames += file + "\">" + file + "</a><br>";
         }
+    } else {
+        filenames = "(No files found)";
     }
-    else
-        throw ErrorCodeClientException(client, 500, "Failed to open directory: " + client._rootPath + ", because: " + string(strerror(errno)));
+
     string htmlResponse = "<html><body><h1>Index of " + client._rootPath + "</h1><pre>" + filenames + "</pre></body></html>";
     string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
     client._filenamePath.clear();
-    closedir(dr); // TODO not protected
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
@@ -150,8 +137,7 @@ void HttpRequest::SendAutoIndex(Client &client)
 
 void HttpRequest::processPost(Client &client)
 {
-    switch (client._headerParseState)
-    {
+    switch (client._headerParseState) {
         case REQUEST_READY:
             POST(client);
             break;
@@ -160,9 +146,7 @@ void HttpRequest::processPost(Client &client)
             client._contentLength = 0;
             unique_ptr<HandleTransfer> handle = make_unique<HandleChunkTransfer>(client);
             if (handle->handleChunkTransfer() == true)
-            {
                 return;
-            }
             RunServers::insertHandleTransfer(move(handle));
             break;
         }
@@ -172,8 +156,7 @@ void HttpRequest::processPost(Client &client)
 void HttpRequest::processDelete(Client &client)
 {
     uint16_t code = 200;
-    if (remove(('.' + client._requestPath).data()) == 0)
-    {
+    if (remove(('.' + client._requestPath).data()) == 0) {
         string body = "File deleted";
         string response = HttpRequest::HttpResponse(client, code, ".txt", body.size());
         response += body;
@@ -181,10 +164,8 @@ void HttpRequest::processDelete(Client &client)
         RunServers::insertHandleTransfer(move(handleClient));
         Logger::log(INFO, client, "DELETE ", client._rootPath);
     }
-    else
-    {
-        switch (errno)
-        {
+    else {
+        switch (errno) {
             case EACCES:
             case EPERM:
             case EROFS:

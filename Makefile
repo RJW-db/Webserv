@@ -12,6 +12,7 @@ CCPFLAGS		:=	-std=c++17
 CCPFLAGS		+=	-Wall -Wextra
 CCPFLAGS		+=	-Werror
 CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+CCPFLAGS		+=	-flto
 CCPFLAGS		+=	-MMD -MP
 # CCPFLAGS		+=	-g
 # CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0

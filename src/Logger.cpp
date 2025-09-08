@@ -26,13 +26,11 @@ void Logger::initialize(const string &logDir, const string &filename)
 string Logger::initLogDirectory(const string &logDir)
 {
     string absolutePath = RunServers::getServerRootDir() + '/' + logDir;
-    try
-    {
+    try {
         if (!filesystem::exists(absolutePath))
             filesystem::create_directory(absolutePath);
     }
-    catch (const filesystem::filesystem_error &e)
-    {
+    catch (const filesystem::filesystem_error &e) {
         Logger::logExit(ERROR, "Log dir error", '-', "Filesystem error", absolutePath, " Details: ", e.what());
     }
     return absolutePath;
@@ -52,8 +50,7 @@ string Logger::getTimeStamp()
     ostringstream timeStamp;
     
     // Print date header if day changed
-    if (currentDay != lastDay)
-    {
+    if (currentDay != lastDay) {
         timeStamp << "\n--- " << ltm->tm_year + 1900 << '-'
                 << setw(2) << setfill('0') << 1 + ltm->tm_mon << '-'
                 << setw(2) << setfill('0') << ltm->tm_mday << " ---\n";
@@ -72,8 +69,7 @@ string Logger::logLevelToString(uint8_t level, bool useColors)
 {
     switch ((level == CHILD_INFO ||
              level == IWARN ||
-             level == IERROR) ? level + 1 : level)
-    {
+             level == IERROR) ? level + 1 : level) {
         case DEBUG: return useColors ? "\033[36mDEBUG\033[0m " : "DEBUG ";
         case INFO:  return useColors ? "\033[32mINFO \033[0m " : "INFO  ";
         case WARN:  return useColors ? "\033[33mWARN \033[0m " : "WARN  ";

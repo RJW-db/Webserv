@@ -15,9 +15,15 @@ class AconfigServ : public Aconfig
         AconfigServ &operator=(const AconfigServ &other);
 
         // Getters
-        unordered_multimap<string, string> &getPortHost(void);
-        vector<pair<string, Location>> &getLocations(void);
-        string &getServerName(void);
+        unordered_multimap<string, string> &getPortHost() {
+            return _portHost;
+        }
+        vector<pair<string, Location>> &getLocations() {
+            return _locations;
+        }
+        string &getServerName() {
+            return _serverName;
+        }
         
     protected:
         unordered_multimap<string, string> _portHost;
@@ -32,7 +38,6 @@ class ConfigServer : public AconfigServ
         ConfigServer();
         ConfigServer(const ConfigServer &other);
         ConfigServer &operator=(const ConfigServer &other);
-        // virtual ~ConfigServer() = default;
 
         // Parsing logic
         bool listenHostname(string &line);
@@ -40,7 +45,9 @@ class ConfigServer : public AconfigServ
 
         // Utils
         void addLocation(const Location &location, string path);
-        int getLineNbr(void) const;
+        int getLineNbr(void) const {
+            return _lineNbr;
+        }
 
         // Default setting
         void setDefaultConf(void);

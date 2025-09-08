@@ -76,8 +76,7 @@ namespace
     void parseHeaders(Client &client)
     {
         size_t start = 0;
-        while (start < client._header.size())
-        {
+        while (start < client._header.size()) {
             size_t end = client._header.find(CRLF, start);
             if (end == string::npos)
                 throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
@@ -87,8 +86,7 @@ namespace
                 break; // End of headers
 
             size_t colon = line.find(':');
-            if (colon != string_view::npos)
-            {
+            if (colon != string_view::npos) {
                 // Extract key and value as string_views
                 string_view key = trimWhiteSpace(line.substr(0, colon));
                 string_view value = trimWhiteSpace(line.substr(colon + 1));
@@ -111,8 +109,7 @@ namespace
     void handleConnectionHeader(Client &client)
     {
         auto connectionHeader = client._headerFields.find("Connection");
-        if (connectionHeader != client._headerFields.end())
-        {
+        if (connectionHeader != client._headerFields.end()) {
             string_view connValue = connectionHeader->second;
             if (connValue == "close")
                 client._keepAlive = false;
@@ -128,8 +125,7 @@ namespace
         HttpRequest::getContentType(client);
         auto transferEncodingHeader = client._headerFields.find("Transfer-Encoding");
         if (transferEncodingHeader != client._headerFields.end() &&
-            transferEncodingHeader->second == "chunked")
-        {
+            transferEncodingHeader->second == "chunked") {
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
         }

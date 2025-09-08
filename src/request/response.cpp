@@ -63,8 +63,7 @@ string HttpRequest::getMimeType(const string &path)
         {"xml", "application/xml"}};
 
     size_t dotIndex = path.find_last_of('.');
-    if (dotIndex != string::npos)
-    {
+    if (dotIndex != string::npos) {
         string_view extention = string_view(path).substr(dotIndex + 1);
         map<string, string>::const_iterator it = mimeTypes.find(extention.data());
         if (it != mimeTypes.end())
@@ -86,8 +85,7 @@ string HttpRequest::createResponseCgi(Client &client, const string &input)
 map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string_view, string_view> &headerFields, size_t headerSize)
 {
     size_t pos = 0;
-    while (pos < headerSize)
-    {
+    while (pos < headerSize) {
         size_t end = input.find(CRLF, pos);
         if (end == string::npos) 
             break;
@@ -121,9 +119,8 @@ string HttpRequest::buildCgiResponse(const Client &client, const map<string_view
     ostringstream response;
     response << "HTTP/1.1 " << headerFields.at("Status") << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
-    
-    if (hasBody)
-    {
+
+    if (hasBody) {
         response << "Content-Type: " << headerFields.at("Content-Type") << CRLF;
         if (headerFields.count("Content-Length") > 0)
             response << "Content-Length: " << headerFields.at("Content-Length") << CRLF;

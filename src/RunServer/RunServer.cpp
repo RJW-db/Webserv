@@ -35,15 +35,11 @@ bool RunServers::_fatalErrorOccurred = false;
 
 void RunServers::runServers()
 {
-    while (g_signal_status == 0)
-    {
+    while (g_signal_status == 0) {
         int eventCount;
-
         disconnectChecks();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
-
-        if (eventCount == -1)
-        {
+        if (eventCount == -1) {
             if (errno == EINTR)
             {
                 if (g_signal_status != SIGINT)
@@ -52,17 +48,13 @@ void RunServers::runServers()
             }
             Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));
         }
-        try
-        {
-            // cout << "event count "<<  eventCount << endl;
+        try {
             handleEvents(static_cast<size_t>(eventCount));
         }
-        catch (Logger::ErrorLogExit&)
-        {
+        catch (Logger::ErrorLogExit&) {
             Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
         }
-        catch (const exception& e)
-        {
+        catch (const exception& e) {
             Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
         }
     }
@@ -71,15 +63,12 @@ void RunServers::runServers()
 
 void RunServers::handleEvents(size_t eventCount)
 {
-    for (size_t i = 0; i < eventCount; ++i)
-    {
-        try
-        {
+    for (size_t i = 0; i < eventCount; ++i) {
+        try {
             struct epoll_event &currentEvent = _events[i];
             int eventFD = currentEvent.data.fd;
 
-            if (eventFD == 0 && (currentEvent.events & EPOLLIN))
-            {
+            if (eventFD == 0 && (currentEvent.events & EPOLLIN)) {
                 handleEpollStdinEvents();
                 continue;
             }
@@ -98,8 +87,7 @@ void RunServers::handleEvents(size_t eventCount)
                 (currentEvent.events == EPOLLIN))
                 processClientRequest(*_clients[eventFD].get());
         }
-        catch (ErrorCodeClientException &e)
-        {
+        catch (ErrorCodeClientException &e) {
             e.handleErrorClient();
         }
     }
@@ -111,8 +99,7 @@ void RunServers::handleEpollStdinEvents()
     ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
     if (bytesRead == -1)
         Logger::log(IWARN, "Reading from stdin failed: ", strerror(errno));
-    else if (bytesRead > 0)
-    {
+    else if (bytesRead > 0) {
         buffer[bytesRead] = '\0';
         int snooze = stoi(buffer, nullptr, 10);
         if (snooze > 0 && snooze < 20)
@@ -123,8 +110,7 @@ void RunServers::handleEpollStdinEvents()
 bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, int eventFD)
 {
     if ((currentEvent.events & (EPOLLERR | EPOLLHUP)) ||
-        !(currentEvent.events & (EPOLLIN | EPOLLOUT)))
-    {
+        !(currentEvent.events & (EPOLLIN | EPOLLOUT))) {
         if (currentEvent.events & EPOLLERR)
             Logger::log(INFO, "Epoll event", eventFD, "", "EPOLLERR (events: ", static_cast<int>(currentEvent.events), ')');
         if (currentEvent.events & EPOLLHUP)
@@ -137,9 +123,7 @@ bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, 
         if (clientIt != _clients.end() && clientIt->second)
             cleanupClient(*clientIt->second);
         else
-        {
             removeHandlesWithFD(eventFD);
-        }
         return true;
     }
     return false;
@@ -148,37 +132,29 @@ bool RunServers::handleEpollErrorEvents(const struct epoll_event &currentEvent, 
 bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
 {
     int eventFD = currentEvent.data.fd;
-    for (size_t idx = 0; idx < _handle.size(); ++idx)
-    {
-        if (_handle[idx]->_client._fd == eventFD)
-        {
+    for (size_t idx = 0; idx < _handle.size(); ++idx) {
+        if (_handle[idx]->_client._fd == eventFD) {
             HandleTransfer &handle = *_handle[idx];
             Client &client = handle._client;
             client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
             bool finished = false;
-            if (currentEvent.events & EPOLLOUT)
-            {
+            if (currentEvent.events & EPOLLOUT) {
                 if (handle._handleType == HANDLE_GET_TRANSFER)
                     finished = handle.handleGetTransfer();
                 else
                     finished = handle.sendToClientTransfer();
             }
-            else if (currentEvent.events & EPOLLIN)
-            {
+            else if (currentEvent.events & EPOLLIN) {
                 if (handle._handleType == HANDLE_POST_TRANSFER)
                     finished = handle.postTransfer(true);
-                else
-                {
+                else {
                     handle.appendToBody();
                     finished = handle.handleChunkTransfer();
                 }
             }
-            if (finished == true)
-            {
-                if ( currentEvent.events & EPOLLOUT) // has to be send to client for cleanup
-                {
-                    if (client._keepAlive == false)
-                    {
+            if (finished == true) {
+                if ( currentEvent.events & EPOLLOUT) { // has to be send to client for cleanup
+                    if (client._keepAlive == false) {
                         cleanupClient(client);
                         return true;
                     }
@@ -196,16 +172,11 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
 bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
 {
     int eventFD = currentEvent.data.fd;
-    for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it)
-    {
-        if ((*it)->_fd == eventFD)
-        {
-            if (currentEvent.events & EPOLLOUT)
-            {
+    for (auto it = _handleCgi.begin(); it != _handleCgi.end(); ++it) {
+        if ((*it)->_fd == eventFD) {
+            if (currentEvent.events & EPOLLOUT) {
                 if ((*it)->writeToCgiTransfer() == true)
-                {
                     _handleCgi.erase(it);
-                }
             }
             else if (currentEvent.events & EPOLLIN)
                 (*it)->readFromCgiTransfer();

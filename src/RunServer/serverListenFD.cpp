@@ -65,10 +65,8 @@ struct addrinfo* ServerListenFD::getServerAddrinfo(void)
 void ServerListenFD::bindToSocket(struct addrinfo *server)
 {
 	struct addrinfo *p;
-	try
-	{
-		for (p = server; p != NULL; p = p->ai_next)
-		{
+	try {
+		for (p = server; p != NULL; p = p->ai_next) {
 			
 			_listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 	
@@ -77,8 +75,7 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 	
 			int reUse = 1;
 			setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &reUse, sizeof(int));
-			if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1)
-			{
+			if (bind(_listener, p->ai_addr, p->ai_addrlen) == -1) {
 				if (FileDescriptor::safeCloseFD(_listener) == false)
 					Logger::logExit(FATAL, "Server error", _listener, "Attempted to close a file descriptor that is not in the vector");
 				continue;
@@ -91,8 +88,7 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 			return;
 		}
 	}
-	catch(...)
-	{
+	catch(...) {
 		freeaddrinfo(server);
 		FileDescriptor::closeFD(_listener); //TODO check if correct solution for protection of fd leak
 		throw;

@@ -19,33 +19,27 @@ namespace
 
 void RunServers::acceptConnection(const int listener)
 {
-    while (true)
-    {
+    while (true) {
         socklen_t in_len = sizeof(struct sockaddr);
         struct sockaddr in_addr;
         int infd = accept(listener, &in_addr, &in_len);
-        if (infd == -1)
-        {
+        if (infd == -1) {
             if (errno != EAGAIN)
                 Logger::log(ERROR, "Server error", listener, "Accept failed", strerror(errno));
             break;
         }
 
         FileDescriptor::setFD(infd);
-        try
-        {
+        try {
             _clients[infd] = make_unique<Client>(infd); 
         }
-        catch(const std::exception& e) //TODO is this correct solution for protection of fd leak?
-        {
+        catch(const std::exception& e) {
             FileDescriptor::closeFD(infd);
             Logger::log(ERROR, "Server error", listener, "Client creation failed", strerror(errno));
             throw;
         }
         
-        
         setClientServerAddress(*_clients[infd], infd);
-
         setEpollEventsClient(*_clients[infd], infd, EPOLL_CTL_ADD, EPOLLIN);
 
         Logger::log(INFO, *_clients[infd], 
@@ -69,8 +63,7 @@ void RunServers::setClientServerAddress(Client &client, int infd)
 
 void RunServers::processClientRequest(Client &client)
 {
-    try
-    {
+    try {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
         static bool (*const handlers[4])(Client&, const char*, size_t) = {
@@ -81,15 +74,12 @@ void RunServers::processClientRequest(Client &client)
         };
         if (handlers[client._headerParseState](client, buff, bytesReceived) == false)
             return ;
-        // client._finishedProcessClientRequest = true;
         HttpRequest::processRequest(client);
     }
-    catch (const Logger::ErrorLogExit&)
-    {
+    catch (const Logger::ErrorLogExit&) {
         throw;
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }
 

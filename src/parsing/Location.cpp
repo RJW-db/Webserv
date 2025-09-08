@@ -14,6 +14,25 @@ namespace
     const uint8_t ALL_METHODS = HEAD_METHOD_BIT | GET_METHOD_BIT | POST_METHOD_BIT | DELETE_METHOD_BIT;
 }
 
+Alocation::Alocation(const Alocation &other)
+: Aconfig(other)
+{
+    *this = other;
+}
+
+Alocation &Alocation::operator=(const Alocation &other)
+{
+    if (this != &other) {
+        Aconfig::operator=(other);
+        _upload_store = other._upload_store;
+        _cgiPath = other._cgiPath;
+        _cgiExtension = other._cgiExtension;
+        _locationPath = other._locationPath;
+        _allowedMethods = other._allowedMethods;
+    }
+    return (*this);
+}
+
 Location::Location(const Location &other) : Alocation(other)
 {
     *this = other;
@@ -22,9 +41,7 @@ Location::Location(const Location &other) : Alocation(other)
 Location &Location::operator=(const Location &other)
 {
     if (this != &other)
-    {
         Alocation::operator=(other);
-    }
     return (*this);
 }
 
@@ -48,8 +65,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
     const string expectedTokens[5] = {"{", "deny", "all", ";", "}"};
 
     if (strncmp(line.c_str(), expectedTokens[expectedTokenIndex].c_str(),
-                expectedTokens[expectedTokenIndex].length()) == 0)
-    {
+                expectedTokens[expectedTokenIndex].length()) == 0) {
         if (_allowedMethods == 0)
             throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods specified for limit_except directive");
 
@@ -57,8 +73,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
         ++expectedTokenIndex;
 
         // Check if we've found all expected tokens
-        if (expectedTokenIndex == 5)
-        {
+        if (expectedTokenIndex == 5) {
             findColon = true;
             expectedTokenIndex = 0;
         }
@@ -73,8 +88,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 bool Location::methods(string &line)
 {
     bool findColon = false;
-    if (checkMethodEnd(findColon, line) == true)
-    {
+    if (checkMethodEnd(findColon, line) == true) {
         if (findColon == true)
             return true;
         return false;
@@ -106,8 +120,7 @@ bool Location::uploadStore(string &line)
     if (!_upload_store.empty())
         throw runtime_error(to_string(_lineNbr) + ": upload_store: setting second upload_store in block");
     size_t len = line.find_first_of(" \t\f\v\r;");
-    if (len == string::npos)
-    {
+    if (len == string::npos) {
         _upload_store = line;
         return false;
     }
@@ -117,8 +130,7 @@ bool Location::uploadStore(string &line)
 
 bool Location::cgiExtensions(string &line)
 {
-    if (line[0] == ';')
-    {
+    if (line[0] == ';') {
         line.erase(0, 1);
         return true;
     }
@@ -136,8 +148,7 @@ bool Location::cgiPath(string &line)
     if (!_cgiPath.empty())
         throw runtime_error(to_string(_lineNbr) + "cgi_path: tried creating second cgi_path");
     size_t len = line.find_first_of(" \t\f\v\r;");
-    if (len == string::npos)
-    {
+    if (len == string::npos) {
         _cgiPath = line;
         return false;
     }
@@ -165,16 +176,11 @@ void Location::SetDefaultLocation(const Aconfig &curConf)
     for (pair<uint16_t, string> errorCodePages : curConf.getErrorCodesWithPage())
         _ErrorCodesWithPage.insert(errorCodePages);
     if (_indexPage.empty())
-    {
         for (const string &indexPage : curConf.getIndexPage())
             _indexPage.push_back(indexPage);
-    }
     if (_allowedMethods == 0)
-    {
-        _allowedMethods = ALL_METHODS; // Allow all HTTP methods by default
-    }
-    for (string &indexPage : _indexPage)
-    {
+        _allowedMethods = ALL_METHODS;
+    for (string &indexPage : _indexPage) {
         if (_root[_root.size() - 1] == '/')
             indexPage = _root + indexPage;
         else
@@ -188,42 +194,12 @@ void Location::SetDefaultLocation(const Aconfig &curConf)
     setDefaultErrorPages();
 }
 
-// Alocation class functions (in header order)
-
-Alocation::Alocation(const Alocation &other)
-: Aconfig(other)
-{
-    *this = other;
-}
-
-Alocation &Alocation::operator=(const Alocation &other)
-{
-    if (this != &other)
-    {
-        Aconfig::operator=(other);
-        _upload_store = other._upload_store;
-        _cgiPath = other._cgiPath;
-        _cgiExtension = other._cgiExtension;
-        _locationPath = other._locationPath;
-        _allowedMethods = other._allowedMethods;
-    }
-    return (*this);
-}
-
 bool Alocation::isCgiFile(string_view &filename) const
 {
     size_t extensionPos = filename.find_last_of('.');
     string_view fileExtension(filename.data() + extensionPos);
     for(const string &cgiExtension : _cgiExtension)
-    {
         if (filename == cgiExtension || fileExtension == cgiExtension)
             return true;
-    }
     return false;
 }
-
-const string &Alocation::getUploadStore() const { return _upload_store; }
-const vector<string> &Alocation::getExtension() const { return _cgiExtension; }
-const string &Alocation::getCgiPath() const { return _cgiPath; }
-const string &Alocation::getPath() const { return _locationPath; }
-uint8_t Alocation::getAllowedMethods() const { return _allowedMethods; }

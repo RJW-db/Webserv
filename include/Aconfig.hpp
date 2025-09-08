@@ -31,12 +31,24 @@ class Aconfig
         bool returnRedirect(string &line);
 
         // Getters
-        size_t getClientMaxBodySize() const;
-        const string &getRoot() const;
-        int8_t getAutoIndex() const;
-        pair<uint16_t, string> getReturnRedirect() const;
-        const map<uint16_t, string> &getErrorCodesWithPage() const;
-        const vector<string> &getIndexPage() const;
+        size_t getClientMaxBodySize() const {
+            return _clientMaxBodySize;
+        }
+        const string &getRoot() const {
+            return _root;
+        }
+        int8_t getAutoIndex() const {
+            return _autoIndex;
+        }
+        pair<uint16_t, string> getReturnRedirect() const {
+            return _returnRedirect;
+        }
+        const map<uint16_t, string> &getErrorCodesWithPage() const {
+            return _ErrorCodesWithPage;
+        }
+        const vector<string> &getIndexPage() const {
+            return _indexPage;
+        }
 
         // Set default
         void setDefaultErrorPages();

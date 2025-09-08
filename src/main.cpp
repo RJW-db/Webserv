@@ -20,20 +20,16 @@ namespace
 
 int main(int argc, char *argv[])
 {
-    try
-    {
+    try {
         return runWebServer(argc, argv);
     }
-    catch (const Logger::ErrorLogExit&)
-    {
+    catch (const Logger::ErrorLogExit&) {
         Logger::log(ERROR, "Logger exit triggered");
     }
-    catch (const exception &e)
-    {
+    catch (const exception &e) {
         Logger::log(ERROR, "An error occurred: ", e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         Logger::log(ERROR, "An error occurred");
     }
     return EXIT_FAILURE;

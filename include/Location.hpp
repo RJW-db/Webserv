@@ -11,11 +11,21 @@ class Alocation : public Aconfig
 		Alocation &operator=(const Alocation &other);
 
         // Getters
-        uint8_t getAllowedMethods() const;
-		const string &getUploadStore() const;
-		const vector<string> &getExtension() const;
-		const string &getCgiPath() const;
-		const string &getPath() const;
+		uint8_t getAllowedMethods() const {
+			return _allowedMethods;
+		}
+		const string &getUploadStore() const {
+			return _upload_store;
+		}
+		const vector<string> &getExtension() const {
+			return _cgiExtension;
+		}
+		const string &getCgiPath() const {
+			return _cgiPath;
+		}
+		const string &getPath() const {
+			return _locationPath;
+		}
 
         // Helper function
         bool isCgiFile(string_view &filename) const;

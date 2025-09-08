@@ -35,34 +35,28 @@ ErrorCodeClientException::ErrorCodeClientException(Client &client, uint16_t erro
 
 void ErrorCodeClientException::handleErrorClient()
 {
-    try
-    {
+    try {
         Logger::log(IWARN, _client, _message);
         _client._keepAlive = false;
-        if (_errorCode == 0)
-        {
+        if (_errorCode == 0) {
             RunServers::cleanupClient(_client);
             return;
         }
         map<uint16_t, std::string>::const_iterator errorPageIt = _errorPages.find(_errorCode);
-        if (errorPageIt == _errorPages.end())
-        {
+        if (errorPageIt == _errorPages.end()) {
             handleDefaultErrorPage();
             return;
         }
         handleCustomErrorPage(errorPageIt->second);
         return;
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
     }
-    catch (ErrorCodeClientException &e)
-    {
+    catch (ErrorCodeClientException &e) {
         Logger::log(ERROR, "Server error", '-', "Nested ErrorCodeClientException in handleErrorClient: ", e.what());
     }
-    catch (...)
-    {
+    catch (...) {
         Logger::log(ERROR, "Server error", '-', "Unknown exception in handleErrorClient");
     }
     int closeFd = _fileFD;
@@ -79,8 +73,7 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
         body = ERR400;
     else if (_errorCode == 500)
         body = ERR500;
-    else
-    {
+    else {
         body = "<html>\n"
             "  <head><title>" + to_string(_errorCode) + " Error</title></head>\n"
             "  <body>\n"
@@ -98,8 +91,7 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
 void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath)
 {
     _fileFD = open(errorPagePath.c_str(), O_RDONLY);
-    if (_fileFD == -1)
-    {
+    if (_fileFD == -1) {
         Logger::log(ERROR, "Server error", '-', "Failed to open error page: ", errorPagePath);
         handleDefaultErrorPage();
         return;
@@ -111,11 +103,3 @@ void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath
     auto transfer = make_unique<HandleGetTransfer>(_client, _fileFD, response, fileSize);
     RunServers::insertHandleTransfer(move(transfer));
 }
-
-const char *ErrorCodeClientException::what() const throw()
-{
-    return _message.c_str();
-}
-
-uint16_t ErrorCodeClientException::getErrorCode() const { return _errorCode; }
-const string &ErrorCodeClientException::getMessage() const { return _message; }

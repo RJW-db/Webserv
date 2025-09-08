@@ -23,11 +23,14 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
 {
     DIR *d = opendir(path.c_str());
     if (d == NULL)
-    {
-        perror("opendir");
         throw ErrorCodeClientException(client, 500, "Couldn't open directory: " + path + " because: " + strerror(errno));
-    }
 
+    /**
+     * If an error occurs, NULL is returned and errno is set appropriately.
+     * To distinguish end of stream from an error,
+     * set errno to zero before calling readdir() and check its value when NULL is returned.
+     */
+    errno = 0;
     vector<string> files = {};
     struct dirent *directoryEntry;
     while ((directoryEntry = readdir(d)) != NULL) {
@@ -36,6 +39,8 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
             files.push_back(file);
     }
     closedir(d);
+    if (errno != 0)
+        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because: " + strerror(errno));
     return files;
 }
 
@@ -43,9 +48,7 @@ size_t getFileLength(Client &client, const string_view filename)
 {
     struct stat status;
     if (stat(filename.data(), &status) == -1)
-    {
         throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "Couldn't get info because" + strerror(errno));
-    }
 
     if (status.st_size < 0)
         throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "invalid file size" + strerror(errno));
@@ -60,16 +63,13 @@ uint64_t stoullSafe(string_view stringValue)
         throw runtime_error("Given value contains non-digit characters: " + string(stringValue));
 
     unsigned long long value;
-    try
-    {
+    try {
         value = stoull(stringValue.data());
     }
-    catch (const invalid_argument &)
-    {
+    catch (const invalid_argument &) {
         throw runtime_error("Given value is invalid: " + string(stringValue));
     }
-    catch (const out_of_range &)
-    {
+    catch (const out_of_range &) {
         throw runtime_error("Given value is out of range: " + string(stringValue));
     }
     return static_cast<uint64_t>(value);
@@ -83,15 +83,14 @@ string escapeSpecialChars(const string &input, bool useColors)
 
     string result;
     for (char ch : input) {
-        if (ch == '\r') {
+        if (ch == '\r')
             result += RED + "\\r" + RESET;
-        } else if (ch == '\n') {
+        else if (ch == '\n')
             result += MAGENTA + "\\n\n" + RESET;
-        } else if (ch == '\t') {
+        else if (ch == '\t')
             result += RED + "\\t" + RESET;
-        } else {
+        else
             result += ch;
-        }
     }
     return result;
 }
@@ -101,8 +100,7 @@ string escapeSpecialChars(const string &input, bool useColors)
 //     static uint8_t count = 1;
 
 //     // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
-//     if (count++ == 1)
-//     {
+//     if (count++ == 1) {
 //         Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
 //         // throw runtime_error("Throw test");
 //     }
@@ -125,9 +123,8 @@ namespace
     {
         const char *hexCharacters = "0123456789abcdef";
         int8_t i;
-        for (i = 0; i < amount; ++i) {
+        for (i = 0; i < amount; ++i)
             uuidIndex[i] = hexCharacters[rand() % 16];
-        }
         uuidIndex[i] = '-';
     }
 }

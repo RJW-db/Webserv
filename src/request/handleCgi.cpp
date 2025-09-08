@@ -34,27 +34,23 @@ bool HttpRequest::handleCgi(Client &client, string &body)
     int fdReadfromCgi[2] = { -1, -1 };  // CGI → Server (stdout)
 
     setupCgiPipes(client, fdWriteToCgi, fdReadfromCgi);
-
     if (FileDescriptor::setNonBlocking(fdWriteToCgi[1]) == false ||
         FileDescriptor::setNonBlocking(fdReadfromCgi[0]) == false ||
         setPipeBufferSize(fdWriteToCgi[1]) == false ||
-        setPipeBufferSize(fdReadfromCgi[0]) == false)
-    {
+        setPipeBufferSize(fdReadfromCgi[0]) == false) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
     }
 
     client._pid = fork();
-    if (client._pid == -1)
-    {
+    if (client._pid == -1) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
         exit(EXIT_FAILURE);
     }
 
     if (client._pid == CHILD)
         setupChildProcess(client, fdWriteToCgi, fdReadfromCgi);
-    if (client._pid >= PARENT)
-    {
+    if (client._pid >= PARENT) {
         setupParentProcess(client, body, fdWriteToCgi, fdReadfromCgi);
         return true;
     }
@@ -65,8 +61,7 @@ namespace
 {
     void setupCgiPipes(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     {
-        if (pipe(fdWriteToCgi) == -1 || pipe(fdReadfromCgi) == -1)
-        {
+        if (pipe(fdWriteToCgi) == -1 || pipe(fdReadfromCgi) == -1) {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
             throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
         }
@@ -99,12 +94,10 @@ namespace
         unique_ptr<HandleTransfer> handleWrite = nullptr;
         unique_ptr<HandleTransfer> handleRead = nullptr;
         uint16_t errorCode = 500; 
-        try
-        {
+        try {
             RunServers::setEpollEventsClient(client, fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
                     
-            if (client._useMethod & METHOD_POST)
-            {
+            if (client._useMethod & METHOD_POST) {
                 RunServers::setEpollEventsClient(client, fdWriteToCgi[1], EPOLL_CTL_ADD, EPOLLOUT);
                 handleWrite = make_unique<HandleWriteToCgiTransfer>(client, body, fdWriteToCgi[1]);
                 RunServers::insertHandleTransferCgi(move(handleWrite));
@@ -117,17 +110,14 @@ namespace
             client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
             return;
         }
-        catch (ErrorCodeClientException &e)
-        {
+        catch (ErrorCodeClientException &e) {
             Logger::log(ERROR, "CGI error", '-', "ErrorCodeClientException in parent process: ", e.what());
             errorCode = e.getErrorCode();
         }
-        catch (const exception& e)
-        {
+        catch (const exception& e) {
             Logger::log(ERROR, "CGI error", '-', "Exception in parent process: ", e.what());
         }
-        catch (...)
-        {
+        catch (...) {
             Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in parent process");
         }
 
@@ -145,10 +135,9 @@ namespace
      */
     bool setPipeBufferSize(int pipeFd)
     {
-        const size_t pipeSize = PIPE_BUFFER_SIZE; // 512 KB
+        const size_t pipeSize = PIPE_BUFFER_SIZE;
 
-        if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1)
-        {
+        if (fcntl(pipeFd, F_SETPIPE_SZ, pipeSize) == -1) {
             Logger::log(ERROR, "CGI error", pipeFd, "fcntl (F_SETPIPE_SZ): ", strerror(errno));
             return false;
         }
@@ -157,19 +146,17 @@ namespace
 
     void sigtermHandler(int signum)
     {
-        if (signum == SIGTERM)
-        {
+        if (signum == SIGTERM) {
             Logger::log(WARN, "CGI warning", "-", "SIGTERM, CGI timeout, exiting child process");
-            close(STDIN_FILENO);
-            close(STDOUT_FILENO);
+            FileDescriptor::safeCloseFD(STDIN_FILENO);
+            FileDescriptor::safeCloseFD(STDOUT_FILENO);
             exit(EXIT_FAILURE);
         }
     }
 
     void child(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
     {
-        try
-        {
+        try {
             setupChildPipes(fdWriteToCgi, fdReadfromCgi);
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
 
@@ -185,12 +172,10 @@ namespace
             execve(filePath, argv.data(), envp.data());
             Logger::log(IWARN, client, "execve failed for CGI handling, filePath: ", filePath, " errno: ", strerror(errno));
         }
-        catch (const exception &e)
-        {
+        catch (const exception &e) {
             Logger::log(ERROR, "CGI error", '-', "Exception in child process: ", e.what());
         }
-        catch (...)
-        {
+        catch (...) {
             Logger::log(ERROR, "CGI error", '-', "Unknown exception caught in child process");
         }
         FileDescriptor::safeCloseFD(STDIN_FILENO);
@@ -200,15 +185,13 @@ namespace
 
     void setupChildPipes(int fdWriteToCgi[2], int fdReadfromCgi[2])
     {
-        if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1)
-        {
+        if (dup2(fdWriteToCgi[0], STDIN_FILENO) == -1) {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
             exit(EXIT_FAILURE);
         }
-        if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1)
-        {
+        if (dup2(fdReadfromCgi[1], STDOUT_FILENO) == -1) {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
-            close(STDIN_FILENO);
+            FileDescriptor::safeCloseFD(STDIN_FILENO);
             exit(EXIT_FAILURE);
         }
     }
@@ -224,8 +207,7 @@ namespace
     vector<string> createArgv(Client &client)
     {
         vector<string> argvString;
-        if (!client._location.getCgiPath().empty())
-        {
+        if (!client._location.getCgiPath().empty()) {
             Logger::log(WARN, client, "client._location.getCgiPath() ", client._location.getCgiPath());
             argvString.push_back(client._location.getCgiPath());
         }
@@ -252,8 +234,7 @@ namespace
             envpString.push_back("QUERY_STRING=" + client._queryString);    // test http://localhost:8080/cgi-bin/cgi.py?WORK=YUR
         envpString.push_back("SCRIPT_NAME=" + client._requestPath);
         envpString.push_back("SERVER_PROTOCOL=" + client._version);
-        if (client._useMethod & METHOD_POST)    /// cgi expects "Content-Type: multipart/form-data; boundary=------someboundary"
-        {
+        if (client._useMethod & METHOD_POST) {   /// cgi expects "Content-Type: multipart/form-data; boundary=------someboundary"
             string contentType = string(client._contentType);
             envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._boundary));
 
@@ -275,9 +256,7 @@ namespace
     {
         vector<char *> argv;
         for (const auto &it : argvString)
-        {
             argv.push_back(const_cast<char *>(it.c_str()));
-        }
         argv.push_back(NULL); // null-terminate for execve
         return argv;
     }
@@ -285,8 +264,6 @@ namespace
     // void printVecArray(vector<char *> &args)
     // {
     //     for (auto it = args.begin(); it != args.end() && *it != NULL; ++it)
-    //     {
     //         cerr << *it << endl; // optional debug output
-    //     }
     // }
 }

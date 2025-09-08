@@ -24,8 +24,7 @@ namespace
 
 void RunServers::getExecutableDirectory()
 {
-    try
-    {
+    try {
         char buf[PATH_MAX];
         ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
         if (len == -1)
@@ -35,8 +34,7 @@ void RunServers::getExecutableDirectory()
         filesystem::path exePath(buf);
         _serverRootDir = exePath.parent_path().string();
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         Logger::logExit(ERROR, "Server error", '-', "Cannot determine executable directory: " + string(e.what()));
     }
 }
@@ -63,13 +61,10 @@ void RunServers::epollInit(ServerList &servers)
     Logger::log(INFO, "Epoll fd created", _epfd, "epollFD");
 
     map<pair<const string, string>, int> listenersMade;
-    for (auto &server : servers)
-    {
-        for (pair<const string, string> &hostPort : server->getPortHost())
-        {
+    for (auto &server : servers) {
+        for (pair<const string, string> &hostPort : server->getPortHost()) {
             auto it = listenersMade.find(hostPort);
-            if (it == listenersMade.end())
-            {
+            if (it == listenersMade.end()) {
                 ServerListenFD listenerFD(hostPort.first.c_str(), hostPort.second.c_str());
                 listenersMade.insert({hostPort, listenerFD.getFD()});
                 _listenFDS.push_back(listenerFD.getFD());
@@ -102,8 +97,7 @@ void RunServers::setEpollEvents(int fd, int option, uint32_t events)
         Logger::logExit(FATAL, "Server Error", fd, "Invalid FD, setEpollEvents failed");
     if (option == EPOLL_CTL_ADD)
         _epollAddedFds.push_back(fd);
-    if (option == EPOLL_CTL_DEL)
-    {
+    if (option == EPOLL_CTL_DEL) {
         vector<int>::iterator it = find(_epollAddedFds.begin(), _epollAddedFds.end(), fd);
         if (it != _epollAddedFds.end())
             _epollAddedFds.erase(it);
@@ -116,17 +110,14 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
-    if (epoll_ctl(_epfd, option, fd, &ev) == -1)
-    {
+    if (epoll_ctl(_epfd, option, fd, &ev) == -1) {
         string Event = (events & EPOLLIN ? "EPOLLIN " : "EPOLLOUT ");
-        if (_clients.count(fd) == 0) // pipes
-        {
+        if (_clients.count(fd) == 0) { // pipes
             if (option == EPOLL_CTL_DEL)
                 Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
             throw ErrorCodeClientException(client, 502, "Server Error Pipes: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
         }
-        else // client
-        {
+        else { // client
             if (option == EPOLL_CTL_DEL)
                 Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
             throw ErrorCodeClientException(client, 0, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + Event + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
@@ -139,18 +130,15 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
 void RunServers::setServerFromListener(Client &client)
 {
     auto hostHeader = client._headerFields.find("Host");
-    if (hostHeader == client._headerFields.end()) {
+    if (hostHeader == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Missing required Host header");
-    }
+
     AconfigServ *tmpServer = nullptr;
-    // Find the matching server
     for (unique_ptr<AconfigServ> &server : _servers) {
         for (const pair<const string, string> &porthost : server->getPortHost()) {
             if (porthost.first == client._ipPort.second && 
-                (porthost.second == client._ipPort.first || porthost.second == "0.0.0.0"))
-            {
-                if (server->getServerName() == hostHeader->second)
-                {
+                (porthost.second == client._ipPort.first || porthost.second == "0.0.0.0")) {
+                if (server->getServerName() == hostHeader->second) {
                     client._usedServer = make_unique<AconfigServ>(*server);
                     return;
                 }
@@ -167,11 +155,9 @@ void RunServers::setServerFromListener(Client &client)
 
 void    RunServers::setLocation(Client &client)
 {
-    for (pair<string, Location> &locationPair : client._usedServer->getLocations())
-    {
+    for (pair<string, Location> &locationPair : client._usedServer->getLocations()) {
         if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
-        (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/'))
-        {
+        (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/')) {
             client._location = locationPair.second;
             return;
         }
@@ -181,15 +167,13 @@ void    RunServers::setLocation(Client &client)
 
 void RunServers::cleanupEpoll()
 {
-    for (auto it = _listenFDS.begin(); it != _listenFDS.end();)
-    {
+    for (auto it = _listenFDS.begin(); it != _listenFDS.end();) {
         FileDescriptor::cleanupEpollFd(*it);
         it = _listenFDS.erase(it);
     }
     while (_clients.size() > 0)
-    {
         cleanupClient(*_clients.begin()->second);
-    }
+
     FileDescriptor::closeFD(_epfd);
     FileDescriptor::cleanupAllFD(); // left overs like fd for files
 }

@@ -10,7 +10,6 @@
 HandleChunkTransfer::HandleChunkTransfer(Client &client)
 : HandlePostTransfer(client, -1)
 {
-    _bytesReadTotal = 0;
     _handleType = HANDLE_CHUNK_TRANSFER;
     RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
 }
@@ -24,28 +23,23 @@ void HandleChunkTransfer::appendToBody()
 
 bool HandleChunkTransfer::handleChunkTransfer()
 {
-    try
-    {
+    try {
         if (decodeChunk() == false)
             return false;
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
     }
-    catch (ErrorCodeClientException &e)
-    {
+    catch (ErrorCodeClientException &e) {
         _client._keepAlive = false;
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     
-    if (_completedRequest == true)
-    {
+    if (_completedRequest == true) {
         if (_client._isCgi == false)
             postTransfer(false);
-        else
-        {
+        else {
             MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer);
             HttpRequest::handleCgi(_client, _fileBuffer);
         }
@@ -57,8 +51,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
 bool    HandleChunkTransfer::decodeChunk()
 {
     size_t targetSize = 0;
-    while (true)
-    {
+    while (true) {
         size_t dataStart;
         if (extractChunkSize(targetSize, dataStart) == false)
             return false;
@@ -66,14 +59,12 @@ bool    HandleChunkTransfer::decodeChunk()
         const string &body = _client._body;
         size_t dataEnd = dataStart + targetSize;
         
-        if (body.size() >= dataEnd + CRLF_LEN)
-        {
+        if (body.size() >= dataEnd + CRLF_LEN) {
             if (body[dataEnd] == '\r' &&
                 body[dataEnd + 1] == '\n')
             {
                 if (targetSize == 0 &&
-                    body[dataEnd - 1] == '\n' && body[dataEnd - 2] == '\r')
-                {
+                    body[dataEnd - 1] == '\n' && body[dataEnd - 2] == '\r') {
                     _completedRequest = true;
                     return true;
                 }
@@ -81,9 +72,7 @@ bool    HandleChunkTransfer::decodeChunk()
                 _fileBuffer.append(body.data() + dataStart, dataEnd - dataStart);
             }
             else
-            {
                 throw ErrorCodeClientException(_client, 400, "Chunk data missing CRLF ");
-            }
             bool exceedsMaxSize = (_fileBuffer.size() > RunServers::getRamBufferLimit());
             if (_client._isCgi == true && exceedsMaxSize == true)
                 throw ErrorCodeClientException(_client, 413, "Chunk data missing CRLF ");
@@ -93,7 +82,7 @@ bool    HandleChunkTransfer::decodeChunk()
         else
             return false;
     }
-    return false; // shouldn't never get here
+    return false; // shouldn't ever get here
 }
 
 bool HandleChunkTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)

@@ -94,6 +94,7 @@ void Logger::log(uint8_t level, Args&&... args)
         string levelStr = logLevelToString(level, LOGGER);
         ostringstream logMsg;
         logMsg << timeStamp << levelStr << escapeSpecialChars(rawMessage, LOGGER) << "\n";
+        
         string logStr = logMsg.str();
 
         if (_logFd != -1 && write(_logFd, logStr.c_str(), logStr.length()) == -1)
@@ -107,6 +108,7 @@ void Logger::log(uint8_t level, Args&&... args)
             levelStr = logLevelToString(level, TERMINAL);
             ostream& output = (level == INFO) ? cout : cerr;
             output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
+            // output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "     errno=" + to_string(errno) + "\n";
         }
     }
     catch (...)

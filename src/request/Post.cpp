@@ -13,8 +13,6 @@ namespace
     void validateMultipartContentType(Client &client, const string &buff, const string &filename);
 }
 
-#include "Logger.hpp"
-
 void HttpRequest::POST(Client &client)
 {
     HttpRequest::getContentLength(client);
@@ -29,8 +27,7 @@ void HttpRequest::getContentLength(Client &client)
     auto contentLength = client._headerFields.find("Content-Length");
     if (contentLength == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Length header not found");
-    try
-    {
+    try {
         uint64_t value = stoullSafe(contentLength->second);
         if (static_cast<size_t>(value) > client._location.getClientMaxBodySize())
             throw ErrorCodeClientException(client, 413, "Content-Length exceeds maximum allowed: " + to_string(value));
@@ -39,8 +36,7 @@ void HttpRequest::getContentLength(Client &client)
 
         client._contentLength = static_cast<size_t>(value);
     }
-    catch (const runtime_error &e)
-    {
+    catch (const runtime_error &e) {
         throw ErrorCodeClientException(client, 400, "Content-Length header is invalid: " + string(e.what()));
     }
 }
@@ -51,11 +47,9 @@ void HttpRequest::getContentType(Client &client)
     if (it == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
     const string_view ct(it->second);
-    if (ct.find("multipart/form-data") == 0)
-    {
+    if (ct.find("multipart/form-data") == 0) {
         size_t semi = ct.find(';');
-        if (semi != string_view::npos)
-        {
+        if (semi != string_view::npos) {
             client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
             if (boundaryPos != string_view::npos)
@@ -66,11 +60,9 @@ void HttpRequest::getContentType(Client &client)
         else
             throw ErrorCodeClientException(client, 400, "Malformed HTTP header line: " + string(ct));
     }
-    else if (ct == "application/x-www-form-urlencoded")
-        client._contentType = ct;
-    else if (ct == "application/json")
-        client._contentType = ct;
-    else if (ct == "text/plain")
+    else if (ct == "application/x-www-form-urlencoded" ||
+             ct == "application/xml" ||
+             ct == "text/xml")
         client._contentType = ct;
     else
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
@@ -92,8 +84,7 @@ void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
     generateUuid(uuid);
 
     size_t totalLength = filename.size() + UUID_SIZE;
-    if (totalLength > NAME_MAX)
-    {
+    if (totalLength > NAME_MAX) {
         size_t leftOvers = totalLength - NAME_MAX;
         if (filename.size() > leftOvers)
             filename.erase(filename.size() - leftOvers);

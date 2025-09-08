@@ -13,7 +13,10 @@ class Parsing
         ~Parsing() = default;
 
         // Getters
-        vector<ConfigServer> &getConfigs();
+        vector<ConfigServer> &getConfigs() {
+            return _configs;
+        }
+
     private:
         // Helper methods for better organization
         void readConfigFile(const char *input);

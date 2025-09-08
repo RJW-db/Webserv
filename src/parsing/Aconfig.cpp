@@ -20,8 +20,7 @@ Aconfig::Aconfig(const Aconfig &other)
 
 Aconfig &Aconfig::operator=(const Aconfig &other)
 {
-    if (this != &other)
-    {
+    if (this != &other) {
         _ErrorCodesWithPage = other._ErrorCodesWithPage;
         _clientMaxBodySize = other._clientMaxBodySize;
         _autoIndex = other._autoIndex;
@@ -44,8 +43,7 @@ bool Aconfig::root(string &line)
     if (line[0] != '/')
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "root first character must be /, line: ", line);
     size_t lenRoot = line.find_first_of(WHITESPACE_SEMICOLON);
-    if (lenRoot == string::npos)
-    {
+    if (lenRoot == string::npos) {
         _root = line;
         return false;
     }
@@ -62,8 +60,7 @@ bool Aconfig::error_page(string &line)
     static bool foundPage = false;
     
     // If we've found a page, we expect a semicolon to end the directive
-    if (foundPage == true)
-    {
+    if (foundPage == true) {
         if (line[0] != ';')
             Logger::logExit(ERROR, "Config error at line", _lineNbr, "error_page: invalid input found after error page given");
         foundPage = false;
@@ -72,9 +69,7 @@ bool Aconfig::error_page(string &line)
     }
     // If line starts with '/', it's an error page path
     else if (line[0] == '/')
-    {
         return setErrorPage(line, foundPage);
-    }
     
     // Validate input - shouldn't end without a page
     if (line[0] == ';')
@@ -110,8 +105,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
     if (_clientMaxBodySize == 0)
         _clientMaxBodySize = SIZE_MAX;
     line.erase(0, len);
-    if (string("kKmMgG;").find(line[0]) != string::npos)
-    {
+    if (string("kKmMgG;").find(line[0]) != string::npos) {
         if (isupper(line[0]) != 0)
             line[0] += 32;
         
@@ -125,8 +119,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
     else if (string(WHITESPACE_SEMICOLON).find(line[0]) == string::npos)
         Logger::logExit(ERROR, "Config error at line", _lineNbr, "client_max_body_size: invalid character found after value, line: ", line);
     
-    if (line[0] == ';')
-    {
+    if (line[0] == ';') {
         line.erase(0, 1);
         return true;
     }
@@ -139,8 +132,7 @@ bool Aconfig::ClientMaxBodysize(string &line)
  */
 bool Aconfig::indexPage(string &line)
 {
-    if (line[0] == ';')
-    {
+    if (line[0] == ';') {
         if (_indexPage.empty())
             Logger::logExit(ERROR, "Config error at line", _lineNbr, ": index: no index given for indexPage, line: ", line);
         line.erase(0, 1);
@@ -204,8 +196,7 @@ bool Aconfig::returnRedirect(string &line)
     }
     else
     {
-        if (line[0] == ';')
-        {
+        if (line[0] == ';') {
             if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
                 Logger::logExit(ERROR, "Config error at line", _lineNbr, "Not enough valid arguments for 'return' directive. Line: ", line);
             line.erase(0, 1);
@@ -257,8 +248,7 @@ bool Aconfig::setErrorPage(string &line, bool &foundPage)
     string errPage = line.substr(0, nameLen);
     
     // Assign the error page to all pending error codes
-    for (uint16_t error_code : _ErrorCodesWithoutPage)
-    {
+    for (uint16_t error_code : _ErrorCodesWithoutPage) {
         if (_ErrorCodesWithPage.find(error_code) != _ErrorCodesWithPage.end())
             _ErrorCodesWithPage.at(error_code) = errPage;
         else
@@ -295,18 +285,15 @@ void Aconfig::setDefaultErrorPages()
     uint16_t errorCodes[] = {400, 403, 404, 405, 413, 414, 431, 500, 501, 502, 503, 504};
     size_t numErrorCodes = sizeof(errorCodes) / sizeof(errorCodes[0]);
 
-    for (size_t i = 0; i < numErrorCodes; i++)
-    {
+    for (size_t i = 0; i < numErrorCodes; i++) {
         uint16_t errorCode = errorCodes[i];
         
-        if (_ErrorCodesWithPage.find(errorCode) == _ErrorCodesWithPage.end())
-        {
+        if (_ErrorCodesWithPage.find(errorCode) == _ErrorCodesWithPage.end()) {
             // Use default error page
             string fileName = "./webPages/defaultErrorPages/" + to_string(static_cast<int>(errorCode)) + ".html";
             _ErrorCodesWithPage.insert({errorCode, fileName});
         }
-        else
-        {
+        else {
             // Prepend root to custom error page path
             _ErrorCodesWithPage.at(errorCode).insert(0, _root);
             _ErrorCodesWithPage.at(errorCode).erase(0, 1);
@@ -319,10 +306,3 @@ void Aconfig::setDefaultErrorPages()
             Logger::logExit(ERROR, "Config error at line", _lineNbr, "couldn't open error page: ", _ErrorCodesWithPage.at(errorCode));
     }
 }
-
-size_t Aconfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
-const string &Aconfig::getRoot() const { return _root; }
-int8_t Aconfig::getAutoIndex() const { return _autoIndex; }
-pair<uint16_t, string> Aconfig::getReturnRedirect() const { return _returnRedirect; }
-const map<uint16_t, string> &Aconfig::getErrorCodesWithPage() const { return _ErrorCodesWithPage; }
-const vector<string> &Aconfig::getIndexPage() const { return _indexPage; }

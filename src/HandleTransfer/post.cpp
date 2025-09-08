@@ -37,21 +37,18 @@ HandlePostTransfer::HandlePostTransfer(Client &client, size_t bytesRead, string 
  */
 bool HandlePostTransfer::postTransfer(bool readData)
 {
-    try
-    {
+    try {
         if (readData == true)
             ReadIncomingData();
         if (_client._isCgi)
             return handlePostCgi();
         return processMultipartData();        
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         _client._keepAlive = false;
         errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
     }
-    catch (ErrorCodeClientException &e)
-    {
+    catch (ErrorCodeClientException &e) {
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     return true;
@@ -76,14 +73,12 @@ void HandlePostTransfer::ReadIncomingData()
  */
 bool HandlePostTransfer::processMultipartData()
 {
-    while (true)
-    {
+    while (true) {
         if (_bytesReadTotal > _client._contentLength)
             throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
         if (_searchContentDisposition == true && searchContentDisposition() == false)
             return false;
-        if (_foundBoundary == true)
-        {
+        if (_foundBoundary == true) {
             ValidationResult result = validateFinalCRLF();
             if (result == RERUN_WITHOUT_READING)
                 continue;
@@ -91,8 +86,7 @@ bool HandlePostTransfer::processMultipartData()
         }
         size_t bytesWritten = 0;
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);
-        if (boundaryPos != string::npos)
-        {
+        if (boundaryPos != string::npos) {
             _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
             _foundBoundary = true;
         }
@@ -119,14 +113,11 @@ size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
         else if (strncmp(_fileBuffer.data() + boundaryPos - BOUNDARY_PREFIX_LEN, "--",BOUNDARY_PREFIX_LEN ) == 0)
             writeSize = boundaryPos - BOUNDARY_PREFIX_LEN;
         else
-        {
             throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
-        }
     }
     else if (writeSize < RunServers::getRamBufferLimit())
         writeSize = 0;
-    if (writeSize > 0)
-    {
+    if (writeSize > 0) {
         ssize_t written = write(_fd, _fileBuffer.data(), writeSize);
         if (written == -1)
             throw ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
@@ -149,8 +140,7 @@ bool HandlePostTransfer::searchContentDisposition()
     HttpRequest::getBodyInfo(_client, _fileBuffer);
     _fileBuffer.erase(0, bodyEnd + BOUNDARY_PADDING);
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, FILE_PERMISSIONS);
-    if (_fd == -1)
-    {
+    if (_fd == -1) {
         if (errno == EACCES)
             throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
         else
@@ -172,8 +162,7 @@ bool HandlePostTransfer::searchContentDisposition()
 ValidationResult HandlePostTransfer::validateFinalCRLF()
 {
     size_t foundReturn = _fileBuffer.find(CRLF);
-    if (foundReturn == 0)
-    {
+    if (foundReturn == 0) {
         _fileBuffer.erase(0, CRLF_LEN);
         _searchContentDisposition = true;
         if (_fd != -1)
@@ -183,15 +172,13 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
     }
     if (foundReturn == BOUNDARY_PREFIX_LEN &&
         strncmp(_fileBuffer.data(), "--\r\n", BOUNDARY_PADDING) == 0 &&
-        _fileBuffer.size() <= BOUNDARY_PADDING)
-    {
+        _fileBuffer.size() <= BOUNDARY_PADDING) {
         if (_fd != -1)
             FileDescriptor::closeFD(_fd);
         sendSuccessResponse();
         return FINISHED;
     }
-    if (_fileBuffer.size() > TERMINATOR_SIZE)
-    {
+    if (_fileBuffer.size() > TERMINATOR_SIZE) {
         cout << "filebuffer is after: " << _fileBuffer << endl; //testcout
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     }
@@ -247,15 +234,11 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, c
         FileDescriptor::closeFD(_fd);
 
     for (const auto &filePath : _fileNamePaths)
-    {
         if (remove(filePath.data()) != 0)
             Logger::log(WARN, "remove failed on file: ", filePath, " because: ", strerror(errno));
-    }
     auto it = RunServers::getHandleTransfers().begin();
-    for (; it != RunServers::getHandleTransfers().end(); ++it)
-    {
-        if ((*it)->_fd == _fd)
-        {
+    for (; it != RunServers::getHandleTransfers().end(); ++it) {
+        if ((*it)->_fd == _fd) {
             RunServers::getHandleTransfers().erase(it);
             break;
         }
@@ -277,17 +260,14 @@ void MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
     bool foundBoundary = false;
     bool needsContentDisposition = false;
     
-    while (!buffer.empty())
-    {
-        if (foundBoundary)
-        {
+    while (!buffer.empty()) {
+        if (foundBoundary) {
             if (validateBoundaryTerminator(client, buffer, needsContentDisposition))
                 return; // Found end of multipart data
             foundBoundary = false;
             continue;
         }
-        if (needsContentDisposition)
-        {
+        if (needsContentDisposition) {
             parseContentDisposition(client, buffer);
             needsContentDisposition = false;
             continue;
@@ -330,8 +310,7 @@ bool MultipartParser::validateBoundaryTerminator(Client &client, string_view &bu
     size_t crlfPos = buffer.find(CRLF);
     
     // Empty line - signals start of content disposition
-    if (crlfPos == 0)
-    {
+    if (crlfPos == 0) {
         buffer.remove_prefix(CRLF_LEN);
         needsContentDisposition = true;
         return false;

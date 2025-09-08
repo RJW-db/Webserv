@@ -9,7 +9,6 @@
 HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
 : HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
 {
-    _bytesReadTotal = 0;
     _fileBuffer = responseHeader;
     RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLOUT);
 }
@@ -23,14 +22,12 @@ bool HandleGetTransfer::handleGetTransfer()
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-    if (_bytesReadTotal >= _fileSize)
-    {
+    if (_bytesReadTotal >= _fileSize) {
         RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
         Logger::log(INFO, _client, "GET    ", _client._filenamePath);
         return true;
     }
-    if (_fileBuffer.size() > RunServers::getRamBufferLimit())
-    {
+    if (_fileBuffer.size() > RunServers::getRamBufferLimit()) {
         _fileBuffer = _fileBuffer.erase(0, _offset);
         _offset = 0;
     }
@@ -39,8 +36,7 @@ bool HandleGetTransfer::handleGetTransfer()
 
 void HandleGetTransfer::fileReadToBuff()
 {
-    if (_fd != -1)
-    {
+    if (_fd != -1) {
         char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)

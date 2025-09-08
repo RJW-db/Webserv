@@ -29,11 +29,17 @@ class ErrorCodeClientException
 
     public:
         // utility function
-        const char *what() const throw();
+        const char *what() const throw() {
+            return _message.c_str();
+        }
 
         // Getters
-        uint16_t getErrorCode() const;
-        const string &getMessage() const;
+        uint16_t getErrorCode() const {
+            return _errorCode;
+        }
+        const string &getMessage() const {
+            return _message;
+        }
 };
 
 #endif

@@ -71,8 +71,7 @@ namespace
     {
         client._requestPath = percentDecode(client._requestPath);
         size_t queryPos = client._requestPath.find('?');
-        if (queryPos != string::npos)
-        {
+        if (queryPos != string::npos) {
             client._queryString = client._requestPath.substr(queryPos + 1);
             client._requestPath = client._requestPath.substr(0, queryPos);
         }
@@ -106,8 +105,7 @@ namespace
     bool isValidAndNormalizeRequestPath(Client &client)
     {
         if (client._requestPath.empty() || client._requestPath.data()[0] != '/' ||
-            pathContainsInvalidCharacters(client._requestPath))
-        {
+            pathContainsInvalidCharacters(client._requestPath)) {
             return false;
         }
         vector<string_view> pathSegments = splitPathSegments(client._requestPath);
@@ -119,8 +117,7 @@ namespace
 
     bool pathContainsInvalidCharacters(const string &path)
     {
-        for (size_t i = 0; i < path.size(); ++i)
-        {
+        for (size_t i = 0; i < path.size(); ++i) {
             char c = path[i];
             if (!isprint(static_cast<unsigned char>(c)) || c == '/' || c == '\\' || c == '\0')
                 return false;
@@ -133,8 +130,7 @@ namespace
     {
         vector<string_view> segments;
         size_t start = 0, end;
-        while ((end = path.find('/', start)) != string::npos)
-        {
+        while ((end = path.find('/', start)) != string::npos) {
             if (end != start)
                 segments.push_back(string_view(path).substr(start, end - start));
             start = end + 1;
@@ -148,12 +144,10 @@ namespace
     vector<string_view> normalizeSegments(const vector<string_view> &segments)
     {
         vector<string_view> normalized;
-        for (size_t i = 0; i < segments.size(); ++i)
-        {
+        for (size_t i = 0; i < segments.size(); ++i) {
             if (segments[i] == "." || segments[i].empty())
                 continue;
-            if (segments[i] == "..")
-            {
+            if (segments[i] == "..") {
                 if (normalized.empty())
                     continue; // Skip leading ".." (browser behavior)
                 normalized.pop_back();
@@ -167,8 +161,7 @@ namespace
     void    joinSegmentsToPath(string &path, const vector<string_view> &segments)
     {
         string newPath = "/";
-        for (size_t i = 0; i < segments.size(); ++i)
-        {
+        for (size_t i = 0; i < segments.size(); ++i) {
             newPath += segments[i];
             if (i + 1 < segments.size())
                 newPath += "/";
@@ -217,16 +210,14 @@ namespace
         if (stat(reqPath.data(), &status) == -1)
             throw ErrorCodeClientException(client, 404, "Couldn't find file: " + reqPath + ", because: " + string(strerror(errno)));
 
-        if (S_ISDIR(status.st_mode) == true)    
-        {
+        if (S_ISDIR(status.st_mode) == true) {
             if (access(reqPath.data(), R_OK | X_OK) != 0)
                 throw ErrorCodeClientException(client, 403, "Forbidden: No permission to access directory");
             
             if (client._requestUpload == false && client._useMethod & (METHOD_HEAD | METHOD_GET))
                 findIndexFile(client, status);
         }
-        else if (S_ISREG(status.st_mode) == true)
-        {
+        else if (S_ISREG(status.st_mode) == true) {
             if (access(reqPath.data(), R_OK) != 0)
                 throw ErrorCodeClientException(client, 403, "Forbidden: No permission to read file");
             detectCgiRequest(client);
@@ -239,15 +230,12 @@ namespace
 
     void findIndexFile(Client &client, struct stat &status)
     {
-        for (const string &indexPage : client._location.getIndexPage())
-        {
-            if (stat(indexPage.data(), &status) == 0)
-            {
+        for (const string &indexPage : client._location.getIndexPage()) {
+            if (stat(indexPage.data(), &status) == 0) {
                 if (S_ISDIR(status.st_mode) == true ||
                     S_ISREG(status.st_mode) == false)
                     continue;
-                if (access(indexPage.data(), R_OK) == -1)
-                {
+                if (access(indexPage.data(), R_OK) == -1) {
                     Logger::log(WARN, "Access error", '-', "Access failed: ", strerror(errno));
                     continue;
                 }
@@ -262,8 +250,7 @@ namespace
             throw ErrorCodeClientException(client, 404, "couldn't find index page");
     }
 
-    void detectCgiRequest(Client &client)
-    {
+    void detectCgiRequest(Client &client) {
         size_t filenamePos = client._requestPath.find_last_of('/');
         string_view filename(client._requestPath.data() + filenamePos + 1);
         if (client._location.isCgiFile(filename) == true)

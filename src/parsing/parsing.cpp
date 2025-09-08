@@ -35,8 +35,7 @@ void Parsing::readConfigFile(const char *input)
     string line;
     size_t skipSpace;
     size_t lineNbr = 0;
-    while (getline(fs, line))
-    {
+    while (getline(fs, line)) {
         ++lineNbr;
         if (isEmptyOrCommentLine(line, skipSpace) == true)
             continue; // Empty line, or #(comment)
@@ -54,8 +53,7 @@ void Parsing::readConfigFile(const char *input)
  */
 void Parsing::processServerBlocks()
 {
-    while (!_lines.empty())
-    {
+    while (!_lines.empty()) {
         if (strncmp(_lines.begin()->second.c_str(), "server", SERVER_KEYWORD_LENGTH) == 0)
             ServerCheck();
         else
@@ -76,20 +74,15 @@ void Parsing::readBlock(T &block,
     {
         _validSyntax = false;
         trimLeadingWhitespace(line);
-        for (const auto& cmd : cmds)
-        {
-            if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0)
-            {
+        for (const auto& cmd : cmds) {
+            if (strncmp(line.c_str(), cmd.first.c_str(), cmd.first.size()) == 0) {
                 _validSyntax = true;
                 cmdCheck(line, block, cmd);
             }
         }
-        if (_validSyntax == false)
-        {
-            for (const auto& whileCmd : whileCmds)
-            {
-                if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0)
-                {
+        if (_validSyntax == false) {
+            for (const auto& whileCmd : whileCmds) {
+                if (strncmp(line.c_str(), whileCmd.first.c_str(), whileCmd.first.size()) == 0) {
                     whileCmdCheck(line, block, whileCmd);
                     _validSyntax = true;
                 }
@@ -111,8 +104,7 @@ void Parsing::ServerCheck()
     string line = _lines.begin()->second;
     line.erase(0, SERVER_KEYWORD_LENGTH);
     skipLine(line, false, curConf, true);
-    if (line[0] == '{')
-    {
+    if (line[0] == '{') {
         line.erase(0, 1);
         skipLine(line, false, curConf, false);
         const map<string, bool (ConfigServer::*)(string &)> cmds = {
@@ -149,8 +141,7 @@ void Parsing::cmdCheck(string &line, T &block, const pair<const string, bool (T:
     validateWhitespaceAfterCommand(line, WHITESPACE_CHARS, _lines.begin()->first);
     trimLeadingWhitespace(line);
     foundSemicolon = (block.*(cmd.second))(line);
-    if (!foundSemicolon)
-    {
+    if (!foundSemicolon) {
         skipLine(line, true, block, false);
         if (line[0] != ';')
             Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "No semi colon found after input");
@@ -173,8 +164,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 
     size_t argumentCount = 0;
     bool foundSemicolon = false;
-    while (!foundSemicolon)
-    {
+    while (!foundSemicolon) {
         ++argumentCount;
         skipLine(line, false, block, true);
         foundSemicolon = (block.*(cmd.second))(line);
@@ -193,8 +183,7 @@ void Parsing::whileCmdCheck(string &line, T &block, const pair<const string, boo
 template <typename T>
 void Parsing::LocationCheck(string &line, T &block)
 {
-    if constexpr (is_same<T, ConfigServer>::value) // TODO checks if block == Configserver
-    {
+    if constexpr (is_same<T, ConfigServer>::value) {
         Location location;
         location.setLineNbr(_lines.begin()->first);
         line.erase(0, LOCATION_KEYWORD_LENGTH);
@@ -237,8 +226,7 @@ bool    Parsing::checkParseSyntax()
     if (_validSyntax == false)
         Logger::logExit(ERROR, "Config error at line", _lines.begin()->first, "Invalid syntax: ", _lines.begin()->second);
 
-    if (_lines.begin()->second[0] == '}')
-    {
+    if (_lines.begin()->second[0] == '}') {
         size_t skipSpace;
         _lines.begin()->second.erase(0, 1);
         if (isEmptyOrCommentLine(_lines.begin()->second, skipSpace) == true)
@@ -254,14 +242,12 @@ bool    Parsing::checkParseSyntax()
  * @param forceSkip for forcing rest of current line to be skipped and removed
  * @param curConf Config to set new lineNbr
  * @param shouldSkipSpace for setting if trimleadingWhiteSpace should be run
- *
  */
 template <typename T>
 void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkipSpace)
 {
     size_t skipSpace = line.find_first_not_of(WHITESPACE_CHARS);
-    if (string::npos == skipSpace || forceSkip)
-    {
+    if (string::npos == skipSpace || forceSkip) {
         if (_lines.size() <= 1)
             Logger::logExit(ERROR, "Config error", '-', "Missing bracket, line ", _lines.begin()->first, ": ", _lines.begin()->second);
         _lines.erase(_lines.begin());
@@ -272,9 +258,8 @@ void Parsing::skipLine(string &line, bool forceSkip, T &curConf, bool shouldSkip
         trimLeadingWhitespace(line);
 }
 
-vector<ConfigServer> &Parsing::getConfigs() {return _configs;}
-
-namespace {
+namespace
+{
     /**
      * Checks if a line is empty or contains only whitespace/comments
      * @param line The line to check

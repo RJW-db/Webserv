@@ -14,17 +14,14 @@ namespace
 
 void FileDescriptor::setFD(int fd)
 {
-    try
-    {
+    try {
         _fds.push_back(fd);
     }
-    catch (const bad_alloc& e)
-    {
+    catch (const bad_alloc& e) {
         safeCloseFD(fd);
         throw;
     }
-    catch (...)
-    {
+    catch (...) {
         safeCloseFD(fd);
         throw;
     }
@@ -33,16 +30,14 @@ void FileDescriptor::setFD(int fd)
 bool FileDescriptor::setNonBlocking(int sfd)
 {
     int currentFlags = fcntl(sfd, F_GETFL, 0);
-    if (currentFlags == -1)
-    {
+    if (currentFlags == -1) {
         Logger::log(ERROR, "Server error", sfd, "fcntl F_GETFL failed", strerror(errno));
         return false;
     }
 
     currentFlags |= O_NONBLOCK;
     int fcntlResult = fcntl(sfd, F_SETFL, currentFlags);
-    if (fcntlResult == -1)
-    {
+    if (fcntlResult == -1) {
         Logger::log(ERROR, "Server error", sfd, "fcntl F_SETFL failed", strerror(errno));
         return false;
     }
@@ -52,13 +47,11 @@ bool FileDescriptor::setNonBlocking(int sfd)
 bool    FileDescriptor::safeCloseFD(int fd)
 {
     int ret;
-    do
-    {
+    do {
         ret = close(fd);
     } while (ret == -1 && errno == EINTR);
 
-    if (ret == -1 && errno == EIO)
-    {
+    if (ret == -1 && errno == EIO) {
         Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
         RunServers::fatalErrorShutdown();
         return false;
@@ -71,8 +64,7 @@ bool	FileDescriptor::closeFD(int &fd)
     if (fd == -1)
         return true;
     vector<int>::iterator it = find(_fds.begin(), _fds.end(), fd);
-    if (it != _fds.end())
-    {
+    if (it != _fds.end()) {
         if (fd == Logger::getLogfd())
             Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
         safeCloseFD(fd);
@@ -81,8 +73,7 @@ bool	FileDescriptor::closeFD(int &fd)
             Logger::log(CHILD_INFO, "Closed file descriptor:", fd);
         fd = -1;
     }
-    else
-    {
+    else {
         if (fd != -1)
             Logger::log(WARN, "FileDescriptor error", fd, "Not in vector", "closeFD attempted");
     }
@@ -97,18 +88,15 @@ void FileDescriptor::cleanupAllFD()
 
 void FileDescriptor::cleanupEpollFd(int &fd)
 {
-    if (fd > 0)
-    {
+    if (fd > 0) {
         vector<int> &fds = RunServers::getEpollAddedFds();
         auto it = find(fds.begin(), fds.end(), fd);
-        if (it != fds.end())
-        {
-            try
-            {
+        if (it != fds.end()) {
+            try {
                 RunServers::setEpollEvents(fd, EPOLL_CTL_DEL, EPOLL_DEL_EVENTS);
             }
-            catch(...)
-            {
+            catch(...) {
+                //ignore
             }
             // fds.erase(it);
         }
