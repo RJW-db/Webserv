@@ -63,7 +63,7 @@ class HandleGetTransfer : public HandleTransfer
 
         size_t  _fileSize;
         size_t _offset;
-        size_t  _headerSize;
+        size_t _bytesSentTotal = 0;
 };
 
 class HandlePostTransfer : public HandleTransfer

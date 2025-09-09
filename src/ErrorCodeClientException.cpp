@@ -54,7 +54,7 @@ void ErrorCodeClientException::handleErrorClient()
         Logger::log(ERROR, "Server error", '-', "Exception in handleErrorClient: ", e.what());
     }
     catch (ErrorCodeClientException &e) {
-        Logger::log(ERROR, "Server error", '-', "Nested ErrorCodeClientException in handleErrorClient: ", e.what());
+        Logger::log(ERROR, "Server error", '-', "Nested ErrorCodeClientException: ", e.what());
     }
     catch (...) {
         Logger::log(ERROR, "Server error", '-', "Unknown exception in handleErrorClient");

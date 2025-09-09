@@ -63,7 +63,10 @@ void HttpRequest::getContentType(Client &client)
     else if (ct == "application/x-www-form-urlencoded" ||
              ct == "application/xml" ||
              ct == "text/xml")
+    {
         client._contentType = ct;
+        throw ErrorCodeClientException(client, 400, "Unsupported Content-Type for POST: " + string(ct));
+    }
     else
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
 }
@@ -98,7 +101,7 @@ void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
     else
         filename += uuid;
 
-    client._filenamePath = client._rootPath + "/" + client._filename; // here to append filename for post
+    client._filenamePath = client._location.getUploadStore() + '/' + client._filename; // here to append filename for post
     if (client._filenamePath.size() > PATH_MAX)
         throw ErrorCodeClientException(client, 413, "Full path to create file is too long");
 }

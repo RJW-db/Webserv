@@ -110,6 +110,7 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
     struct epoll_event ev;
     ev.data.fd = fd;
     ev.events = events;
+    errno = 0;
     if (epoll_ctl(_epfd, option, fd, &ev) == -1) {
         string Event = (events & EPOLLIN ? "EPOLLIN " : "EPOLLOUT ");
         if (_clients.count(fd) == 0) { // pipes
@@ -159,6 +160,10 @@ void    RunServers::setLocation(Client &client)
         if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/')) {
             client._location = locationPair.second;
+            // if (locationPair.first != "/")
+            // {
+            //     client._requestPath.erase(0, locationPair.first.size()); // remove location part from request path, keep leading /
+            // }
             return;
         }
     }
@@ -175,5 +180,4 @@ void RunServers::cleanupEpoll()
         cleanupClient(*_clients.begin()->second);
 
     FileDescriptor::closeFD(_epfd);
-    FileDescriptor::cleanupAllFD(); // left overs like fd for files
 }

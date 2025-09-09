@@ -56,7 +56,7 @@ class Location : public Alocation
 		void getLocationPath(string &line);
 
         // Parsing logic
-		bool methods(string &line);
+		bool limitExcept(string &line);
 		bool uploadStore(string &line);
 		bool cgiExtensions(string &line);
 		bool cgiPath(string &line);

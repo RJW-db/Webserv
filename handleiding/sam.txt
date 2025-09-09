@@ -1,5 +1,4 @@
 
-dingen die nog moeten worden geimplementeerd: upload_store
 zorgen dat voor chunked max_body_size wordt gechecked
 
 erase calls bekijken of ze in destructor of anders kunnen throwen
@@ -8,8 +7,5 @@ cgi error codes aanpassen
 
 verder testen falen setepollevents voor pipes en clients
 
-get request bytesSentTotal gebruiken
-
 maybe also for cgi pipes handle if it fails remove it
 
-check if add addFdToEpoll still needed

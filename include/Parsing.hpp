@@ -18,7 +18,7 @@ class Parsing
         }
 
     private:
-        // Helper methods for better organization
+        // Helper limitExcept for better organization
         void readConfigFile(const char *input);
 
         // Parsing

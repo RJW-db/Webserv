@@ -92,7 +92,6 @@ void ConfigServer::setDefaultConf()
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
         _root.erase(_root.size() - 1);
-    
     if (_clientMaxBodySize == 0)
         _clientMaxBodySize = 1024 * 1024;
     if (_autoIndex == autoIndexNotFound)

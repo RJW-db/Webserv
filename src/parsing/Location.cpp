@@ -63,9 +63,10 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
 {
     static int expectedTokenIndex = 0;
     const string expectedTokens[5] = {"{", "deny", "all", ";", "}"};
-
-    if (strncmp(line.c_str(), expectedTokens[expectedTokenIndex].c_str(),
-                expectedTokens[expectedTokenIndex].length()) == 0) {
+    if (expectedTokenIndex == 0 && strncmp(line.c_str(), "{", 1) != 0) {
+        return false;
+    }
+    if (line.compare(0, expectedTokens[expectedTokenIndex].length(), expectedTokens[expectedTokenIndex]) == 0) {
         if (_allowedMethods == 0)
             throw runtime_error(to_string(_lineNbr) + ": limit_except: No methods specified for limit_except directive");
 
@@ -85,7 +86,7 @@ bool Location::checkMethodEnd(bool &findColon, string &line)
     return false;
 }
 
-bool Location::methods(string &line)
+bool Location::limitExcept(string &line)
 {
     bool findColon = false;
     if (checkMethodEnd(findColon, line) == true) {
@@ -156,6 +157,8 @@ bool Location::cgiPath(string &line)
     return (handleNearEndOfLine(line, len, "cgi_path"));
 }
 
+
+#include "Logger.hpp"
 void Location::SetDefaultLocation(const Aconfig &curConf)
 {
     if (_autoIndex == autoIndexNotFound)
@@ -163,6 +166,12 @@ void Location::SetDefaultLocation(const Aconfig &curConf)
     _root.insert(0, RunServers::getServerRootDir());
     if (_root.back() == '/')
         _root.erase(_root.size() - 1);
+    if (_upload_store.empty())
+        _upload_store = _root;
+    else
+        _upload_store.insert(0, RunServers::getServerRootDir());
+    if (_upload_store.back() == '/')
+        _upload_store.erase(_upload_store.size() - 1);
     if (_locationPath[_locationPath.size() - 1] == '/' && _locationPath.size() > 1)
         _locationPath.erase(_locationPath.size() - 1);
     if (_root.size() > 2)

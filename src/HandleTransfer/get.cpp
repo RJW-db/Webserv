@@ -7,7 +7,7 @@
 #include "Logger.hpp"
 
 HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
-: HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _offset(0), _headerSize(responseHeader.size())
+: HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _offset(0)
 {
     _fileBuffer = responseHeader;
     RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLOUT);
@@ -21,8 +21,9 @@ bool HandleGetTransfer::handleGetTransfer()
         throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;
+    _bytesSentTotal += _sent;
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-    if (_bytesReadTotal >= _fileSize) {
+    if (_bytesSentTotal >= _fileSize) {
         RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
         Logger::log(INFO, _client, "GET    ", _client._filenamePath);
         return true;

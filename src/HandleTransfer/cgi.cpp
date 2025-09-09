@@ -14,9 +14,10 @@ HandleWriteToCgiTransfer::HandleWriteToCgiTransfer(Client &client, const string 
 bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 {
     ssize_t sent = write(_fd, _fileBuffer.data() + _bytesWrittenTotal, _fileBuffer.size() - _bytesWrittenTotal);
+
     if (sent == -1) {
         _client._cgiClosing = true;
-        throw ErrorCodeClientException(_client, 500, "Writing to CGI failed");
+        throw ErrorCodeClientException(_client, 500, "Writing to CGI failed: " + string(strerror(errno)));
     }
     else if (sent > 0) {
         _bytesWrittenTotal += static_cast<size_t>(sent);
@@ -48,8 +49,8 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     _fileBuffer.append(buff.data(), rd);
     if (rd == 0 || buff[rd] == '\0') {
         FileDescriptor::cleanupEpollFd(_fd);
-        _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         return true;
     }
+    _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
     return false;
 }

@@ -27,10 +27,8 @@ void    HttpRequest::validateHEAD(Client &client)
 {
     istringstream headStream(client._header);
     headStream >> client._method >> client._requestPath >> client._version;
-
     if (client._method.empty() || client._version.empty())
         throw ErrorCodeClientException(client, 400, "Malformed request line");
-    
     parseRequestPath(client);
     RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
@@ -43,12 +41,13 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     
     client._rootPath = client._location.getRoot() + string(client._requestPath);
-    decodeSafeFilenameChars(client);
-    if (client._requestPath == "/upload/list") {
+
+    if (client._requestPath == "/upload/list")
+    {
         client._requestUpload = true;
         client._requestPath = "/upload";
-        // client._requestPath = should be upload_store
     }
+    decodeSafeFilenameChars(client);
     validateResourceAccess(client);
 }
 

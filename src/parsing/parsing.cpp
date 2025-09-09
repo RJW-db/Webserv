@@ -203,7 +203,7 @@ void Parsing::LocationCheck(string &line, T &block)
             {"cgi_path", &Location::cgiPath}};
         const map<string, bool (Location::*)(string &)> whileCmds = {
             {"error_page", &Location::error_page},
-            {"limit_except", &Location::methods},
+            {"limit_except", &Location::limitExcept},
             {"return", &Location::returnRedirect},
             {"index", &Location::indexPage},
             {"cgi_extension", &Location::cgiExtensions}};
