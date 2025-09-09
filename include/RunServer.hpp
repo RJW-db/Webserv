@@ -14,6 +14,11 @@ using HandleTransferIter = vector<unique_ptr<HandleTransfer>>::iterator;
 extern volatile sig_atomic_t g_signal_status;
 class Client;
 
+struct SessionData
+{
+    bool darkMode = false;
+};
+
 class RunServers
 {
     public:
@@ -45,7 +50,15 @@ class RunServers
         static bool   runCgiHandleTransfer(struct epoll_event &currentEvent);
         static void   processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);
-
+        static bool sessionsExist(const string &sessionId) {
+            return (sessions.find(sessionId) != sessions.end());
+        }
+        static void setSessionData(const string &sessionId, const SessionData &data) {
+            sessions[sessionId] = data;
+        }
+        static SessionData &getSessionData(const string &sessionId) {
+            return sessions[sessionId];
+        }
         // cleanup
         static void   disconnectChecks();
         static void   checkCgiDisconnect();
@@ -89,6 +102,7 @@ class RunServers
         static unordered_map<int, unique_ptr<Client>> _clients;
         static vector<unique_ptr<HandleTransfer>> _handle;
         static vector<unique_ptr<HandleTransfer>> _handleCgi;
+        static unordered_map<string, SessionData> sessions; 
 
         // --- Miscellaneous ---
         static int _level;

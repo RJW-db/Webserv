@@ -48,6 +48,7 @@ class Client
         pair<string, string> _ipPort;
         Location _location;
         string_view _uploadPath;
+        string _sessionId;
         bool _isCgi = false;
 
         uint8_t _headerParseState;

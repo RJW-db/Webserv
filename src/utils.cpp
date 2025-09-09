@@ -109,7 +109,7 @@ string escapeSpecialChars(const string &input, bool useColors)
 //     }
 // }
 
-void generateUuid(char uuid[UUID_SIZE])
+char *generateUuid(char uuid[UUID_SIZE])
 {
     uuid[0] = '-';
     insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
@@ -118,6 +118,7 @@ void generateUuid(char uuid[UUID_SIZE])
     insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
     insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
     uuid[UUID_SIZE - 1] = '\0';
+    return uuid;
 }
 
 namespace

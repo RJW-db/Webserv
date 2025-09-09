@@ -38,6 +38,22 @@ string HttpRequest::HttpResponse(const Client &client, uint16_t code, const stri
         response << "Content-Type: " << getMimeType(path) << CRLF;
     response << "Content-Length: " << fileSize << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
+
+    auto cookie = client._headerFields.find("Cookie");
+
+    if (cookie == client._headerFields.end()) {
+        Logger::log(DEBUG, "never here"); //testlog
+        response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
+    }
+    else /* if (cookie->second.size() > 11 && cookie->second.substr(11) != client._sessionId) */ {
+        Logger::log(DEBUG, "cookie->second.size(): ", cookie->second.size()); //testlog
+
+        Logger::log(DEBUG, "once here"); //testlog
+        Logger::log(DEBUG, "cookie->second.substr(11): ", cookie->second.substr(11)); //testlog
+        Logger::log(DEBUG, "client._sessionId: ", client._sessionId); //testlog
+        response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
+    }
+
     response << CRLF;
     return response.str();
 }

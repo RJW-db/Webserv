@@ -2,6 +2,8 @@
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Constants.hpp"
+
+#include "Logger.hpp"
 namespace
 {
     void appendToHeader(Client &client, const char *buff, size_t receivedBytes);
@@ -28,10 +30,37 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     handleConnectionHeader(client);
 
-    checkNullBytes(client._header, client);
+    auto cookie = client._headerFields.find("Cookie");
+    char buffer[UUID_SIZE];
+    if (cookie == client._headerFields.end()) {
+        Logger::log(DEBUG, "No session cookie found, creating a new one."); //testlog
+        RunServers::setSessionData(generateUuid(buffer), SessionData{});
+        client._sessionId = string(buffer);
+    }
+    else {
+        if (cookie->second.substr(0, 11) == "session_id=") {
+            // Logger::log(DEBUG, "Found session cookie: " + string(cookie->second).substr(11)); //testlog
+            // if (RunServers::sessionsExist(string(cookie->second).substr(11)))
+            //     Logger::log(DEBUG, "Session cookie found: " + string(cookie->second).substr(11)); //testlog
+            if (!RunServers::sessionsExist(string(cookie->second).substr(11))) {
+                RunServers::setSessionData(generateUuid(buffer), SessionData{});
+                // Logger::log(DEBUG, "Created new session cookie: " + string(buffer)); //testlog
+                client._sessionId = string(buffer);
+            }
+        }
+        else { // errorcodeclient?
+            // Logger::log(DEBUG, "Invalid session cookie format, creating a new one."); //testlog
+            RunServers::setSessionData(generateUuid(buffer), SessionData{});
+            client._sessionId = string(buffer);
+        }
+    }
+    
 
-    if (client._method == "POST")
+    checkNullBytes(client._header, client);
+    if (client._method == "POST") {
+        HttpRequest::getContentLength(client);
         return handlePost(client);
+    }
 
     client._headerParseState = REQUEST_READY;
     return true;
@@ -40,9 +69,19 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receivedBytes)
 {
     client._body.append(buff, receivedBytes);
-    client._bodyEnd = client._body.find(CRLF2);
-    if (client._bodyEnd == string::npos)
-        return false;
+    if (client._contentType == "multipart/form-data")
+    {
+        client._bodyEnd = client._body.find(CRLF2);
+        if (client._bodyEnd == string::npos)
+            return false;
+    }
+    else { // application/x-www-form-urlencoded or others
+        if (client._body.size() < client._contentLength) {
+            return false;
+        }
+        else if (client._body.size() > client._contentLength)
+            throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+    }
     client._headerParseState = REQUEST_READY;
     return true;
 }
@@ -130,9 +169,19 @@ namespace
             return (client._body.size() > 0 ? true : false);
         }
         client._headerParseState = BODY_AWAITING;
-        client._bodyEnd = client._body.find(CRLF2);
-        if (client._bodyEnd == string::npos)
-            return false;
+        if (client._contentType == "multipart/form-data")
+        {
+            client._bodyEnd = client._body.find(CRLF2);
+            if (client._bodyEnd == string::npos)
+                return false;
+        }
+        else if (client._contentType == "application/x-www-form-urlencoded")
+        {
+            if (client._body.size() > client._contentLength)
+                throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+            else if (client._body.size() < client._contentLength)
+                return false;
+        }
         client._headerParseState = REQUEST_READY;
         return true;
     }

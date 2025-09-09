@@ -69,7 +69,24 @@ void HttpRequest::processGet(Client &client)
 {
     if (!client._isAutoIndex) {
         if (client._requestUpload == false)
+        {
+            if (client._requestPath == "/get-theme") {
+                const char *theme = RunServers::getSessionData(client._sessionId).darkMode ? "dark" : "light";
+                string body = "{\"theme\":\"" + string(theme) + "\"}";
+                string responseStr = "HTTP/1.1 200 OK\r\n";
+                responseStr += "Content-Type: application/json\r\n";
+                responseStr += "Content-Length: " + to_string(body.size()) + "\r\n";
+                responseStr += "Connection: keep-alive\r\n\r\n";
+                responseStr += body;
+
+                // Use HandleToClientTransfer to send the response
+                auto handle = make_unique<HandleToClientTransfer>(client, responseStr);
+                RunServers::insertHandleTransfer(move(handle));
+                return;
+            }
             GET(client);
+            
+        }
         else {
             vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
             string body;

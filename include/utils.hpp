@@ -3,7 +3,7 @@
 #include <string>
 #include <cstdlib>
 using namespace std;
-class Cleint;
+class Client;
 namespace
 {
     static constexpr bool   TERMINAL = true;
@@ -22,6 +22,5 @@ string   escapeSpecialChars(const string &input, bool useColors);
  * 3fb17ebc-bc38-4939-bc8b-74f2443281d4
  * 8 dash 4 dash 4 dash 4 dash 12
  */
-class Client;
-void 	 generateUuid(char uuid[UUID_SIZE]);
+char *generateUuid(char uuid[UUID_SIZE]);
 #endif
