@@ -8,6 +8,9 @@
 #include "ErrorCodeClientException.hpp"
 namespace
 {
+    constexpr char hexCharacters[] = "0123456789abcdef";
+    constexpr int  hexCharactersSize = sizeof(hexCharacters) - 1;
+
     void insertUuidSegment(int8_t amount, char *uuidIndex);
 }
 
@@ -121,10 +124,9 @@ namespace
 {
     inline void insertUuidSegment(int8_t amount, char *uuidIndex)
     {
-        const char *hexCharacters = "0123456789abcdef";
         int8_t i;
         for (i = 0; i < amount; ++i)
-            uuidIndex[i] = hexCharacters[rand() % 16];
+            uuidIndex[i] = hexCharacters[rand() % hexCharactersSize];
         uuidIndex[i] = '-';
     }
 }
