@@ -4,6 +4,7 @@
 #include <memory>
 #include "HandleTransfer.hpp"
 #include "ConfigServer.hpp"
+#include "Logger.hpp"
 #define _XOPEN_SOURCE 700  // VSC related, make signal and struct visible
 #ifndef FD_LIMIT
 # define FD_LIMIT 1024
@@ -13,10 +14,10 @@ using ServerList = vector<unique_ptr<AconfigServ>>;
 using HandleTransferIter = vector<unique_ptr<HandleTransfer>>::iterator;
 extern volatile sig_atomic_t g_signal_status;
 class Client;
-
 struct SessionData
 {
-    bool darkMode = false;
+    bool newSession = false;
+    bool darkMode = true;
 };
 
 class RunServers

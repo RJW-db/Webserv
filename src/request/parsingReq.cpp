@@ -38,24 +38,31 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
         client._sessionId = string(buffer);
     }
     else {
-        if (cookie->second.substr(0, 11) == "session_id=") {
-            // Logger::log(DEBUG, "Found session cookie: " + string(cookie->second).substr(11)); //testlog
+        if (cookie->second.substr(0, 11) == "session_id=" && cookie->second.size() >= 12) {
+            Logger::log(DEBUG, "Found session cookie: " + string(cookie->second).substr(11)); //testlog
             // if (RunServers::sessionsExist(string(cookie->second).substr(11)))
             //     Logger::log(DEBUG, "Session cookie found: " + string(cookie->second).substr(11)); //testlog
+            // if (RunServers::sessionsExist(string(cookie->second).substr(11)))
+            //     Logger::log(DEBUG, "Session cookie found: " + string(cookie->second).substr(11)); //testlog
+            // else
+            //     Logger::log(DEBUG, "Session cookie not found"); //testlog
+
             if (!RunServers::sessionsExist(string(cookie->second).substr(11))) {
                 RunServers::setSessionData(generateUuid(buffer), SessionData{});
-                // Logger::log(DEBUG, "Created new session cookie: " + string(buffer)); //testlog
+                Logger::log(DEBUG, "Created new session cookie: " + string(buffer)); //testlog
                 client._sessionId = string(buffer);
             }
+            else
+                client._sessionId = string(cookie->second).substr(11);
         }
         else { // errorcodeclient?
-            // Logger::log(DEBUG, "Invalid session cookie format, creating a new one."); //testlog
             RunServers::setSessionData(generateUuid(buffer), SessionData{});
+            Logger::log(DEBUG, "Invalid session cookie format, creating a new one."  + string(buffer)); //testlog
             client._sessionId = string(buffer);
         }
     }
-    
-
+        Logger::log(DEBUG, "no session id how?", client._sessionId); //testlog
+        Logger::log(DEBUG, client._sessionId.size()); //testlog
     checkNullBytes(client._header, client);
     if (client._method == "POST") {
         HttpRequest::getContentLength(client);

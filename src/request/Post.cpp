@@ -22,6 +22,7 @@ void HttpRequest::POST(Client &client)
     if (client._contentType == "application/x-www-form-urlencoded") {
         replace(client._body.begin(), client._body.end(), '+', ' ');
         SessionData &sessionData = RunServers::getSessionData(client._sessionId);
+        // Logger::log(DEBUG, client._header); //testlog
         Logger::log(DEBUG, client._body); //testlog
         if (client._body.empty() || client._body.size() < 6)
             throw ErrorCodeClientException(client, 400, "Body too short or empty for form data");
@@ -30,17 +31,26 @@ void HttpRequest::POST(Client &client)
             throw ErrorCodeClientException(client, 400, "Unsupported form data key: " + client._body);
 
         string_view theme(client._body.data() + 6, client._body.size() - 6);
-        if (theme != "light" && theme != "dark")
+        if (theme == "light")
+            sessionData.darkMode = false;
+        else if (theme == "dark")
+            sessionData.darkMode = true;
+        else
             throw ErrorCodeClientException(client, 400, "Unsupported theme value: " + string(theme));
-        sessionData.darkMode = !sessionData.darkMode;
-
+        
         std::ostringstream response;
-        response << "HTTP/1.1 200 OK\r\n"
-                << "Content-Length: 0\r\n"
-                << "Connection: keep-alive\r\n"
-                << "\r\n";
+        response << "HTTP/1.1 200 OK" << CRLF
+                << "Content-Length: 0" << CRLF
+                << "Connection: keep-alive" << CRLF;
+        if (RunServers::getSessionData(client._sessionId).newSession == false) {
+            RunServers::getSessionData(client._sessionId).newSession = true;
+            Logger::log(DEBUG, "response with new session cookie"); //testlog
+            response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
+        }
+        response << CRLF;
         std::string respStr = response.str();
         send(client._fd, respStr.c_str(), respStr.size(), 0);
+        client.httpCleanup();
         return;
     }
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);

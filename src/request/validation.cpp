@@ -49,10 +49,12 @@ void    HttpRequest::validateHEAD(Client &client)
         client._requestPath = "/upload";
         // client._requestPath = should be upload_store
     }
-    Logger::log(DEBUG, "reqpath: " + client._requestPath); //testlog
+
     if ((client._useMethod & METHOD_GET && client._requestPath == "/get-theme") ||
-        (client._useMethod & METHOD_POST && client._requestPath == "/set-theme"))
+        (client._useMethod & METHOD_POST && client._requestPath == "/set-theme")) {
+        Logger::log(DEBUG, "validation reqpath: " + client._requestPath);
         return ;
+    }
     validateResourceAccess(client);
 }
 

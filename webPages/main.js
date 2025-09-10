@@ -344,9 +344,6 @@ window.addEventListener('DOMContentLoaded', function() {
     // Send theme update as POST form data
     const formData = new URLSearchParams();
     formData.append('theme', isLight ? 'light' : 'dark');
-    // Add more settings if needed, e.g.:
-    // formData.append('notifications', 'enabled');
-
     fetch('/set-theme', {
       method: 'POST',
       headers: {
@@ -356,61 +353,4 @@ window.addEventListener('DOMContentLoaded', function() {
       credentials: 'same-origin'
     });
   });
-
-  // fetch('/account/settings', { credentials: 'same-origin' })
-  //   .then(res => res.json())
-  //   .then(data => {
-  //     let isLight = data.theme === 'light';
-  //     document.body.classList.toggle('light-mode', isLight);
-  //     // ...update button text, etc.
-  //   });
-});
-
-// ...existing code...
-
-// Helper functions for cookies
-function setCookie(name, value, days) {
-  let expires = "";
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days*24*60*60*1000));
-    expires = "; expires=" + date.toUTCString();
-  }
-  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-}
-function getCookie(name) {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(';');
-  for(let i=0;i < ca.length;i++) {
-    let c = ca[i];
-    while (c.charAt(0)==' ') c = c.substring(1,c.length);
-    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-  }
-  return null;
-}
-
-// const toggleBtn = document.getElementById('toggleThemeBtn');
-// let isLight = getCookie('theme') === 'light';
-// if (isLight) {
-//   document.body.classList.add('light-mode');
-//   toggleBtn.textContent = 'Switch to Dark Mode';
-// }
-// toggleBtn.addEventListener('click', function() {
-//   isLight = !isLight;
-//   document.body.classList.toggle('light-mode', isLight);
-//   toggleBtn.textContent = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
-//   setCookie('theme', isLight ? 'light' : 'dark', 365);
-// });
-// // ...existing code...
-const toggleBtn = document.getElementById('toggleThemeBtn');
-let isLight = getCookie('theme') === 'light';
-if (isLight) {
-  document.body.classList.add('light-mode');
-  toggleBtn.textContent = 'Switch to Dark Mode';
-}
-toggleBtn.addEventListener('click', function() {
-  isLight = !isLight;
-  document.body.classList.toggle('light-mode', isLight);
-  toggleBtn.textContent = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
-  setCookie('theme', isLight ? 'light' : 'dark', 365);
 });

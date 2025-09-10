@@ -82,6 +82,7 @@ void HttpRequest::processGet(Client &client)
                 // Use HandleToClientTransfer to send the response
                 auto handle = make_unique<HandleToClientTransfer>(client, responseStr);
                 RunServers::insertHandleTransfer(move(handle));
+                client.httpCleanup();
                 return;
             }
             GET(client);
@@ -122,6 +123,7 @@ void HttpRequest::GET(Client &client)
             throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
     }
     FileDescriptor::setFD(fd);
+    Logger::log(INFO, "GET file opened", fd, "GETfile", client._filenamePath);
     size_t fileSize = getFileLength(client, client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));

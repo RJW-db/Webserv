@@ -51,7 +51,7 @@ class Client
         string _sessionId;
         bool _isCgi = false;
 
-        uint8_t _headerParseState;
+        uint8_t _headerParseState = HEADER_AWAITING;
         string _header;
         string _body;
         string _method;
