@@ -14,24 +14,25 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 
-// Static member variables
-// FileDescriptor RunServers::_fds;
+// --- Server configuration ---
 string RunServers::_serverRootDir;
-int RunServers::_epfd = -1;
-array<struct epoll_event, FD_LIMIT> RunServers::_events;
-// unordered_map<int, string> RunServers::_fdBuffers;
 ServerList RunServers::_servers;
 vector<int> RunServers::_listenFDS;
 vector<int> RunServers::_epollAddedFds;
+
+// --- Epoll and event management ---
+int RunServers::_epfd = -1;
+array<struct epoll_event, FD_LIMIT> RunServers::_events;
+
+// --- Client and handle management ---
+unordered_map<int, unique_ptr<Client>> RunServers::_clients;
 vector<unique_ptr<HandleTransfer>> RunServers::_handle;
 vector<unique_ptr<HandleTransfer>> RunServers::_handleCgi;
-// vector<int> RunServers::_connectedClients;
-unordered_map<int, unique_ptr<Client>> RunServers::_clients;
+unordered_map<string, SessionData> RunServers::sessions;
+// --- Miscellaneous ---
 int RunServers::_level = -1;
-
-uint64_t RunServers::_ramBufferLimit = 65536;
+uint64_t RunServers::_ramBufferLimit = 65536; // 64KB
 bool RunServers::_fatalErrorOccurred = false;
-
 
 void RunServers::runServers()
 {

@@ -45,16 +45,63 @@
       margin-bottom: 10px;
       background: #fff;
     }
+
+    :root {
+      --bg: #181818;
+      --fg: #f4f4f4;
+      --sidebar-bg: #222;
+      --sidebar-border: #333;
+      --gallery-bg: #181818;
+      --gallery-img-bg: #222;
+      --input-bg: #222;
+      --input-fg: #f4f4f4;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .sidebar {
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+    }
+
+    .gallery {
+      background: var(--gallery-bg);
+    }
+
+    .gallery img {
+      background: var(--gallery-img-bg);
+    }
+
+    input, button {
+      background: var(--input-bg);
+      color: var(--input-fg);
+      border: 1px solid #444;
+    }
+
+    body.light-mode {
+      --bg: #fff;
+      --fg: #222;
+      --sidebar-bg: #f4f4f4;
+      --sidebar-border: #ddd;
+      --gallery-bg: #fff;
+      --gallery-img-bg: #fff;
+      --input-bg: #fff;
+      --input-fg: #222;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="sidebar">
+      <button id="toggleThemeBtn" style="margin-bottom: 20px;">Switch to Light Mode</button>
       <h2>Upload Files</h2>
       <form id="uploadForm" enctype="multipart/form-data">
         <input type="file" id="fileInput" name="myfile" accept="image/*" multiple required />
         <br /><br />
-        <button type="submit">Upload</button>
+      <button type="submit">Upload</button>
       </form>
 
       <form action="/cgi-bin/upload.py" method="GET">

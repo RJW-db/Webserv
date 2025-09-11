@@ -1,11 +1,14 @@
-#include <cassert>
 #include <string_view>
+#include <algorithm>
+#include <cassert>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Constants.hpp"
 #include "utils.hpp"
+
+#include "Logger.hpp"
 namespace
 {
     string extractContentDispositionLine(Client &client, const string &buff);
@@ -15,8 +18,32 @@ namespace
 
 void HttpRequest::POST(Client &client)
 {
-    HttpRequest::getContentLength(client);
     unique_ptr<HandleTransfer> handle;
+    if (client._contentType == "application/x-www-form-urlencoded" && client._isCgi == false) {
+        replace(client._body.begin(), client._body.end(), '+', ' ');
+        SessionData &sessionData = RunServers::getSessionData(client._sessionId);
+        // Logger::log(DEBUG, client._header); //testlog
+        Logger::log(DEBUG, client._body); //testlog
+        if (client._body.empty() || client._body.size() < 6)
+            throw ErrorCodeClientException(client, 400, "Body too short or empty for form data");
+
+        if (client._body.substr(0, 6) != "theme=")
+            throw ErrorCodeClientException(client, 400, "Unsupported form data key: " + client._body);
+
+        string_view theme(client._body.data() + 6, client._body.size() - 6);
+        if (theme == "light")
+            sessionData.darkMode = false;
+        else if (theme == "dark")
+            sessionData.darkMode = true;
+        else
+            throw ErrorCodeClientException(client, 400, "Unsupported theme value: " + string(theme));
+
+
+        string responseStr = HttpRequest::HttpResponse(client, 200, "", 0);
+        handle = make_unique<HandleToClientTransfer>(client, responseStr);
+        RunServers::insertHandleTransfer(move(handle));
+        return;
+    }
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->postTransfer(false) == false)
         RunServers::insertHandleTransfer(move(handle));
@@ -60,12 +87,10 @@ void HttpRequest::getContentType(Client &client)
         else
             throw ErrorCodeClientException(client, 400, "Malformed HTTP header line: " + string(ct));
     }
-    else if (ct == "application/x-www-form-urlencoded" ||
-             ct == "application/xml" ||
-             ct == "text/xml")
-    {
+    else if (ct.find("application/x-www-form-urlencoded") == 0) {
         client._contentType = ct;
-        throw ErrorCodeClientException(client, 400, "Unsupported Content-Type for POST: " + string(ct));
+        if (client._requestPath != "/set-theme" && client._isCgi == false)
+            throw ErrorCodeClientException(client, 415, "Unsupported Content-Type for this endpoint: " + string(ct));
     }
     else
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
@@ -84,7 +109,7 @@ void HttpRequest::getBodyInfo(Client &client, const string &buff)
 void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
 {
     char uuid[UUID_SIZE];
-    generateUuid(uuid);
+    generateFilenameUuid(uuid);
 
     size_t totalLength = filename.size() + UUID_SIZE;
     if (totalLength > NAME_MAX) {

@@ -81,14 +81,13 @@ void RunServers::processClientRequest(Client &client)
     catch (const exception& e) {
         throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
     }
-
 }
 
 size_t RunServers::receiveClientData(Client &client, char *buff)
 {
-    // buff[CLIENT_BUFFER_SIZE] = '\0'; // kan alleen aan voor testen anders kan het voor post problemen geven
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
+    Logger::log(DEBUG, string(buff, static_cast<size_t>(bytesReceived)));
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)

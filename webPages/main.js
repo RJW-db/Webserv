@@ -324,4 +324,33 @@ window.addEventListener('DOMContentLoaded', function() {
       statusDiv.textContent = 'Error sending delete request.';
     });
   });
+
+  const toggleBtn = document.getElementById('toggleThemeBtn');
+  fetch('/get-theme', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+      let isLight = data.theme === 'light';
+      document.body.classList.toggle('light-mode', isLight);
+      toggleBtn.textContent = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+      toggleBtn.dataset.isLight = isLight ? '1' : '0';
+    });
+
+  toggleBtn.addEventListener('click', function() {
+    let isLight = toggleBtn.dataset.isLight !== '1';
+    document.body.classList.toggle('light-mode', isLight);
+    toggleBtn.textContent = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+    toggleBtn.dataset.isLight = isLight ? '1' : '0';
+
+    // Send theme update as POST form data
+    const formData = new URLSearchParams();
+    formData.append('theme', isLight ? 'light' : 'dark');
+    fetch('/set-theme', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString(),
+      credentials: 'same-origin'
+    });
+  });
 });

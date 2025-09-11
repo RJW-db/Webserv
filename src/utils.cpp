@@ -8,7 +8,7 @@
 #include "ErrorCodeClientException.hpp"
 namespace
 {
-    constexpr char hexCharacters[] = "0123456789abcdef";
+    constexpr char hexCharacters[] = "0123456789ABCDEF";
     constexpr int  hexCharactersSize = sizeof(hexCharacters) - 1;
 
     void insertUuidSegment(int8_t amount, char *uuidIndex);
@@ -98,6 +98,37 @@ string escapeSpecialChars(const string &input, bool useColors)
     return result;
 }
 
+char *generateSessionIdCookie(char sessionId[ID_SIZE])
+{
+    for (uint8_t i = 0; i < ID_SIZE; ++i)
+        sessionId[i] = hexCharacters[rand() % hexCharactersSize];
+    sessionId[ID_SIZE] = '\0';
+    return sessionId;
+}
+
+char *generateFilenameUuid(char uuid[UUID_SIZE])
+{
+    uuid[0] = '-';
+    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
+    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
+    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
+    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
+    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
+    uuid[UUID_SIZE - 1] = '\0';
+    return uuid;
+}
+
+namespace
+{
+    inline void insertUuidSegment(int8_t amount, char *uuidIndex)
+    {
+        uint8_t i;
+        for (i = 0; i < amount; ++i)
+            uuidIndex[i] = hexCharacters[rand() % hexCharactersSize];
+        uuidIndex[i] = '-';
+    }
+}
+
 // void throwTesting()
 // {
 //     static uint8_t count = 1;
@@ -108,25 +139,3 @@ string escapeSpecialChars(const string &input, bool useColors)
 //         // throw runtime_error("Throw test");
 //     }
 // }
-
-void generateUuid(char uuid[UUID_SIZE])
-{
-    uuid[0] = '-';
-    insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
-    insertUuidSegment(4, uuid + 10);  // uuid[10-13] = random, uuid[14] = '-'  
-    insertUuidSegment(4, uuid + 15);  // uuid[15-18] = random, uuid[19] = '-'
-    insertUuidSegment(4, uuid + 20);  // uuid[20-23] = random, uuid[24] = '-'
-    insertUuidSegment(12, uuid + 25); // uuid[25-36] = random, uuid[37] = '-'
-    uuid[UUID_SIZE - 1] = '\0';
-}
-
-namespace
-{
-    inline void insertUuidSegment(int8_t amount, char *uuidIndex)
-    {
-        int8_t i;
-        for (i = 0; i < amount; ++i)
-            uuidIndex[i] = hexCharacters[rand() % hexCharactersSize];
-        uuidIndex[i] = '-';
-    }
-}

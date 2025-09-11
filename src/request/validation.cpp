@@ -45,13 +45,18 @@ void    HttpRequest::validateHEAD(Client &client)
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
     
     client._rootPath = client._location.getRoot() + string(client._requestPath);
-
+    decodeSafeFilenameChars(client);
     if (client._requestPath == "/upload/list")
     {
         client._requestUpload = true;
         client._requestPath = "/upload";
     }
-    decodeSafeFilenameChars(client);
+
+    if ((client._useMethod & METHOD_GET && client._requestPath == "/get-theme") ||
+        (client._useMethod & METHOD_POST && client._requestPath == "/set-theme")) {
+        Logger::log(DEBUG, "validation reqpath: " + client._requestPath);
+        return ;
+    }
     validateResourceAccess(client);
 }
 

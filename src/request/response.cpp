@@ -38,6 +38,15 @@ string HttpRequest::HttpResponse(const Client &client, uint16_t code, const stri
         response << "Content-Type: " << getMimeType(path) << CRLF;
     response << "Content-Length: " << fileSize << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
+
+    if (RunServers::getSessionData(client._sessionId).newSession == false) {
+        RunServers::getSessionData(client._sessionId).newSession = true;
+        Logger::log(DEBUG, "response with new session cookie2323"); //testlog
+        Logger::log(DEBUG, client._sessionId); //testlog
+        Logger::log(DEBUG, client._sessionId.size()); //testlog
+        response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
+    }
+
     response << CRLF;
     return response.str();
 }

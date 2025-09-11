@@ -97,6 +97,7 @@ void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath
         return;
     }
     FileDescriptor::setFD(_fileFD);
+    Logger::log(INFO, "Serving custom error page", _fileFD, "errorPageFD");
     size_t fileSize = getFileLength(_client, string_view(errorPagePath));
     _client._filenamePath = errorPagePath;
     string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);

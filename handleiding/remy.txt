@@ -58,3 +58,6 @@ od -tx1 -c filename
 testen
 bool RunServers::addFdToEpoll(int infd)
 
+
+
+_fatalErrorOccurred still must stop the server

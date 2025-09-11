@@ -2,6 +2,8 @@
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Constants.hpp"
+
+#include "Logger.hpp"
 namespace
 {
     void appendToHeader(Client &client, const char *buff, size_t receivedBytes);
@@ -10,6 +12,7 @@ namespace
     void parseHeaders(Client &client);
     string_view trimWhiteSpace(string_view sv);
     void handleConnectionHeader(Client &client);
+    void assignOrCreateSessionId(Client &client);
     bool handlePost(Client &client);
 }
 
@@ -27,12 +30,13 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     validateHEAD(client);
 
     handleConnectionHeader(client);
+    assignOrCreateSessionId(client);
 
     checkNullBytes(client._header, client);
-
-    
-    if (client._method == "POST")
+    if (client._method == "POST") {
+        HttpRequest::getContentLength(client);
         return handlePost(client);
+    }
 
     client._headerParseState = REQUEST_READY;
     return true;
@@ -41,10 +45,19 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receivedBytes)
 {
     client._body.append(buff, receivedBytes);
-    // return true;
-    client._bodyEnd = client._body.find(CRLF2);
-    if (client._bodyEnd == string::npos)
-        return false;
+    if (client._contentType == "multipart/form-data")
+    {
+        client._bodyEnd = client._body.find(CRLF2);
+        if (client._bodyEnd == string::npos)
+            return false;
+    }
+    else { // application/x-www-form-urlencoded or others
+        if (client._body.size() < client._contentLength) {
+            return false;
+        }
+        else if (client._body.size() > client._contentLength)
+            throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+    }
     client._headerParseState = REQUEST_READY;
     return true;
 }
@@ -122,6 +135,29 @@ namespace
         }
     }
 
+    void assignOrCreateSessionId(Client &client)
+    {
+        auto cookie = client._headerFields.find("Cookie");
+        char sessionId[ID_SIZE];
+
+        bool validSessionCookie = false;
+        string cookieSessionId;
+        if (cookie != client._headerFields.end() &&
+            cookie->second.substr(0, 11) == "session_id=" &&
+            cookie->second.size() >= 12) {
+            cookieSessionId = string(cookie->second).substr(11);
+            if (RunServers::sessionsExist(cookieSessionId))
+                validSessionCookie = true;
+        }
+
+        if (validSessionCookie)
+            client._sessionId = cookieSessionId;
+        else {
+            RunServers::setSessionData(generateSessionIdCookie(sessionId), SessionData{});
+            client._sessionId = string(sessionId);
+        }
+    }
+
     bool handlePost(Client &client)
     {
         HttpRequest::getContentType(client);
@@ -130,6 +166,13 @@ namespace
             transferEncodingHeader->second == "chunked") {
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
+        }
+        if (client._contentType == "application/x-www-form-urlencoded")
+        {
+            if (client._body.size() > client._contentLength)
+                throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+            else if (client._body.size() < client._contentLength)
+                return false;
         }
         client._headerParseState = REQUEST_READY;
         return true;
