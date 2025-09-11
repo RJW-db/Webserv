@@ -20,6 +20,7 @@ string HttpRequest::HttpResponse(const Client &client, uint16_t code, const stri
         {405, "Method Not Allowed"},
         {413, "Payload Too Large"},
         {414, "URI Too Long"},
+        {415, "Unsupported Media Type"},
         {431, "Request Header Fields Too Large"},
         {500, "Internal Server Error"},
         {501, "Not Implemented"},

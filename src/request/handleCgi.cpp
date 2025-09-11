@@ -208,7 +208,6 @@ namespace
     {
         vector<string> argvString;
         if (!client._location.getCgiPath().empty()) {
-            Logger::log(WARN, client, "client._location.getCgiPath() ", client._location.getCgiPath());
             argvString.push_back(client._location.getCgiPath());
         }
         else if (endsWith(client._requestPath, ".py"))
@@ -245,6 +244,10 @@ namespace
         envpString.push_back("SERVER_PORT=" + client._ipPort.second);
 
         envpString.push_back("DOCUMENT_ROOT=" + client._location.getRoot());
+        //for php-cgi
+        
+        envpString.push_back("REDIRECT_STATUS=200"); // for php-cgi
+        envpString.push_back("SCRIPT_FILENAME=" + RunServers::getServerRootDir() + client._requestPath);
         return envpString;
     }
 

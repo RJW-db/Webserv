@@ -33,9 +33,9 @@ void    HttpRequest::validateHEAD(Client &client)
     RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
 
-    Logger::log(DEBUG, "client header: ", client._header); //testlog
+    // Logger::log(DEBUG, "client header: ", client._header); //testlog
 
-        Logger::log(DEBUG, "client body: ", client._body); //testlog
+        // Logger::log(DEBUG, "client body: ", client._body); //testlog
 
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == METHOD_INVALID)

@@ -1,5 +1,6 @@
-<?php
 #!/usr/bin/php-cgi
+<?php
+
 // Error handling: custom error handler to display user-friendly message
 set_error_handler(function($errno, $errstr) {
     if (!headers_sent()) {
@@ -24,6 +25,14 @@ if (!is_numeric($content_length) || $content_length < 0) {
     exit;
 }
 
+// Read the raw POST body from stdin
+$post_data = '';
+if ($content_length > 0) {
+    $post_data = file_get_contents('php://input');
+}
+
+// Parse application/x-www-form-urlencoded POST data
+parse_str($post_data, $fields);
 
 // Enhanced field validation
 if (empty($fields['name']) || empty($fields['email']) || empty($fields['message'])) {
@@ -45,15 +54,6 @@ if (strlen($fields['name']) > 100 || strlen($fields['message']) > 5000) {
     exit;
 }
 
-// Read the raw POST body from stdin
-$post_data = '';
-if ($content_length > 0) {
-    $post_data = fread(STDIN, $content_length);
-}
-
-// Parse application/x-www-form-urlencoded POST data
-parse_str($post_data, $fields);
-
 // Safely extract input fields
 $name    = isset($fields['name'])    ? htmlspecialchars($fields['name'])    : '';
 $email   = isset($fields['email'])   ? htmlspecialchars($fields['email'])   : '';
@@ -73,7 +73,7 @@ $html = "<!DOCTYPE html>
 
 
 header("Status: 200 OK\r\n");
-header("Content-Type: text/html\r\n");
+header("Content-Type: text/html; charset=UTF-8\r\n");
 header("Content-Length: " . strlen($html) . "\r\n\r\n");
 
 // Output the HTML

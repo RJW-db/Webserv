@@ -87,7 +87,7 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
 {
     client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     ssize_t bytesReceived = recv(client._fd, buff, CLIENT_BUFFER_SIZE, 0);
-    Logger::log(DEBUG, string(buff, static_cast<size_t>(bytesReceived)));
+    // Logger::log(DEBUG, string(buff, static_cast<size_t>(bytesReceived)));
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
