@@ -12,6 +12,7 @@ namespace
     void parseHeaders(Client &client);
     string_view trimWhiteSpace(string_view sv);
     void handleConnectionHeader(Client &client);
+    void assignOrCreateSessionId(Client &client);
     bool handlePost(Client &client);
 }
 
@@ -29,40 +30,8 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     validateHEAD(client);
 
     handleConnectionHeader(client);
+    assignOrCreateSessionId(client);
 
-    auto cookie = client._headerFields.find("Cookie");
-    char buffer[UUID_SIZE];
-    if (cookie == client._headerFields.end()) {
-        Logger::log(DEBUG, "No session cookie found, creating a new one."); //testlog
-        RunServers::setSessionData(generateUuid(buffer), SessionData{});
-        client._sessionId = string(buffer);
-    }
-    else {
-        if (cookie->second.substr(0, 11) == "session_id=" && cookie->second.size() >= 12) {
-            Logger::log(DEBUG, "Found session cookie: " + string(cookie->second).substr(11)); //testlog
-            // if (RunServers::sessionsExist(string(cookie->second).substr(11)))
-            //     Logger::log(DEBUG, "Session cookie found: " + string(cookie->second).substr(11)); //testlog
-            // if (RunServers::sessionsExist(string(cookie->second).substr(11)))
-            //     Logger::log(DEBUG, "Session cookie found: " + string(cookie->second).substr(11)); //testlog
-            // else
-            //     Logger::log(DEBUG, "Session cookie not found"); //testlog
-
-            if (!RunServers::sessionsExist(string(cookie->second).substr(11))) {
-                RunServers::setSessionData(generateUuid(buffer), SessionData{});
-                Logger::log(DEBUG, "Created new session cookie: " + string(buffer)); //testlog
-                client._sessionId = string(buffer);
-            }
-            else
-                client._sessionId = string(cookie->second).substr(11);
-        }
-        else { // errorcodeclient?
-            RunServers::setSessionData(generateUuid(buffer), SessionData{});
-            Logger::log(DEBUG, "Invalid session cookie format, creating a new one."  + string(buffer)); //testlog
-            client._sessionId = string(buffer);
-        }
-    }
-        Logger::log(DEBUG, "no session id how?", client._sessionId); //testlog
-        Logger::log(DEBUG, client._sessionId.size()); //testlog
     checkNullBytes(client._header, client);
     if (client._method == "POST") {
         HttpRequest::getContentLength(client);
@@ -163,6 +132,29 @@ namespace
                 client._keepAlive = true;
             else
                 throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + string(connValue));
+        }
+    }
+
+    void assignOrCreateSessionId(Client &client)
+    {
+        auto cookie = client._headerFields.find("Cookie");
+        char sessionId[ID_SIZE];
+
+        bool validSessionCookie = false;
+        string cookieSessionId;
+        if (cookie != client._headerFields.end() &&
+            cookie->second.substr(0, 11) == "session_id=" &&
+            cookie->second.size() >= 12) {
+            cookieSessionId = string(cookie->second).substr(11);
+            if (RunServers::sessionsExist(cookieSessionId))
+                validSessionCookie = true;
+        }
+
+        if (validSessionCookie)
+            client._sessionId = cookieSessionId;
+        else {
+            RunServers::setSessionData(generateSessionIdCookie(sessionId), SessionData{});
+            client._sessionId = string(sessionId);
         }
     }
 

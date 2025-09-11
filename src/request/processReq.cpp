@@ -67,48 +67,13 @@ void HttpRequest::processHead(Client &client)
 
 void HttpRequest::processGet(Client &client)
 {
-    if (!client._isAutoIndex) {
-        if (client._requestUpload == false)
-        {
-            if (client._requestPath == "/get-theme") {
-                const char *theme = RunServers::getSessionData(client._sessionId).darkMode ? "dark" : "light";
-                string body = "{\"theme\":\"" + string(theme) + "\"}";
-                string responseStr = "HTTP/1.1 200 OK\r\n";
-                responseStr += "Content-Type: application/json\r\n";
-                responseStr += "Content-Length: " + to_string(body.size()) + "\r\n";
-                responseStr += "Connection: keep-alive\r\n\r\n";
-                responseStr += body;
-
-                // Use HandleToClientTransfer to send the response
-                auto handle = make_unique<HandleToClientTransfer>(client, responseStr);
-                RunServers::insertHandleTransfer(move(handle));
-                client.httpCleanup();
-                return;
-            }
-            GET(client);
-            
-        }
-        else {
-            vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
-            string body;
-            for (const string& f : files)
-                body += f + "\n";
-            string responseStr = "HTTP/1.1 200 OK\r\n";
-            responseStr += "Content-Type: text/plain\r\n";
-            responseStr += "Content-Length: " + to_string(body.size()) + "\r\n";
-            responseStr += "Connection: keep-alive\r\n\r\n";
-            responseStr += body;
-
-            // Use HandleToClientTransfer to send the response
-            auto handle = make_unique<HandleToClientTransfer>(client, responseStr);
-            RunServers::insertHandleTransfer(move(handle));
-            client._requestUpload = false;
-        }
-    }
-    else {
-        SendAutoIndex(client);
-        client.httpCleanup();
-    }
+    if (handleAutoIndex(client))
+        return;
+    if (handleRequestUpload(client))
+        return;
+    if (handleGetTheme(client))
+        return;
+    GET(client);
 }
 
 void HttpRequest::GET(Client &client)
@@ -128,6 +93,16 @@ void HttpRequest::GET(Client &client)
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
     auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
     RunServers::insertHandleTransfer(move(handle));
+}
+
+bool HttpRequest::handleAutoIndex(Client &client)
+{
+    if (client._isAutoIndex) {
+        SendAutoIndex(client);
+        client.httpCleanup();
+        return true;
+    }
+    return false;
 }
 
 void HttpRequest::SendAutoIndex(Client &client)
@@ -152,6 +127,39 @@ void HttpRequest::SendAutoIndex(Client &client)
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
+}
+
+// Check if /upload is requested and respond with list of images in upload directory
+bool HttpRequest::handleRequestUpload(Client &client)
+{
+    if (client._requestUpload) {
+        vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
+        string body;
+        for (const string& f : files)
+            body += f + "\n";
+        string responseStr = HttpRequest::HttpResponse(client, 200, ".txt", body.size());
+
+        auto handle = make_unique<HandleToClientTransfer>(client, responseStr + body);
+        RunServers::insertHandleTransfer(move(handle));
+        client._requestUpload = false;
+        return true;
+    }
+    return false;
+}
+
+// Check if site is in dark or light mode and respond with JSON
+bool HttpRequest::handleGetTheme(Client &client)
+{
+    if (client._requestPath == "/get-theme") {
+        const char *theme = RunServers::getSessionData(client._sessionId).darkMode ? "dark" : "light";
+        string body = "{\"theme\":\"" + string(theme) + "\"}";
+        string responseStr = HttpRequest::HttpResponse(client, 200, ".json", body.size());
+
+        auto handle = make_unique<HandleToClientTransfer>(client, responseStr + body);
+        RunServers::insertHandleTransfer(move(handle));
+        return true;
+    }
+    return false;
 }
 
 void HttpRequest::processPost(Client &client)

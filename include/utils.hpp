@@ -8,6 +8,7 @@ namespace
 {
     static constexpr bool   TERMINAL = true;
     static constexpr bool   LOGGER = false;
+    static constexpr size_t ID_SIZE = 32;
     static constexpr size_t UUID_SIZE = 38;
 }
 
@@ -17,10 +18,11 @@ size_t	 getFileLength(Client &client, const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
 // void     throwTesting();
+char *generateSessionIdCookie(char sessionId[ID_SIZE]);
 /**
  * Universally Unique Identifier
  * 3fb17ebc-bc38-4939-bc8b-74f2443281d4
  * 8 dash 4 dash 4 dash 4 dash 12
  */
-char *generateUuid(char uuid[UUID_SIZE]);
+char *generateFilenameUuid(char uuid[UUID_SIZE]);
 #endif

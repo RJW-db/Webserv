@@ -37,20 +37,11 @@ void HttpRequest::POST(Client &client)
             sessionData.darkMode = true;
         else
             throw ErrorCodeClientException(client, 400, "Unsupported theme value: " + string(theme));
-        
-        std::ostringstream response;
-        response << "HTTP/1.1 200 OK" << CRLF
-                << "Content-Length: 0" << CRLF
-                << "Connection: keep-alive" << CRLF;
-        if (RunServers::getSessionData(client._sessionId).newSession == false) {
-            RunServers::getSessionData(client._sessionId).newSession = true;
-            Logger::log(DEBUG, "response with new session cookie"); //testlog
-            response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
-        }
-        response << CRLF;
-        std::string respStr = response.str();
-        send(client._fd, respStr.c_str(), respStr.size(), 0);
-        client.httpCleanup();
+
+
+        string responseStr = HttpRequest::HttpResponse(client, 200, "", 0);
+        handle = make_unique<HandleToClientTransfer>(client, responseStr);
+        RunServers::insertHandleTransfer(move(handle));
         return;
     }
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
@@ -118,7 +109,7 @@ void HttpRequest::getBodyInfo(Client &client, const string &buff)
 void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
 {
     char uuid[UUID_SIZE];
-    generateUuid(uuid);
+    generateFilenameUuid(uuid);
 
     size_t totalLength = filename.size() + UUID_SIZE;
     if (totalLength > NAME_MAX) {

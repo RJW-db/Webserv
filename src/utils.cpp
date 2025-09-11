@@ -8,7 +8,7 @@
 #include "ErrorCodeClientException.hpp"
 namespace
 {
-    constexpr char hexCharacters[] = "0123456789abcdef";
+    constexpr char hexCharacters[] = "0123456789ABCDEF";
     constexpr int  hexCharactersSize = sizeof(hexCharacters) - 1;
 
     void insertUuidSegment(int8_t amount, char *uuidIndex);
@@ -98,18 +98,15 @@ string escapeSpecialChars(const string &input, bool useColors)
     return result;
 }
 
-// void throwTesting()
-// {
-//     static uint8_t count = 1;
+char *generateSessionIdCookie(char sessionId[ID_SIZE])
+{
+    for (uint8_t i = 0; i < ID_SIZE; ++i)
+        sessionId[i] = hexCharacters[rand() % hexCharactersSize];
+    sessionId[ID_SIZE] = '\0';
+    return sessionId;
+}
 
-//     // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
-//     if (count++ == 1) {
-//         Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
-//         // throw runtime_error("Throw test");
-//     }
-// }
-
-char *generateUuid(char uuid[UUID_SIZE])
+char *generateFilenameUuid(char uuid[UUID_SIZE])
 {
     uuid[0] = '-';
     insertUuidSegment(8, uuid + 1);   // uuid[1-8]   = random, uuid[9]  = '-'
@@ -125,9 +122,20 @@ namespace
 {
     inline void insertUuidSegment(int8_t amount, char *uuidIndex)
     {
-        int8_t i;
+        uint8_t i;
         for (i = 0; i < amount; ++i)
             uuidIndex[i] = hexCharacters[rand() % hexCharactersSize];
         uuidIndex[i] = '-';
     }
 }
+
+// void throwTesting()
+// {
+//     static uint8_t count = 1;
+
+//     // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
+//     if (count++ == 1) {
+//         Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
+//         // throw runtime_error("Throw test");
+//     }
+// }

@@ -52,5 +52,11 @@ class HttpRequest
         static void validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody);
         static string buildCgiResponse(const Client &client, const map<string_view, string_view> &headerFields, 
                                 const string &input, size_t headerSize, bool hasBody);
+
+    private:
+        // Helper functions for processGet
+        static bool handleAutoIndex(Client &client);
+        static bool handleRequestUpload(Client &client);
+        static bool handleGetTheme(Client &client);
 };
 #endif
