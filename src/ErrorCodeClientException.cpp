@@ -10,20 +10,20 @@ namespace
 {
     constexpr const char ERR400[] =
     "<html>\n"
-    "<head><title>400 Bad Request</title></head>\n"
-    "<body>\n"
+    "  <head><title>400 Bad Request</title></head>\n"
+    "  <body>\n"
     "    <h1>400 Bad Request</h1>\n"
     "    <p>Your browser sent a request that this server could not understand.</p>\n"
-    "</body>\n"
+    "  </body>\n"
     "</html>";
 
     constexpr const char ERR500[] =
     "<html>\n"
-    "<head><title>500 Internal Server Error</title></head>\n"
-    "<body>\n"
+    "  <head><title>500 Internal Server Error</title></head>\n"
+    "  <body>\n"
     "    <h1>500 Internal Server Error</h1>\n"
     "    <p>The server encountered an internal error and was unable to complete your request.</p>\n"
-    "</body>\n"
+    "  </body>\n"
     "</html>";
 }
 

@@ -33,10 +33,6 @@ void    HttpRequest::validateHEAD(Client &client)
     RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
 
-    // Logger::log(DEBUG, "client header: ", client._header); //testlog
-
-        // Logger::log(DEBUG, "client body: ", client._body); //testlog
-
     client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
     if (client._useMethod == METHOD_INVALID)
         throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
@@ -54,7 +50,6 @@ void    HttpRequest::validateHEAD(Client &client)
 
     if ((client._useMethod & METHOD_GET && client._requestPath == "/get-theme") ||
         (client._useMethod & METHOD_POST && client._requestPath == "/set-theme")) {
-        Logger::log(DEBUG, "validation reqpath: " + client._requestPath);
         return ;
     }
     validateResourceAccess(client);

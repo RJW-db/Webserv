@@ -14,6 +14,14 @@ using ServerList = vector<unique_ptr<AconfigServ>>;
 using HandleTransferIter = vector<unique_ptr<HandleTransfer>>::iterator;
 extern volatile sig_atomic_t g_signal_status;
 class Client;
+
+enum FatalError : uint8_t
+{
+    SERVER_GOOD = 0,
+    FATAL_ERROR_CLOSE_LISTENERS = 1,
+    FATAL_ERROR_HANDLE_CLIENTS = 2
+};
+
 struct SessionData
 {
     bool newSession = false;
@@ -37,7 +45,7 @@ class RunServers
         static void   setServerFromListener(Client &client);
         static void   setLocation(Client &state);
         static inline void   fatalErrorShutdown() {
-            _fatalErrorOccurred = true;
+            _fatalErrorOccurred = FATAL_ERROR_CLOSE_LISTENERS;
         };
 
         // main loop
@@ -87,6 +95,9 @@ class RunServers
         static inline vector<unique_ptr<HandleTransfer>> &getHandleTransfers() {
             return _handle;
         }
+        static inline uint8_t getErrorOccurred() {
+            return _fatalErrorOccurred;
+        }
 
     private:
         // --- Server configuration ---
@@ -108,6 +119,8 @@ class RunServers
         // --- Miscellaneous ---
         static int _level;
         static uint64_t _ramBufferLimit;
-        static bool _fatalErrorOccurred;
+        static uint8_t _fatalErrorOccurred;
+
+        static void handleFatalError();
 };
 #endif

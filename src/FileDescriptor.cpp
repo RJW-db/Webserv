@@ -52,7 +52,7 @@ bool    FileDescriptor::safeCloseFD(int fd)
     } while (ret == -1 && errno == EINTR);
 
     if (ret == -1 && errno == EIO) {
-        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor that is not in the vector: ", fd);
+        Logger::log(FATAL, "FileDescriptor::safeCloseFD: Attempted to close a file descriptor which failed: ", fd, ": ", strerror(errno));
         RunServers::fatalErrorShutdown();
         return false;
     }
@@ -107,9 +107,9 @@ void FileDescriptor::cleanupEpollFd(int &fd)
 // void FileDescriptor::printAllFDs()
 // {
 //     for (size_t i = 0; i < _fds.size(); i++) {
-//         Logger::log(DEBUG, "[", i, "] FD: ", _fds[i]);
+//         Logger::log(INFO, "[", i, "] FD: ", _fds[i]);
 //     }
 //     if (_fds.empty()) {
-//         Logger::log(DEBUG, "No FDs currently tracked");
+//         Logger::log(INFO, "No FDs currently tracked");
 //     }
 // }

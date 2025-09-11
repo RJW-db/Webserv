@@ -10,21 +10,17 @@
 
 void RunServers::disconnectChecks()
 {
-    try
-    {
+    try {
         checkCgiDisconnect();
         checkClientDisconnects();
     }
-    catch (ErrorCodeClientException &e)
-    {
-        e.handleErrorClient();  //TODO anything throwing in here stops the server?
+    catch (ErrorCodeClientException &e) {
+        e.handleErrorClient();
     }
-    catch (Logger::ErrorLogExit&)
-    {
+    catch (Logger::ErrorLogExit&) {
         Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
     }
-    catch (const exception& e)
-    {
+    catch (const exception& e) {
         Logger::log(ERROR, "Server error", '-', "Exception in disconnectChecks: ", e.what());
     }
 }
@@ -34,8 +30,7 @@ HandleTransferIter RunServers::cleanupHandleCgi(HandleTransferIter it, int clien
     HandleTransferIter lastAfter = it;
     if (it != _handleCgi.begin())
         --it;
-    while (it != _handleCgi.end())
-    {
+    while (it != _handleCgi.end()) {
         if ((*it)->_client._fd == clientfd)
         {
             it = _handleCgi.erase(it);
@@ -125,7 +120,6 @@ void RunServers::checkClientDisconnects()
                 client->_cgiClosing = true;
                 checkCgiDisconnect();
                 cleanupClient(*client);
-
             }
         }
     }

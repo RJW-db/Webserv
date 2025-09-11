@@ -9,25 +9,22 @@ using namespace std;
 # define CLIENT_BUFFER_SIZE 8192 // 8KB
 #endif
 class Client;
-// namespace //TODO look at this. It didn't compile on newer version of compiler ( error: ‘HandleTransfer’ has a field ‘{anonymous}::HandleTransferType HandleTransfer::_handleType’ whose type uses the anonymous namespace [-Werror=subobject-linkage] 32 | class HandleTransfer)
-// { 
-    enum HandleTransferType : uint8_t
-    {
-        HANDLE_GET_TRANSFER = 1,
-        HANDLE_POST_TRANSFER = 2,
-        HANDLE_CHUNK_TRANSFER = 3,
-        HANDLE_WRITE_TO_CGI_TRANSFER = 4,
-        HANDLE_READ_FROM_CGI_TRANSFER = 5,
-        HANDLE_TO_CLIENT_TRANSFER = 6
-    };
-    
-    enum ValidationResult : uint8_t
-    {
-        CONTINUE_READING = 0,
-        FINISHED = 1,
-        RERUN_WITHOUT_READING = 2
-    };
-// }
+enum HandleTransferType : uint8_t
+{
+    HANDLE_GET_TRANSFER = 1,
+    HANDLE_POST_TRANSFER = 2,
+    HANDLE_CHUNK_TRANSFER = 3,
+    HANDLE_WRITE_TO_CGI_TRANSFER = 4,
+    HANDLE_READ_FROM_CGI_TRANSFER = 5,
+    HANDLE_TO_CLIENT_TRANSFER = 6
+};
+
+enum ValidationResult : uint8_t
+{
+    CONTINUE_READING = 0,
+    FINISHED = 1,
+    RERUN_WITHOUT_READING = 2
+};
 
 class HandleTransfer
 {

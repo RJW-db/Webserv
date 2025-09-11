@@ -32,12 +32,17 @@ unordered_map<string, SessionData> RunServers::sessions;
 // --- Miscellaneous ---
 int RunServers::_level = -1;
 uint64_t RunServers::_ramBufferLimit = 65536; // 64KB
-bool RunServers::_fatalErrorOccurred = false;
+uint8_t RunServers::_fatalErrorOccurred = SERVER_GOOD;
 
 void RunServers::runServers()
 {
     while (g_signal_status == 0) {
         int eventCount;
+        
+        if (_fatalErrorOccurred != SERVER_GOOD) {
+            handleFatalError();
+        }
+    
         disconnectChecks();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) {
@@ -53,7 +58,7 @@ void RunServers::runServers()
             handleEvents(static_cast<size_t>(eventCount));
         }
         catch (Logger::ErrorLogExit&) {
-            Logger::logExit(ERROR, "Server error", '-', "Restart now or finish existing clients and exit");
+            Logger::logExit(ERROR, "Server error", '-', "Fatal error occurred, shutting down now");
         }
         catch (const exception& e) {
             Logger::log(ERROR, "Server error", '-', "Exception in handleEvents: ", e.what());
@@ -77,7 +82,8 @@ void RunServers::handleEvents(size_t eventCount)
             if (handleEpollErrorEvents(currentEvent, eventFD))
                 continue;
 
-            if (find(_listenFDS.begin(), _listenFDS.end(), eventFD) != _listenFDS.end())
+            if (find(_listenFDS.begin(), _listenFDS.end(), eventFD) != _listenFDS.end() &&
+                _fatalErrorOccurred == SERVER_GOOD)
                 acceptConnection(eventFD);
 
             if (runHandleTransfer(currentEvent) == true || \
@@ -154,7 +160,7 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
                 }
             }
             if (finished == true) {
-                if ( currentEvent.events & EPOLLOUT) { // has to be send to client for cleanup
+                if (currentEvent.events & EPOLLOUT) { // has to be send to client for cleanup
                     if (client._keepAlive == false) {
                         cleanupClient(client);
                         return true;
@@ -185,4 +191,25 @@ bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)
         }
     }
     return false;
+}
+
+void RunServers::handleFatalError()
+{
+    if (_fatalErrorOccurred == FATAL_ERROR_CLOSE_LISTENERS) {
+        Logger::log(ERROR, "Server error", '-', "Fatal error occurred, closing listeners and stopping new connections");
+        
+        for (int listener : _listenFDS)
+            FileDescriptor::cleanupEpollFd(listener);
+        _listenFDS.clear();
+        
+        _fatalErrorOccurred = FATAL_ERROR_HANDLE_CLIENTS;
+    
+        for (pair<const int, unique_ptr<Client>> &clientPair : _clients) {
+            clientPair.second->_keepAlive = false;
+        }
+    }
+    if (_fatalErrorOccurred == FATAL_ERROR_HANDLE_CLIENTS &&
+        _handle.empty() && _handleCgi.empty()) {
+        Logger::logExit(FATAL, "Server error", '-', "Fatal error occurred, handled all clients and exiting now");
+    }
 }

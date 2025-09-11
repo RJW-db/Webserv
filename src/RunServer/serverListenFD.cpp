@@ -90,7 +90,7 @@ void ServerListenFD::bindToSocket(struct addrinfo *server)
 	}
 	catch(...) {
 		freeaddrinfo(server);
-		FileDescriptor::closeFD(_listener); //TODO check if correct solution for protection of fd leak
+		FileDescriptor::closeFD(_listener);
 		throw;
 	}
 	freeaddrinfo(server);

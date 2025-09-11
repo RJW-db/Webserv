@@ -133,7 +133,7 @@ namespace
 // {
 //     static uint8_t count = 1;
 
-//     // Logger::log(DEBUG, "ThrowTesting(), count: ", +count); //testlog
+//     // Logger::log(INFO, "ThrowTesting(), count: ", +count); //testlog
 //     if (count++ == 1) {
 //         Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
 //         // throw runtime_error("Throw test");

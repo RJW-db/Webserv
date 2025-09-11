@@ -40,8 +40,8 @@ namespace
 {
     int runWebServer(int argc, char *argv[])
     {
-        setupEnvironment();
         setupSignalHandlers();
+        setupEnvironment();
         configureServer(argc, argv);
         RunServers::setupEpoll();
         RunServers::runServers();

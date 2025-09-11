@@ -243,7 +243,7 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, c
             break;
         }
     }
-    throw ErrorCodeClientException(client, errorCode, errMsg + ": " + strerror(errno)); // todo replace only for when actually needed in throw themself
+    throw ErrorCodeClientException(client, errorCode, errMsg); 
 }
 
 /**

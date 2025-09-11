@@ -133,6 +133,8 @@ namespace
 
     void handleConnectionHeader(Client &client)
     {
+        if (RunServers::getErrorOccurred() != SERVER_GOOD)
+            return;
         auto connectionHeader = client._headerFields.find("Connection");
         if (connectionHeader != client._headerFields.end()) {
             string_view connValue = connectionHeader->second;
