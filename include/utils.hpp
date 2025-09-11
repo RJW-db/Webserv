@@ -17,7 +17,6 @@ vector<string> listFilesInDirectory(Client &client, const string &path);
 size_t	 getFileLength(Client &client, const string_view filename);
 uint64_t stoullSafe(string_view stringValue);
 string   escapeSpecialChars(const string &input, bool useColors);
-// void     throwTesting();
 char *generateSessionIdCookie(char sessionId[ID_SIZE]);
 /**
  * Universally Unique Identifier
@@ -25,4 +24,5 @@ char *generateSessionIdCookie(char sessionId[ID_SIZE]);
  * 8 dash 4 dash 4 dash 4 dash 12
  */
 char *generateFilenameUuid(char uuid[UUID_SIZE]);
+// void     throwTesting();
 #endif

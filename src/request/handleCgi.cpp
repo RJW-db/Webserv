@@ -235,13 +235,13 @@ namespace
         envpString.push_back("SCRIPT_NAME=" + client._requestPath);
         envpString.push_back("SERVER_PROTOCOL=" + client._version);
         if (client._useMethod & METHOD_POST) {   /// cgi expects "Content-Type: multipart/form-data; boundary=------someboundary"
-            string contentType = string(client._contentType);
+            string contentType = ContentTypeString[client._contentType];
             envpString.push_back("CONTENT_TYPE=" + contentType + "; boundary=" + string(client._boundary));
 
             if (!client._location.getUploadStore().empty())
                 envpString.push_back("UPLOAD_STORE=" + client._location.getUploadStore());
             else
-                envpString.push_back(string("UPLOAD_STORE=") + "./");
+                envpString.push_back("UPLOAD_STORE=" + string("./"));
         }
 
         envpString.push_back("GATEWAY_INTERFACE=CGI/1.1");
