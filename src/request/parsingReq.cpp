@@ -30,6 +30,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     checkNullBytes(client._header, client);
 
+    
     if (client._method == "POST")
         return handlePost(client);
 
@@ -40,6 +41,7 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receivedBytes)
 {
     client._body.append(buff, receivedBytes);
+    // return true;
     client._bodyEnd = client._body.find(CRLF2);
     if (client._bodyEnd == string::npos)
         return false;
@@ -129,10 +131,6 @@ namespace
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
         }
-        client._headerParseState = BODY_AWAITING;
-        client._bodyEnd = client._body.find(CRLF2);
-        if (client._bodyEnd == string::npos)
-            return false;
         client._headerParseState = REQUEST_READY;
         return true;
     }

@@ -36,7 +36,7 @@ curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" \
  http://localhost:15001/upload2 > results/post/post5.txt &
 
 
-sleep 2
+sleep 3
 
 # Change to the Webserv root directory for comparisons
 cd ..

@@ -217,7 +217,6 @@ void HandlePostTransfer::sendSuccessResponse()
     
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, headers);
     RunServers::insertHandleTransfer(move(handleClient));
-    // send(_client._fd, headers.data(), headers.size(), MSG_NOSIGNAL);
     Logger::log(INFO, _client, "POST   ", _client._filenamePath);
 }
 

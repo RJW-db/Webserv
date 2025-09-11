@@ -6,8 +6,8 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 
-HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize)
-: HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _offset(0)
+HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize, size_t headerSize)
+: HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _headerSize(headerSize), _offset(0)
 {
     _fileBuffer = responseHeader;
     RunServers::setEpollEventsClient(client, _client._fd, EPOLL_CTL_MOD, EPOLLOUT);
@@ -23,7 +23,7 @@ bool HandleGetTransfer::handleGetTransfer()
     _offset += _sent;
     _bytesSentTotal += _sent;
     _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-    if (_bytesSentTotal >= _fileSize) {
+    if (_bytesSentTotal >= _fileSize + _headerSize) {
         RunServers::setEpollEventsClient(_client, _client._fd, EPOLL_CTL_MOD, EPOLLIN);
         Logger::log(INFO, _client, "GET    ", _client._filenamePath);
         return true;

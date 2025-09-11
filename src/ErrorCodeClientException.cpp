@@ -100,6 +100,6 @@ void ErrorCodeClientException::handleCustomErrorPage(const string &errorPagePath
     size_t fileSize = getFileLength(_client, string_view(errorPagePath));
     _client._filenamePath = errorPagePath;
     string response = HttpRequest::HttpResponse(_client, _errorCode, errorPagePath, fileSize);
-    auto transfer = make_unique<HandleGetTransfer>(_client, _fileFD, response, fileSize);
+    auto transfer = make_unique<HandleGetTransfer>(_client, _fileFD, response, fileSize, response.size());
     RunServers::insertHandleTransfer(move(transfer));
 }

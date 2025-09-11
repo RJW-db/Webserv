@@ -55,6 +55,7 @@ CHUNKED_PID=$!
 
 echo "testing started, waiting for tests to finish..."
 
+
 wait $POST_PID
 wait $GET_PID
 wait $GET_FAIL_PID

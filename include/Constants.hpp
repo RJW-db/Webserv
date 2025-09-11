@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-constexpr size_t DISCONNECT_DELAY_SECONDS = 5;
+constexpr size_t DISCONNECT_DELAY_SECONDS = 1000;
 constexpr char CRLF[] = "\r\n";
 constexpr size_t CRLF_LEN = sizeof(CRLF) - 1;
 constexpr char CRLF2[] = "\r\n\r\n";

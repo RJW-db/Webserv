@@ -54,7 +54,7 @@ class HandleTransfer
 class HandleGetTransfer : public HandleTransfer
 {
     public:
-        HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize); // get
+        HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize, size_t headerSize); // get
         ~HandleGetTransfer() override { FileDescriptor::closeFD(_fd); };
 
         // Main logic
@@ -62,6 +62,7 @@ class HandleGetTransfer : public HandleTransfer
         void fileReadToBuff();
 
         size_t  _fileSize;
+        size_t _headerSize;
         size_t _offset;
         size_t _bytesSentTotal = 0;
 };

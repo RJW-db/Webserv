@@ -13,8 +13,7 @@ namespace
     {
         HEADER_AWAITING = 0,
         BODY_CHUNKED = 1,
-        BODY_AWAITING = 2,
-        REQUEST_READY = 3
+        REQUEST_READY = 2
     };
 
     enum HttpMethod : uint8_t

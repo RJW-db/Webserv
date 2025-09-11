@@ -61,8 +61,10 @@ bool HttpRequest::checkAndRunCgi(Client &client)
 
 void HttpRequest::processHead(Client &client)
 {
-    string response = HttpRequest::HttpResponse(client, 200, "txt", 0);
-    send(client._fd, response.data(), response.size(), MSG_NOSIGNAL);
+    string response = HttpRequest::HttpResponse(client, 200, "", 0);
+    
+    unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
+    RunServers::insertHandleTransfer(move(handleClient));
 }
 
 void HttpRequest::processGet(Client &client)
@@ -107,7 +109,7 @@ void HttpRequest::GET(Client &client)
     FileDescriptor::setFD(fd);
     size_t fileSize = getFileLength(client, client._filenamePath);
     string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
-    auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize));
+    auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize), responseStr.size());
     RunServers::insertHandleTransfer(move(handle));
 }
 
