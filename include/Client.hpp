@@ -63,7 +63,7 @@ class Client
         string _version;
         size_t _contentLength = 0;
         size_t _bodyEnd = 0;
-        string_view _contentType;
+        uint8_t _contentType;
         string_view _boundary;
 
         pid_t _pid = -1;

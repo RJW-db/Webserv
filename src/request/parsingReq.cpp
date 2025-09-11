@@ -45,18 +45,28 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 bool HttpRequest::parseHttpBody(Client &client, const char *buff, size_t receivedBytes)
 {
     client._body.append(buff, receivedBytes);
-    if (client._contentType == "multipart/form-data")
+    switch (client._contentType)
     {
-        client._bodyEnd = client._body.find(CRLF2);
-        if (client._bodyEnd == string::npos)
-            return false;
-    }
-    else { // application/x-www-form-urlencoded or others
-        if (client._body.size() < client._contentLength) {
-            return false;
+        case MULTIPART_FORM_DATA:
+        {
+            client._bodyEnd = client._body.find(CRLF2);
+            if (client._bodyEnd == string::npos)
+                return false;
         }
-        else if (client._body.size() > client._contentLength)
-            throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+        break;
+
+        case FORM_URLENCODED:
+        {
+            if (client._body.size() < client._contentLength) {
+                return false;
+            }
+            else if (client._body.size() > client._contentLength)
+                throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+        }
+        break;
+
+        default:
+            break;
     }
     client._headerParseState = REQUEST_READY;
     return true;
@@ -167,7 +177,7 @@ namespace
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
         }
-        if (client._contentType == "application/x-www-form-urlencoded")
+        if (client._contentType == FORM_URLENCODED)
         {
             if (client._body.size() > client._contentLength)
                 throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");

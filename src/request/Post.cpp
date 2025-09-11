@@ -11,6 +11,7 @@
 #include "Logger.hpp"
 namespace
 {
+    void processThemeForm(Client &client);
     string extractContentDispositionLine(Client &client, const string &buff);
     string extractFilenameFromContentDisposition(Client &client, const string &cdLine);
     void validateMultipartContentType(Client &client, const string &buff, const string &filename);
@@ -18,32 +19,12 @@ namespace
 
 void HttpRequest::POST(Client &client)
 {
-    unique_ptr<HandleTransfer> handle;
-    if (client._contentType == "application/x-www-form-urlencoded" && client._isCgi == false) {
-        replace(client._body.begin(), client._body.end(), '+', ' ');
-        SessionData &sessionData = RunServers::getSessionData(client._sessionId);
-        // Logger::log(DEBUG, client._header); //testlog
-        Logger::log(DEBUG, client._body); //testlog
-        if (client._body.empty() || client._body.size() < 6)
-            throw ErrorCodeClientException(client, 400, "Body too short or empty for form data");
-
-        if (client._body.substr(0, 6) != "theme=")
-            throw ErrorCodeClientException(client, 400, "Unsupported form data key: " + client._body);
-
-        string_view theme(client._body.data() + 6, client._body.size() - 6);
-        if (theme == "light")
-            sessionData.darkMode = false;
-        else if (theme == "dark")
-            sessionData.darkMode = true;
-        else
-            throw ErrorCodeClientException(client, 400, "Unsupported theme value: " + string(theme));
-
-
-        string responseStr = HttpRequest::HttpResponse(client, 200, "", 0);
-        handle = make_unique<HandleToClientTransfer>(client, responseStr);
-        RunServers::insertHandleTransfer(move(handle));
+    if (client._contentType == FORM_URLENCODED && client._isCgi == false) {
+        processThemeForm(client);
         return;
     }
+
+    unique_ptr<HandleTransfer> handle;
     handle = make_unique<HandlePostTransfer>(client, client._body.size(), client._body);
     if (handle->postTransfer(false) == false)
         RunServers::insertHandleTransfer(move(handle));
@@ -74,10 +55,9 @@ void HttpRequest::getContentType(Client &client)
     if (it == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
     const string_view ct(it->second);
-    if (ct.find("multipart/form-data") == 0) {
+    if (ct.find(ContentTypeString[MULTIPART_FORM_DATA]) == 0) { // "multipart/form-data"
         size_t semi = ct.find(';');
         if (semi != string_view::npos) {
-            client._contentType = ct.substr(0, semi);
             size_t boundaryPos = ct.find("boundary=", semi);
             if (boundaryPos != string_view::npos)
                 client._boundary = ct.substr(boundaryPos + 9); // 9 = strlen("boundary=")
@@ -86,14 +66,17 @@ void HttpRequest::getContentType(Client &client)
         }
         else
             throw ErrorCodeClientException(client, 400, "Malformed HTTP header line: " + string(ct));
+        client._contentType = MULTIPART_FORM_DATA;
     }
-    else if (ct.find("application/x-www-form-urlencoded") == 0) {
-        client._contentType = ct;
+    else if (ct.find(ContentTypeString[FORM_URLENCODED]) == 0) { // "application/x-www-form-urlencoded"
+        client._contentType = FORM_URLENCODED;
         if (client._requestPath != "/set-theme" && client._isCgi == false)
             throw ErrorCodeClientException(client, 415, "Unsupported Content-Type for this endpoint: " + string(ct));
     }
-    else
+    else {
+        client._contentType = UNSUPPORTED;
         throw ErrorCodeClientException(client, 400, "Unsupported Content-Type: " + string(ct));
+    }
 }
 
 void HttpRequest::getBodyInfo(Client &client, const string &buff)
@@ -133,6 +116,31 @@ void    HttpRequest::appendUuidToFilename(Client &client, string &filename)
 
 namespace
 {
+
+    void processThemeForm(Client &client)
+    {
+        replace(client._body.begin(), client._body.end(), '+', ' ');
+        SessionData &sessionData = RunServers::getSessionData(client._sessionId);
+
+        if (client._body.empty() || client._body.size() < 6)
+            throw ErrorCodeClientException(client, 400, "Body too short or empty for form data");
+
+        if (client._body.substr(0, 6) != "theme=")
+            throw ErrorCodeClientException(client, 400, "Unsupported form data key: " + client._body);
+
+        string_view theme(client._body.data() + 6, client._body.size() - 6);
+        if (theme == "light")
+            sessionData.darkMode = false;
+        else if (theme == "dark")
+            sessionData.darkMode = true;
+        else
+            throw ErrorCodeClientException(client, 400, "Unsupported theme value: " + string(theme));
+
+        string responseStr = HttpRequest::HttpResponse(client, 200, "", 0);
+        unique_ptr<HandleTransfer> handle = make_unique<HandleToClientTransfer>(client, responseStr);
+        RunServers::insertHandleTransfer(move(handle));
+    }
+
     string extractContentDispositionLine(Client &client, const string &buff)
     {
         const string contentDisposition = "Content-Disposition:";

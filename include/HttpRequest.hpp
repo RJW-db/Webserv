@@ -7,6 +7,27 @@
 #endif
 #include "Client.hpp"
 using namespace std;
+namespace
+{
+    enum ContentType : uint8_t
+    {
+        UNSUPPORTED,
+        FORM_URLENCODED,
+        JSON,
+        TEXT,
+        MULTIPART_FORM_DATA,
+        CONTENT_TYPE_AMOUNT
+    };
+
+    constexpr const char *ContentTypeString[CONTENT_TYPE_AMOUNT] = {
+        "UNSUPPORTED",
+        "application/x-www-form-urlencoded",
+        "application/json",
+        "text/plain",
+        "multipart/form-data"
+    };
+}
+
 class HttpRequest
 {
     public:

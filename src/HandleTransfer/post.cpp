@@ -194,7 +194,8 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
  */
 bool HandlePostTransfer::handlePostCgi()
 {
-    if (_fileBuffer.find(string(_client._boundary) + "--" + CRLF) == string::npos && _client._contentType != "application/x-www-form-urlencoded")
+    if (_fileBuffer.find(string(_client._boundary) + "--" + CRLF) == string::npos &&
+        _client._contentType != FORM_URLENCODED)
         return false;
 
     MultipartParser::validateMultipartPostSyntax(_client, _fileBuffer);
@@ -254,8 +255,9 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, c
 void MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
-        throw ErrorCodeClientException(client, 400, "Content-Length does not match body size, " + string("content_length: ") + to_string(client._contentLength) + ", input size: " + to_string(input.size()));
-    if (client._contentType == "application/x-www-form-urlencoded")
+        throw ErrorCodeClientException(client, 400, "Content-Length does not match body size, " + string("content_length: ") + 
+        to_string(client._contentLength) + ", input size: " + to_string(input.size()));
+    if (client._contentType == FORM_URLENCODED)
         return;
     string_view buffer = string_view(input);
     bool foundBoundary = false;

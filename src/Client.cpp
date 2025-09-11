@@ -1,5 +1,6 @@
-#include "Client.hpp"
+#include "HttpRequest.hpp"
 #include "Constants.hpp"
+#include "Client.hpp"
 
 Client::Client(int fd)
 : _fd(fd)
@@ -20,7 +21,7 @@ void Client::httpCleanup()
     _headerFields.clear();
     _rootPath.clear();
     _filenamePath.clear();
-    _contentType = string_view();
+    _contentType = UNSUPPORTED;
     _name.clear();
     _version.clear();
     _bodyEnd = 0;
