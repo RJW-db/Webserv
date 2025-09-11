@@ -51,7 +51,7 @@ class HandleTransfer
 class HandleGetTransfer : public HandleTransfer
 {
     public:
-        HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize, size_t headerSize); // get
+        HandleGetTransfer(Client &client, int fd, const string &responseHeader, size_t fileSize, size_t headerSize); // get
         ~HandleGetTransfer() override { FileDescriptor::closeFD(_fd); };
 
         // Main logic

@@ -102,7 +102,7 @@ char *generateSessionIdCookie(char sessionId[ID_SIZE])
 {
     for (uint8_t i = 0; i < ID_SIZE; ++i)
         sessionId[i] = hexCharacters[rand() % hexCharactersSize];
-    sessionId[ID_SIZE] = '\0';
+    sessionId[ID_SIZE - 1] = '\0';
     return sessionId;
 }
 

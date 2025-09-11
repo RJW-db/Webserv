@@ -6,7 +6,7 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 
-HandleGetTransfer::HandleGetTransfer(Client &client, int fd, string &responseHeader, size_t fileSize, size_t headerSize)
+HandleGetTransfer::HandleGetTransfer(Client &client, int fd, const string &responseHeader, size_t fileSize, size_t headerSize)
 : HandleTransfer(client, fd, HANDLE_GET_TRANSFER), _fileSize(fileSize), _headerSize(headerSize), _offset(0)
 {
     _fileBuffer = responseHeader;
