@@ -6,6 +6,7 @@
 #include "RunServer.hpp"
 #include "Constants.hpp"
 #include "Logger.hpp"
+#include <algorithm>
 namespace
 {
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
@@ -147,6 +148,11 @@ bool HandlePostTransfer::searchContentDisposition()
             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
     FileDescriptor::setFD(_fd);
+    if (rand() % 2 == 0)
+    {
+        Logger::log(DEBUG, "HandlePostTransfer::ReadIncomingData: Simulating read failure");
+        throw bad_alloc();
+    }
     _fileNamePaths.push_back(_client._filenamePath);
     Logger::log(INFO, "POST file added", _fd, "POSTfile", _client._filenamePath);
     _searchContentDisposition = false;
@@ -179,7 +185,6 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         return FINISHED;
     }
     if (_fileBuffer.size() > TERMINATOR_SIZE) {
-        cout << "filebuffer is after: " << _fileBuffer << endl; //testcout
         errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
     }
     return CONTINUE_READING;
@@ -232,10 +237,16 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, c
 {
     if (_fd != -1)
         FileDescriptor::closeFD(_fd);
-
+    
     for (const auto &filePath : _fileNamePaths)
         if (remove(filePath.data()) != 0)
             Logger::log(WARN, "remove failed on file: ", filePath, " because: ", strerror(errno));
+    
+    if (find(_fileNamePaths.begin(), _fileNamePaths.end(), client._filenamePath) == _fileNamePaths.end() && 
+        !client._filenamePath.empty()) {
+        if (remove(client._filenamePath.data()) != 0)
+            Logger::log(WARN, "remove failed on file: ", client._filenamePath, " because: ", strerror(errno));
+    }
     auto it = RunServers::getHandleTransfers().begin();
     for (; it != RunServers::getHandleTransfers().end(); ++it) {
         if ((*it)->_fd == _fd) {
