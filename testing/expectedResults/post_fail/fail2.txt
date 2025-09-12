@@ -1,12 +1,12 @@
-HTTP/1.1 400 Bad Request
+HTTP/1.1 413 Payload Too Large
 Content-Type: text/html
-Content-Length: 187
+Content-Length: 201
 Connection: close
 
 <html>
-  <head><title>400 Bad Request</title></head>
+  <head><title>413 Payload Too Large</title></head>
   <body>
-    <h1>400 Bad Request</h1>
-    <p>Your browser sent a request that this server could not understand.</p>
+    <h1>413 Payload Too Large</h1>
+    <p>The request is larger than the server is willing or able to process.</p>
   </body>
 </html>
