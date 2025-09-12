@@ -3,7 +3,7 @@
 #include "Client.hpp"
 
 Client::Client(int fd)
-: _fd(fd)
+: _fd(fd),_contentType(UNSUPPORTED)
 {}
 
 void Client::httpCleanup()

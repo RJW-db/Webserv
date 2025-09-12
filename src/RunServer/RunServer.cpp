@@ -204,7 +204,7 @@ void RunServers::handleFatalError()
         
         _fatalErrorOccurred = FATAL_ERROR_HANDLE_CLIENTS;
     
-        for (pair<const int, unique_ptr<Client>> &clientPair : _clients) {
+        for (const pair<const int, unique_ptr<Client>> &clientPair : _clients) {
             clientPair.second->_keepAlive = false;
         }
     }

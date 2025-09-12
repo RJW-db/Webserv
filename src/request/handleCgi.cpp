@@ -23,8 +23,8 @@ namespace
     void setupChildPipes(int fdWriteToCgi[2], int fdReadfromCgi[2]);
     void closing_pipes(int fdWriteToCgi[2], int fdReadfromCgi[2]);
     bool endsWith(const string &str, const string &suffix);
-    vector<string> createArgv(Client &client);
-    vector<string> createEnvp(Client &client);
+    vector<string> createArgv(const Client &client);
+    vector<string> createEnvp(const Client &client);
     vector<char *> convertToCharArray(const vector<string> &argvString);
 }
 
@@ -204,7 +204,7 @@ namespace
         FileDescriptor::closeFD(fdReadfromCgi[1]);
     }
 
-    vector<string> createArgv(Client &client)
+    vector<string> createArgv(const Client &client)
     {
         vector<string> argvString;
         if (!client._location.getCgiPath().empty()) {
@@ -224,7 +224,7 @@ namespace
         return (str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
     }
 
-    vector<string> createEnvp(Client &client)
+    vector<string> createEnvp(const Client &client)
     {
         vector<string> envpString;
         envpString.push_back("REQUEST_METHOD=" + client._method);

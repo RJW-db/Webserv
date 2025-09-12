@@ -6,24 +6,24 @@ MAKEFLAGS		+=	-j
 RM				:=	rm -rf
 PRINT_NO_DIR	:=	--no-print-directory
 
-#		CCPFLAGS for testing
-COMPILER		:=	c++
-CCPFLAGS		:=	-std=c++17
-CCPFLAGS		+=	-Wall -Wextra
-CCPFLAGS		+=	-Werror
-# CCPFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
-# CCPFLAGS		+=	-flto
-CCPFLAGS		+=	-MMD -MP
-# CCPFLAGS		+=	-g
-CCPFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+#		CXXFLAGS for testing
+CXX				:=	c++
+CXXFLAGS		:=	-std=c++17
+CXXFLAGS		+=	-Wall -Wextra
+CXXFLAGS		+=	-Werror
+CXXFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+CXXFLAGS		+=	-flto
+CXXFLAGS		+=	-MMD -MP
+# CXXFLAGS		+=	-g
+# CXXFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
-# CCPFLAGS		+=	-g -fsanitize=address
+# CXXFLAGS		+=	-g -fsanitize=address
 
 # ulimit -n, view the limit of fds. use ulimit -n <max_value> to set a new limit.
 FD_LIMIT		:=	$(shell n=$$(ulimit -n); echo $$((n>1024?1024:n)))
-CCPFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
+CXXFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
 ifdef BUFFER
-CCPFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
+CXXFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
 endif
 
 #		Directories
@@ -55,7 +55,7 @@ DEPS			:=	$(OBJS:.o=.d)
 #		HEADERS
 INCLUDE			:=	-I $(INCD)
 
-BUILD			:=	$(COMPILER) $(INCLUDE) $(CCPFLAGS)
+BUILD			:=	$(CXX) $(INCLUDE) $(CXXFLAGS)
 
 #		Remove these created files
 DELETE			:=	*.out			**/*.out		.DS_Store	\
