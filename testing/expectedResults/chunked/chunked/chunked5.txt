@@ -1,0 +1,6 @@
+HTTP/1.1 201 Created
+Content-Type: text/plain
+Content-Length: 79
+Connection: keep-alive
+
+./testing/results/chunked/chunk_test2-35EE1D39-CB6C-8CA5-A7E6-F2D29A4E3BB6.txt

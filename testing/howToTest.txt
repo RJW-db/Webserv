@@ -1,0 +1,6 @@
+Our tests:
+    make && ./Webserv testing/test1.conf
+    testing/test.sh | testing/test.sh -y
+
+docker:
+    info in testing/docker/siege/howToUse.txt
