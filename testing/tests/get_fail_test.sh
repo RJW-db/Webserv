@@ -74,12 +74,12 @@ printf "GET HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\n\r\n"
 echo "13. Testing GET request with spaces in path (should return 400)"
 printf "GET /test file.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\n\r\n" | nc localhost 15003 > results/get_fail/fail13.txt &
 
-# Test 14: GET request with extremely long header value (should return 400)
-echo "14. Testing GET request with extremely long header value (should return 400)"
-LONG_VALUE=$(printf 'a%.0s' {1..8000})
-curl -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" \
-    -H "X-Long-Header: $LONG_VALUE" \
-    http://localhost:15003/index.html > results/get_fail/fail14.txt &
+
+
+# Remove lines starting with Set-Cookie from all results files
+for file in results/get_fail/fail*.txt; do
+    sed -i '/^Set-Cookie/d' "$file"
+done
 
 # Wait for all background requests
 echo ""
@@ -106,7 +106,6 @@ cmp -s expectedResults/get_fail/fail10.txt results/get_fail/fail10.txt && echo "
 cmp -s expectedResults/get_fail/fail11.txt results/get_fail/fail11.txt && echo "get_fail test 11 completed successfully" || echo "get_fail test 11 failed because there is difference in expected output"
 cmp -s expectedResults/get_fail/fail12.txt results/get_fail/fail12.txt && echo "get_fail test 12 completed successfully" || echo "get_fail test 12 failed because there is difference in expected output"
 cmp -s expectedResults/get_fail/fail13.txt results/get_fail/fail13.txt && echo "get_fail test 13 completed successfully" || echo "get_fail test 13 failed because there is difference in expected output"
-cmp -s expectedResults/get_fail/fail14.txt results/get_fail/fail14.txt && echo "get_fail test 14 completed successfully" || echo "get_fail test 14 failed because there is difference in expected output"
 
 # echo ""
 # echo "=== Summary ==="

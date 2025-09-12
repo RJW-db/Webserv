@@ -1,5 +1,0 @@
-
-zorgen dat voor chunked max_body_size wordt gechecked
-
-cgi error codes aanpassen
-

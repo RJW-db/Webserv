@@ -36,7 +36,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
     }
     
-    if (_completedRequest == true) {
+    if (_completedChunkedRequest == true) {
         if (_client._isCgi == false)
             postTransfer(false);
         else {
@@ -58,14 +58,13 @@ bool    HandleChunkTransfer::decodeChunk()
 
         const string &body = _client._body;
         size_t dataEnd = dataStart + targetSize;
-        
         if (body.size() >= dataEnd + CRLF_LEN) {
             if (body[dataEnd] == '\r' &&
                 body[dataEnd + 1] == '\n')
             {
                 if (targetSize == 0 &&
                     body[dataEnd - 1] == '\n' && body[dataEnd - 2] == '\r') {
-                    _completedRequest = true;
+                    _completedChunkedRequest = true;
                     return true;
                 }
                 _bodyPos = dataEnd + CRLF_LEN;
@@ -82,7 +81,6 @@ bool    HandleChunkTransfer::decodeChunk()
         else
             return false;
     }
-    throw std::logic_error("Unreachable code in decodeChunk");
 }
 
 bool HandleChunkTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)

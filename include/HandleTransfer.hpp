@@ -77,6 +77,8 @@ class HandlePostTransfer : public HandleTransfer
         bool _searchContentDisposition = false;
         vector<string> _fileNamePaths; // For post transfer - shared between HandlePostTransfer and HandleChunkTransfer
 
+        bool _completedChunkedRequest = false;
+
     protected:
         // Protected constructor for derived classes
         HandlePostTransfer(Client &client, int fd) : HandleTransfer(client, fd, HANDLE_POST_TRANSFER) {};
@@ -113,7 +115,6 @@ class HandleChunkTransfer : public HandlePostTransfer
         uint64_t parseChunkSize(string_view chunkSizeLine);
         
         size_t _bodyPos = 0;
-        bool _completedRequest = false;
 };
 
 class HandleWriteToCgiTransfer : public HandleTransfer

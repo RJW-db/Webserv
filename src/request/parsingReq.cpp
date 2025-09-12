@@ -33,10 +33,8 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
     assignOrCreateSessionId(client);
 
     checkNullBytes(client._header, client);
-    if (client._method == "POST") {
-        HttpRequest::getContentLength(client);
+    if (client._method == "POST")
         return handlePost(client);
-    }
 
     client._headerParseState = REQUEST_READY;
     return true;
@@ -146,9 +144,14 @@ namespace
         auto transferEncodingHeader = client._headerFields.find("Transfer-Encoding");
         if (transferEncodingHeader != client._headerFields.end() &&
             transferEncodingHeader->second == "chunked") {
+            transferEncodingHeader = client._headerFields.find("Content-Length");
+            if (transferEncodingHeader != client._headerFields.end())
+                throw ErrorCodeClientException(client, 400, "Content-Length shouldn't be present in a chunked request");
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
         }
+
+        HttpRequest::getContentLength(client);
         if (client._contentType == FORM_URLENCODED)
         {
             if (client._body.size() > client._contentLength)

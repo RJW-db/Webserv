@@ -88,7 +88,7 @@ curl -i -X POST -H "Host: server1" -H "Connection: close" \
 # Test 8: Unsupported Expect header on server2 (multipart) -> expect 417 or 400
 echo "8. POST with unsupported Expect header to server2 (expect 417 or 400)"
 curl -i -X POST -H "Host: server2" -H "Connection: close" -H "Expect: 100-continue" \
-  -F "myfile=@expectedResults/post/upload2/small.txt" \
+  -F "myfile=@expectedResults/post/upload1/small.txt" \
   http://localhost:15001/upload2 > results/post_fail/fail8.txt &
 
 # Test 9: Missing Content-Type for multipart-style body on server3 -> expect 400
@@ -102,7 +102,7 @@ echo "9. POST missing Content-Type (multipart-like body) to server3 (expect 400)
 # Test 10: POST to non-existent location on server2 (multipart) -> expect 404
 echo "10. POST to non-existent location /nope on server2 (expect 404)"
 curl -i -X POST -H "Host: server2" -H "Connection: close" \
-  -F "myfile=@expectedResults/post/upload2/small.txt" \
+  -F "myfile=@expectedResults/post/upload1/small.txt" \
   http://localhost:15001/nope > results/post_fail/fail10.txt &
 
 # Test 11: Oversized body against tiny limit (POST to / with >1 byte) on server1 (multipart) -> expect 413
@@ -135,10 +135,23 @@ echo "14. Both Content-Length and Transfer-Encoding set to server1 (expect 400)"
   printf "0\r\n\r\n"
 ) | nc localhost 15000 > results/post_fail/fail14.txt &
 
+# Test 15: incomplete chunked request for (multipart) -> expect 400
+echo "15. Incomplete chunked request for /upload1 (multipart) -> expect 400"
+(
+  B="BOUNDARY15"
+  printf "POST /upload1 HTTP/1.1\r\nHost: server1\r\nConnection: close\r\nTransfer-Encoding: chunked\r\nContent-Type: multipart/form-data; boundary=$B\r\n\r\n"
+  printf "0\r\n\r\n"
+) | nc localhost 15000 > results/post_fail/fail15.txt &
+
 echo "" 
 echo "Waiting for requests to complete..."
 wait
 sleep 3
+
+# Remove lines starting with Set-Cookie from all results files
+for file in results/post_fail/fail*.txt; do
+    sed -i '/^Set-Cookie/d' "$file"
+done
 
 echo "" 
 echo "=== Checking POST Failure Test Results ===" 

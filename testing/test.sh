@@ -61,7 +61,7 @@ wait $GET_PID
 wait $GET_FAIL_PID
 wait $POST_FAIL_PID
 wait $CHUNKED_PID
-
+echo "post fail pid $POST_FAIL_PID finished"
 
 
 echo "=== Tests Completed ==="
