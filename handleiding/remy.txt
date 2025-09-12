@@ -2,6 +2,7 @@ scan-build-14 make
 Run 'scan-view /tmp/scan-build-2025-05-08-175353-70197-1' to examine bug reports.
 remy:
 	scan-view-14 /tmp/scan-build-2025-05-08-175353-70197-1
+  scan-build-20 make
 
 infer		good with FD
 https://fbinfer.com/

@@ -82,7 +82,7 @@ bool    HandleChunkTransfer::decodeChunk()
         else
             return false;
     }
-    return false; // shouldn't ever get here
+    throw std::logic_error("Unreachable code in decodeChunk");
 }
 
 bool HandleChunkTransfer::extractChunkSize(size_t &targetSize, size_t &dataStart)

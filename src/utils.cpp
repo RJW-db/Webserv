@@ -12,6 +12,7 @@ namespace
     constexpr int  hexCharactersSize = sizeof(hexCharacters) - 1;
 
     void insertUuidSegment(int8_t amount, char *uuidIndex);
+    int handleDirCleanup(DIR *d);
 }
 
 void initRandomSeed()
@@ -27,26 +28,43 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
     DIR *d = opendir(path.c_str());
     if (d == NULL)
         throw ErrorCodeClientException(client, 500, "Couldn't open directory: " + path + " because: " + strerror(errno));
-
-    /**
-     * If an error occurs, NULL is returned and errno is set appropriately.
-     * To distinguish end of stream from an error,
-     * set errno to zero before calling readdir() and check its value when NULL is returned.
-     */
-    errno = 0;
-    vector<string> files = {};
-    struct dirent *directoryEntry;
-    while ((directoryEntry = readdir(d)) != NULL) {
-        char *file = directoryEntry->d_name;
-        if (!(file[0] == '.' && (file[1] == '\0' || (file[1] == '.' && file[2] == '\0'))))
-            files.push_back(file);
+    try
+    {
+        errno = 0; // man readdir for explanation
+        vector<string> files = {};
+        struct dirent *directoryEntry;
+        while ((directoryEntry = readdir(d)) != NULL) {
+            char *file = directoryEntry->d_name;
+            if (!(file[0] == '.' && (file[1] == '\0' || (file[1] == '.' && file[2] == '\0'))))
+                files.push_back(file);
+        }
+        int err = handleDirCleanup(d);
+        if (err != 0)
+            throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because: " + strerror(err));
+        return files;
     }
-    closedir(d);
-    if (errno != 0)
-        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because: " + strerror(errno));
-    return files;
+    catch (const std::bad_alloc& e) {
+        handleDirCleanup(d);
+        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because vector: " + e.what());
+    }
+    catch (...) {
+        handleDirCleanup(d);
+        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because of an unknown exception");
+    }
+    throw std::logic_error("Unreachable code in listFilesInDirectory");
 }
 
+namespace
+{
+    int handleDirCleanup(DIR *d)
+    {
+        int readdirErrno = errno;
+        int closedirResult = closedir(d);
+        if (closedirResult == -1 && readdirErrno == 0)
+            readdirErrno = errno;
+        return readdirErrno;            
+    }
+}
 size_t getFileLength(Client &client, const string_view filename)
 {
     struct stat status;

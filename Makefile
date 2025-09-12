@@ -7,13 +7,13 @@ RM				:=	rm -rf
 PRINT_NO_DIR	:=	--no-print-directory
 
 #		CXXFLAGS for testing
-CXX		:=	c++
+CXX				:=	c++
 CXXFLAGS		:=	-std=c++17
-# CXXFLAGS		+=	-Wall -Wextra
-# CXXFLAGS		+=	-Werror
-# CXXFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
-# CXXFLAGS		+=	-flto
-# CXXFLAGS		+=	-MMD -MP
+CXXFLAGS		+=	-Wall -Wextra
+CXXFLAGS		+=	-Werror
+CXXFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+CXXFLAGS		+=	-flto
+CXXFLAGS		+=	-MMD -MP
 # CXXFLAGS		+=	-g
 # CXXFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
@@ -21,10 +21,10 @@ CXXFLAGS		:=	-std=c++17
 
 # ulimit -n, view the limit of fds. use ulimit -n <max_value> to set a new limit.
 FD_LIMIT		:=	$(shell n=$$(ulimit -n); echo $$((n>1024?1024:n)))
-# CXXFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
-# ifdef BUFFER
-# CXXFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
-# endif
+CXXFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
+ifdef BUFFER
+CXXFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
+endif
 
 #		Directories
 BUILD_DIR		:=	.build/
