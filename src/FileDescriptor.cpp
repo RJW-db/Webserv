@@ -15,15 +15,6 @@ namespace
 void FileDescriptor::setFD(int fd) //todo look at making fd -1 on failure
 {
     try {
-        // static int testFail = 0; // todo remove
-        // if (testFail++ > 5)
-        // {
-        //     if (rand() % 5 == 0)
-        //     {
-        //         Logger::log(DEBUG, "simulating failure"); // testlog
-        //         throw bad_alloc();
-        //     }
-        // }
         _fds.push_back(fd);
     }
     catch (const bad_alloc& e) {

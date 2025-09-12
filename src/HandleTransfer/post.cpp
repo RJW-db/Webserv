@@ -150,11 +150,6 @@ bool HandlePostTransfer::searchContentDisposition()
             throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
     FileDescriptor::setFD(_fd);
-    // if (rand() % 2 == 0)
-    // {
-    //     Logger::log(DEBUG, "HandlePostTransfer::ReadIncomingData: Simulating read failure");
-    //     throw bad_alloc();
-    // }
     _fileNamePaths.push_back(_client._filenamePath);
     Logger::log(INFO, "POST file added", _fd, "POSTfile", _client._filenamePath);
     _searchContentDisposition = false;

@@ -51,7 +51,6 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
         handleDirCleanup(d);
         throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because of an unknown exception");
     }
-    // throw std::logic_error("Unreachable code in listFilesInDirectory");
 }
 
 namespace
@@ -65,6 +64,7 @@ namespace
         return readdirErrno;            
     }
 }
+
 size_t getFileLength(Client &client, const string_view filename)
 {
     struct stat status;

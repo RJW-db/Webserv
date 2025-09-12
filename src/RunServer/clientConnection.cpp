@@ -66,7 +66,6 @@ void RunServers::processClientRequest(Client &client)
     try {
         char   buff[CLIENT_BUFFER_SIZE];
         size_t bytesReceived = receiveClientData(client, buff);
-        Logger::log(DEBUG, "received: " + string(buff, bytesReceived)); //testlog
         static bool (*const handlers[3])(Client&, const char*, size_t) = {
             &HttpRequest::parseHttpHeader,                     // HEADER_AWAITING (0)
             &HttpRequest::appendToBody,                        // BODY_CHUNKED (1)

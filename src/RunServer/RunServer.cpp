@@ -42,14 +42,14 @@ void RunServers::runServers()
         if (_fatalErrorOccurred != SERVER_GOOD) {
             handleFatalError();
         }
-    
+
         disconnectChecks();
         eventCount = epoll_wait(_epfd, _events.data(), FD_LIMIT, DISCONNECT_DELAY_SECONDS);
         if (eventCount == -1) {
             if (errno == EINTR)
             {
                 if (g_signal_status != SIGINT)
-                    Logger::log(WARN, "epoll_wait interrupted by signal: ", g_signal_status);
+                    Logger::log(WARN, "epoll_wait interrupted", "-", "by signal: ", g_signal_status);
                 continue;
             }
             Logger::logExit(ERROR, "Server error", '-', "Server epoll_wait: ", strerror(errno));

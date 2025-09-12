@@ -36,7 +36,7 @@ ErrorCodeClientException::ErrorCodeClientException(Client &client, uint16_t erro
 void ErrorCodeClientException::handleErrorClient()
 {
     try {
-        Logger::log(IWARN, _client, _message);
+        Logger::log((_errorCode == 0) ? INFO : IWARN, _client, _message);
         _client._keepAlive = false;
         if (_errorCode == 0) {
             RunServers::cleanupClient(_client);
