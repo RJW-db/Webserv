@@ -8,10 +8,10 @@
 #include "Logger.hpp"
 namespace
 {
+    void                 parseRequestPath(Client &client, string &requestPath);
     uint8_t              checkAllowedMethod(const string &method, uint8_t allowedMethods);
-    void                 parseRequestPath(Client &client);
     string               percentDecode(const string& input);
-    bool                 isValidAndNormalizeRequestPath(Client &client);
+    bool                 isValidAndNormalizeRequestPath(Client &client, string &requestPath);
     bool                 pathContainsInvalidCharacters(const string &path);
     vector<string_view>  splitPathSegments(const string &path);
     vector<string_view>  normalizeSegments(const vector<string_view> &segments);
@@ -29,7 +29,7 @@ void    HttpRequest::validateHEAD(Client &client)
     headStream >> client._method >> client._requestPath >> client._version;
     if (client._method.empty() || client._version.empty())
         throw ErrorCodeClientException(client, 400, "Malformed request line");
-    parseRequestPath(client);
+    parseRequestPath(client, client._requestPath);
     RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
 
@@ -57,6 +57,23 @@ void    HttpRequest::validateHEAD(Client &client)
 
 namespace
 {
+    void parseRequestPath(Client &client, string &requestPath)
+    {
+        requestPath = percentDecode(requestPath);
+        size_t queryPos = requestPath.find('?');
+        if (queryPos != string::npos) {
+            client._queryString = requestPath.substr(queryPos + 1);
+            requestPath = requestPath.substr(0, queryPos);
+        }
+        
+        if (isValidAndNormalizeRequestPath(client, requestPath) == false)
+            throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + requestPath);
+
+        size_t faviconIndex = requestPath.find("/favicon.ico");
+        if (faviconIndex != string::npos)
+            requestPath = requestPath.substr(0, faviconIndex) + "/favicon.svg";
+    }
+
     uint8_t checkAllowedMethod(const string &method, uint8_t allowedMethods)
     {
         if (method == "HEAD" && allowedMethods & METHOD_HEAD)
@@ -70,23 +87,6 @@ namespace
         return METHOD_INVALID;
     }
 
-    void parseRequestPath(Client &client)
-    {
-        client._requestPath = percentDecode(client._requestPath);
-        size_t queryPos = client._requestPath.find('?');
-        if (queryPos != string::npos) {
-            client._queryString = client._requestPath.substr(queryPos + 1);
-            client._requestPath = client._requestPath.substr(0, queryPos);
-        }
-        
-        if (isValidAndNormalizeRequestPath(client) == false)
-            throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + client._requestPath);
-
-        size_t faviconIndex = client._requestPath.find("/favicon.ico");
-        if (faviconIndex != string::npos)
-            client._requestPath = client._requestPath.substr(0, faviconIndex) + "/favicon.svg";
-    }
-
     string percentDecode(const string& input)
     {
         string result;
@@ -95,7 +95,7 @@ namespace
                 isxdigit(input[i + 1]) && isxdigit(input[i + 2]))
             {
                 string hex = input.substr(i + 1, 2);
-                // strol doesn't need a protection because of isxdigit
+                // stoi doesn't need a protection because of isxdigit
                 result += static_cast<char>(stoi(hex.c_str(), nullptr, 16));
                 i += 2;
             }
@@ -105,15 +105,15 @@ namespace
         return result;
     }
 
-    bool isValidAndNormalizeRequestPath(Client &client)
+    bool isValidAndNormalizeRequestPath(Client &client, string &requestPath)
     {
-        if (client._requestPath.empty() || client._requestPath.data()[0] != '/' ||
-            pathContainsInvalidCharacters(client._requestPath)) {
+        if (requestPath.empty() || requestPath.data()[0] != '/' ||
+            pathContainsInvalidCharacters(requestPath)) {
             return false;
         }
-        vector<string_view> pathSegments = splitPathSegments(client._requestPath);
+        vector<string_view> pathSegments = splitPathSegments(requestPath);
         vector<string_view> normalizedSegments = normalizeSegments(pathSegments);
-        joinSegmentsToPath(client._requestPath, normalizedSegments);
+        joinSegmentsToPath(requestPath, normalizedSegments);
         validatePathAndSegmentLengths(client, normalizedSegments);
         return true;
     }

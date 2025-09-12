@@ -72,11 +72,11 @@ make_multipart() {
 #   make_multipart "$B" "myfile" "e.txt" "Hello Multipart" "" # No --$B-- terminator
 # ) | nc localhost 15003 > results/post_fail/fail5.txt &
 
-# # Test 7: Directory traversal attempt in filename on server1 (multipart) -> expect 400 or sanitized
-# echo "7. POST multipart with traversal filename to server1 (expect 400 or sanitized)"
-# curl -i -X POST -H "Host: server1" -H "Connection: close" \
-#   -F "myfile=@expectedResults/post/upload1/small.txt;filename=../../evil.txt" \
-#   http://localhost:15003/upload > results/post_fail/fail6.txt &
+# Test 7: Directory traversal attempt in filename on server1 (multipart) -> expect 400 or sanitized
+echo "7. POST multipart with traversal filename to server1 (expect 400 or sanitized)"
+curl -i -X POST -H "Host: server1" -H "Connection: close" \
+  -F "myfile=@expectedResults/post/upload1/small.txt;filename=../../evil.txt" \
+  http://localhost:15003/upload > results/post_fail/fail6.txt &
 
 
 # # Test 9: Missing Content-Type for multipart-style body on server3 -> expect 400

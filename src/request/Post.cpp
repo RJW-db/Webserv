@@ -173,6 +173,15 @@ namespace
         string filename = cdLine.substr(fnStart, fnEnd - fnStart);
         if (filename.empty())
             throw ErrorCodeClientException(client, 400, "Filename is empty in Content-Disposition header");
+
+        if (filename.find('/') != string::npos || filename.find('\\') != string::npos)
+            throw ErrorCodeClientException(client, 400, "Directory separators not allowed in filename: " + filename);
+        
+        if (filename == ".." || filename == "." || 
+            filename.find("../") != string::npos || filename.find("..\\") != string::npos ||
+            filename.find("/..") != string::npos || filename.find("\\..") != string::npos)
+            throw ErrorCodeClientException(client, 400, "Path traversal detected in filename: " + filename);
+
         return filename;
     }
 

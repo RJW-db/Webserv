@@ -38,7 +38,6 @@ class HttpRequest
             client._body.append(buff, receivedBytes);
             return (true);
         }
-        static bool parseHttpBody(Client &client, const char* buff, size_t receivedBytes);
         static void validateHEAD(Client &client);
         static void	getBodyInfo(Client &client, const string &buff);
         static void getContentLength(Client &client);
