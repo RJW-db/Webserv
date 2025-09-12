@@ -48,7 +48,7 @@ POST_PID=$!
 GET_PID=$!
 ./tests/get_fail_test.sh &
 GET_FAIL_PID=$!
-./tests/post_fail_test.sh &
+./tests/post_fail_tests.sh &
 POST_FAIL_PID=$!
 ./tests/chunked_tests.sh &
 CHUNKED_PID=$!

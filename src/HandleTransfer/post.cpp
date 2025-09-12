@@ -76,7 +76,10 @@ bool HandlePostTransfer::processMultipartData()
 {
     while (true) {
         if (_bytesReadTotal > _client._contentLength)
+        {
+            Logger::log(DEBUG, "content length", _client._contentLength, "bytes read total", _bytesReadTotal);
             throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
+        }
         if (_searchContentDisposition == true && searchContentDisposition() == false)
             return false;
         if (_foundBoundary == true) {
@@ -91,7 +94,7 @@ bool HandlePostTransfer::processMultipartData()
             _fileBuffer = _fileBuffer.erase(0, _client._boundary.size() + boundaryPos - bytesWritten);
             _foundBoundary = true;
         }
-        else if (_completedChunkedRequest == true)
+        else if (_completedChunkedRequest == true || _bytesReadTotal == _client._contentLength)
             throw ErrorCodeClientException(_client, 400, "No boundary found in chunked post request");
         else
             return false;
