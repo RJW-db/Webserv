@@ -1,0 +1,3 @@
+chunked tests comparisons van nieuwe toevoegen
+
+check if sed doesn't remove whole files for post_fail tests and finish post_fail tests
