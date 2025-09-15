@@ -1,12 +1,12 @@
-HTTP/1.1 405 Method Not Allowed
+HTTP/1.1 400 Bad Request
 Content-Type: text/html
-Content-Length: 183
-Connection: keep-alive
+Content-Length: 187
+Connection: close
 
 <html>
-  <head><title>405 Method Not Allowed</title></head>
+  <head><title>400 Bad Request</title></head>
   <body>
-    <h1>405 Method Not Allowed</h1>
-    <p>The method is not allowed for the requested URL.</p>
+    <h1>400 Bad Request</h1>
+    <p>Your browser sent a request that this server could not understand.</p>
   </body>
 </html>

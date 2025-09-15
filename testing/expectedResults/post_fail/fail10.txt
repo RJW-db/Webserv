@@ -1,12 +1,12 @@
-HTTP/1.1 404 Not Found
+HTTP/1.1 405 Method Not Allowed
 Content-Type: text/html
-Content-Length: 164
-Connection: keep-alive
+Content-Length: 183
+Connection: close
 
 <html>
-  <head><title>404 Not Found</title></head>
+  <head><title>405 Method Not Allowed</title></head>
   <body>
-    <h1>404 Not Found</h1>
-    <p>The requested URL was not found on this server.</p>
+    <h1>405 Method Not Allowed</h1>
+    <p>The method is not allowed for the requested URL.</p>
   </body>
 </html>
