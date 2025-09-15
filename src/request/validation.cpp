@@ -6,6 +6,7 @@
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Logger.hpp"
+
 namespace
 {
     void                 parseRequestPath(Client &client, string &requestPath);

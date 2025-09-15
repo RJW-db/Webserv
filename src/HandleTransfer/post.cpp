@@ -1,4 +1,5 @@
 #include <sys/epoll.h>
+#include <algorithm>
 #include <fcntl.h>
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
@@ -6,7 +7,6 @@
 #include "RunServer.hpp"
 #include "Constants.hpp"
 #include "Logger.hpp"
-#include <algorithm>
 namespace
 {
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix

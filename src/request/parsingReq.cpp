@@ -2,8 +2,8 @@
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
 #include "Constants.hpp"
+#include "utils.hpp"
 
-#include "Logger.hpp"
 namespace
 {
     void appendToHeader(Client &client, const char *buff, size_t receivedBytes);

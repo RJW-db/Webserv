@@ -30,7 +30,6 @@ namespace
 ErrorCodeClientException::ErrorCodeClientException(Client &client, uint16_t errorCode, const string &message)
 : _client(client), _errorCode(errorCode), _message(message), _errorPages(client._location.getErrorCodesWithPage())
 {
-    // _errorPages = client._location.getErrorCodesWithPage();
 }
 
 void ErrorCodeClientException::handleErrorClient()

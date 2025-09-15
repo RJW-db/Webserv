@@ -8,7 +8,6 @@
 #include "Constants.hpp"
 #include "utils.hpp"
 
-#include "Logger.hpp"
 namespace
 {
     void processThemeForm(Client &client);

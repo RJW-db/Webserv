@@ -4,7 +4,6 @@
 #include <memory>
 #include "HandleTransfer.hpp"
 #include "ConfigServer.hpp"
-#include "Logger.hpp"
 #define _XOPEN_SOURCE 700  // VSC related, make signal and struct visible
 #ifndef FD_LIMIT
 # define FD_LIMIT 1024
