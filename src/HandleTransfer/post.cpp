@@ -76,17 +76,14 @@ bool HandlePostTransfer::processMultipartData()
 {
     while (true) {
         if (_bytesReadTotal > _client._contentLength)
-        {
-            Logger::log(DEBUG, "content length", _client._contentLength, "bytes read total", _bytesReadTotal);
             throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
-        }
         if (_searchContentDisposition == true && searchContentDisposition() == false)
             return false;
         if (_foundBoundary == true) {
             ValidationResult result = validateFinalCRLF();
             if (result == RERUN_WITHOUT_READING)
                 continue;
-            return (result == FINISHED); // if result is true, then we are done with the post transfer
+            return (result == FINISHED);
         }
         size_t bytesWritten = 0;
         size_t boundaryPos = FindBoundaryAndWrite(bytesWritten);

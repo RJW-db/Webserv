@@ -12,17 +12,19 @@ namespace
     constexpr uint32_t EPOLL_DEL_EVENTS = 0;
 }
 
-void FileDescriptor::setFD(int fd) //todo look at making fd -1 on failure
+void FileDescriptor::setFD(int &fd)
 {
     try {
         _fds.push_back(fd);
     }
     catch (const bad_alloc& e) {
         safeCloseFD(fd);
+        fd = -1;
         throw;
     }
     catch (...) {
         safeCloseFD(fd);
+        fd = -1;
         throw;
     }
 }

@@ -6,7 +6,7 @@ using namespace std;
 class FileDescriptor
 {
 	public:
-		static void setFD(int fd);
+		static void setFD(int &fd);
 		static bool safeCloseFD(int fd);
 		static bool	closeFD(int &fd);
 		static bool setNonBlocking(int sfd);

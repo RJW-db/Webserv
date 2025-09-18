@@ -65,14 +65,21 @@ namespace
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
             throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
         }
-        FileDescriptor::setFD(fdWriteToCgi[0]);
-        Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[0]:", fdWriteToCgi[0]);
-        FileDescriptor::setFD(fdWriteToCgi[1]);
-        Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[1]:", fdWriteToCgi[1]);
-        FileDescriptor::setFD(fdReadfromCgi[0]);
-        Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[0]:", fdReadfromCgi[0]);
-        FileDescriptor::setFD(fdReadfromCgi[1]);
-        Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[1]:", fdReadfromCgi[1]);
+
+        try {
+            FileDescriptor::setFD(fdWriteToCgi[0]);
+            Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[0]:", fdWriteToCgi[0]);
+            FileDescriptor::setFD(fdWriteToCgi[1]);
+            Logger::log(CHILD_INFO, client, "Opened fdWriteToCgi[1]:", fdWriteToCgi[1]);
+            FileDescriptor::setFD(fdReadfromCgi[0]);
+            Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[0]:", fdReadfromCgi[0]);
+            FileDescriptor::setFD(fdReadfromCgi[1]);
+            Logger::log(CHILD_INFO, client, "Opened fdReadfromCgi[1]:", fdReadfromCgi[1]);
+        }
+        catch (...) {
+            closing_pipes(fdWriteToCgi, fdReadfromCgi);
+            throw;
+        }
     }
 
     void setupChildProcess(Client &client, int fdWriteToCgi[2], int fdReadfromCgi[2])
