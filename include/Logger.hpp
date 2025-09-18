@@ -9,7 +9,7 @@
 #include "Client.hpp"
 #include "utils.hpp"
 #ifndef TERMINAL_DEBUG
-# define TERMINAL_DEBUG true
+# define TERMINAL_DEBUG false
 #endif
 using namespace std;
 namespace

@@ -25,6 +25,9 @@ CXXFLAGS		+=	-D FD_LIMIT=$(FD_LIMIT)
 ifdef BUFFER
 CXXFLAGS		+=	-D CLIENT_BUFFER_SIZE=$(BUFFER)	#make BUFFER=<value>
 endif
+ifdef TERMINAL_DEBUG
+CXXFLAGS		+=	-D TERMINAL_DEBUG=true
+endif
 
 #		Directories
 BUILD_DIR		:=	.build/
@@ -89,21 +92,6 @@ test: all
 
 valgrind: all
 	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
-
-build:
-	docker compose -f $(DOCKER_DIR)/docker-compose.yml build --build-arg HOST_IP=$(shell hostname -I | awk '{print $$1}')
-
-up:
-	docker compose -f $(DOCKER_DIR)/docker-compose.yml up -d
-
-down:
-	docker compose -f $(DOCKER_DIR)/docker-compose.yml down -v
-
-docker_clean:
-	docker system prune -af --volumes
-
-enter:
-	docker exec -it webserv bash
 
 print-%:
 	$(info $($*))

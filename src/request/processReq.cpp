@@ -130,14 +130,35 @@ void HttpRequest::SendAutoIndex(Client &client)
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
 }
-
+#include <algorithm>
 // Check if /upload is requested and respond with list of images in upload directory
 bool HttpRequest::handleRequestUpload(Client &client)
 {
     if (client._requestUpload) {
         vector<string> files = listFilesInDirectory(client, client._location.getRoot() + "/upload");
+
+        // Filter to keep only image files
+        vector<string> imageFiles;
+        for (size_t i = 0; i < files.size(); ++i) {
+            const string& filename = files[i];
+            size_t dotPos = filename.find_last_of('.');
+            if (dotPos == string::npos)
+                continue;
+            
+            string extension = filename.substr(dotPos + 1);
+            for (size_t j = 0; j < extension.length(); ++j) {
+                extension[j] = tolower(extension[j]);
+            }
+            
+            if (extension == "jpg" || extension == "jpeg" || extension == "png" || 
+                extension == "webp" || extension == "gif" || extension == "bmp" || 
+                extension == "svg" || extension == "ico") {
+                imageFiles.push_back(filename);
+            }
+        }
+
         string body;
-        for (const string& f : files)
+        for (const string& f : imageFiles)
             body += f + "\n";
         string responseStr = HttpRequest::HttpResponse(client, 200, ".txt", body.size());
 
