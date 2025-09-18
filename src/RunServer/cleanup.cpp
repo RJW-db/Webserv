@@ -42,7 +42,6 @@ HandleTransferIter RunServers::cleanupHandleCgi(HandleTransferIter it, int clien
     return lastAfter;
 }
 
-
 void RunServers::checkCgiDisconnect()
 {
     for (auto it = _handleCgi.begin(); it != _handleCgi.end();) {
@@ -98,9 +97,10 @@ HandleTransferIter RunServers::killCgiPipes(HandleTransferIter it, pid_t pid)
         }
         catch (ErrorCodeClientException& e) {
             e.handleErrorClient();
+            it = _handleCgi.erase(it);
             return cleanupHandleCgi(it, pid);
         }
-        catch (const exception& e) {
+        catch (const exception &e) {
             Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
             cleanupClient((*it)->_client);
             return _handleCgi.begin();

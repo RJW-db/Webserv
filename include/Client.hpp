@@ -18,11 +18,12 @@ namespace
 
     enum HttpMethod : uint8_t
     {
-        METHOD_INVALID = 0,
+        METHOD_NOT_ALLOWED = 0,
         METHOD_HEAD = 1,
         METHOD_GET = 2,
         METHOD_POST = 4,
-        METHOD_DELETE = 8
+        METHOD_DELETE = 8,
+        METHOD_INVALID = 16
     };
 }
 

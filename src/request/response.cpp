@@ -40,10 +40,10 @@ string HttpRequest::HttpResponse(const Client &client, uint16_t code, const stri
     response << "Content-Length: " << fileSize << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
 
-    if (RunServers::getSessionData(client._sessionId).newSession == false) {
+    if (RunServers::getSessionData(client._sessionId).newSession == false &&
+        !client._sessionId.empty()) {
         RunServers::getSessionData(client._sessionId).newSession = true;
-        if (!client._sessionId.empty())
-            response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
+        response << "Set-Cookie: session_id=" << client._sessionId << "; Path=/; HttpOnly" << CRLF;
     }
 
     response << CRLF;

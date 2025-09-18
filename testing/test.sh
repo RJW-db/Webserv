@@ -23,7 +23,7 @@ if [[ "$1" == "y" || "$1" == "Y" || "$1" == "-y" || "$1" == "-Y" ]]; then
     disown $SERVER_PID
     
     # Wait a moment and check if server started successfully
-    sleep 2
+    sleep 0.1
     if ! kill -0 $SERVER_PID 2>/dev/null; then
         echo "Error: Server failed to start. Check testing/results/webservOut.txt for details."
         cat testing/results/webservOut.txt
@@ -61,7 +61,7 @@ wait $GET_PID
 wait $GET_FAIL_PID
 wait $POST_FAIL_PID
 wait $CHUNKED_PID
-echo "post fail pid $POST_FAIL_PID finished"
+
 
 
 echo "=== Tests Completed ==="

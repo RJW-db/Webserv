@@ -19,7 +19,7 @@ echo ""
 
 # Pre-requests to create cookies on the server
 echo "Creating cookies on server..."
-curl -i -H "Connection: close" http://localhost:15000/ > results/get/cookie_request.txt
+curl -s -i -H "Connection: close" http://localhost:15000/ > results/get/cookie_request.txt
 sleep 0.5
 # Extract session_id from the Set-Cookie header in the response
 session_id=$(grep -i "Set-Cookie:" results/get/cookie_request.txt | grep -o 'session_id=[^;]*' | cut -d= -f2)
@@ -31,72 +31,67 @@ echo "Extracted session_id: $session_id"
 
 # Test 1: GET request missing HOST header (should return 400)
 echo "1. Testing GET request missing HOST header (should return 400)"
-printf "GET /index.html HTTP/1.1\r\nConnection: keep-alive\r\n\r\n" | nc localhost 15003 > results/get_fail/fail1.txt &
+printf "GET /index.html HTTP/1.1\r\nConnection: keep-alive\r\n\r\n" | nc localhost 15003 > results/get_fail/fail1.txt  # &
 
 # Test 2: GET request to method not allowed location (should return 405)
 echo "2. Testing GET request to POST-only location (should return 405)"
-curl -i -X GET -H "Host: post_only_server" -H "Connection: keep-alive" \
-    http://localhost:15003/post_only/index.html > results/get_fail/fail2.txt &
+curl -s -i -X GET -H "Host: post_only_server" -H "Connection: keep-alive" \
+    http://localhost:15003/post_only/index.html > results/get_fail/fail2.txt  # &
 
 # Test 3: GET request with wrong path not starting with / (should return 400)
 echo "3. Testing GET request with invalid path (should return 400)"
-printf "GET index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail3.txt &
+printf "GET index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail3.txt  # &
 
 # Test 4: GET request with different HTTP version (should return 400)
 echo "4. Testing GET request with HTTP/1.0 (should return 400)"
-printf "GET /index.html HTTP/1.0\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail4.txt &
+printf "GET /index.html HTTP/1.0\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail4.txt  # &
 
 # Test 5: GET request with HTTP/2.0 (should return 400)
 echo "5. Testing GET request with HTTP/2.0 (should return 400)"
-printf "GET /index.html HTTP/2.0\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail5.txt &
+printf "GET /index.html HTTP/2.0\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail5.txt  # &
 
 # Test 6: GET request with incorrect Connection type (should return 400)
 echo "6. Testing GET request with invalid Connection header (should return 400)"
-printf "GET /index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: invalid-value\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail6.txt &
+printf "GET /index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: invalid-value\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail6.txt  # &
 
 # Test 7: GET request with incorrect characters that turn into % (path traversal)
 echo "7. Testing GET request with percent-encoded path traversal (should return 400)"
-curl -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
-"http://localhost:15003/../Makefile" > results/get_fail/fail7.txt &
+curl -s -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
+"http://localhost:15003/../Makefile" > results/get_fail/fail7.txt  # &
 
 # Test 8: GET request with malformed percent encoding (should return 400)
 echo "8. Testing GET request with malformed percent encoding (should return 400)"
-curl -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
-    "http://localhost:15003/test%GG.html" > results/get_fail/fail8.txt &
+curl -s -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
+    "http://localhost:15003/test%GG.html" > results/get_fail/fail8.txt  # &
 
 # Test 9: GET request with extremely long URI (should return 414)
 echo "9. Testing GET request with extremely long URI (should return 414)"
 LONG_PATH=$(printf 'a%.0s' {1..8000})
-curl -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
-    "http://localhost:15003/$LONG_PATH" > results/get_fail/fail9.txt &
+curl -s -i -X GET -H "Host: get_fail_server" -H "Connection: keep-alive" -H "Cookie: session_id=$session_id" \
+    "http://localhost:15003/$LONG_PATH" > results/get_fail/fail9.txt  # &
 
 # Test 10: GET request with null bytes in path (should return 400)
 echo "10. Testing GET request with null bytes in path (should return 400)"
-printf "GET /test\x00.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail10.txt &
+printf "GET /test\x00.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail10.txt  # &
 
 # Test 11: GET request with invalid method (should return 405)
 echo "11. Testing invalid method INVALID (should return 405)"
-printf "INVALID /index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003   > results/get_fail/fail11.txt &
+printf "INVALID /index.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003   > results/get_fail/fail11.txt  # &
 
 # Test 12: GET request with malformed request line (should return 400)
 echo "12. Testing GET request with malformed request line (should return 400)"
-printf "GET HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail12.txt &
+printf "GET HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail12.txt  # &
 
 # Test 13: GET request with spaces in path (should return 400)
 echo "13. Testing GET request with spaces in path (should return 400)"
-printf "GET /test file.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail13.txt &
+printf "GET /test file.html HTTP/1.1\r\nHost: get_fail_server\r\nConnection: keep-alive\r\nCookie: session_id=$session_id\r\n\r\n" | nc localhost 15003 > results/get_fail/fail13.txt  # &
 
-
-
-# # Remove lines starting with Set-Cookie from all results files
-# for file in results/get_fail/fail*.txt; do
-#     sed -i '/^Set-Cookie/d' "$file"
-# done
 
 # Wait for all background requests
 echo ""
 echo "Waiting for all requests to complete..."
-sleep 3
+wait
+sleep 0.1
 
 echo ""
 echo "=== Checking GET Failure Test Results ==="

@@ -1,6 +1,0 @@
-HTTP/1.1 201 Created
-Content-Type: text/plain
-Content-Length: 79
-Connection: keep-alive
-
-./testing/results/chunked/chunk_test4-594A7B1B-8914-0048-CB9D-D26218E220A7.txt

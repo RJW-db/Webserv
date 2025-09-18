@@ -10,7 +10,7 @@
 namespace
 {
     void                 parseRequestPath(Client &client, string &requestPath);
-    uint8_t              checkAllowedMethod(const string &method, uint8_t allowedMethods);
+    uint8_t              checkAllowedMethod(Client &client);
     string               percentDecode(const string& input);
     bool                 isValidAndNormalizeRequestPath(Client &client, string &requestPath);
     bool                 pathContainsInvalidCharacters(const string &path);
@@ -34,9 +34,7 @@ void    HttpRequest::validateHEAD(Client &client)
     RunServers::setServerFromListener(client);
     RunServers::setLocation(client);
 
-    client._useMethod = checkAllowedMethod(client._method, client._location.getAllowedMethods());
-    if (client._useMethod == METHOD_INVALID)
-        throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
+    client._useMethod = checkAllowedMethod(client);
 
     if (client._version != "HTTP/1.1")
         throw ErrorCodeClientException(client, 400, "Invalid version: " + client._version);
@@ -75,8 +73,11 @@ namespace
             requestPath = requestPath.substr(0, faviconIndex) + "/favicon.svg";
     }
 
-    uint8_t checkAllowedMethod(const string &method, uint8_t allowedMethods)
+    uint8_t checkAllowedMethod(Client &client)
     {
+        string &method = client._method;
+        uint8_t allowedMethods = client._location.getAllowedMethods();
+    
         if (method == "HEAD" && allowedMethods & METHOD_HEAD)
             return METHOD_HEAD;
         if (method == "GET" && allowedMethods & METHOD_GET)
@@ -85,7 +86,13 @@ namespace
             return METHOD_POST;
         if (method == "DELETE" && allowedMethods & METHOD_DELETE)
             return METHOD_DELETE;
-        return METHOD_INVALID;
+
+        if (method == "HEAD" || method == "GET" || method == "POST" || method == "DELETE" ||
+            method == "PUT" || method == "PATCH" || method == "OPTIONS" || 
+            method == "TRACE" || method == "CONNECT") {
+            throw ErrorCodeClientException(client, 405, "Method not allowed: " + client._method);
+        }
+        throw ErrorCodeClientException(client, 400, "Invalid method: " + client._method);
     }
 
     string percentDecode(const string& input)

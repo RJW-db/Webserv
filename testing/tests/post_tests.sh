@@ -13,7 +13,7 @@ mkdir -p results/post/upload1 results/post/upload2 results/post/upload3
 
 # Pre-requests to create cookies on the server
 echo "Creating cookies on server..."
-curl -i -H "Connection: close" http://localhost:15000/ > results/post/cookie_request.txt
+curl -s -i -H "Connection: close" http://localhost:15000/ > results/post/cookie_request.txt
 sleep 0.5
 # Extract session_id from the Set-Cookie header in the response
 session_id=$(grep -i "Set-Cookie:" results/post/cookie_request.txt | grep -o 'session_id=[^;]*' | cut -d= -f2)
@@ -25,30 +25,31 @@ echo "Extracted session_id: $session_id"
 
 # test 1: POST request to upload a file
 echo "1. Testing POST request to upload test1.jpg to localhost:15000/upload"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: notexistinghost" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/test1.jpg" http://localhost:15000/upload1 > results/post/post1.txt &
+curl -s -i -X POST -H "Expect:" -H "Connection: close" -H "Host: notexistinghost" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/test1.jpg" http://localhost:15000/upload1 > results/post/post1.txt &
 
 # Test 2: POST request to upload PNG file to server2
 echo "2. Testing POST request to upload test2.png to localhost:15000/upload with Host header 'server2'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/test2.png" http://localhost:15000/upload1  > results/post/post2.txt & 
+curl -s -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/test2.png" http://localhost:15000/upload1  > results/post/post2.txt & 
 
 # Test 3: POST request to upload small text file to server3
 echo "3. Testing POST request to upload small.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/small.txt" http://localhost:15000/upload1 > results/post/post3.txt &
+curl -s -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/small.txt" http://localhost:15000/upload1 > results/post/post3.txt &
 
 # Test 4: POST request to upload large text file to server1
 echo "4. Testing POST request to upload 1M.txt to localhost:15000/upload with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
+curl -s -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server1" -H "Cookie: session_id=$session_id" -F "myfile=@expectedResults/post/upload1/1M.txt" http://localhost:15000/upload1 > results/post/post4.txt &
 
 # Test 5: POST request to upload multiple files to server1
 echo "5. Testing POST request to upload multiple files (small2.txt and small3.txt) to localhost:15001/upload3 with Host header 'server1'"
-curl -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -H "Cookie: session_id=$session_id" \
+curl -s -i -X POST -H "Expect:" -H "Connection: close" -H "Host: server2" -H "Cookie: session_id=$session_id" \
 -F "file1=@expectedResults/post/upload1/small.txt" -F "file2=@expectedResults/post/upload1/small2.txt" \
 -F "file3=@expectedResults/post/upload1/small3.txt" -F "file4=@expectedResults/post/upload1/test1.jpg" \
 -F "file5=@expectedResults/post/upload1/test2.png" \
  http://localhost:15001/upload2 > results/post/post5.txt &
 
 
-sleep 3
+wait 
+sleep 0.1
 
 # Change to the Webserv root directory for comparisons
 cd ..
@@ -167,21 +168,6 @@ if $all_passed; then
     echo "post test 5 completed successfully"
 fi
 
-# # test 6: Check results for chunked transfer
-# # Extract the filename from the server response (last line of the response)
-# actual_filename6=$(tail -n 1 testing/results/post/post6.txt | tr -d '\r\n')
-
-# # Check if response headers are correct and if the file content matches
-# if grep -q "HTTP/1.1 201 Created" testing/results/post/post6.txt && grep -q "Content-Type: text/plain" testing/results/post/post6.txt; then
-#     if [[ -f "$actual_filename6" ]] && cmp -s testing/expectedResults/post/upload1/small.txt "$actual_filename6"; then
-#         echo "post test 6 completed successfully"
-#     else
-#         echo "post test 6 failed because uploaded file content doesn't match expected content"
-#         [[ ! -f "$actual_filename6" ]] && echo "  - File $actual_filename6 does not exist"
-#     fi
-# else
-#     echo "post test 6 failed because HTTP response headers are incorrect"
-# fi
 
 } > testing/results/post/summary.txt 2>&1
 
