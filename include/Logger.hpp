@@ -103,12 +103,11 @@ void Logger::log(uint8_t level, Args&&... args)
             _logFd = -1;
         }
 
-        if (level >= IWARN || (TERMINAL_DEBUG == true && level == INFO))
+        if (level >= IERROR || (TERMINAL_DEBUG == true && level >= INFO))
         {
             levelStr = logLevelToString(level, TERMINAL);
             ostream& output = (level == INFO) ? cout : cerr;
             output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "\n";
-            // output << timeStamp + levelStr + escapeSpecialChars(rawMessage, TERMINAL) + "     errno=" + to_string(errno) + "\n";
         }
     }
     catch (...)
