@@ -194,38 +194,33 @@ bool Aconfig::returnRedirect(string &line)
         line.erase(0, len);
         return false;
     }
-    else
-    {
-        if (line[0] == ';') {
-            if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
-                Logger::logExit(ERROR, "Config error at line", _lineNbr, "Not enough valid arguments for 'return' directive. Line: ", line);
-            line.erase(0, 1);
-            return true;
-        }
-        
-        len = line.find_first_of(WHITESPACE_SEMICOLON);
-        if (len == 0)
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "Invalid character found in 'return' directive. Line: ", line);
-        if (_returnRedirect.first == 0)
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "No error code given in 'return' directive. Line: ", line);
-        if (!_returnRedirect.second.empty())
-            Logger::logExit(ERROR, "Config error at line", _lineNbr, "Multiple error pages specified in 'return' directive. Line: ", line);
-
-        if (len == string::npos)
-            len = line.length();
-        
-        _returnRedirect.second = line.substr(0, len);
-        line.erase(0, len);
-        return false;
-    }
+    return setRedirect(line);
 }
 
-/**
- * Set the current line number for error reporting
- */
-void Aconfig::setLineNbr(int num)
+bool Aconfig::setRedirect(string &line)
 {
-    _lineNbr = num;
+    size_t len = 0;
+    if (line[0] == ';') {
+        if (_returnRedirect.first == 0 || _returnRedirect.second.empty())
+            Logger::logExit(ERROR, "Config error at line", _lineNbr, "Not enough valid arguments for 'return' directive. Line: ", line);
+        line.erase(0, 1);
+        return true;
+    }
+
+    len = line.find_first_of(WHITESPACE_SEMICOLON);
+    if (len == 0)
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "Invalid character found in 'return' directive. Line: ", line);
+    if (_returnRedirect.first == 0)
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "No error code given in 'return' directive. Line: ", line);
+    if (!_returnRedirect.second.empty())
+        Logger::logExit(ERROR, "Config error at line", _lineNbr, "Multiple error pages specified in 'return' directive. Line: ", line);
+
+    if (len == string::npos)
+        len = line.length();
+
+    _returnRedirect.second = line.substr(0, len);
+    line.erase(0, len);
+    return false;
 }
 
 /**

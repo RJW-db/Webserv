@@ -24,5 +24,10 @@ char *generateSessionIdCookie(char sessionId[ID_SIZE]);
  * 8 dash 4 dash 4 dash 4 dash 12
  */
 char *generateFilenameUuid(char uuid[UUID_SIZE]);
+
+
+inline void convertStringToLower(string &str) {
+    transform(str.begin(), str.end(), str.begin(), ::tolower);
+}
 // void     throwTesting();
 #endif

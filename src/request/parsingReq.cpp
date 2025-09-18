@@ -82,7 +82,7 @@ namespace
                 // Extract key and value as string_views
                 string_view key = trimWhiteSpace(line.substr(0, colon));
                 string_view value = trimWhiteSpace(line.substr(colon + 1));
-                client._headerFields[string(key)] = value;
+                client._headerFields[keyStr] = value;
             }
             start = end + 2;
         }
@@ -129,7 +129,7 @@ namespace
         }
 
         if (validSessionCookie)
-            client._sessionId = cookieSessionId;
+            client._sessionId = move(cookieSessionId);
         else {
             RunServers::setSessionData(generateSessionIdCookie(sessionId), SessionData{});
             client._sessionId = string(sessionId);

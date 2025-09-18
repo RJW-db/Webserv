@@ -53,8 +53,10 @@ class Aconfig
         // Set default
         void setDefaultErrorPages();
 
-        // utils
-        void setLineNbr(int num);
+        // Set the current line number for error reporting
+        inline void setLineNbr(int num) {
+            _lineNbr = num;
+        }
 
     protected:
         // Initialization for inheriting classes
@@ -64,6 +66,7 @@ class Aconfig
         // Util functions
         bool setErrorPage(string &line, bool &foundPage);
         bool handleNearEndOfLine(string &line, size_t pos, string err);
+        bool setRedirect(string &line);
 
         int8_t _autoIndex = 0;
         size_t _clientMaxBodySize = 0;

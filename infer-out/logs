@@ -1,0 +1,1106 @@
+[107015][      debug] Sqlite write daemon: starting up
+[107015][      debug] Sqlite write daemon: set up complete, waiting for connections
+[107016][      debug] Sqlite write daemon: process starting, pid= 107016
+[107015][environment] CWD = /sgoinfre/rde-brui/sandbox/Webserv
+[107015][environment] No .inferconfig file found
+[107015][environment] Project root = /sgoinfre/rde-brui/sandbox/Webserv
+[107015][environment] INFER_ARGS =   @/tmp/args.tmp.c7e767 --progress-bar-style multiline
+[107015][environment] command line arguments:   /home/rde-brui/sgoinfre/infer-linux-x86_64-v1.2.0/bin/infer
+[107015][environment]                           run -- make
+[107015][environment] Available memory at startup: 6547 MB
+[107015][environment] Active checkers: self-in-block (C/C++/ObjC), parameter-not-null-checked (C/C++/ObjC), starvation (C/C++/ObjC, Java), siof (C/C++/ObjC), racerd (C/C++/ObjC, C#/.Net, Java), pulse (C/C++/ObjC, C#/.Net, Erlang, Hack, Java, Python), liveness (C/C++/ObjC), inefficient-keyset-iterator (Java), fragment-retains-view (Java)
+[107015][environment] Scheduler: restart
+[107015][environment] Cores used: 20
+[107015][environment] Infer version v1.2.0
+[107015][environment] Copyright 2009 - present Facebook. All Rights Reserved.
+[107015][environment] 
+[107015][   progress] Capturing in make/cc mode...
+[107015][environment] Running command make with env:
+[107015][environment] (Extend((PATH /sgoinfre/rde-brui/infer-linux-x86_64-v1.2.0/lib/infer/infer/bin/../lib/wrappers:/home/rde-brui/.local/bin:/home/rde-brui/bin:/home/rde-brui/.local/bin:/home/rde-brui/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/rde-brui/.dotnet/tools:/home/rde-brui/.config/Code/User/globalStorage/github.copilot-chat/debugCommand)(INFER_OLD_PATH /home/rde-brui/.local/bin:/home/rde-brui/bin:/home/rde-brui/.local/bin:/home/rde-brui/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/rde-brui/.dotnet/tools:/home/rde-brui/.config/Code/User/globalStorage/github.copilot-chat/debugCommand)))
+[107015][environment] 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[107061][      debug] 
+[107061][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/HandleTransfer/toClient.cpp ***
+[107061][      debug] Elapsed: 4.46s.
+[107061][      debug] GC stats for capture:
+[107061][      debug]   minor_words: 2.83132e+07
+[107061][      debug]   promoted_words: 8.33067e+06
+[107061][      debug]   major_words: 8.84887e+06
+[107061][      debug]   minor_collections: 31
+[107061][      debug]   major_collections: 5
+[107061][      debug]   compactions: 0
+[107061][      debug]   top_heap_words: 10847744
+[107061][      debug]   
+[107061][      debug] GC stats for main_process_full:
+[107061][      debug]   minor_words: 3.10355e+07
+[107061][      debug]   promoted_words: 9.03817e+06
+[107061][      debug]   major_words: 9.59403e+06
+[107061][      debug]   minor_collections: 39
+[107061][      debug]   major_collections: 6
+[107061][      debug]   compactions: 0
+[107061][      debug]   top_heap_words: 10847744
+[107061][      debug]   
+[107044][      debug] 
+[107044][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/parsingReq.cpp ***
+[107044][      debug] Elapsed: 4.67s.
+[107044][      debug] GC stats for capture:
+[107044][      debug]   minor_words: 3.25294e+07
+[107044][      debug]   promoted_words: 9.20239e+06
+[107044][      debug]   major_words: 9.86744e+06
+[107044][      debug]   minor_collections: 35
+[107044][      debug]   major_collections: 5
+[107044][      debug]   compactions: 0
+[107044][      debug]   top_heap_words: 10847744
+[107044][      debug]   
+[107044][      debug] GC stats for main_process_full:
+[107044][      debug]   minor_words: 3.52517e+07
+[107044][      debug]   promoted_words: 9.90989e+06
+[107044][      debug]   major_words: 1.06126e+07
+[107044][      debug]   minor_collections: 43
+[107044][      debug]   major_collections: 6
+[107044][      debug]   compactions: 0
+[107044][      debug]   top_heap_words: 10847744
+[107044][      debug]   
+[107065][      debug] 
+[107065][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/Client.cpp ***
+[107065][      debug] Elapsed: 4.7s.
+[107065][      debug] GC stats for capture:
+[107065][      debug]   minor_words: 2.6304e+07
+[107065][      debug]   promoted_words: 7.73104e+06
+[107065][      debug]   major_words: 8.24068e+06
+[107065][      debug]   minor_collections: 29
+[107065][      debug]   major_collections: 4
+[107065][      debug]   compactions: 0
+[107065][      debug]   top_heap_words: 9432576
+[107065][      debug]   
+[107065][      debug] GC stats for main_process_full:
+[107065][      debug]   minor_words: 2.90263e+07
+[107065][      debug]   promoted_words: 8.43854e+06
+[107065][      debug]   major_words: 8.98584e+06
+[107065][      debug]   minor_collections: 37
+[107065][      debug]   major_collections: 5
+[107065][      debug]   compactions: 0
+[107065][      debug]   top_heap_words: 9432576
+[107065][      debug]   
+[107063][      debug] 
+[107063][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/HandleTransfer/chunk.cpp ***
+[107063][      debug] Elapsed: 4.88s.
+[107063][      debug] GC stats for capture:
+[107063][      debug]   minor_words: 3.6087e+07
+[107063][      debug]   promoted_words: 1.08061e+07
+[107063][      debug]   major_words: 1.14796e+07
+[107063][      debug]   minor_collections: 39
+[107063][      debug]   major_collections: 5
+[107063][      debug]   compactions: 0
+[107063][      debug]   top_heap_words: 12475392
+[107063][      debug]   
+[107063][      debug] GC stats for main_process_full:
+[107063][      debug]   minor_words: 3.88094e+07
+[107063][      debug]   promoted_words: 1.15136e+07
+[107063][      debug]   major_words: 1.22247e+07
+[107063][      debug]   minor_collections: 47
+[107063][      debug]   major_collections: 6
+[107063][      debug]   compactions: 0
+[107063][      debug]   top_heap_words: 12475392
+[107063][      debug]   
+[107064][      debug] 
+[107064][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/utils.cpp ***
+[107064][      debug] Elapsed: 5.04s.
+[107064][      debug] GC stats for capture:
+[107064][      debug]   minor_words: 3.71751e+07
+[107064][      debug]   promoted_words: 1.09852e+07
+[107064][      debug]   major_words: 1.16544e+07
+[107064][      debug]   minor_collections: 40
+[107064][      debug]   major_collections: 5
+[107064][      debug]   compactions: 0
+[107064][      debug]   top_heap_words: 12475392
+[107064][      debug]   
+[107064][      debug] GC stats for main_process_full:
+[107064][      debug]   minor_words: 3.98974e+07
+[107064][      debug]   promoted_words: 1.16927e+07
+[107064][      debug]   major_words: 1.23996e+07
+[107064][      debug]   minor_collections: 48
+[107064][      debug]   major_collections: 6
+[107064][      debug]   compactions: 0
+[107064][      debug]   top_heap_words: 12475392
+[107064][      debug]   
+[107062][      debug] 
+[107062][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/HandleTransfer/cgi.cpp ***
+[107062][      debug] Elapsed: 5.63s.
+[107062][      debug] GC stats for capture:
+[107062][      debug]   minor_words: 3.37859e+07
+[107062][      debug]   promoted_words: 1.05948e+07
+[107062][      debug]   major_words: 1.12562e+07
+[107062][      debug]   minor_collections: 37
+[107062][      debug]   major_collections: 6
+[107062][      debug]   compactions: 0
+[107062][      debug]   top_heap_words: 12475392
+[107062][      debug]   
+[107062][      debug] GC stats for main_process_full:
+[107062][      debug]   minor_words: 3.65082e+07
+[107062][      debug]   promoted_words: 1.13023e+07
+[107062][      debug]   major_words: 1.20014e+07
+[107062][      debug]   minor_collections: 45
+[107062][      debug]   major_collections: 7
+[107062][      debug]   compactions: 0
+[107062][      debug]   top_heap_words: 12475392
+[107062][      debug]   
+[107029][      debug] 
+[107029][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/parsing/Location.cpp ***
+[107029][      debug] Elapsed: 8.24s.
+[107029][      debug] GC stats for capture:
+[107029][      debug]   minor_words: 3.92859e+07
+[107029][      debug]   promoted_words: 1.12146e+07
+[107029][      debug]   major_words: 1.18814e+07
+[107029][      debug]   minor_collections: 40
+[107029][      debug]   major_collections: 3
+[107029][      debug]   compactions: 0
+[107029][      debug]   top_heap_words: 14346752
+[107029][      debug]   
+[107029][      debug] GC stats for main_process_full:
+[107029][      debug]   minor_words: 4.20082e+07
+[107029][      debug]   promoted_words: 1.19221e+07
+[107029][      debug]   major_words: 1.26266e+07
+[107029][      debug]   minor_collections: 48
+[107029][      debug]   major_collections: 4
+[107029][      debug]   compactions: 0
+[107029][      debug]   top_heap_words: 14346752
+[107029][      debug]   
+[107057][      debug] 
+[107057][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/HandleTransfer/get.cpp ***
+[107057][      debug] Elapsed: 9.38s.
+[107057][      debug] GC stats for capture:
+[107057][      debug]   minor_words: 4.39301e+07
+[107057][      debug]   promoted_words: 1.14836e+07
+[107057][      debug]   major_words: 1.21834e+07
+[107057][      debug]   minor_collections: 46
+[107057][      debug]   major_collections: 6
+[107057][      debug]   compactions: 0
+[107057][      debug]   top_heap_words: 12475392
+[107057][      debug]   
+[107057][      debug] GC stats for main_process_full:
+[107057][      debug]   minor_words: 4.66524e+07
+[107057][      debug]   promoted_words: 1.21911e+07
+[107057][      debug]   major_words: 1.29285e+07
+[107057][      debug]   minor_collections: 54
+[107057][      debug]   major_collections: 7
+[107057][      debug]   compactions: 0
+[107057][      debug]   top_heap_words: 12475392
+[107057][      debug]   
+[107027][      debug] 
+[107027][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/main.cpp ***
+[107027][      debug] Elapsed: 10.1s.
+[107027][      debug] GC stats for capture:
+[107027][      debug]   minor_words: 5.10386e+07
+[107027][      debug]   promoted_words: 1.2496e+07
+[107027][      debug]   major_words: 1.3219e+07
+[107027][      debug]   minor_collections: 54
+[107027][      debug]   major_collections: 5
+[107027][      debug]   compactions: 0
+[107027][      debug]   top_heap_words: 14346752
+[107027][      debug]   
+[107027][      debug] GC stats for main_process_full:
+[107027][      debug]   minor_words: 5.37609e+07
+[107027][      debug]   promoted_words: 1.32035e+07
+[107027][      debug]   major_words: 1.39641e+07
+[107027][      debug]   minor_collections: 62
+[107027][      debug]   major_collections: 6
+[107027][      debug]   compactions: 0
+[107027][      debug]   top_heap_words: 14346752
+[107027][      debug]   
+[107069][      debug] 
+[107069][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/FileDescriptor.cpp ***
+[107069][      debug] Elapsed: 10.5s.
+[107069][      debug] GC stats for capture:
+[107069][      debug]   minor_words: 5.07237e+07
+[107069][      debug]   promoted_words: 1.21525e+07
+[107069][      debug]   major_words: 1.28593e+07
+[107069][      debug]   minor_collections: 51
+[107069][      debug]   major_collections: 4
+[107069][      debug]   compactions: 0
+[107069][      debug]   top_heap_words: 14346752
+[107069][      debug]   
+[107069][      debug] GC stats for main_process_full:
+[107069][      debug]   minor_words: 5.3446e+07
+[107069][      debug]   promoted_words: 1.286e+07
+[107069][      debug]   major_words: 1.36045e+07
+[107069][      debug]   minor_collections: 59
+[107069][      debug]   major_collections: 5
+[107069][      debug]   compactions: 0
+[107069][      debug]   top_heap_words: 14346752
+[107069][      debug]   
+[107047][      debug] 
+[107047][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/Post.cpp ***
+[107047][      debug] Elapsed: 10.5s.
+[107047][      debug] GC stats for capture:
+[107047][      debug]   minor_words: 3.87933e+07
+[107047][      debug]   promoted_words: 9.82615e+06
+[107047][      debug]   major_words: 1.05079e+07
+[107047][      debug]   minor_collections: 41
+[107047][      debug]   major_collections: 5
+[107047][      debug]   compactions: 0
+[107047][      debug]   top_heap_words: 10847744
+[107047][      debug]   
+[107047][      debug] GC stats for main_process_full:
+[107047][      debug]   minor_words: 4.15156e+07
+[107047][      debug]   promoted_words: 1.05336e+07
+[107047][      debug]   major_words: 1.12531e+07
+[107047][      debug]   minor_collections: 49
+[107047][      debug]   major_collections: 6
+[107047][      debug]   compactions: 0
+[107047][      debug]   top_heap_words: 10847744
+[107047][      debug]   
+[107070][      debug] 
+[107070][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/Logger.cpp ***
+[107070][      debug] Elapsed: 11.1s.
+[107070][      debug] GC stats for capture:
+[107070][      debug]   minor_words: 5.51495e+07
+[107070][      debug]   promoted_words: 1.41758e+07
+[107070][      debug]   major_words: 1.51642e+07
+[107070][      debug]   minor_collections: 58
+[107070][      debug]   major_collections: 6
+[107070][      debug]   compactions: 0
+[107070][      debug]   top_heap_words: 16499200
+[107070][      debug]   
+[107070][      debug] GC stats for main_process_full:
+[107070][      debug]   minor_words: 5.78718e+07
+[107070][      debug]   promoted_words: 1.48833e+07
+[107070][      debug]   major_words: 1.59094e+07
+[107070][      debug]   minor_collections: 66
+[107070][      debug]   major_collections: 7
+[107070][      debug]   compactions: 0
+[107070][      debug]   top_heap_words: 16499200
+[107070][      debug]   
+[107038][      debug] 
+[107038][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/RunServer/serverListenFD.cpp ***
+[107038][      debug] Elapsed: 12.4s.
+[107038][      debug] GC stats for capture:
+[107038][      debug]   minor_words: 6.45351e+07
+[107038][      debug]   promoted_words: 1.38844e+07
+[107038][      debug]   major_words: 1.49047e+07
+[107038][      debug]   minor_collections: 67
+[107038][      debug]   major_collections: 6
+[107038][      debug]   compactions: 0
+[107038][      debug]   top_heap_words: 16499200
+[107038][      debug]   
+[107038][      debug] GC stats for main_process_full:
+[107038][      debug]   minor_words: 6.72574e+07
+[107038][      debug]   promoted_words: 1.45919e+07
+[107038][      debug]   major_words: 1.56499e+07
+[107038][      debug]   minor_collections: 75
+[107038][      debug]   major_collections: 7
+[107038][      debug]   compactions: 0
+[107038][      debug]   top_heap_words: 16499200
+[107038][      debug]   
+[107052][      debug] 
+[107052][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/response.cpp ***
+[107052][      debug] Elapsed: 13.3s.
+[107052][      debug] GC stats for capture:
+[107052][      debug]   minor_words: 4.56891e+07
+[107052][      debug]   promoted_words: 1.26164e+07
+[107052][      debug]   major_words: 1.33347e+07
+[107052][      debug]   minor_collections: 49
+[107052][      debug]   major_collections: 6
+[107052][      debug]   compactions: 0
+[107052][      debug]   top_heap_words: 14346752
+[107052][      debug]   
+[107052][      debug] GC stats for main_process_full:
+[107052][      debug]   minor_words: 4.84114e+07
+[107052][      debug]   promoted_words: 1.33239e+07
+[107052][      debug]   major_words: 1.40798e+07
+[107052][      debug]   minor_collections: 57
+[107052][      debug]   major_collections: 7
+[107052][      debug]   compactions: 0
+[107052][      debug]   top_heap_words: 14346752
+[107052][      debug]   
+[107042][      debug] 
+[107042][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/RunServer/clientConnection.cpp ***
+[107042][      debug] Elapsed: 13.7s.
+[107042][      debug] GC stats for capture:
+[107042][      debug]   minor_words: 5.59159e+07
+[107042][      debug]   promoted_words: 1.34326e+07
+[107042][      debug]   major_words: 1.44446e+07
+[107042][      debug]   minor_collections: 58
+[107042][      debug]   major_collections: 6
+[107042][      debug]   compactions: 0
+[107042][      debug]   top_heap_words: 16499200
+[107042][      debug]   
+[107042][      debug] GC stats for main_process_full:
+[107042][      debug]   minor_words: 5.86382e+07
+[107042][      debug]   promoted_words: 1.41401e+07
+[107042][      debug]   major_words: 1.51897e+07
+[107042][      debug]   minor_collections: 66
+[107042][      debug]   major_collections: 7
+[107042][      debug]   compactions: 0
+[107042][      debug]   top_heap_words: 16499200
+[107042][      debug]   
+[107031][      debug] 
+[107031][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/parsing/ConfigServer.cpp ***
+[107031][      debug] Elapsed: 14s.
+[107031][      debug] GC stats for capture:
+[107031][      debug]   minor_words: 6.81129e+07
+[107031][      debug]   promoted_words: 1.45484e+07
+[107031][      debug]   major_words: 1.55833e+07
+[107031][      debug]   minor_collections: 69
+[107031][      debug]   major_collections: 5
+[107031][      debug]   compactions: 0
+[107031][      debug]   top_heap_words: 16499200
+[107031][      debug]   
+[107031][      debug] GC stats for main_process_full:
+[107031][      debug]   minor_words: 7.08352e+07
+[107031][      debug]   promoted_words: 1.52559e+07
+[107031][      debug]   major_words: 1.63285e+07
+[107031][      debug]   minor_collections: 77
+[107031][      debug]   major_collections: 6
+[107031][      debug]   compactions: 0
+[107031][      debug]   top_heap_words: 16499200
+[107031][      debug]   
+[107046][      debug] 
+[107046][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/validation.cpp ***
+[107046][      debug] Elapsed: 14.1s.
+[107046][      debug] GC stats for capture:
+[107046][      debug]   minor_words: 4.74402e+07
+[107046][      debug]   promoted_words: 1.21101e+07
+[107046][      debug]   major_words: 1.2828e+07
+[107046][      debug]   minor_collections: 50
+[107046][      debug]   major_collections: 6
+[107046][      debug]   compactions: 0
+[107046][      debug]   top_heap_words: 14346752
+[107046][      debug]   
+[107046][      debug] GC stats for main_process_full:
+[107046][      debug]   minor_words: 5.01626e+07
+[107046][      debug]   promoted_words: 1.28176e+07
+[107046][      debug]   major_words: 1.35732e+07
+[107046][      debug]   minor_collections: 58
+[107046][      debug]   major_collections: 7
+[107046][      debug]   compactions: 0
+[107046][      debug]   top_heap_words: 14346752
+[107046][      debug]   
+[107059][      debug] 
+[107059][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/HandleTransfer/post.cpp ***
+[107059][      debug] Elapsed: 14.1s.
+[107059][      debug] GC stats for capture:
+[107059][      debug]   minor_words: 6.52797e+07
+[107059][      debug]   promoted_words: 1.39973e+07
+[107059][      debug]   major_words: 1.5034e+07
+[107059][      debug]   minor_collections: 68
+[107059][      debug]   major_collections: 6
+[107059][      debug]   compactions: 0
+[107059][      debug]   top_heap_words: 16499200
+[107059][      debug]   
+[107059][      debug] GC stats for main_process_full:
+[107059][      debug]   minor_words: 6.8002e+07
+[107059][      debug]   promoted_words: 1.47048e+07
+[107059][      debug]   major_words: 1.57791e+07
+[107059][      debug]   minor_collections: 76
+[107059][      debug]   major_collections: 7
+[107059][      debug]   compactions: 0
+[107059][      debug]   top_heap_words: 16499200
+[107059][      debug]   
+[107071][      debug] 
+[107071][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/ErrorCodeClientException.cpp ***
+[107071][      debug] Elapsed: 14.4s.
+[107071][      debug] GC stats for capture:
+[107071][      debug]   minor_words: 6.65273e+07
+[107071][      debug]   promoted_words: 1.42039e+07
+[107071][      debug]   major_words: 1.52499e+07
+[107071][      debug]   minor_collections: 69
+[107071][      debug]   major_collections: 6
+[107071][      debug]   compactions: 0
+[107071][      debug]   top_heap_words: 16499200
+[107071][      debug]   
+[107071][      debug] GC stats for main_process_full:
+[107071][      debug]   minor_words: 6.92496e+07
+[107071][      debug]   promoted_words: 1.49114e+07
+[107071][      debug]   major_words: 1.59951e+07
+[107071][      debug]   minor_collections: 77
+[107071][      debug]   major_collections: 7
+[107071][      debug]   compactions: 0
+[107071][      debug]   top_heap_words: 16499200
+[107071][      debug]   
+[107045][      debug] 
+[107045][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/processReq.cpp ***
+[107045][      debug] Elapsed: 14.7s.
+[107045][      debug] GC stats for capture:
+[107045][      debug]   minor_words: 5.96998e+07
+[107045][      debug]   promoted_words: 1.36488e+07
+[107045][      debug]   major_words: 1.46665e+07
+[107045][      debug]   minor_collections: 62
+[107045][      debug]   major_collections: 6
+[107045][      debug]   compactions: 0
+[107045][      debug]   top_heap_words: 16499200
+[107045][      debug]   
+[107045][      debug] GC stats for main_process_full:
+[107045][      debug]   minor_words: 6.24221e+07
+[107045][      debug]   promoted_words: 1.43563e+07
+[107045][      debug]   major_words: 1.54116e+07
+[107045][      debug]   minor_collections: 70
+[107045][      debug]   major_collections: 7
+[107045][      debug]   compactions: 0
+[107045][      debug]   top_heap_words: 16499200
+[107045][      debug]   
+[107040][      debug] 
+[107040][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/RunServer/cleanup.cpp ***
+[107040][      debug] Elapsed: 15.8s.
+[107040][      debug] GC stats for capture:
+[107040][      debug]   minor_words: 7.79948e+07
+[107040][      debug]   promoted_words: 1.56193e+07
+[107040][      debug]   major_words: 1.67029e+07
+[107040][      debug]   minor_collections: 80
+[107040][      debug]   major_collections: 6
+[107040][      debug]   compactions: 0
+[107040][      debug]   top_heap_words: 16499200
+[107040][      debug]   
+[107040][      debug] GC stats for main_process_full:
+[107040][      debug]   minor_words: 8.07171e+07
+[107040][      debug]   promoted_words: 1.63268e+07
+[107040][      debug]   major_words: 1.74481e+07
+[107040][      debug]   minor_collections: 88
+[107040][      debug]   major_collections: 7
+[107040][      debug]   compactions: 0
+[107040][      debug]   top_heap_words: 16499200
+[107040][      debug]   
+[107030][      debug] 
+[107030][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/parsing/Aconfig.cpp ***
+[107030][      debug] Elapsed: 16.4s.
+[107030][      debug] GC stats for capture:
+[107030][      debug]   minor_words: 1.13586e+08
+[107030][      debug]   promoted_words: 1.77256e+07
+[107030][      debug]   major_words: 1.90491e+07
+[107030][      debug]   minor_collections: 114
+[107030][      debug]   major_collections: 7
+[107030][      debug]   compactions: 0
+[107030][      debug]   top_heap_words: 18974208
+[107030][      debug]   
+[107030][      debug] GC stats for main_process_full:
+[107030][      debug]   minor_words: 1.16309e+08
+[107030][      debug]   promoted_words: 1.84331e+07
+[107030][      debug]   major_words: 1.97943e+07
+[107030][      debug]   minor_collections: 122
+[107030][      debug]   major_collections: 8
+[107030][      debug]   compactions: 0
+[107030][      debug]   top_heap_words: 18974208
+[107030][      debug]   
+[107028][      debug] 
+[107028][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/parsing/parsing.cpp ***
+[107028][      debug] src/parsing/parsing.cpp:170:27-45: ERROR translating statement 'BinaryOperator'
+[107028][      debug] Aborting translation of method 'Parsing::whileCmdCheck<Location>' in file 'src/parsing/parsing.cpp'
+[107028][      debug] Unimplemented feature:
+[107028][      debug]   Pointer-to-member constructs are unsupported. Got '{"kind":<"PtrMemD">}'.
+[107028][      debug] src/parsing/parsing.cpp:143:23-41: ERROR translating statement 'BinaryOperator'
+[107028][      debug] Aborting translation of method 'Parsing::cmdCheck<Location>' in file 'src/parsing/parsing.cpp'
+[107028][      debug] Unimplemented feature:
+[107028][      debug]   Pointer-to-member constructs are unsupported. Got '{"kind":<"PtrMemD">}'.
+[107028][      debug] src/parsing/parsing.cpp:170:27-45: ERROR translating statement 'BinaryOperator'
+[107028][      debug] Aborting translation of method 'Parsing::whileCmdCheck<ConfigServer>' in file 'src/parsing/parsing.cpp'
+[107028][      debug] Unimplemented feature:
+[107028][      debug]   Pointer-to-member constructs are unsupported. Got '{"kind":<"PtrMemD">}'.
+[107028][      debug] src/parsing/parsing.cpp:143:23-41: ERROR translating statement 'BinaryOperator'
+[107028][      debug] Aborting translation of method 'Parsing::cmdCheck<ConfigServer>' in file 'src/parsing/parsing.cpp'
+[107028][      debug] Unimplemented feature:
+[107028][      debug]   Pointer-to-member constructs are unsupported. Got '{"kind":<"PtrMemD">}'.
+[107028][      debug] Elapsed: 16.8s.
+[107028][      debug] GC stats for capture:
+[107028][      debug]   minor_words: 8.85549e+07
+[107028][      debug]   promoted_words: 1.61379e+07
+[107028][      debug]   major_words: 1.72502e+07
+[107028][      debug]   minor_collections: 90
+[107028][      debug]   major_collections: 6
+[107028][      debug]   compactions: 0
+[107028][      debug]   top_heap_words: 16499200
+[107028][      debug]   
+[107028][      debug] GC stats for main_process_full:
+[107028][      debug]   minor_words: 9.12772e+07
+[107028][      debug]   promoted_words: 1.68454e+07
+[107028][      debug]   major_words: 1.79954e+07
+[107028][      debug]   minor_collections: 98
+[107028][      debug]   major_collections: 7
+[107028][      debug]   compactions: 0
+[107028][      debug]   top_heap_words: 16499200
+[107028][      debug]   
+[107032][      debug] 
+[107032][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/RunServer/RunServer.cpp ***
+[107032][      debug] Elapsed: 17.1s.
+[107032][      debug] GC stats for capture:
+[107032][      debug]   minor_words: 8.38787e+07
+[107032][      debug]   promoted_words: 1.65481e+07
+[107032][      debug]   major_words: 1.76609e+07
+[107032][      debug]   minor_collections: 85
+[107032][      debug]   major_collections: 5
+[107032][      debug]   compactions: 0
+[107032][      debug]   top_heap_words: 18974208
+[107032][      debug]   
+[107032][      debug] GC stats for main_process_full:
+[107032][      debug]   minor_words: 8.6601e+07
+[107032][      debug]   promoted_words: 1.72556e+07
+[107032][      debug]   major_words: 1.8406e+07
+[107032][      debug]   minor_collections: 93
+[107032][      debug]   major_collections: 6
+[107032][      debug]   compactions: 0
+[107032][      debug]   top_heap_words: 18974208
+[107032][      debug]   
+[107054][      debug] 
+[107054][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/request/handleCgi.cpp ***
+[107054][      debug] Elapsed: 17.5s.
+[107054][      debug] GC stats for capture:
+[107054][      debug]   minor_words: 1.23898e+08
+[107054][      debug]   promoted_words: 1.95682e+07
+[107054][      debug]   major_words: 2.09384e+07
+[107054][      debug]   minor_collections: 124
+[107054][      debug]   major_collections: 7
+[107054][      debug]   compactions: 0
+[107054][      debug]   top_heap_words: 21820416
+[107054][      debug]   
+[107054][      debug] GC stats for main_process_full:
+[107054][      debug]   minor_words: 1.26621e+08
+[107054][      debug]   promoted_words: 2.02757e+07
+[107054][      debug]   major_words: 2.16835e+07
+[107054][      debug]   minor_collections: 132
+[107054][      debug]   major_collections: 8
+[107054][      debug]   compactions: 0
+[107054][      debug]   top_heap_words: 21820416
+[107054][      debug]   
+[107033][      debug] 
+[107033][      debug] *** Beginning capture of file /sgoinfre/rde-brui/sandbox/Webserv/src/RunServer/serverUtils.cpp ***
+[107033][      debug] Elapsed: 17.8s.
+[107033][      debug] GC stats for capture:
+[107033][      debug]   minor_words: 8.65602e+07
+[107033][      debug]   promoted_words: 1.81385e+07
+[107033][      debug]   major_words: 1.93812e+07
+[107033][      debug]   minor_collections: 88
+[107033][      debug]   major_collections: 5
+[107033][      debug]   compactions: 0
+[107033][      debug]   top_heap_words: 18974208
+[107033][      debug]   
+[107033][      debug] GC stats for main_process_full:
+[107033][      debug]   minor_words: 8.92825e+07
+[107033][      debug]   promoted_words: 1.8846e+07
+[107033][      debug]   major_words: 2.01264e+07
+[107033][      debug]   minor_collections: 96
+[107033][      debug]   major_collections: 6
+[107033][      debug]   compactions: 0
+[107033][      debug]   top_heap_words: 18974208
+[107033][      debug]   
+
+[107598][      debug] GC stats for capture:
+[107598][      debug]   minor_words: 18965
+[107598][      debug]   promoted_words: 0
+[107598][      debug]   major_words: 514
+[107598][      debug]   minor_collections: 0
+[107598][      debug]   major_collections: 0
+[107598][      debug]   compactions: 0
+[107598][      debug]   top_heap_words: 760832
+[107598][      debug]   
+[107598][      debug] GC stats for main_process_full:
+[107598][      debug]   minor_words: 2.74229e+06
+[107598][      debug]   promoted_words: 707790
+[107598][      debug]   major_words: 745964
+[107598][      debug]   minor_collections: 8
+[107598][      debug]   major_collections: 1
+[107598][      debug]   compactions: 0
+[107598][      debug]   top_heap_words: 760832
+[107598][      debug]   
+[107015][      debug] GC stats for capture:
+[107015][      debug]   minor_words: 1673
+[107015][      debug]   promoted_words: 0
+[107015][      debug]   major_words: 514
+[107015][      debug]   minor_collections: 0
+[107015][      debug]   major_collections: 0
+[107015][      debug]   compactions: 0
+[107015][      debug]   top_heap_words: 760832
+[107015][      debug]   
+[107015][environment] Parallel jobs: 20
+[107015][   progress] Found 26 source files to analyze in /sgoinfre/rde-brui/sandbox/Webserv/infer-out
+[107618][   progress] Analysing block of 200 procs, starting with Logger::padLeft
+[107606][   progress] Analysing block of 200 procs, starting with RunServers::removeHandlesWithFD
+[107607][   progress] Analysing block of 200 procs, starting with Logger::processErrorArgsToString<d631d0d601736240>
+[107610][   progress] Analysing block of 200 procs, starting with __infer_globals_initializer_BOUNDARY_PREFIX_LEN
+[107620][   progress] Analysing block of 200 procs, starting with Logger::makeRawMessage<45d2d1fb5e5f7f34>
+[107619][   progress] Analysing block of 200 procs, starting with std::unique_ptr<HandleTransfer,std::default_delete<HandleTransfer>>::unique_ptr
+[107622][   progress] Analysing block of 200 procs, starting with std::get<8927361ea97d7eb9>
+[107613][   progress] Analysing block of 200 procs, starting with std::unique_ptr<HandleWriteToCgiTransfer,std::default_delete<HandleWriteToCgiTransfer>>::get_deleter
+[107604][   progress] Analysing block of 200 procs, starting with std::_Tuple_impl<1,std::default_delete<HandleTransfer>>::_Tuple_impl
+[107617][   progress] Analysing block of 200 procs, starting with std::pair<std::basic_string<char,std::char_traits<char>,std::allocator<char>> const ,std::basic_string<char,std::char_traits<char>,std::allocator<char>>>::~pair
+[107609][   progress] Analysing block of 200 procs, starting with std::_Head_base<1,char*&&,0>::_M_head
+[107612][   progress] Analysing block of 200 procs, starting with std::_Head_base<2,char[76*1] const (&),0>::_M_head
+[107621][   progress] Analysing block of 200 procs, starting with Logger::makeRawMessage<d191188716adfde2>
+[107608][   progress] Analysing block of 200 procs, starting with Logger::argToString<char[9]>
+[107605][   progress] Analysing block of 200 procs, starting with std::__get_helper<65984f480a48ec46>
+[107616][   progress] Analysing block of 200 procs, starting with std::get<fb7fe0549ed11618>
+[107614][   progress] Analysing block of 200 procs, starting with Logger::argToString<char[15]>
+[107615][   progress] Analysing block of 200 procs, starting with std::__get_helper<29eb030e45e97925>
+[107611][   progress] Analysing block of 200 procs, starting with std::_Head_base<2,std::basic_string<char,std::char_traits<char>,std::allocator<char>>&,0>::_M_head
+[107623][   progress] Analysing block of 200 procs, starting with std::__get_helper<1UL,_int_&>
+[107606][   progress] Analysing block of 200 procs, starting with Logger::logExit<f6c4745c0fab2c37>
+[107611][   progress] Analysing block of 200 procs, starting with Logger::argToString<char[17]>
+[107617][   progress] Analysing block of 200 procs, starting with std::__uniq_ptr_data<HandleToClientTransfer,std::default_delete<HandleToClientTransfer>,1,1>::__uniq_ptr_impl
+[107610][   progress] Analysing block of 200 procs, starting with std::_Tuple_impl<3,std::basic_string<char,std::char_traits<char>,std::allocator<char>>&>::_M_head
+[107604][   progress] Analysing block of 200 procs, starting with std::__get_helper<cc88fc9a6ce4fda5>
+[107619][   progress] Analysing block of 200 procs, starting with std::operator==<char>
+[107611][   progress] Analysing block of 200 procs, starting with Location::__infer_inner_destructor_~Location
+[107623][   progress] Analysing block of 200 procs, starting with Logger::log<756ba4120169e735>
+[107609][   progress] Analysing block of 200 procs, starting with std::__get_helper<669c0154b8fa26e2>
+[107612][   progress] Analysing block of 200 procs, starting with std::__get_helper<50a0b8c930275bca>
+[107613][   progress] Analysing block of 200 procs, starting with std::_Head_base<2,char[72*1] const (&),0>::_M_head
+[107622][   progress] src/utils.cpp starting
+[107622][   progress] src/utils.cpp DONE
+[107622][   progress] src/RunServer/RunServer.cpp starting
+[107613][   progress] src/HandleTransfer/cgi.cpp starting
+[107622][   progress] src/RunServer/RunServer.cpp DONE
+[107622][   progress] src/request/response.cpp starting
+[107622][   progress] src/request/response.cpp DONE
+[107622][   progress] src/RunServer/serverListenFD.cpp starting
+[107620][   progress] src/main.cpp starting
+[107618][   progress] src/HandleTransfer/get.cpp starting
+[107608][   progress] src/HandleTransfer/chunk.cpp starting
+[107618][   progress] src/HandleTransfer/get.cpp DONE
+[107618][   progress] src/HandleTransfer/toClient.cpp starting
+[107618][   progress] src/HandleTransfer/toClient.cpp DONE
+[107618][   progress] src/RunServer/cleanup.cpp starting
+[107620][   progress] src/main.cpp DONE
+[107620][   progress] src/request/validation.cpp starting
+[107618][   progress] src/RunServer/cleanup.cpp DONE
+[107618][   progress] src/RunServer/clientConnection.cpp starting
+[107608][   progress] src/HandleTransfer/chunk.cpp DONE
+[107608][   progress] src/Client.cpp starting
+[107620][   progress] src/request/validation.cpp DONE
+[107620][   progress] src/parsing/parsing.cpp starting
+[107608][   progress] src/Client.cpp DONE
+[107608][   progress] src/RunServer/serverUtils.cpp starting
+[107608][   progress] src/RunServer/serverUtils.cpp DONE
+[107608][   progress] src/parsing/Location.cpp starting
+[107608][   progress] src/parsing/Location.cpp DONE
+[107608][   progress] src/request/parsingReq.cpp starting
+[107618][   progress] src/RunServer/clientConnection.cpp DONE
+[107618][   progress] src/request/processReq.cpp starting
+[107616][   progress] src/HandleTransfer/post.cpp starting
+[107622][   progress] src/RunServer/serverListenFD.cpp DONE
+[107622][   progress] src/Logger.cpp starting
+[107622][   progress] src/Logger.cpp DONE
+[107622][   progress] src/ErrorCodeClientException.cpp starting
+[107608][   progress] src/request/parsingReq.cpp DONE
+[107608][   progress] src/parsing/ConfigServer.cpp starting
+[107608][   progress] src/parsing/ConfigServer.cpp DONE
+[107608][   progress] src/request/Post.cpp starting
+[107621][   progress] src/FileDescriptor.cpp starting
+[107621][   progress] src/FileDescriptor.cpp DONE
+[107621][   progress] src/parsing/Aconfig.cpp starting
+[107619][   progress] src/request/handleCgi.cpp starting
+[107621][   progress] src/parsing/Aconfig.cpp DONE
+[107608][   progress] src/request/Post.cpp DONE
+[107613][   progress] src/HandleTransfer/cgi.cpp DONE
+[107618][   progress] src/request/processReq.cpp DONE
+[107611][   progress] src/request/response.cpp starting
+[107604][   progress] src/main.cpp starting
+[107610][   progress] src/HandleTransfer/chunk.cpp starting
+[107611][   progress] src/request/response.cpp DONE
+[107611][   progress] src/RunServer/serverUtils.cpp starting
+[107604][   progress] src/main.cpp DONE
+[107604][   progress] src/parsing/Location.cpp starting
+[107604][   progress] src/parsing/Location.cpp DONE
+[107604][   progress] src/RunServer/clientConnection.cpp starting
+[107618][   progress] src/request/Post.cpp starting
+[107604][   progress] src/RunServer/clientConnection.cpp DONE
+[107610][   progress] src/HandleTransfer/chunk.cpp DONE
+[107611][   progress] src/RunServer/serverUtils.cpp DONE
+[107610][   progress] src/parsing/Aconfig.cpp starting
+[107621][   progress] src/RunServer/clientConnection.cpp starting
+[107609][   progress] src/request/processReq.cpp starting
+[107621][   progress] src/RunServer/clientConnection.cpp DONE
+[107609][   progress] src/request/processReq.cpp DONE
+[107610][   progress] src/parsing/Aconfig.cpp DONE
+[107618][   progress] src/request/Post.cpp DONE
+[107621][   progress] src/request/processReq.cpp starting
+[107621][   progress] src/request/processReq.cpp DONE
+[107610][   progress] src/RunServer/clientConnection.cpp starting
+[107618][   progress] src/parsing/Aconfig.cpp starting
+[107610][   progress] src/RunServer/clientConnection.cpp DONE
+[107610][   progress] src/RunServer/clientConnection.cpp starting
+[107610][   progress] src/RunServer/clientConnection.cpp DONE
+[107610][   progress] src/RunServer/RunServer.cpp starting
+[107604][   progress] src/RunServer/cleanup.cpp starting
+[107610][   progress] src/RunServer/RunServer.cpp DONE
+[107604][   progress] src/RunServer/cleanup.cpp DONE
+[107610][   progress] src/RunServer/RunServer.cpp starting
+[107610][   progress] src/RunServer/RunServer.cpp DONE
+[107604][   progress] src/RunServer/RunServer.cpp starting
+[107609][   progress] src/RunServer/clientConnection.cpp starting
+[107618][   progress] src/parsing/Aconfig.cpp DONE
+[107609][   progress] src/RunServer/clientConnection.cpp DONE
+[107618][   progress] src/RunServer/clientConnection.cpp starting
+[107618][   progress] src/RunServer/clientConnection.cpp DONE
+[107604][   progress] src/RunServer/RunServer.cpp DONE
+[107611][   progress] src/RunServer/clientConnection.cpp starting
+[107611][   progress] src/RunServer/clientConnection.cpp DONE
+[107604][   progress] src/parsing/Aconfig.cpp starting
+[107623][   progress] src/RunServer/clientConnection.cpp starting
+[107623][   progress] src/RunServer/clientConnection.cpp DONE
+[107616][   progress] src/HandleTransfer/post.cpp DONE
+[107616][   progress] src/RunServer/clientConnection.cpp starting
+[107618][   progress] Analysing block of 200 procs, starting with RunServers::handleEvents
+[107607][   progress] src/HandleTransfer/chunk.cpp starting
+[107611][   progress] src/request/processReq.cpp starting
+[107605][   progress] src/request/Post.cpp starting
+[107613][   progress] src/HandleTransfer/post.cpp starting
+[107607][   progress] src/HandleTransfer/chunk.cpp DONE
+[107612][   progress] src/RunServer/serverUtils.cpp starting
+[107616][   progress] src/RunServer/clientConnection.cpp DONE
+[107605][   progress] src/request/Post.cpp DONE
+[107616][   progress] src/HandleTransfer/chunk.cpp starting
+[107611][   progress] src/request/processReq.cpp DONE
+[107616][   progress] src/HandleTransfer/chunk.cpp DONE
+[107617][   progress] src/Logger.cpp starting
+[107617][   progress] src/Logger.cpp DONE
+[107604][   progress] src/parsing/Aconfig.cpp DONE
+[107613][   progress] src/HandleTransfer/post.cpp DONE
+[107612][   progress] src/RunServer/serverUtils.cpp DONE
+[107616][   progress] src/Logger.cpp starting
+[107616][   progress] src/Logger.cpp DONE
+[107623][   progress] src/request/Post.cpp starting
+[107613][   progress] src/request/processReq.cpp starting
+[107615][   progress] src/RunServer/clientConnection.cpp starting
+[107615][   progress] src/RunServer/clientConnection.cpp DONE
+[107604][   progress] src/RunServer/clientConnection.cpp starting
+[107613][   progress] src/request/processReq.cpp DONE
+[107604][   progress] src/RunServer/clientConnection.cpp DONE
+[107611][   progress] src/RunServer/clientConnection.cpp starting
+[107611][   progress] src/RunServer/clientConnection.cpp DONE
+[107623][   progress] src/request/Post.cpp DONE
+[107622][   progress] src/ErrorCodeClientException.cpp DONE
+[107623][   progress] src/RunServer/clientConnection.cpp starting
+[107605][   progress] src/request/processReq.cpp starting
+[107623][   progress] src/RunServer/clientConnection.cpp DONE
+[107605][   progress] src/request/processReq.cpp DONE
+[107609][   progress] src/parsing/ConfigServer.cpp starting
+[107619][   progress] src/request/handleCgi.cpp DONE
+[107617][   progress] src/request/processReq.cpp starting
+[107605][   progress] src/RunServer/clientConnection.cpp starting
+[107605][   progress] src/RunServer/clientConnection.cpp DONE
+[107621][   progress] src/RunServer/clientConnection.cpp starting
+[107609][   progress] src/parsing/ConfigServer.cpp DONE
+[107621][   progress] src/RunServer/clientConnection.cpp DONE
+[107617][   progress] src/request/processReq.cpp DONE
+[107621][   progress] src/RunServer/clientConnection.cpp starting
+[107621][   progress] src/RunServer/clientConnection.cpp DONE
+[107617][   progress] src/request/processReq.cpp starting
+[107613][   progress] src/HandleTransfer/chunk.cpp starting
+[107613][   progress] src/HandleTransfer/chunk.cpp DONE
+[107623][   progress] src/RunServer/clientConnection.cpp starting
+[107617][   progress] src/request/processReq.cpp DONE
+[107623][   progress] src/RunServer/clientConnection.cpp DONE
+[107607][   progress] src/request/processReq.cpp starting
+[107617][   progress] src/RunServer/clientConnection.cpp starting
+[107604][   progress] Analysing block of 200 procs, starting with HttpRequest::processRequest
+[107617][   progress] src/RunServer/clientConnection.cpp DONE
+[107605][   progress] src/RunServer/clientConnection.cpp starting
+[107607][   progress] src/request/processReq.cpp DONE
+[107605][   progress] src/RunServer/clientConnection.cpp DONE
+[107607][   progress] src/request/processReq.cpp starting
+[107612][   progress] src/RunServer/clientConnection.cpp starting
+[107612][   progress] src/RunServer/clientConnection.cpp DONE
+[107605][   progress] src/RunServer/clientConnection.cpp starting
+[107605][   progress] src/RunServer/clientConnection.cpp DONE
+[107612][   progress] src/RunServer/RunServer.cpp starting
+[107608][   progress] src/RunServer/cleanup.cpp starting
+[107612][   progress] src/RunServer/RunServer.cpp DONE
+[107608][   progress] src/RunServer/cleanup.cpp DONE
+[107606][   progress] src/HandleTransfer/chunk.cpp starting
+[107606][   progress] src/HandleTransfer/chunk.cpp DONE
+[107614][   progress] src/RunServer/RunServer.cpp starting
+[107614][   progress] src/RunServer/RunServer.cpp DONE
+[107615][   progress] src/RunServer/RunServer.cpp starting
+[107613][   progress] src/RunServer/cleanup.cpp starting
+[107615][   progress] src/RunServer/RunServer.cpp DONE
+[107613][   progress] src/RunServer/cleanup.cpp DONE
+[107616][   progress] src/RunServer/RunServer.cpp starting
+[107616][   progress] src/RunServer/RunServer.cpp DONE
+[107618][   progress] src/main.cpp starting
+[107618][   progress] src/main.cpp DONE
+[107606][   progress] src/main.cpp starting
+[107606][   progress] src/main.cpp DONE
+[107620][   progress] src/parsing/parsing.cpp DONE
+[107610][   progress] src/RunServer/cleanup.cpp starting
+[107612][   progress] src/RunServer/RunServer.cpp starting
+[107612][   progress] src/RunServer/RunServer.cpp DONE
+[107605][   progress] src/RunServer/RunServer.cpp starting
+[107606][   progress] src/main.cpp starting
+[107615][   progress] src/parsing/parsing.cpp starting
+[107606][   progress] src/main.cpp DONE
+[107610][   progress] src/RunServer/cleanup.cpp DONE
+[107605][   progress] src/RunServer/RunServer.cpp DONE
+[107615][   progress] src/parsing/parsing.cpp DONE
+[107606][   progress] src/RunServer/RunServer.cpp starting
+[107610][   progress] src/RunServer/clientConnection.cpp starting
+[107604][   progress] src/main.cpp starting
+[107610][   progress] src/RunServer/clientConnection.cpp DONE
+[107606][   progress] src/RunServer/RunServer.cpp DONE
+[107604][   progress] src/main.cpp DONE
+[107607][   progress] src/request/processReq.cpp DONE
+[107610][   progress] src/main.cpp starting
+[107615][   progress] src/request/processReq.cpp starting
+[107616][   progress] src/RunServer/RunServer.cpp starting
+[107617][   progress] src/RunServer/clientConnection.cpp starting
+[107617][   progress] src/RunServer/clientConnection.cpp DONE
+[107616][   progress] src/RunServer/RunServer.cpp DONE
+[107616][   progress] src/RunServer/RunServer.cpp starting
+[107610][   progress] src/main.cpp DONE
+[107616][   progress] src/RunServer/RunServer.cpp DONE
+[107609][   progress] src/RunServer/RunServer.cpp starting
+[107610][   progress] src/main.cpp starting
+[107609][   progress] src/RunServer/RunServer.cpp DONE
+[107610][   progress] src/main.cpp DONE
+[107609][   progress] src/RunServer/RunServer.cpp starting
+[107610][   progress] src/main.cpp starting
+[107609][   progress] src/RunServer/RunServer.cpp DONE
+[107610][   progress] src/main.cpp DONE
+[107615][   progress] src/request/processReq.cpp DONE
+[107611][   progress] src/RunServer/clientConnection.cpp starting
+[107611][   progress] src/RunServer/clientConnection.cpp DONE
+[107608][   progress] src/RunServer/RunServer.cpp starting
+[107608][   progress] src/RunServer/RunServer.cpp DONE
+[107604][   progress] src/main.cpp starting
+[107604][   progress] src/main.cpp DONE
+[107604][   progress] src/main.cpp starting
+[107604][   progress] src/main.cpp DONE
+[107015][      debug] Backend stats:
+[107015][      debug]   summary_file_try_load= 112757
+[107015][      debug]   summary_read_from_disk= 15715
+[107015][      debug]   summary_cache_hits= 67715 (37%)
+[107015][      debug]   summary_cache_misses= 112757
+[107015][      debug]   ondemand_procs_analyzed= 2857
+[107015][      debug]   proc_locker_lock_time_user= 0.62569600
+[107015][      debug]   proc_locker_lock_time_sys= 0.39642700
+[107015][      debug]   proc_locker_lock_time_wall= 7.35551053
+[107015][      debug]   proc_locker_lock_time_oncpu_pct= 14%
+[107015][      debug]   proc_locker_unlock_time_user= 0.49280600
+[107015][      debug]   proc_locker_unlock_time_sys= 0.12217300
+[107015][      debug]   proc_locker_unlock_time_wall= 3.12784130
+[107015][      debug]   proc_locker_unlock_time_oncpu_pct= 20%
+[107015][      debug]   restart_scheduler_useful_time_user= 386.04275600
+[107015][      debug]   restart_scheduler_useful_time_sys= 34.16943800
+[107015][      debug]   restart_scheduler_useful_time_wall= 562.75849884
+[107015][      debug]   restart_scheduler_useful_time_oncpu_pct= 75%
+[107015][      debug]   restart_scheduler_total_time_user= 389.59584300
+[107015][      debug]   restart_scheduler_total_time_sys= 35.26459600
+[107015][      debug]   restart_scheduler_total_time_wall= 570.42092185
+[107015][      debug]   restart_scheduler_total_time_oncpu_pct= 74%
+[107015][      debug]   pulse_aliasing_contradictions= 0
+[107015][      debug]   pulse_args_length_contradictions= 0
+[107015][      debug]   pulse_captured_vars_length_contradictions= 0
+[107015][      debug]   pulse_disjuncts_dropped= 19427
+[107015][      debug]   pulse_interrupted_loops= 44
+[107015][      debug]   pulse_summaries_contradictions= 0
+[107015][      debug]   pulse_summaries_unsat_for_caller= 869
+[107015][      debug]   pulse_summaries_unsat_for_caller_percent= 30
+[107015][      debug]   pulse_summaries_with_some_unreachable_nodes= 478
+[107015][      debug]   pulse_summaries_with_some_unreachable_nodes_percent= 16
+[107015][      debug]   pulse_summaries_with_some_unreachable_returns= 86
+[107015][      debug]   pulse_summaries_with_some_unreachable_returns_percent= 0.3%
+[107015][      debug]   pulse_summaries_count= [0 -> 2, 1 -> 2064, 2 -> 98, 3 -> 32, 4 -> 123, 5 -> 5, 6 -> 7, 7 -> 3, 8 -> 110, 9 -> 3, 10 -> 10, 11 -> 1, 12 -> 2, 13 -> 2, 14 -> 2, 15 -> 5, 16 -> 1, 17 -> 3, 18 -> 1, 19 -> 3, 20 -> 380]
+[107015][      debug]   pulse_summaries_total_disjuncts= 11849
+[107015][      debug]   pulse_summaries_count_0_continue_program= 66
+[107015][      debug]   pulse_summaries_count_0_percent= 2
+[107015][      debug]   topl_reachable_calls= 0
+[107015][      debug]   timeouts= 0
+[107015][      debug]   timings= timings for liveness:
+[107015][      debug]     p10: 0.000045s p20: 0.000077s p30: 0.000101s p40: 0.000125s
+[107015][      debug]     p50: 0.000151s p60: 0.000186s p70: 0.000254s p80: 0.000784s
+[107015][      debug]     p90: 0.002386s p95: 0.004379s p96: 0.005085s p97: 0.005872s
+[107015][      debug]     p98: 0.006733s p99: 0.008104s p99.9: 0.012211s p99.99: 0.019893s 
+[107015][      debug]   timings for parameter-not-null-checked:
+[107015][      debug]     p10: 0.000000s p20: 0.000001s p30: 0.000003s p40: 0.000028s
+[107015][      debug]     p50: 0.000039s p60: 0.000053s p70: 0.000074s p80: 0.000148s
+[107015][      debug]     p90: 0.000494s p95: 0.001093s p96: 0.001395s p97: 0.001566s
+[107015][      debug]     p98: 0.001763s p99: 0.002359s p99.9: 0.011929s p99.99: 0.018425s 
+[107015][      debug]   timings for pulse:
+[107015][      debug]     p10: 0.000277s p20: 0.002085s p30: 0.004047s p40: 0.005120s
+[107015][      debug]     p50: 0.006119s p60: 0.007959s p70: 0.017996s p80: 0.115956s
+[107015][      debug]     p90: 0.312149s p95: 0.732122s p96: 1.188928s p97: 1.417774s
+[107015][      debug]     p98: 1.547566s p99: 1.635658s p99.9: 2.243354s p99.99: 3.666276s 
+[107015][      debug]   timings for racerd:
+[107015][      debug]     p10: 0.000001s p20: 0.000043s p30: 0.000184s p40: 0.000349s
+[107015][      debug]     p50: 0.000687s p60: 0.001472s p70: 0.002882s p80: 0.004938s
+[107015][      debug]     p90: 0.013633s p95: 0.020203s p96: 0.022456s p97: 0.024957s
+[107015][      debug]     p98: 0.027383s p99: 0.032389s p99.9: 0.056184s p99.99: 0.068596s 
+[107015][      debug]   timings for self-in-block:
+[107015][      debug]     p10: 0.000000s p20: 0.000000s p30: 0.000001s p40: 0.000004s
+[107015][      debug]     p50: 0.000006s p60: 0.000009s p70: 0.000012s p80: 0.000017s
+[107015][      debug]     p90: 0.000024s p95: 0.000030s p96: 0.000031s p97: 0.000033s
+[107015][      debug]     p98: 0.000037s p99: 0.000040s p99.9: 0.000067s p99.99: 0.000109s 
+[107015][      debug]   timings for siof:
+[107015][      debug]     p10: 0.000000s p20: 0.000057s p30: 0.000266s p40: 0.000365s
+[107015][      debug]     p50: 0.000458s p60: 0.000564s p70: 0.000751s p80: 0.001519s
+[107015][      debug]     p90: 0.005090s p95: 0.008063s p96: 0.008936s p97: 0.009666s
+[107015][      debug]     p98: 0.011083s p99: 0.014015s p99.9: 0.026953s p99.99: 0.042565s 
+[107015][      debug]   timings for starvation:
+[107015][      debug]     p10: 0.000003s p20: 0.000133s p30: 0.000411s p40: 0.000777s
+[107015][      debug]     p50: 0.001158s p60: 0.001629s p70: 0.002530s p80: 0.004910s
+[107015][      debug]     p90: 0.011538s p95: 0.017809s p96: 0.019326s p97: 0.021948s
+[107015][      debug]     p98: 0.025261s p99: 0.029879s p99.9: 0.045989s p99.99: 0.054761s 
+[107015][      debug]   timings for preanalysis:
+[107015][      debug]     p10: 0.000292s p20: 0.000490s p30: 0.000643s p40: 0.000812s
+[107015][      debug]     p50: 0.001025s p60: 0.001290s p70: 0.001805s p80: 0.004229s
+[107015][      debug]     p90: 0.008163s p95: 0.011798s p96: 0.013708s p97: 0.016111s
+[107015][      debug]     p98: 0.020426s p99: 0.030471s p99.9: 0.077964s p99.99: 0.083144s 
+[107015][      debug]   
+[107015][      debug]   longest_proc_duration_heap= [
+[107015][      debug]   15739443us: src/HandleTransfer/post.cpp: HandlePostTransfer::validateFinalCRLF
+[107015][      debug]   12333878us: src/HandleTransfer/post.cpp: HandlePostTransfer::errorPostTransfer
+[107015][      debug]   10721222us: src/FileDescriptor.cpp: FileDescriptor::closeFD
+[107015][      debug]   10524603us: src/parsing/Location.cpp: Location::SetDefaultLocation
+[107015][      debug]   10304318us: src/parsing/Aconfig.cpp: Aconfig::error_page
+[107015][      debug]   9737729us: src/RunServer/RunServer.cpp: RunServers::handleEpollErrorEvents
+[107015][      debug]   9386573us: src/request/handleCgi.cpp: anonymous_namespace_src_request_handleCgi.cpp::setupCgiPipes
+[107015][      debug]   8925889us: src/RunServer/cleanup.cpp: RunServers::cleanupClient
+[107015][      debug]   8254886us: src/parsing/ConfigServer.cpp: ConfigServer::serverName
+[107015][      debug]   7760879us: include/Logger.hpp: Logger::log<const_char_(&)[13]>
+[107015][      debug]   ]
+[107015][      debug]   process_times_user= 393.64457200
+[107015][      debug]   process_times_sys= 37.55287500
+[107015][      debug]   process_times_wall= 626.43593230
+[107015][      debug]   process_times_oncpu_pct= 69%
+[107015][      debug]   useful_times_user= 393.55544300
+[107015][      debug]   useful_times_sys= 37.50794700
+[107015][      debug]   useful_times_wall= 583.43743185
+[107015][      debug]   useful_times_oncpu_pct= 74%
+[107015][      debug]   spec_store_times_user= 3.38962800
+[107015][      debug]   spec_store_times_sys= 0.38936600
+[107015][      debug]   spec_store_times_wall= 37.07221466
+[107015][      debug]   spec_store_times_oncpu_pct= 10%
+[107015][      debug]   
+[107015][      debug] GC stats for backend_stats.gc_stats_add.:
+[107015][      debug]   minor_words: 9.17033e+09
+[107015][      debug]   promoted_words: 1.15666e+08
+[107015][      debug]   major_words: 3.67394e+08
+[107015][      debug]   minor_collections: 8886
+[107015][      debug]   major_collections: 289
+[107015][      debug]   compactions: 0
+[107015][      debug]   top_heap_words: 120098304
+[107015][      debug]   
+[107015][      debug] GC stats for backend_stats.gc_stats_max.:
+[107015][      debug]   minor_words: 5.34359e+08
+[107015][      debug]   promoted_words: 6.87718e+06
+[107015][      debug]   major_words: 2.61836e+07
+[107015][      debug]   minor_collections: 517
+[107015][      debug]   major_collections: 18
+[107015][      debug]   compactions: 0
+[107015][      debug]   top_heap_words: 7432704
+[107015][      debug]   
+[107015][      debug] Average over 20 processes
+[107015][      debug] GC stats for backend_stats.gc_stats_average.:
+[107015][      debug]   minor_words: 4.58516e+08
+[107015][      debug]   promoted_words: 5.78332e+06
+[107015][      debug]   major_words: 1.83697e+07
+[107015][      debug]   minor_collections: 444
+[107015][      debug]   major_collections: 14
+[107015][      debug]   compactions: 0
+[107015][      debug]   top_heap_words: 6004915
+[107015][      debug]   
+[107015][      debug] Analysis phase finished in 31.5s
+[107015][      debug] backend_stats.scheduler_process_analysis_time_user= 2.26298600
+[107015][      debug] backend_stats.scheduler_process_analysis_time_sys= 3.26096800
+[107015][      debug] backend_stats.scheduler_process_analysis_time_wall= 31.48548923
+[107015][      debug] backend_stats.scheduler_process_analysis_time_oncpu_pct= 18%
+[107015][      debug] GC stats for analysis_scheduler:
+[107015][      debug]   minor_words: 5.50406e+07
+[107015][      debug]   promoted_words: 1.74276e+06
+[107015][      debug]   major_words: 2.64403e+06
+[107015][      debug]   minor_collections: 57
+[107015][      debug]   major_collections: 7
+[107015][      debug]   compactions: 1
+[107015][      debug]   top_heap_words: 2330624
+[107015][      debug]   
+[107015][     result] 
+/usr/include/c++/12/bits/stl_pair.h:535: error: Unnecessary Copy Intermediate
+  `std::forward()` is copied into field `first` but is not modified afterwards. Rather than copying into the field, move into it instead.
+  533.                          bool>::type=true>
+  534. 	constexpr pair(_U1&& __x, _U2&& __y)
+  535. 	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y)) { }
+          ^
+  536. 
+  537.       template<typename _U1, typename _U2, typename
+
+/usr/include/c++/12/bits/stl_pair.h:535: error: Unnecessary Copy Intermediate
+  `std::forward()` is copied into field `second` but is not modified afterwards. Rather than copying into the field, move into it instead.
+  533.                          bool>::type=true>
+  534. 	constexpr pair(_U1&& __x, _U2&& __y)
+  535. 	: first(std::forward<_U1>(__x)), second(std::forward<_U2>(__y)) { }
+                                         ^
+  536. 
+  537.       template<typename _U1, typename _U2, typename
+
+src/request/parsingReq.cpp:132: error: Unnecessary Copy Assignment
+  `&cookieSessionId` is copy assigned into field `_sessionId` but is not modified afterwards. Rather than copying into the field, move into it instead.
+  130. 
+  131.         if (validSessionCookie)
+  132.             client._sessionId = cookieSessionId;
+                   ^
+  133.         else {
+  134.             RunServers::setSessionData(generateSessionIdCookie(sessionId), SessionData{});
+
+
+Found 3 issues
+                                          Issue Type(ISSUED_TYPE_ID): #
+  Unnecessary Copy Intermediate(PULSE_UNNECESSARY_COPY_INTERMEDIATE): 2
+      Unnecessary Copy Assignment(PULSE_UNNECESSARY_COPY_ASSIGNMENT): 1
+
+[107015][      debug] GC stats for report:
+[107015][      debug]   minor_words: 735015
+[107015][      debug]   promoted_words: 0
+[107015][      debug]   major_words: 300388
+[107015][      debug]   minor_collections: 0
+[107015][      debug]   major_collections: 0
+[107015][      debug]   compactions: 0
+[107015][      debug]   top_heap_words: 2680320
+[107015][      debug]   
+[107015][      debug] GC stats for main_process_full:
+[107015][      debug]   minor_words: 5.87462e+07
+[107015][      debug]   promoted_words: 2.45009e+06
+[107015][      debug]   major_words: 3.69763e+06
+[107015][      debug]   minor_collections: 65
+[107015][      debug]   major_collections: 8
+[107015][      debug]   compactions: 1
+[107015][      debug]   top_heap_words: 2680320
+[107015][      debug]   
+[107016][      debug] Detected 5 spec overwrites.
+[107016][      debug] Sqlite write daemon: terminating
+[107015][      debug] Sqlite write daemon: waiting for process 107016 to finish
+[107016][      debug] dbwriter.useful_time_user= 2.43428500
+[107016][      debug] dbwriter.useful_time_sys= 3.11474600
+[107016][      debug] dbwriter.useful_time_wall= 25.43991391
+[107016][      debug] dbwriter.useful_time_oncpu_pct= 22%
+[107016][      debug] dbwriter.store_sql_user= 0.96509200
+[107016][      debug] dbwriter.store_sql_sys= 1.68817000
+[107016][      debug] dbwriter.store_sql_wall= 9.47744694
+[107016][      debug] dbwriter.store_sql_oncpu_pct= 28%
+[107016][      debug] dbwriter.store_sql_pct= 48%
+[107016][      debug] dbwriter.total_time_user= 3.37314400
+[107016][      debug] dbwriter.total_time_sys= 3.60258300
+[107016][      debug] dbwriter.total_time_wall= 50.79239306
+[107016][      debug] dbwriter.total_time_oncpu_pct= 14%
+[107016][      debug] [107015][      debug] Sqlite write daemon: process 107016 terminated

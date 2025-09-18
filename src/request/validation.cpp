@@ -62,20 +62,22 @@ namespace
         size_t queryPos = requestPath.find('?');
         if (queryPos != string::npos) {
             client._queryString = requestPath.substr(queryPos + 1);
-            requestPath = requestPath.substr(0, queryPos);
+            requestPath.resize(queryPos);
         }
         
         if (isValidAndNormalizeRequestPath(client, requestPath) == false)
             throw ErrorCodeClientException(client, 400, "Invalid HTTP path: " + requestPath);
 
         size_t faviconIndex = requestPath.find("/favicon.ico");
-        if (faviconIndex != string::npos)
-            requestPath = requestPath.substr(0, faviconIndex) + "/favicon.svg";
+        if (faviconIndex != string::npos) {
+            requestPath.resize(faviconIndex);
+            requestPath += "/favicon.svg";
+        }
     }
 
     uint8_t checkAllowedMethod(Client &client)
     {
-        string &method = client._method;
+        const string &method = client._method;
         uint8_t allowedMethods = client._location.getAllowedMethods();
     
         if (method == "HEAD" && allowedMethods & METHOD_HEAD)

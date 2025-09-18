@@ -92,6 +92,7 @@ string HttpRequest::createResponseCgi(Client &client, const string &input)
 
 map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string_view, string_view> &headerFields, size_t headerSize)
 {
+    Logger::log(DEBUG, input); //testlog
     size_t pos = 0;
     while (pos < headerSize) {
         size_t end = input.find(CRLF, pos);

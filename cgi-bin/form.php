@@ -1,12 +1,12 @@
 #!/usr/bin/php-cgi
 <?php
 
+
 // Error handling: custom error handler to display user-friendly message
 set_error_handler(function($errno, $errstr) {
-    if (!headers_sent()) {
-        header("Status: 500 Internal Server Error");
-        header("Content-Type: text/html");
-    }
+    header_remove(); // Remove all default headers
+    header("Status: 500 Internal Server Error");
+    header("Content-Type: text/html", true);
     echo "<h2>Internal Server Error</h2><p>An error occurred: " . htmlspecialchars($errstr) . "</p>";
     exit;
 });
@@ -17,10 +17,11 @@ $content_length = getenv('CONTENT_LENGTH') ?: 0;
 
 // Validate content length with reasonable limits
 if (!is_numeric($content_length) || $content_length < 0) {
-    header("Status: 400 Bad Request\r\n");
-    header("Content-Type: text/html\r\n");
+    header_remove(); // Remove all default headers
+    header("Status: 400 Bad Request");
+    header("Content-Type: text/html", true);
     $return_body = "<h2>Bad Request</h2><p>Invalid content length.</p>";
-    header("Content-Length: " . strlen($return_body) . "\r\n\r\n");
+    header("Content-Length: " . strlen($return_body) . "");
     echo $return_body;
     exit;
 }
@@ -36,20 +37,26 @@ parse_str($post_data, $fields);
 
 // Enhanced field validation
 if (empty($fields['name']) || empty($fields['email']) || empty($fields['message'])) {
+    header_remove(); // Remove all default headers
     header("Status: 400 Bad Request");
+    header("Content-Type: text/html", true);
     echo "<h2>Bad Request</h2><p>All fields are required.</p>";
     exit;
 }
 
 // Add email validation and length checks
 if (!filter_var($fields['email'], FILTER_VALIDATE_EMAIL)) {
+    header_remove(); // Remove all default headers
     header("Status: 400 Bad Request");
+    header("Content-Type: text/html", true);
     echo "<h2>Bad Request</h2><p>Invalid email format.</p>";
     exit;
 }
 
 if (strlen($fields['name']) > 100 || strlen($fields['message']) > 5000) {
+    header_remove(); // Remove all default headers
     header("Status: 400 Bad Request");
+    header("Content-Type: text/html", true);
     echo "<h2>Bad Request</h2><p>Input too long.</p>";
     exit;
 }

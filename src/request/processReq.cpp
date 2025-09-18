@@ -147,7 +147,7 @@ bool HttpRequest::handleRequestUpload(Client &client)
             
             string extension = filename.substr(dotPos + 1);
             for (size_t j = 0; j < extension.length(); ++j) {
-                extension[j] = tolower(extension[j]);
+                extension[j] = static_cast<char>(tolower(extension[j]));
             }
             
             if (extension == "jpg" || extension == "jpeg" || extension == "png" || 

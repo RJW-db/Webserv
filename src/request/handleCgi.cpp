@@ -136,6 +136,7 @@ namespace
             handleRead->_fd = -1;
         throw ErrorCodeClientException(client, errorCode, "CGI setup failed");
     }
+
     /**
      * you can expand the pipe buffer, normally is 65536, using fcntl F_SETPIPE_SZ.
      * check the maximum size: cat /proc/sys/fs/pipe-max-size
