@@ -56,9 +56,8 @@ void RunServers::checkCgiDisconnect()
                 if (client._pid > 0)
                     kill(client._pid, SIGTERM);
                 else
-                    Logger::log(IERROR, "No valid PID to kill", client._fd, "clientFD", "Trying to kill pid ", client._pid); //testlog
+                    Logger::log(IERROR, "No valid PID to kill", client._fd, "clientFD", "Trying to kill pid ", client._pid);
                 throw ErrorCodeClientException(client, 500, "Reading from CGI failed because it took too long");
-                // continue;
             }
             ++it;
         }

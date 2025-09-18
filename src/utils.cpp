@@ -151,7 +151,7 @@ namespace
 // {
 //     static uint8_t count = 1;
 
-//     // Logger::log(INFO, "ThrowTesting(), count: ", +count); //testlog
+//     // Logger::log(INFO, "ThrowTesting(), count: ", +count);
 //     if (count++ == 1) {
 //         Logger::logExit(ERROR, "Server Error", "Invalid FD, setEpollEvents failed");
 //         // throw runtime_error("Throw test");

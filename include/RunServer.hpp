@@ -55,6 +55,9 @@ class RunServers
         static void   acceptConnection(const int listener);
         static void   setClientServerAddress(Client &client, int infd);
         static bool   runHandleTransfer(struct epoll_event &currentEvent);
+        static bool   processHandleTransferEvents(const struct epoll_event& currentEvent, HandleTransfer& handle);
+        static void   handleCompletedTransfer(const struct epoll_event& currentEvent, HandleTransfer& handle, size_t idx);
+
         static bool   runCgiHandleTransfer(struct epoll_event &currentEvent);
         static void   processClientRequest(Client &client);
         static size_t receiveClientData(Client &client, char *buff);

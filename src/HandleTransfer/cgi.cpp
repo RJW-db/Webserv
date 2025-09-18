@@ -39,8 +39,8 @@ HandleReadFromCgiTransfer::HandleReadFromCgiTransfer(Client &client, int fdReadf
 bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
     vector<char> buff(PIPE_BUFFER_SIZE);
-    
     ssize_t bytesRead = read(_fd, buff.data(), buff.size());
+    _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
     if (bytesRead == -1) {
         FileDescriptor::cleanupEpollFd(_fd);
         throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
@@ -51,6 +51,5 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
         FileDescriptor::cleanupEpollFd(_fd);
         return true;
     }
-    _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
     return false;
 }

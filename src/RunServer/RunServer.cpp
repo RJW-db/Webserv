@@ -142,38 +142,48 @@ bool RunServers::runHandleTransfer(struct epoll_event &currentEvent)
     for (size_t idx = 0; idx < _handle.size(); ++idx) {
         if (_handle[idx]->_client._fd == eventFD) {
             HandleTransfer &handle = *_handle[idx];
-            Client &client = handle._client;
-            client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
-            bool finished = false;
-            if (currentEvent.events & EPOLLOUT) {
-                if (handle._handleType == HANDLE_GET_TRANSFER)
-                    finished = handle.handleGetTransfer();
-                else
-                    finished = handle.sendToClientTransfer();
-            }
-            else if (currentEvent.events & EPOLLIN) {
-                if (handle._handleType == HANDLE_POST_TRANSFER)
-                    finished = handle.postTransfer(true);
-                else {
-                    handle.appendToBody();
-                    finished = handle.handleChunkTransfer();
-                }
-            }
-            if (finished == true) {
-                if (currentEvent.events & EPOLLOUT) { // has to be send to client for cleanup
-                    if (client._keepAlive == false) {
-                        cleanupClient(client);
-                        return true;
-                    }
-                    else
-                        client.httpCleanup();
-                }
-                _handle.erase(_handle.begin() + static_cast<long>(idx));
+            if (processHandleTransferEvents(currentEvent, handle)) {
+                handleCompletedTransfer(currentEvent, handle, idx);
             }
             return true;
         }
     }
     return false;
+}
+
+bool RunServers::processHandleTransferEvents(const struct epoll_event& currentEvent, HandleTransfer& handle)
+{
+    if (currentEvent.events & EPOLLOUT) {
+        if (handle._handleType == HANDLE_GET_TRANSFER)
+            return handle.handleGetTransfer();
+        else
+            return handle.sendToClientTransfer();
+    }
+    else if (currentEvent.events & EPOLLIN) {
+        if (handle._handleType == HANDLE_POST_TRANSFER)
+            return handle.postTransfer(true);
+        else {
+            handle.appendToBody();
+            return handle.handleChunkTransfer();
+        }
+    }
+    return false;
+}
+
+void RunServers::handleCompletedTransfer(const struct epoll_event& currentEvent, HandleTransfer& handle, size_t idx)
+{
+    if (currentEvent.events & EPOLLOUT) {
+        Client& client = handle._client;
+        if (client._keepAlive)
+            client.httpCleanup();
+        else
+        {
+            cleanupClient(client);
+            return;
+        }
+    }
+    _handle.erase(_handle.begin() + static_cast<long>(idx));
+
 }
 
 bool RunServers::runCgiHandleTransfer(struct epoll_event &currentEvent)

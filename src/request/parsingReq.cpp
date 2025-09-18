@@ -28,7 +28,6 @@ bool HttpRequest::parseHttpHeader(Client &client, const char *buff, size_t recei
 
     parseHeaders(client);
     validateHEAD(client);
-
     handleConnectionHeader(client);
     assignOrCreateSessionId(client);
 
@@ -114,7 +113,6 @@ namespace
                 throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + string(connValue));
         }
     }
-
     void assignOrCreateSessionId(Client &client)
     {
         auto cookie = client._headerFields.find("Cookie");
