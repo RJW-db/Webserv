@@ -82,6 +82,8 @@ namespace
                 // Extract key and value as string_views
                 string_view key = trimWhiteSpace(line.substr(0, colon));
                 string_view value = trimWhiteSpace(line.substr(colon + 1));
+                string keyStr(key);
+                convertStringToLower(keyStr);
                 client._headerFields[keyStr] = value;
             }
             start = end + 2;
@@ -102,7 +104,7 @@ namespace
     {
         if (RunServers::getErrorOccurred() != SERVER_GOOD)
             return;
-        auto connectionHeader = client._headerFields.find("Connection");
+        auto connectionHeader = client._headerFields.find("connection");
         if (connectionHeader != client._headerFields.end()) {
             string_view connValue = connectionHeader->second;
             if (connValue == "close")
@@ -115,7 +117,7 @@ namespace
     }
     void assignOrCreateSessionId(Client &client)
     {
-        auto cookie = client._headerFields.find("Cookie");
+        auto cookie = client._headerFields.find("cookie");
         char sessionId[ID_SIZE];
 
         bool validSessionCookie = false;
@@ -139,10 +141,10 @@ namespace
     bool handlePost(Client &client)
     {
         HttpRequest::getContentType(client);
-        auto transferEncodingHeader = client._headerFields.find("Transfer-Encoding");
+        auto transferEncodingHeader = client._headerFields.find("transfer-encoding");
         if (transferEncodingHeader != client._headerFields.end() &&
             transferEncodingHeader->second == "chunked") {
-            transferEncodingHeader = client._headerFields.find("Content-Length");
+            transferEncodingHeader = client._headerFields.find("content-length");
             if (transferEncodingHeader != client._headerFields.end())
                 throw ErrorCodeClientException(client, 400, "Content-Length shouldn't be present in a chunked request");
             client._headerParseState = BODY_CHUNKED;

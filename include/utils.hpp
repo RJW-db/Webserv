@@ -1,7 +1,8 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
-#include <string>
+#include <algorithm>
 #include <cstdlib>
+#include <string>
 using namespace std;
 class Client;
 namespace

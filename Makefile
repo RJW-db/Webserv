@@ -89,6 +89,9 @@ re:
 test: all
 	./$(NAME)
 
+test2: all
+	./$(NAME) testing/test1.conf
+
 valgrind: all
 	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
 

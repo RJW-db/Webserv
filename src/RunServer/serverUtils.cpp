@@ -130,7 +130,7 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
 
 void RunServers::setServerFromListener(Client &client)
 {
-    auto hostHeader = client._headerFields.find("Host");
+    auto hostHeader = client._headerFields.find("host");
     if (hostHeader == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Missing required Host header");
 

@@ -84,15 +84,14 @@ string HttpRequest::createResponseCgi(Client &client, const string &input)
 {
     size_t headerSize = input.find(CRLF2);
     bool hasBody = (input.size() > headerSize + CRLF2_LEN);
-    map<string_view, string_view> headerFields;
+    map<string, string_view> headerFields;
     parseCgiHeaders(input, headerFields, headerSize);
     validateCgiHeaders(client, headerFields, hasBody);
     return buildCgiResponse(client, headerFields, input, headerSize, hasBody);
 }
 
-map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string_view, string_view> &headerFields, size_t headerSize)
+map<string, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string, string_view> &headerFields, size_t headerSize)
 {
-    Logger::log(DEBUG, input); //testlog
     size_t pos = 0;
     while (pos < headerSize) {
         size_t end = input.find(CRLF, pos);
@@ -101,11 +100,12 @@ map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, 
         string_view line(&input[pos], end - pos);
         size_t colon = line.find(':');
         if (colon != string_view::npos) {
-            string_view key = line.substr(0, colon);
+            string key(line.substr(0, colon));
             string_view value = line.substr(colon + 1);
             size_t firstNonSpace = value.find_first_not_of(" ");
             if (firstNonSpace != string_view::npos)
                 value = value.substr(firstNonSpace);
+            convertStringToLower(key);
             headerFields[key] = value;
         }
         pos = end + CRLF_LEN;
@@ -113,26 +113,26 @@ map<string_view, string_view> HttpRequest::parseCgiHeaders(const string &input, 
     return headerFields;
 }
 
-void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody)
+void HttpRequest::validateCgiHeaders(Client &client, const map<string, string_view> &headerFields, bool hasBody)
 {
-    if (headerFields.find("Status") == headerFields.end() || headerFields.at("Status").empty())
-        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Status");
-    
-    if (hasBody && headerFields.count("Content-Type") < 1)
+    if (headerFields.find("status") == headerFields.end() || headerFields.at("status").empty())
+        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header status");
+
+    if (hasBody && headerFields.count("content-type") < 1)
         throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
 }
 
-string HttpRequest::buildCgiResponse(const Client &client, const map<string_view, string_view> &headerFields, 
+string HttpRequest::buildCgiResponse(const Client &client, const map<string, string_view> &headerFields, 
                                 const string &input, size_t headerSize, bool hasBody)
 {
     ostringstream response;
-    response << "HTTP/1.1 " << headerFields.at("Status") << CRLF;
+    response << "HTTP/1.1 " << headerFields.at("status") << CRLF;
     response << "Connection: " + string(client._keepAlive ? "keep-alive" : "close") + CRLF;
 
     if (hasBody) {
-        response << "Content-Type: " << headerFields.at("Content-Type") << CRLF;
-        if (headerFields.count("Content-Length") > 0)
-            response << "Content-Length: " << headerFields.at("Content-Length") << CRLF;
+        response << "Content-Type: " << headerFields.at("content-type") << CRLF;
+        if (headerFields.count("content-length") > 0)
+            response << "Content-Length: " << headerFields.at("content-length") << CRLF;
         else
             response << "Content-Length: " << input.size() - headerSize - CRLF2_LEN << CRLF;
         response << CRLF;

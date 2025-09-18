@@ -31,7 +31,7 @@ void HttpRequest::POST(Client &client)
 
 void HttpRequest::getContentLength(Client &client)
 {
-    auto contentLength = client._headerFields.find("Content-Length");
+    auto contentLength = client._headerFields.find("content-length");
     if (contentLength == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Length header not found");
     try {
@@ -50,7 +50,7 @@ void HttpRequest::getContentLength(Client &client)
 
 void HttpRequest::getContentType(Client &client)
 {
-    auto it = client._headerFields.find("Content-Type");
+    auto it = client._headerFields.find("content-type");
     if (it == client._headerFields.end())
         throw ErrorCodeClientException(client, 400, "Content-Type header not found in request");
     const string_view ct(it->second);
