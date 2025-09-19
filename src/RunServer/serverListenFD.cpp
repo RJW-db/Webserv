@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-// #include <poll.h>
 #ifdef __linux__
 # include <sys/epoll.h>
 #endif

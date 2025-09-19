@@ -2,10 +2,11 @@
 #include <algorithm>
 #include <dirent.h>
 #include <cstring>
+#include "ErrorCodeClientException.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 #include "utils.hpp"
-#include "ErrorCodeClientException.hpp"
 namespace
 {
     constexpr char hexCharacters[] = "0123456789ABCDEF";
@@ -27,7 +28,7 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
 {
     DIR *d = opendir(path.c_str());
     if (d == NULL)
-        throw ErrorCodeClientException(client, 500, "Couldn't open directory: " + path + " because: " + strerror(errno));
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Couldn't open directory: " + path + " because: " + strerror(errno));
     try
     {
         errno = 0; // man readdir for explanation
@@ -40,16 +41,16 @@ vector<string> listFilesInDirectory(Client &client, const string &path)
         }
         int err = handleDirCleanup(d);
         if (err != 0)
-            throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because: " + strerror(err));
+            throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Error reading directory: " + path + " because: " + strerror(err));
         return files;
     }
     catch (const std::bad_alloc& e) {
         handleDirCleanup(d);
-        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because vector: " + e.what());
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Error reading directory: " + path + " because vector: " + e.what());
     }
     catch (...) {
         handleDirCleanup(d);
-        throw ErrorCodeClientException(client, 500, "Error reading directory: " + path + " because of an unknown exception");
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Error reading directory: " + path + " because of an unknown exception");
     }
 }
 
@@ -69,10 +70,10 @@ size_t getFileLength(Client &client, const string_view filename)
 {
     struct stat status;
     if (stat(filename.data(), &status) == -1)
-        throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "Couldn't get info because" + strerror(errno));
+        throw ErrorCodeClientException(client, BAD_REQUEST, "Filename: " + string(filename) + "Couldn't get info because" + strerror(errno));
 
     if (status.st_size < 0)
-        throw ErrorCodeClientException(client, 400, "Filename: " + string(filename) + "invalid file size" + strerror(errno));
+        throw ErrorCodeClientException(client, BAD_REQUEST, "Filename: " + string(filename) + "invalid file size" + strerror(errno));
     return static_cast<size_t>(status.st_size);;
 }
 

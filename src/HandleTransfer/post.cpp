@@ -12,7 +12,6 @@ namespace
     constexpr size_t BOUNDARY_PADDING = 4;  // for \r\n-- prefix
     constexpr size_t TERMINATOR_SIZE = 4;   // for --\r\n
     constexpr int FILE_PERMISSIONS = 0700;
-    constexpr uint16_t HTTP_CREATED = 201;
 }
 
 /**
@@ -47,7 +46,7 @@ bool HandlePostTransfer::postTransfer(bool readData)
     }
     catch (const exception& e) {
         _client._keepAlive = false;
-        errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
+        errorPostTransfer(_client, INTERNAL_SERVER_ERROR, "Error in handlePostTransfer: " + string(e.what()));
     }
     catch (ErrorCodeClientException &e) {
         errorPostTransfer(_client, e.getErrorCode(), e.getMessage());
@@ -76,7 +75,7 @@ bool HandlePostTransfer::processMultipartData()
 {
     while (true) {
         if (_bytesReadTotal > _client._contentLength)
-            throw ErrorCodeClientException(_client, 400, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
+            throw ErrorCodeClientException(_client, BAD_REQUEST, "Content length smaller then body received for client with fd: " + to_string(_client._fd));
         if (_searchContentDisposition == true && searchContentDisposition() == false)
             return false;
         if (_foundBoundary == true) {
@@ -92,7 +91,7 @@ bool HandlePostTransfer::processMultipartData()
             _foundBoundary = true;
         }
         else if (_completedChunkedRequest == true || _bytesReadTotal == _client._contentLength)
-            throw ErrorCodeClientException(_client, 400, "No boundary found in chunked post request");
+            throw ErrorCodeClientException(_client, BAD_REQUEST, "No boundary found in chunked post request");
         else
             return false;
     }
@@ -116,14 +115,14 @@ size_t HandlePostTransfer::FindBoundaryAndWrite(size_t &bytesWritten)
         else if (strncmp(_fileBuffer.data() + boundaryPos - BOUNDARY_PREFIX_LEN, "--",BOUNDARY_PREFIX_LEN ) == 0)
             writeSize = boundaryPos - BOUNDARY_PREFIX_LEN;
         else
-            throw ErrorCodeClientException(_client, 400, "post request has more characters then allowed between content and boundary");
+            throw ErrorCodeClientException(_client, BAD_REQUEST, "post request has more characters then allowed between content and boundary");
     }
     else if (writeSize < RunServers::getRamBufferLimit())
         writeSize = 0;
     if (writeSize > 0) {
         ssize_t written = write(_fd, _fileBuffer.data(), writeSize);
         if (written == -1)
-            throw ErrorCodeClientException(_client, 500, "write failed post request: " + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, INTERNAL_SERVER_ERROR, "write failed post request: " + string(strerror(errno)));
         bytesWritten = static_cast<size_t>(written);
         _fileBuffer = _fileBuffer.erase(0, bytesWritten);
     }
@@ -145,9 +144,9 @@ bool HandlePostTransfer::searchContentDisposition()
     _fd = open(_client._filenamePath.data(), O_WRONLY | O_TRUNC | O_CREAT, FILE_PERMISSIONS);
     if (_fd == -1) {
         if (errno == EACCES)
-            throw ErrorCodeClientException(_client, 403, "access not permitted for post on file: " + _client._filenamePath);
+            throw ErrorCodeClientException(_client, FORBIDDEN, "access not permitted for post on file: " + _client._filenamePath);
         else
-            throw ErrorCodeClientException(_client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+            throw ErrorCodeClientException(_client, INTERNAL_SERVER_ERROR, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     }
     FileDescriptor::setFD(_fd);
     _fileNamePaths.push_back(_client._filenamePath);
@@ -182,7 +181,7 @@ ValidationResult HandlePostTransfer::validateFinalCRLF()
         return FINISHED;
     }
     if (_fileBuffer.size() > TERMINATOR_SIZE) {
-        errorPostTransfer(_client, 400, "post request has more characters then allowed between boundary and return characters");
+        errorPostTransfer(_client, BAD_REQUEST, "post request has more characters then allowed between boundary and return characters");
     }
     return CONTINUE_READING;
 }
@@ -216,7 +215,7 @@ void HandlePostTransfer::sendSuccessResponse()
     size_t absolutePathSize = RunServers::getServerRootDir().size();
     string_view relativeView(_client._filenamePath.data() + absolutePathSize, _client._filenamePath.size() - absolutePathSize);
     string relativePath = "." + string(relativeView) + '\n';
-    string headers = HttpRequest::HttpResponse(_client, HTTP_CREATED, ".txt", relativePath.size()) + relativePath;
+    string headers = HttpRequest::HttpResponse(_client, CREATED, ".txt", relativePath.size()) + relativePath;
     
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(_client, headers);
     RunServers::insertHandleTransfer(move(handleClient));
@@ -263,7 +262,7 @@ void HandlePostTransfer::errorPostTransfer(Client &client, uint16_t errorCode, c
 void MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
 {
     if (input.size() != client._contentLength)
-        throw ErrorCodeClientException(client, 400, "Content-Length does not match body size, " + string("content_length: ") + 
+        throw ErrorCodeClientException(client, BAD_REQUEST, "Content-Length does not match body size, " + string("content_length: ") + 
         to_string(client._contentLength) + ", input size: " + to_string(input.size()));
     if (client._contentType == FORM_URLENCODED)
         return;
@@ -285,11 +284,11 @@ void MultipartParser::validateMultipartPostSyntax(Client &client, string &input)
         }
         size_t boundaryPos = buffer.find(client._boundary);
         if (boundaryPos == string_view::npos)
-            throw ErrorCodeClientException(client, 400, "Expected boundary not found in multipart data");
+            throw ErrorCodeClientException(client, BAD_REQUEST, "Expected boundary not found in multipart data");
         buffer.remove_prefix(boundaryPos + client._boundary.size());
         foundBoundary = true;
     }
-    throw ErrorCodeClientException(client, 400, "Incomplete multipart data - missing terminator");
+    throw ErrorCodeClientException(client, BAD_REQUEST, "Incomplete multipart data - missing terminator");
 }
 
 /**
@@ -302,7 +301,7 @@ void MultipartParser::parseContentDisposition(Client &client, string_view &buffe
 {
     size_t bodyEnd = buffer.find(CRLF2);
     if (bodyEnd == string_view::npos)
-        throw ErrorCodeClientException(client, 400, "Missing double CRLF after Content-Disposition");
+        throw ErrorCodeClientException(client, BAD_REQUEST, "Missing double CRLF after Content-Disposition");
     string buf = string(buffer.substr(0, bodyEnd));
     HttpRequest::getBodyInfo(client, buf);
     buffer.remove_prefix(bodyEnd + CRLF2_LEN);
@@ -332,5 +331,5 @@ bool MultipartParser::validateBoundaryTerminator(Client &client, string_view &bu
     if (crlfPos == BOUNDARY_PREFIX_LEN && buffer.size() >= terminator.size() && 
         strncmp(buffer.data(), terminator.data(), terminator.size()) == 0)
         return true;
-    throw ErrorCodeClientException(client, 400, "invalid post request to cgi)");
+    throw ErrorCodeClientException(client, BAD_REQUEST, "invalid post request to cgi)");
 }

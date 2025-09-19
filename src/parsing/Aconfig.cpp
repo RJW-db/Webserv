@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include "Constants.hpp"
 #include "Aconfig.hpp"
 #include "Logger.hpp"
 namespace
@@ -8,7 +9,6 @@ namespace
     const char* INVALID_PATH_CHARS = " \t\f\v\r;#?&%=+\\:";
     const size_t MIN_ERROR_CODE = 300;
     const size_t MAX_ERROR_CODE = 599;
-    const size_t KILOBYTE = 1024;
 }
 
 Aconfig::Aconfig() : _autoIndex(autoIndexNotFound), _clientMaxBodySize(0) {}

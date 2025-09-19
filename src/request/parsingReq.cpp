@@ -45,7 +45,7 @@ namespace
     {
         client._header.append(buff, receivedBytes);
         if (client._header.size() > RunServers::getRamBufferLimit())
-            throw ErrorCodeClientException(client, 413, "Header size sent by client larger then ramBufferLimit");
+            throw ErrorCodeClientException(client, PAYLOAD_TOO_LARGE, "Header size sent by client larger then ramBufferLimit");
     }
 
     bool detectHeaderEnd(Client &client, size_t &headerEnd)
@@ -62,7 +62,7 @@ namespace
     {
         size_t pos = header.find('\0');
         if (pos != string::npos)
-            throw ErrorCodeClientException(client, 400, "Null terminator found in header request at index: " + to_string(pos));
+            throw ErrorCodeClientException(client, BAD_REQUEST, "Null terminator found in header request at index: " + to_string(pos));
     }
 
     void parseHeaders(Client &client)
@@ -71,7 +71,7 @@ namespace
         while (start < client._header.size()) {
             size_t end = client._header.find(CRLF, start);
             if (end == string::npos)
-                throw ErrorCodeClientException(client, 400, "Malformed HTTP request: header line not properly terminated");
+                throw ErrorCodeClientException(client, BAD_REQUEST, "Malformed HTTP request: header line not properly terminated");
 
             string_view line(&client._header[start], end - start);
             if (line.empty())
@@ -79,12 +79,14 @@ namespace
 
             size_t colon = line.find(':');
             if (colon != string_view::npos) {
+                // Convert header name to lowercase IN PLACE
+                for (size_t i = start; i < start + colon; ++i) {
+                    client._header[i] = static_cast<char>(std::tolower(client._header[i]));
+                }
                 // Extract key and value as string_views
                 string_view key = trimWhiteSpace(line.substr(0, colon));
                 string_view value = trimWhiteSpace(line.substr(colon + 1));
-                string keyStr(key);
-                convertStringToLower(keyStr);
-                client._headerFields[keyStr] = value;
+                client._headerFields[key] = value;
             }
             start = end + 2;
         }
@@ -112,7 +114,7 @@ namespace
             else if (connValue == "keep-alive")
                 client._keepAlive = true;
             else
-                throw ErrorCodeClientException(client, 400, "Invalid Connection header value: " + string(connValue));
+                throw ErrorCodeClientException(client, BAD_REQUEST, "Invalid Connection header value: " + string(connValue));
         }
     }
     void assignOrCreateSessionId(Client &client)
@@ -146,7 +148,7 @@ namespace
             transferEncodingHeader->second == "chunked") {
             transferEncodingHeader = client._headerFields.find("content-length");
             if (transferEncodingHeader != client._headerFields.end())
-                throw ErrorCodeClientException(client, 400, "Content-Length shouldn't be present in a chunked request");
+                throw ErrorCodeClientException(client, BAD_REQUEST, "Content-Length shouldn't be present in a chunked request");
             client._headerParseState = BODY_CHUNKED;
             return (client._body.size() > 0 ? true : false);
         }
@@ -155,7 +157,7 @@ namespace
         if (client._contentType == FORM_URLENCODED)
         {
             if (client._body.size() > client._contentLength)
-                throw ErrorCodeClientException(client, 400, "Body size exceeds Content-Length");
+                throw ErrorCodeClientException(client, BAD_REQUEST, "Body size exceeds Content-Length");
             else if (client._body.size() < client._contentLength)
                 return false;
         }

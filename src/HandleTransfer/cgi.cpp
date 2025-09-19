@@ -17,7 +17,7 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
 
     if (sent == -1) {
         _client._cgiClosing = true;
-        throw ErrorCodeClientException(_client, 500, "Writing to CGI failed: " + string(strerror(errno)));
+        throw ErrorCodeClientException(_client, INTERNAL_SERVER_ERROR, "Writing to CGI failed: " + string(strerror(errno)));
     }
     else if (sent > 0) {
         _bytesWrittenTotal += static_cast<size_t>(sent);
@@ -43,11 +43,14 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
     _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
     if (bytesRead == -1) {
         FileDescriptor::cleanupEpollFd(_fd);
-        throw ErrorCodeClientException(_client, 500, "Reading from CGI failed: " + string(strerror(errno)));
+        throw ErrorCodeClientException(_client, INTERNAL_SERVER_ERROR, "Reading from CGI failed: " + string(strerror(errno)));
     }
     size_t rd = static_cast<size_t>(bytesRead);
     _fileBuffer.append(buff.data(), rd);
     if (rd == 0 || buff[rd] == '\0') {
+        string paddedMethod = _client._method;
+        paddedMethod.resize(6, ' ');
+        Logger::log(INFO, _client, paddedMethod, " Finished CGI request");
         FileDescriptor::cleanupEpollFd(_fd);
         return true;
     }

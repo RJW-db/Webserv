@@ -55,7 +55,7 @@ void RunServers::setClientServerAddress(Client &client, int infd)
     sockaddr_in serverAddr;
     socklen_t addrLen = sizeof(serverAddr); 
     if (getsockname(infd, reinterpret_cast<sockaddr*>(&serverAddr), &addrLen) != 0)
-        throw ErrorCodeClientException(*_clients[infd], 500, "Failed to get server info");
+        throw ErrorCodeClientException(*_clients[infd], INTERNAL_SERVER_ERROR, "Failed to get server info");
     client._ipPort.first = NumIpToString(ntohl(serverAddr.sin_addr.s_addr));
     client._ipPort.second = to_string(ntohs(serverAddr.sin_port));
 
@@ -79,7 +79,7 @@ void RunServers::processClientRequest(Client &client)
         throw;
     }
     catch (const exception& e) {
-        throw ErrorCodeClientException(client, 500, "error occured in processclientRequest: " + string(e.what()));
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "error occured in processclientRequest: " + string(e.what()));
     }
 }
 
@@ -90,8 +90,8 @@ size_t RunServers::receiveClientData(Client &client, char *buff)
     if (bytesReceived > 0)
         return static_cast<size_t>(bytesReceived);
     if (bytesReceived < 0)
-        throw ErrorCodeClientException(client, 500, "Recv failed from client with error: " + string(strerror(errno)));
-    throw ErrorCodeClientException(client, 0, "kicking out client after read of 0");
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Recv failed from client with error: " + string(strerror(errno)));
+    throw ErrorCodeClientException(client, INFO_LOG, "kicking out client after read of 0");
 }
 
 namespace

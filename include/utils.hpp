@@ -26,10 +26,5 @@ char *generateSessionIdCookie(char sessionId[ID_SIZE]);
  */
 char *generateFilenameUuid(char uuid[UUID_SIZE]);
 size_t findCaseInsensitive(const string_view string, const string_view substr);
-
-
-inline void convertStringToLower(string &str) {
-    transform(str.begin(), str.end(), str.begin(), ::tolower);
-}
 // void     throwTesting();
 #endif

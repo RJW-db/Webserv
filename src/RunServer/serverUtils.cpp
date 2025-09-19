@@ -12,6 +12,7 @@
 #include "ServerListenFD.hpp"
 #include "ConfigServer.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 namespace
 {
@@ -116,12 +117,12 @@ void RunServers::setEpollEventsClient(Client &client, int fd, int option, uint32
         if (_clients.count(fd) == 0) { // pipes
             if (option == EPOLL_CTL_DEL)
                 Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
-            throw ErrorCodeClientException(client, 502, "Server Error Pipes: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
+            throw ErrorCodeClientException(client, BAD_GATEWAY, "Server Error Pipes: " + string(EPOLL_OPTIONS[option - 1]) + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
         }
         else { // client
             if (option == EPOLL_CTL_DEL)
                 Logger::logExit(IERROR, "epoll_ctl error", fd, "fd", EPOLL_OPTIONS[option - 1], Event, strerror(errno));
-            throw ErrorCodeClientException(client, 0, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + Event + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
+            throw ErrorCodeClientException(client, INFO_LOG, "Server Error Client: " + string(EPOLL_OPTIONS[option - 1]) + Event + "fd:" + to_string(fd) + " Failed: " + strerror(errno));
         }
     }
     if (option == EPOLL_CTL_ADD)
@@ -132,7 +133,7 @@ void RunServers::setServerFromListener(Client &client)
 {
     auto hostHeader = client._headerFields.find("host");
     if (hostHeader == client._headerFields.end())
-        throw ErrorCodeClientException(client, 400, "Missing required Host header");
+        throw ErrorCodeClientException(client, BAD_REQUEST, "Missing required Host header");
 
     AconfigServ *tmpServer = nullptr;
     for (unique_ptr<AconfigServ> &server : _servers) {
@@ -160,14 +161,10 @@ void    RunServers::setLocation(Client &client)
         if (strncmp(client._requestPath.data(), locationPair.first.data(), locationPair.first.size()) == 0 &&
         (client._requestPath[client._requestPath.size()] == '\0' || client._requestPath[locationPair.first.size() - 1] == '/')) {
             client._location = locationPair.second;
-            // if (locationPair.first != "/")
-            // {
-            //     client._requestPath.erase(0, locationPair.first.size()); // remove location part from request path, keep leading /
-            // }
             return;
         }
     }
-    throw ErrorCodeClientException(client, 400, "Couldn't find location block: malformed request");
+    throw ErrorCodeClientException(client, BAD_REQUEST, "Couldn't find location block: malformed request");
 }
 
 void RunServers::cleanupEpoll()

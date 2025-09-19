@@ -39,7 +39,7 @@ bool HttpRequest::handleCgi(Client &client, string &body)
         setPipeBufferSize(fdWriteToCgi[1]) == false ||
         setPipeBufferSize(fdReadfromCgi[0]) == false) {
         closing_pipes(fdWriteToCgi, fdReadfromCgi);
-        throw ErrorCodeClientException(client, 500, "Failed to set fcntl for CGI handling");
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Failed to set fcntl for CGI handling");
     }
 
     client._pid = fork();
@@ -63,7 +63,7 @@ namespace
     {
         if (pipe(fdWriteToCgi) == -1 || pipe(fdReadfromCgi) == -1) {
             closing_pipes(fdWriteToCgi, fdReadfromCgi);
-            throw ErrorCodeClientException(client, 500, "Failed to create pipe(s) for CGI handling");
+            throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "Failed to create pipe(s) for CGI handling");
         }
 
         try {
@@ -100,7 +100,7 @@ namespace
 
         unique_ptr<HandleTransfer> handleWrite = nullptr;
         unique_ptr<HandleTransfer> handleRead = nullptr;
-        uint16_t errorCode = 500; 
+        uint16_t errorCode = INTERNAL_SERVER_ERROR; 
         try {
             RunServers::setEpollEventsClient(client, fdReadfromCgi[0], EPOLL_CTL_ADD, EPOLLIN);
                     

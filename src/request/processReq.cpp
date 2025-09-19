@@ -7,8 +7,7 @@
 
 void HttpRequest::processRequest(Client &client)
 {
-    if (checkAndRedirect(client) ||
-        checkAndRunCgi(client))
+    if (checkAndRunCgi(client))
         return;
 
     switch (client._useMethod) {
@@ -25,7 +24,7 @@ void HttpRequest::processRequest(Client &client)
             processDelete(client);
             break;
         default:
-            throw ErrorCodeClientException(client, 405, "Method Not Allowed: " + client._method);
+            throw ErrorCodeClientException(client, METHOD_NOT_ALLOWED, "Method Not Allowed: " + client._method);
     }
 }
 
@@ -61,7 +60,7 @@ bool HttpRequest::checkAndRunCgi(Client &client)
 
 void HttpRequest::processHead(Client &client)
 {
-    string response = HttpRequest::HttpResponse(client, 200, "", 0);
+    string response = HttpRequest::HttpResponse(client, OK, "", 0);
     
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
@@ -83,16 +82,16 @@ void HttpRequest::GET(Client &client)
     int fd = open(client._filenamePath.data(), R_OK);
     if (fd == -1) {
         if (errno == EACCES)
-            throw ErrorCodeClientException(client, 403, "access not permitted for post on file: " + client._filenamePath);
+            throw ErrorCodeClientException(client, FORBIDDEN, "access not permitted for post on file: " + client._filenamePath);
         else if (errno == ENOENT)
-            throw ErrorCodeClientException(client, 404, "file not found: " + client._filenamePath);
+            throw ErrorCodeClientException(client, NOT_FOUND, "file not found: " + client._filenamePath);
         else
-            throw ErrorCodeClientException(client, 500, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
+            throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "couldn't open file because: " + string(strerror(errno)) + ", on file: " + client._filenamePath);
     }
     FileDescriptor::setFD(fd);
     Logger::log(INFO, "GET file opened", fd, "GETfile", client._filenamePath);
     size_t fileSize = getFileLength(client, client._filenamePath);
-    string responseStr = HttpResponse(client, 200, client._filenamePath, fileSize);
+    string responseStr = HttpResponse(client, OK, client._filenamePath, fileSize);
     auto handle = make_unique<HandleGetTransfer>(client, fd, responseStr, static_cast<size_t>(fileSize), responseStr.size());
     RunServers::insertHandleTransfer(move(handle));
 }
@@ -124,13 +123,13 @@ void HttpRequest::SendAutoIndex(Client &client)
     }
 
     string htmlResponse = "<html><body><h1>Index of " + client._rootPath + "</h1><pre>" + filenames + "</pre></body></html>";
-    string response = HttpResponse(client, 200, ".html", htmlResponse.size()) + htmlResponse;
+    string response = HttpResponse(client, OK, ".html", htmlResponse.size()) + htmlResponse;
     client._filenamePath.clear();
     unique_ptr handleClient = make_unique<HandleToClientTransfer>(client, response);
     RunServers::insertHandleTransfer(move(handleClient));
     Logger::log(INFO, client, "GET    ", client._requestPath);
 }
-#include <algorithm>
+
 // Check if /upload is requested and respond with list of images in upload directory
 bool HttpRequest::handleRequestUpload(Client &client)
 {
@@ -160,7 +159,7 @@ bool HttpRequest::handleRequestUpload(Client &client)
         string body;
         for (const string& f : imageFiles)
             body += f + "\n";
-        string responseStr = HttpRequest::HttpResponse(client, 200, ".txt", body.size());
+        string responseStr = HttpRequest::HttpResponse(client, OK, ".txt", body.size());
 
         auto handle = make_unique<HandleToClientTransfer>(client, responseStr + body);
         RunServers::insertHandleTransfer(move(handle));
@@ -176,7 +175,7 @@ bool HttpRequest::handleGetTheme(Client &client)
     if (client._requestPath == "/get-theme") {
         const char *theme = RunServers::getSessionData(client._sessionId).darkMode ? "dark" : "light";
         string body = "{\"theme\":\"" + string(theme) + "\"}";
-        string responseStr = HttpRequest::HttpResponse(client, 200, ".json", body.size());
+        string responseStr = HttpRequest::HttpResponse(client, OK, ".json", body.size());
 
         auto handle = make_unique<HandleToClientTransfer>(client, responseStr + body);
         RunServers::insertHandleTransfer(move(handle));
@@ -219,17 +218,17 @@ void HttpRequest::processDelete(Client &client)
             case EACCES:
             case EPERM:
             case EROFS:
-                code = 403;
+                code = FORBIDDEN;
                 break;
             case ENOENT:
             case ENOTDIR:
-                code = 404;
+                code = NOT_FOUND;
                 break;
             case EISDIR:
-                code = 405;
+                code = METHOD_NOT_ALLOWED;
                 break;
             default:
-                code = 500;
+                code = INTERNAL_SERVER_ERROR;
         }
         throw ErrorCodeClientException(client, code, string("Remove failed: ") + strerror(errno));
     }

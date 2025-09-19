@@ -157,8 +157,6 @@ bool Location::cgiPath(string &line)
     return (handleNearEndOfLine(line, len, "cgi_path"));
 }
 
-
-#include "Logger.hpp"
 void Location::SetDefaultLocation(const Aconfig &curConf)
 {
     if (_autoIndex == autoIndexNotFound)
@@ -189,12 +187,6 @@ void Location::SetDefaultLocation(const Aconfig &curConf)
             _indexPage.push_back(indexPage);
     if (_allowedMethods == 0)
         _allowedMethods = ALL_METHODS;
-    for (string &indexPage : _indexPage) {
-        if (_root[_root.size() - 1] == '/')
-            indexPage = _root + indexPage;
-        else
-            indexPage = _root + "/" + indexPage;
-    }
 
     // Set default upload store to root if not specified
     if (_upload_store.empty())

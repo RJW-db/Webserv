@@ -67,10 +67,10 @@ class HttpRequest
         static string HttpResponse(const Client &client, uint16_t code, const string &path, size_t fileSize);
 
         // Cgi response generation
-        static string createResponseCgi(Client &client, const string &input);
-        static map<string, string_view> parseCgiHeaders(const string &input, map<string,string_view> &headerfields, size_t headerSize);
-        static void validateCgiHeaders(Client &client, const map<string, string_view> &headerFields, bool hasBody);
-        static string buildCgiResponse(const Client &client, const map<string, string_view> &headerFields, 
+        static string createResponseCgi(Client &client, string &input);
+        static void parseCgiHeaders(string &input, map<string_view,string_view> &headerfields, size_t headerSize);
+        static void validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody);
+        static string buildCgiResponse(const Client &client, const map<string_view, string_view> &headerFields, 
                                 const string &input, size_t headerSize, bool hasBody);
 
     private:

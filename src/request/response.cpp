@@ -7,26 +7,26 @@
 string HttpRequest::HttpResponse(const Client &client, uint16_t code, const string &path, size_t fileSize)
 {
     static const map<uint16_t, string> responseCodes = {
-        {200, "OK"},
-        {201, "Created"},
-        {301, "Moved Permanently"},
-        {302, "Found"},
-        {303, "See Other"},
-        {307, "Temporary Redirect"},
-        {308, "Permanent Redirect"},
-        {400, "Bad Request"},
-        {403, "Forbidden"},
-        {404, "Not Found"},
-        {405, "Method Not Allowed"},
-        {413, "Payload Too Large"},
-        {414, "URI Too Long"},
-        {415, "Unsupported Media Type"},
-        {431, "Request Header Fields Too Large"},
-        {500, "Internal Server Error"},
-        {501, "Not Implemented"},
-        {502, "Bad Gateway"},
-        {503, "Service Unavailable"},
-        {504, "Gateway Timeout"}
+        {OK, "OK"},
+        {CREATED, "Created"},
+        {MOVED_PERMANENTLY, "Moved Permanently"},
+        {FOUND, "Found"},
+        {SEE_OTHER, "See Other"},
+        {TEMPORARY_REDIRECT, "Temporary Redirect"},
+        {PERMANENT_REDIRECT, "Permanent Redirect"},
+        {BAD_REQUEST, "Bad Request"},
+        {FORBIDDEN, "Forbidden"},
+        {NOT_FOUND, "Not Found"},
+        {METHOD_NOT_ALLOWED, "Method Not Allowed"},
+        {PAYLOAD_TOO_LARGE, "Payload Too Large"},
+        {URI_TOO_LONG, "URI Too Long"},
+        {UNSUPPORTED_MEDIA_TYPE, "Unsupported Media Type"},
+        {REQUEST_HEADER_FIELDS_TOO_LARGE, "Request Header Fields Too Large"},
+        {INTERNAL_SERVER_ERROR, "Internal Server Error"},
+        {NOT_IMPLEMENTED, "Not Implemented"},
+        {BAD_GATEWAY, "Bad Gateway"},
+        {SERVICE_UNAVAILABLE, "Service Unavailable"},
+        {GATEWAY_TIMEOUT, "Gateway Timeout"}
     };
 
     map<uint16_t, string>::const_iterator it = responseCodes.find(code);
@@ -80,17 +80,17 @@ string HttpRequest::getMimeType(const string &path)
     return "application/octet-stream";
 }
 
-string HttpRequest::createResponseCgi(Client &client, const string &input)
+string HttpRequest::createResponseCgi(Client &client, string &input)
 {
     size_t headerSize = input.find(CRLF2);
     bool hasBody = (input.size() > headerSize + CRLF2_LEN);
-    map<string, string_view> headerFields;
+    map<string_view, string_view> headerFields;
     parseCgiHeaders(input, headerFields, headerSize);
     validateCgiHeaders(client, headerFields, hasBody);
     return buildCgiResponse(client, headerFields, input, headerSize, hasBody);
 }
 
-map<string, string_view> HttpRequest::parseCgiHeaders(const string &input, map<string, string_view> &headerFields, size_t headerSize)
+void HttpRequest::parseCgiHeaders(string &input, map<string_view, string_view> &headerFields, size_t headerSize)
 {
     size_t pos = 0;
     while (pos < headerSize) {
@@ -100,29 +100,31 @@ map<string, string_view> HttpRequest::parseCgiHeaders(const string &input, map<s
         string_view line(&input[pos], end - pos);
         size_t colon = line.find(':');
         if (colon != string_view::npos) {
-            string key(line.substr(0, colon));
+            for (size_t i = pos; i < pos + colon; ++i) {
+                input[i] = static_cast<char>(std::tolower(input[i]));
+            }
+            string_view key(line.substr(0, colon));
             string_view value = line.substr(colon + 1);
             size_t firstNonSpace = value.find_first_not_of(" ");
+
             if (firstNonSpace != string_view::npos)
                 value = value.substr(firstNonSpace);
-            convertStringToLower(key);
             headerFields[key] = value;
         }
         pos = end + CRLF_LEN;
     }
-    return headerFields;
 }
 
-void HttpRequest::validateCgiHeaders(Client &client, const map<string, string_view> &headerFields, bool hasBody)
+void HttpRequest::validateCgiHeaders(Client &client, const map<string_view, string_view> &headerFields, bool hasBody)
 {
     if (headerFields.find("status") == headerFields.end() || headerFields.at("status").empty())
-        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header status");
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "invalid response from cgi process with missing header status");
 
     if (hasBody && headerFields.count("content-type") < 1)
-        throw ErrorCodeClientException(client, 500, "invalid response from cgi process with missing header Content-Type");
+        throw ErrorCodeClientException(client, INTERNAL_SERVER_ERROR, "invalid response from cgi process with missing header Content-Type");
 }
 
-string HttpRequest::buildCgiResponse(const Client &client, const map<string, string_view> &headerFields, 
+string HttpRequest::buildCgiResponse(const Client &client, const map<string_view, string_view> &headerFields, 
                                 const string &input, size_t headerSize, bool hasBody)
 {
     ostringstream response;

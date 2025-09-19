@@ -18,7 +18,7 @@ bool HandleGetTransfer::handleGetTransfer()
     fileReadToBuff();
     ssize_t sent = send(_client._fd, _fileBuffer.data() + _offset, _fileBuffer.size() - _offset, MSG_NOSIGNAL);
     if (sent == -1)
-        throw ErrorCodeClientException(_client, 0, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
+        throw ErrorCodeClientException(_client, INFO_LOG, "send failed: " + string(strerror(errno)) + ", on file: " + _client._filenamePath);
     size_t _sent = static_cast<size_t>(sent);
     _offset += _sent;
     _bytesSentTotal += _sent;
@@ -41,7 +41,7 @@ void HandleGetTransfer::fileReadToBuff()
         char buff[CLIENT_BUFFER_SIZE];
         ssize_t bytesRead = read(_fd, buff, CLIENT_BUFFER_SIZE);
         if (bytesRead == -1)
-            throw ErrorCodeClientException(_client, 0, "read on file: " + _client._filenamePath + ", failed because" + string(strerror(errno)));
+            throw ErrorCodeClientException(_client, INFO_LOG, "read on file: " + _client._filenamePath + ", failed because" + string(strerror(errno)));
         size_t rd = static_cast<size_t>(bytesRead);
         _bytesReadTotal += rd;
         if (rd > 0)

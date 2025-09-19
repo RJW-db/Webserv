@@ -14,7 +14,7 @@ CXXFLAGS		+=	-Werror
 CXXFLAGS		+=	-Wunreachable-code -Wpedantic -Wshadow -Wconversion -Wsign-conversion
 CXXFLAGS		+=	-MMD -MP
 # CXXFLAGS		+=	-g
-# CXXFLAGS		+=	-ggdb -fno-limit-debug-info -O0
+CXXFLAGS		+=	-ggdb -fno-limit-debug-info -O0
 #		Werror cannot go together with fsanitize, because fsanitize won't work correctly.
 # CXXFLAGS		+=	-g -fsanitize=address
 
@@ -92,7 +92,7 @@ test: all
 test2: all
 	./$(NAME) testing/test1.conf
 
-valgrind: all	#make TERMINAL_DEBUG=true valgrind
+valgrind: all	# make TERMINAL_DEBUG=true valgrind
 	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
 
 valgrind2: all

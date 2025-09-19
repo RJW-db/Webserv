@@ -4,6 +4,7 @@
 #include "ErrorCodeClientException.hpp"
 #include "HandleTransfer.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Client.hpp"
 
 HandleToClientTransfer::HandleToClientTransfer(Client &client, const string &response)
@@ -24,6 +25,6 @@ bool HandleToClientTransfer::sendToClientTransfer()
         }
     }
     else
-        throw ErrorCodeClientException(_client, 0, "Send to client went wrong: " + string(strerror(errno)));
+        throw ErrorCodeClientException(_client, INFO_LOG, "Send to client went wrong: " + string(strerror(errno)));
     return false;
 }

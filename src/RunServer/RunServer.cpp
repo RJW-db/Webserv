@@ -102,7 +102,7 @@ void RunServers::handleEvents(size_t eventCount)
 
 void RunServers::handleEpollStdinEvents()
 {
-    char buffer[1024];
+    char buffer[KILOBYTE];
     ssize_t bytesRead = read(0, buffer, sizeof(buffer) - 1);
     if (bytesRead == -1)
         Logger::log(IWARN, "Reading from stdin failed: ", strerror(errno));

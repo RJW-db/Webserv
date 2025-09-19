@@ -5,6 +5,7 @@
 #include "FileDescriptor.hpp"
 #include "HttpRequest.hpp"
 #include "RunServer.hpp"
+#include "Constants.hpp"
 #include "Logger.hpp"
 namespace
 {
@@ -68,9 +69,9 @@ void ErrorCodeClientException::handleDefaultErrorPage() const
     string message;
     string body;
     _client._keepAlive = false;
-    if (_errorCode == 400)
+    if (_errorCode == BAD_REQUEST)
         body = ERR400;
-    else if (_errorCode == 500)
+    else if (_errorCode == INTERNAL_SERVER_ERROR)
         body = ERR500;
     else {
         body = "<html>\n"

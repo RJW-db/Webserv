@@ -100,7 +100,6 @@ void FileDescriptor::cleanupEpollFd(int &fd)
             catch(...) {
                 //ignore
             }
-            // fds.erase(it);
         }
         FileDescriptor::closeFD(fd);
     }

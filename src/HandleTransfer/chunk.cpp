@@ -29,7 +29,7 @@ bool HandleChunkTransfer::handleChunkTransfer()
     }
     catch (const exception& e) {
         _client._keepAlive = false;
-        errorPostTransfer(_client, 500, "Error in handlePostTransfer: " + string(e.what()));
+        errorPostTransfer(_client, INTERNAL_SERVER_ERROR, "Error in handlePostTransfer: " + string(e.what()));
     }
     catch (ErrorCodeClientException &e) {
         _client._keepAlive = false;
@@ -71,10 +71,10 @@ bool    HandleChunkTransfer::decodeChunk()
                 _fileBuffer.append(body.data() + dataStart, dataEnd - dataStart);
             }
             else
-                throw ErrorCodeClientException(_client, 400, "Chunk data missing CRLF ");
+                throw ErrorCodeClientException(_client, BAD_REQUEST, "Chunk data missing CRLF ");
             bool exceedsMaxSize = (_fileBuffer.size() > RunServers::getRamBufferLimit());
             if (_client._isCgi == true && exceedsMaxSize == true)
-                throw ErrorCodeClientException(_client, 413, "Chunk data missing CRLF ");
+                throw ErrorCodeClientException(_client, PAYLOAD_TOO_LARGE, "Chunk data missing CRLF ");
             else if (exceedsMaxSize == true)
                 postTransfer(false);
         }
