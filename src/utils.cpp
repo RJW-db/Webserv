@@ -147,6 +147,23 @@ namespace
     }
 }
 
+size_t findCaseInsensitive(const string_view string, const string_view substr)
+{
+    size_t j = 0;
+    for (size_t i = 0; i < string.length(); ++i)
+    {
+        if (tolower(string[i]) == tolower(substr[j]))
+        {
+            ++j;
+            if (j == substr.length())
+                return i - (substr.length() - 1);
+            continue;
+        }
+        j = 0;
+    }
+    return string::npos;
+}
+
 // void throwTesting()
 // {
 //     static uint8_t count = 1;

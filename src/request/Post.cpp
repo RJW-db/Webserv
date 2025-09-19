@@ -143,7 +143,7 @@ namespace
     string extractContentDispositionLine(Client &client, const string &buff)
     {
         const string contentDisposition = "Content-Disposition:";
-        size_t cdPos = buff.find(contentDisposition);
+        size_t cdPos = findCaseInsensitive(buff, contentDisposition);
         if (cdPos == string::npos)
             throw ErrorCodeClientException(client, 400, "Content-Disposition header not found in multipart body");
 
@@ -152,7 +152,7 @@ namespace
         if (wsEnd == string::npos)
             throw ErrorCodeClientException(client, 400, "Malformed Content-Disposition header: only whitespace found");
 
-        size_t formDataPos = buff.find("form-data", cdPos);
+        size_t formDataPos = findCaseInsensitive(buff.data() + cdPos, "form-data;");
         if (formDataPos != wsEnd)
             throw ErrorCodeClientException(client, 400, "Content-Disposition is not form-data");
 
@@ -163,7 +163,7 @@ namespace
     string extractFilenameFromContentDisposition(Client &client, const string &cdLine)
     {
         const string filenameKey = "filename=\"";
-        size_t fnPos = cdLine.find(filenameKey);
+        size_t fnPos = findCaseInsensitive(cdLine, filenameKey);
         if (fnPos == string::npos)
             throw ErrorCodeClientException(client, 400, "Filename not found in Content-Disposition header");
 
@@ -187,7 +187,7 @@ namespace
     void validateMultipartContentType(Client &client, const string &buff, const string &filename)
     {
         const string contentType = "Content-Type: ";
-        size_t position = buff.find(contentType);
+        size_t position = findCaseInsensitive(buff, contentType);
         if (position == string::npos && !filename.empty())
             throw ErrorCodeClientException(client, 400, "Content-Type header not found in multipart body");
     }

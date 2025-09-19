@@ -92,8 +92,11 @@ test: all
 test2: all
 	./$(NAME) testing/test1.conf
 
-valgrind: all
+valgrind: all	#make TERMINAL_DEBUG=true valgrind
 	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
+
+valgrind2: all
+	valgrind -s --track-fds=yes --leak-check=full --show-leak-kinds=all ./$(NAME) testing/test1.conf
 
 print-%:
 	$(info $($*))
