@@ -21,6 +21,7 @@ bool HandleWriteToCgiTransfer::writeToCgiTransfer()
     }
     else if (sent > 0) {
         _bytesWrittenTotal += static_cast<size_t>(sent);
+        _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
         _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
         if (_fileBuffer.size() == _bytesWrittenTotal) {
             FileDescriptor::cleanupEpollFd(_fd);
@@ -40,6 +41,7 @@ bool HandleReadFromCgiTransfer::readFromCgiTransfer()
 {
     vector<char> buff(PIPE_BUFFER_SIZE);
     ssize_t bytesRead = read(_fd, buff.data(), buff.size());
+    _client.setDisconnectTime(DISCONNECT_DELAY_SECONDS);
     _client.setDisconnectTimeCgi(DISCONNECT_DELAY_SECONDS);
     if (bytesRead == -1) {
         FileDescriptor::cleanupEpollFd(_fd);

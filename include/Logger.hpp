@@ -102,7 +102,6 @@ void Logger::log(uint8_t level, Args&&... args)
             cerr << getTimeStamp() << logLevelToString(ERROR, TERMINAL) << "Writing to log file failed: " << strerror(errno) << endl;
             _logFd = -1;
         }
-
         if (level >= IERROR || (TERMINAL_DEBUG == true && level >= INFO))
         {
             levelStr = logLevelToString(level, TERMINAL);

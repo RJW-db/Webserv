@@ -151,6 +151,8 @@ void RunServers::cleanupClient(Client &client)
         else
             ++it;
     }
+    if (client._pid > 0)
+        kill(client._pid, SIGTERM);
     cleanupHandleCgi(_handleCgi.begin(), clientFD);
     _clients.erase(clientFD);
     FileDescriptor::cleanupEpollFd(clientFD);
