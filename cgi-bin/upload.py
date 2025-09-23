@@ -34,7 +34,7 @@ def main():
     # # === ACTUAL LOGIC ===
 
 
-    time.sleep(15)
+    # time.sleep(15)
 
     if os.environ.get('REQUEST_METHOD', '') == 'POST':
         upload_dir = os.environ.get('UPLOAD_STORE', './upload')

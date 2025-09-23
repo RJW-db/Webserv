@@ -42,6 +42,7 @@ HandleTransferIter RunServers::cleanupHandleCgi(HandleTransferIter it, int clien
     return lastAfter;
 }
 
+
 void RunServers::checkCgiDisconnect()
 {
     for (auto it = _handleCgi.begin(); it != _handleCgi.end();) {
@@ -55,7 +56,8 @@ void RunServers::checkCgiDisconnect()
                 if (client._pid > 0)
                     kill(client._pid, SIGTERM);
                 else
-                    Logger::log(IERROR, "No valid PID to kill", client._fd, "clientFD", "Trying to kill pid ", client._pid);
+                    Logger::log(IERROR, "No valid PID to kill", client._fd, "clientFD", "Trying to kill pid ", client._pid); //testlog
+                client._pid = -1;
                 throw ErrorCodeClientException(client, 500, "Reading from CGI failed because it took too long");
             }
             ++it;
@@ -68,8 +70,8 @@ void RunServers::checkCgiDisconnect()
             if (WIFEXITED(exit_code)) {
                 Logger::log(INFO, "Child process exited ", client._fd, "Child", "exit code: ", WEXITSTATUS(exit_code));
                 it = killCgiPipes(_handleCgi.begin(), client._pid);
+                client._pid = -1;
             }
-
         }
     }
 }
@@ -97,10 +99,9 @@ HandleTransferIter RunServers::killCgiPipes(HandleTransferIter it, pid_t pid)
         }
         catch (ErrorCodeClientException& e) {
             e.handleErrorClient();
-            it = _handleCgi.erase(it);
             return cleanupHandleCgi(it, pid);
         }
-        catch (const exception &e) {
+        catch (const exception& e) {
             Logger::log(ERROR, "Server error", '-', "Exception in cleanupHandleCgi: ", e.what());
             cleanupClient((*it)->_client);
             return _handleCgi.begin();
@@ -151,8 +152,6 @@ void RunServers::cleanupClient(Client &client)
         else
             ++it;
     }
-    if (client._pid > 0)
-        kill(client._pid, SIGTERM);
     cleanupHandleCgi(_handleCgi.begin(), clientFD);
     _clients.erase(clientFD);
     FileDescriptor::cleanupEpollFd(clientFD);
